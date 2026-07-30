@@ -34,6 +34,74 @@ This is not a "add types" project. The types exist. This is a **wire up the enfo
 
 ---
 
+## Phase 0 — Document the undocumented `salary` contract
+
+**Do this first. It is ~20 minutes and it is the concrete instance of the disease every other phase treats.**
+
+### The gap
+
+`scan.mjs`'s `buildSalaryFilter` (line 561) consumes a `salary` object off each `Job`:
+
+```js
+const jobMin = salary.min ?? salary.max ?? null;
+const jobMax = salary.max ?? salary.min ?? null;
+const jobCurrency = (salary.currency || '').trim().toUpperCase();
+```
+
+Three providers emit it — `ashby.mjs` (via `parseCompensation`), `wttj.mjs` (`salary_yearly_minimum` / `salary_maximum`), and it is gated by `salary_filter` in `portals.yml`.
+
+**`providers/_types.js` does not mention `salary` anywhere.**
+
+The field is real, consumed, and load-bearing, but absent from the contract that is supposed to define the `Job` shape. A provider author reading `_types.js` — which the README calls "the authoritative contract" — has no way to learn the field exists, what it is named, or what shape it takes.
+
+### The invariant nobody wrote down
+
+Both current producers annualize. `ashby.mjs:42-63` does it explicitly:
+
+```js
+const interval = (comp.interval || '1 YEAR');
+const multiplier = INTERVAL_MULTIPLIERS[interval];
+...
+const min = minValue != null ? minValue * multiplier : null;   // annualized
+```
+
+`wttj.mjs` reads an already-yearly source field. `salary_filter` in `portals.yml` is likewise annual.
+
+So **"salary is always annualized" is a real invariant that is enforced by nothing** — not a type, not a test, not a line of documentation. It survives only because both current implementers happened to get it right.
+
+A fourth provider passing a raw hourly rate through would be silently, expensively wrong:
+
+> Source quotes `$85/hour`. Provider sets `salary.min = 85`. User sets `salary_filter.min = 100000`. `buildSalaryFilter` hits *"Job entirely below user minimum"* (line 598) → **rejected**. True comp ≈ $176K/yr.
+
+The failure is silent and inverted — it discards the *best-paying* roles, and the user never sees the posting to notice. Same shape for monthly-quoted DACH and LATAM sources, where `× 12` vs `× 14` (13th/14th month) is itself a judgment call worth documenting.
+
+### The fix
+
+Add to the `Job` typedef in `providers/_types.js`:
+
+```js
+ * @property {{min: number|null, max: number|null, currency: string}} [salary]
+ *           ANNUALIZED figures only — never a raw hourly, monthly, or weekly
+ *           rate. Providers whose source quotes a non-annual interval MUST
+ *           multiply before returning; see ashby.mjs's INTERVAL_MULTIPLIERS
+ *           for the reference implementation. Consumed by scan.mjs's
+ *           buildSalaryFilter, which compares against portals.yml
+ *           `salary_filter` — always annual. An un-annualized value does not
+ *           error: it silently drops well-paid roles as "below minimum",
+ *           and the user never sees the posting to notice.
+ *           Omit the field entirely when the source exposes no salary; an
+ *           absent value always passes the filter (conservative by design,
+ *           since most providers cannot supply one).
+```
+
+### Why this is Phase 0 and not a footnote
+
+Every other phase in this plan is infrastructure that would have *prevented* this. Phase 0 is the one place where the cost of the missing infrastructure is already visible and already priced. It also makes Phase 2's job concrete: the contract test now has a documented invariant to assert rather than an inferred one.
+
+Ship it as a standalone docs PR. No code change, no dependency, no CI edit.
+
+---
+
 ## Phase 1 — Type enforcement (highest value, smallest diff)
 
 ### 1.1 Add `tsconfig.json`
@@ -191,8 +259,9 @@ Assertions per provider:
 | 8 | `detect(entry)` returns `null` or `{ url: string }` — probed with a synthetic entry | The routing contract: `null` means "not mine". |
 | 9 | No unexpected top-level keys on the default export | Catches `fetchJobs:` where `fetch:` was meant — currently a silent no-op board. |
 | 10 | File does not begin with `_` | `_`-prefixed files are helpers and must not be registered. |
+| 11 | If `salary` present: `min`/`max` are `null` or finite `>= 0`, and any non-null value is `>= 1000` | Enforces the Phase 0 annualization invariant. The `>= 1000` floor is a tripwire, not a truth test — it cannot know the real figure, but no plausible *annual* salary in any currency falls below it, while every raw hourly rate does. Catches the silent-drop bug at PR time. |
 
-Assertions 8–9 are where the real defects hide; 1–7 are cheap insurance.
+Assertions 8–9 are where the real defects hide; 11 enforces the one invariant the codebase relies on but never wrote down; 1–7 are cheap insurance.
 
 **Explicitly out of scope:** no network. The contract test asserts *shape*, never *behaviour*. Live-endpoint probing is `verify-portals.mjs`'s job and must stay separate — a contract suite that hits the network becomes a flaky suite nobody trusts.
 
@@ -351,9 +420,10 @@ Sketch, if pursued:
 
 | Phase | Effort | Risk | Blocking? | Recommended order |
 |---|---|---|---|---|
-| 1. Type enforcement | ~half day setup + incremental | Very low — opt-in, green from day one | No | **1st** |
-| 2. Provider contract test | ~half day | Very low — pure additive test | No | **2nd** (or 1st; independent) |
-| 5. Dependency integrity | ~1 hour | Very low | No | **3rd** — trivial, do it alongside |
+| 0. Document `salary` contract | ~20 min | None — docs only | No | **1st** |
+| 2. Provider contract test | ~half day | Very low — pure additive test | No | **2nd** — makes Phase 0's invariant enforceable |
+| 1. Type enforcement | ~half day setup + incremental | Very low — opt-in, green from day one | No | **3rd** |
+| 5. Dependency integrity | ~1 hour | Very low | No | **4th** — trivial, do it alongside |
 | 3. Dead code (knip) | ~2 hours + triage backlog | Low — advisory first | No | 4th |
 | 4. Style floor (lint only) | ~2 hours + triage | Medium — needs maintainer buy-in on the no-format constraint | No | 5th |
 | 6. Location intelligence | Weeks | High maintenance | Yes — needs an issue first | Not scheduled |

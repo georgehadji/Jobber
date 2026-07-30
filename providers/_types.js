@@ -30,6 +30,19 @@
  *                               usable date. scan.mjs ignores it; consumers
  *                               like scan-ats-full.mjs use it for recency
  *                               filtering.
+ * @property {{min: (number|null), max: (number|null), currency: string}} [salary]
+ *                               ANNUALIZED figures only — never a raw hourly,
+ *                               monthly, or weekly rate. A provider whose source
+ *                               quotes a non-annual interval MUST multiply before
+ *                               returning; ashby.mjs's INTERVAL_MULTIPLIERS is the
+ *                               reference implementation. Consumed by scan.mjs's
+ *                               buildSalaryFilter, which compares against
+ *                               portals.yml `salary_filter` — always annual. An
+ *                               un-annualized value does not error: it silently
+ *                               drops well-paid roles as "below minimum", and the
+ *                               user never sees the posting to notice. Omit the
+ *                               field entirely when the source exposes no salary;
+ *                               an absent value always passes the filter.
  * @property {number} [trustScore] 0-100 trust score from _trust-validator.mjs.
  * @property {string[]} [trustFlags] Flags raised by trust validation (e.g.
  *                                   'invalid_url', 'suspicious_domain').

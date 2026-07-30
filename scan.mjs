@@ -609,20 +609,55 @@ export function buildSalaryFilter(salaryFilter) {
   };
 }
 
-export function companyMatch(jobCompany, windowCompany) {
-  const cleanNoSpaces = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const c1NoSpaces = cleanNoSpaces(jobCompany);
-  const c2NoSpaces = cleanNoSpaces(windowCompany);
+// Fold a company name to an ASCII skeleton so a portals.yml entry typed
+// without diacritics still matches the ATS feed's canonical spelling.
+// Previously non-ASCII letters were *stripped* rather than folded, so
+// "Nørgaard" reduced to "nrgaard" and never matched "norgaard".
+//
+// Two passes are needed because the conventions conflict: NFD maps ü→u
+// (matching "Muller"), while German transliteration expands ü→ue (matching
+// "Mueller"). No single fold satisfies both, so companyMatch tries each.
+/**
+ * @param {string} str
+ * @param {boolean} [german] Expand umlauts to digraphs (ü→ue) instead of NFD's ü→u.
+ * @returns {string}
+ */
+export function foldCompanyName(str, german = false) {
+  let out = String(str || '').toLowerCase();
+  if (german) {
+    out = out.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue');
+  }
+  // Letters NFD cannot decompose: they are atomic codepoints, not
+  // base+combining-mark pairs, so the U+0300-U+036F strip below never sees them.
+  out = out
+    .replace(/ø/g, 'o').replace(/æ/g, 'ae').replace(/å/g, 'a')
+    .replace(/ß/g, 'ss').replace(/ł/g, 'l').replace(/đ/g, 'd')
+    .replace(/þ/g, 'th').replace(/ð/g, 'd');
+  return out.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/** Substring/equality match over two already-folded, already-lowercased names. */
+function matchFolded(f1, f2) {
+  const cleanNoSpaces = (str) => str.replace(/[^a-z0-9]/g, '');
+  const c1NoSpaces = cleanNoSpaces(f1);
+  const c2NoSpaces = cleanNoSpaces(f2);
   if (c1NoSpaces === c2NoSpaces) return true;
 
-  const cleanWithSpaces = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  const c1WithSpaces = cleanWithSpaces(jobCompany);
-  const c2WithSpaces = cleanWithSpaces(windowCompany);
+  const cleanWithSpaces = (str) => str.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const c1WithSpaces = cleanWithSpaces(f1);
+  const c2WithSpaces = cleanWithSpaces(f2);
   if (!c1WithSpaces || !c2WithSpaces) return false;
 
   const regex1 = new RegExp('\\b' + c2WithSpaces.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b');
   const regex2 = new RegExp('\\b' + c1WithSpaces.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b');
   return regex1.test(c1WithSpaces) || regex2.test(c2WithSpaces);
+}
+
+export function companyMatch(jobCompany, windowCompany) {
+  return (
+    matchFolded(foldCompanyName(jobCompany), foldCompanyName(windowCompany)) ||
+    matchFolded(foldCompanyName(jobCompany, true), foldCompanyName(windowCompany, true))
+  );
 }
 
 export function addDays(dateStr, days) {
