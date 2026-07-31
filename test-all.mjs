@@ -152,7 +152,10 @@ console.log('\n1b. Type checks (@ts-check opt-in files)');
 
 const tscBin = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
 if (existsSync(tscBin)) {
-  const tscResult = run(NODE, [tscBin, '--noEmit']);
+  // 5 min, not run()'s 30s default: a full-repo tsc pass takes ~40s on a warm
+  // machine and considerably longer on a cold/loaded CI runner. The default
+  // timed out and reported a clean tree as "type errors".
+  const tscResult = run(NODE, [tscBin, '--noEmit'], { timeout: 300000 });
   if (tscResult !== null) pass('tsc --noEmit clean');
   else fail('tsc --noEmit reported type errors');
 } else {
