@@ -130,7 +130,7 @@ export default {
       prevFirstUrl = pageJobs[0].url;
       all.push(...pageJobs);
     }
-    if (!reachedEnd) all.icimsTruncated = true;
+    if (!reachedEnd) /** @type {any} */ (all).icimsTruncated = true;
     return all;
   },
 

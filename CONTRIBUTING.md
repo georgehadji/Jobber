@@ -105,10 +105,19 @@ Failing one of these is a routing, not a rejection. Open the issue first and we 
 ## Development
 
 ```bash
+# Install
+npm install                   # full install, includes the ~170 MB Chromium download
+npm install --ignore-scripts  # skip the Chromium download; PDF/liveness tests will skip.
+                               # CI already uses this path — fine if you're only running
+                               # the test suite, type checks, or lint.
+
 # Scripts
 npm run doctor                # Setup validation
 node verify-pipeline.mjs     # Health check
 node cv-sync-check.mjs        # Config check
+npm run check:types           # tsc --noEmit over @ts-check opt-in files (devDependency)
+npm run knip                  # Dead-code / unused-dependency scan (advisory, not a CI gate)
+npm run lint                  # Biome lint (correctness/suspicious rules only, no formatting)
 
 # Dashboard
 npm run build:dashboard       # go build with platform-correct binary name

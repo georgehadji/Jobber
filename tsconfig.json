@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "target": "es2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "types": ["node"]
+  },
+  "include": [
+    "*.mjs",
+    "providers/**/*.mjs",
+    "providers/**/*.js",
+    "plugins/**/*.mjs",
+    "plugins/**/*.js",
+    "lib/**/*.mjs",
+    "utils/**/*.mjs"
+  ],
+  "exclude": ["node_modules", "web", "dashboard", "batch", "output", "test-fixtures"]
+}

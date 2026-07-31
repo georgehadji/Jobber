@@ -142,7 +142,11 @@ export async function loadPluginConfig(root) {
  * @property {string} [version]
  * @property {string} [homepage]
  * @property {string} dir
+ * @property {boolean} allowsLocalhost
+ * @property {string} [skill]
  */
+
+/** @typedef {import('./_types.js').PluginContext} PluginContext */
 export function validateManifest(m, dir, dirName) {
   const label = dirName;
   if (!m || typeof m !== 'object') { warnSkip(label, 'manifest.json is not an object'); return null; }
@@ -637,6 +641,17 @@ export async function runHook(kind, payload, { root, dryRun = false, timeoutMs =
   return results;
 }
 
+// A detect-exempt provider whose fetch throws an actionable message — used when
+// a known provider plugin is inactive (disabled / missing key / failed import)
+// so an explicit `provider: <id>` portals.yml entry stays self-explaining.
+function inactiveProviderStub(id, reason) {
+  return {
+    id,
+    detect: () => null,
+    fetch: async () => { throw new Error(`plugin "${id}" inactive: ${reason}. Run \`node doctor.mjs\` for setup.`); },
+  };
+}
+
 /**
  * Merge enabled provider-plugins into the core providers Map. THE one hot-path
  * hook (scan.mjs calls this right after loadProviders). Critical guarantees:
@@ -658,17 +673,6 @@ export async function runHook(kind, payload, { root, dryRun = false, timeoutMs =
  * @param {Map<string, any>} providersMap   The Map returned by scan.mjs loadProviders.
  * @param {{ root: string }} opts
  */
-// A detect-exempt provider whose fetch throws an actionable message — used when
-// a known provider plugin is inactive (disabled / missing key / failed import)
-// so an explicit `provider: <id>` portals.yml entry stays self-explaining.
-function inactiveProviderStub(id, reason) {
-  return {
-    id,
-    detect: () => null,
-    fetch: async () => { throw new Error(`plugin "${id}" inactive: ${reason}. Run \`node doctor.mjs\` for setup.`); },
-  };
-}
-
 export async function mergeProviderPlugins(providersMap, { root }) {
   if (!existsSync(pluginsConfigPath(root))) return; // (1) opted out → inert (no work, no env read)
 

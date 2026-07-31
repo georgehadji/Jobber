@@ -286,9 +286,9 @@ export default {
     // the HTML walk below, so tenants without this endpoint are unaffected.
     if (typeof ctx.fetchJson === 'function') {
       try {
-        const first = await ctx.fetchJson(buildFragmentUrl(listUrl, 1), {
+        const first = /** @type {any} */ (await ctx.fetchJson(buildFragmentUrl(listUrl, 1), {
           headers: { accept: 'application/json', 'x-requested-with': 'XMLHttpRequest' },
-        });
+        }));
         const firstHtml = typeof first?.results === 'string' ? first.results : '';
         const firstRows = firstHtml ? parseResults(firstHtml, origin) : [];
         if (firstRows.length) {
@@ -312,9 +312,9 @@ export default {
             await wait(PAGE_DELAY_MS);
             let rows;
             try {
-              const json = await ctx.fetchJson(buildFragmentUrl(listUrl, page), {
+              const json = /** @type {any} */ (await ctx.fetchJson(buildFragmentUrl(listUrl, page), {
                 headers: { accept: 'application/json', 'x-requested-with': 'XMLHttpRequest' },
-              });
+              }));
               const frag = typeof json?.results === 'string' ? json.results : '';
               rows = frag ? parseResults(frag, origin) : [];
             } catch {

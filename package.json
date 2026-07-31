@@ -58,7 +58,10 @@
     "build:dashboard": "node build-dashboard.mjs",
     "serve:dashboard": "cd dashboard && go run . --path ..",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps",
-    "manifesto": "node manifesto.mjs"
+    "manifesto": "node manifesto.mjs",
+    "check:types": "tsc --noEmit",
+    "knip": "knip",
+    "lint": "biome lint ."
   },
   "keywords": [
     "ai",
@@ -85,9 +88,15 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "dotenv": "^17.0.0",
-    "js-yaml": "^4.1.1",
+    "@google/generative-ai": "0.24.1",
+    "dotenv": "17.0.0",
+    "js-yaml": "4.1.1",
     "playwright": "1.62.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "~2.0.0",
+    "@types/node": "^22.0.0",
+    "knip": "^5.0.0",
+    "typescript": "~5.9.0"
   }
 }

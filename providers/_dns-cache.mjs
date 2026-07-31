@@ -79,7 +79,7 @@ export const RESOLVER_FAILURE_CODES = new Set([
  * @returns {boolean} True when a resolver refusal/failure code is present.
  */
 export function isResolverFailure(err) {
-  for (let e = err, depth = 0; e && typeof e === 'object' && depth < 5; e = e.cause, depth++) {
+  for (let e = err, depth = 0; e && typeof e === 'object' && depth < 5; e = /** @type {any} */ (e).cause, depth++) {
     if (RESOLVER_FAILURE_CODES.has(/** @type {any} */ (e).code)) return true;
   }
   return false;
@@ -216,6 +216,7 @@ export function createTokenBucket(options = {}) {
  * @param {Function} realLookup - The underlying `dns.lookup` to memoize.
  * @param {object} [options] - Cache tuning.
  * @param {number} [options.ttlMs] - How long a successful result stays fresh.
+ * @param {number} [options.negativeTtlMs] - How long a resolver-failure result stays cached.
  * @param {number} [options.maxEntries] - Cap on distinct cached keys.
  * @param {() => number} [options.now] - Clock source, injectable for tests.
  * @param {number} [options.lookupsPerMin] - Ceiling on resolver-bound lookups; 0 disables pacing.
@@ -345,7 +346,7 @@ export function lookupsPerMinFromEnv(env = process.env) {
   return n;
 }
 
-/** @type {{ pacingStats: () => { delayed: number, waitedMs: number } } | null} */
+/** @type {(Function & { pacingStats: () => { delayed: number, waitedMs: number } }) | null} */
 let patched = null;
 
 /**
@@ -360,6 +361,6 @@ export function dnsPacingStats() {
 }
 
 if (process.env.CAREER_OPS_NO_DNS_CACHE !== '1') {
-  patched = createCachedLookup(dns.lookup, { lookupsPerMin: lookupsPerMinFromEnv() });
-  dns.lookup = patched;
+  patched = /** @type {any} */ (createCachedLookup(dns.lookup, { lookupsPerMin: lookupsPerMinFromEnv() }));
+  dns.lookup = /** @type {any} */ (patched);
 }

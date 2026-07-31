@@ -138,7 +138,7 @@ export default {
   detect(entry) {
     const url = entry.api || entry.careers_url || '';
     if (typeof url !== 'string') return null;
-    return resolveConfig({ api: url }) ? { url } : null;
+    return resolveConfig(/** @type {import('./_types.js').PortalEntry} */ ({ api: url })) ? { url } : null;
   },
 
   async fetch(entry, ctx) {

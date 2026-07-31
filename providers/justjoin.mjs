@@ -114,7 +114,7 @@ export default {
     const maxPages = Number(entry.max_pages || MAX_PAGES);
     for (let page = 0; page < maxPages; page++) {
       const url = buildApiUrl(entry, from);
-      const json = await ctx.fetchJson(url, { redirect: 'error' });
+      const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error' }));
       const parsed = parseJustJoinResponse(json);
       jobs.push(...parsed);
 

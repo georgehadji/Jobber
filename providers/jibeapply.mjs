@@ -96,7 +96,7 @@ export default {
     const apiUrl = (typeof entry.api === 'string' && validateExplicitApi(entry.api))
       || toApiUrl(url);
     if (!apiUrl) throw new Error(`jibeapply: cannot derive API URL for ${entry.name}`);
-    const first = await ctx.fetchJson(apiUrl, { redirect: 'error' });
+    const first = /** @type {any} */ (await ctx.fetchJson(apiUrl, { redirect: 'error' }));
     const total = first.totalCount ?? 0;
     // Use the actual number of items returned as page size — some implementations
     // set `count` to the total rather than the per-page count.
@@ -114,6 +114,7 @@ export default {
       for (let page = 2; page <= pages; page++) {
         const u2 = new URL(apiUrl);
         u2.searchParams.set('page', String(page));
+        /** @type {any} */
         let json;
         try {
           json = await ctx.fetchJson(u2.toString(), { redirect: 'error' });

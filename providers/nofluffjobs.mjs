@@ -143,7 +143,7 @@ export default {
 
     for (let pageTo = 1; pageTo <= maxPages; pageTo++) {
       const { url, body } = buildRequest(entry, pageTo);
-      const json = await ctx.fetchJson(url, {
+      const json = /** @type {any} */ (await ctx.fetchJson(url, {
         method: 'POST',
         body: JSON.stringify(body),
         headers: {
@@ -151,7 +151,7 @@ export default {
           'content-type': 'application/infiniteSearch+json',
         },
         redirect: 'error',
-      });
+      }));
       for (const job of parseNoFluffJobsResponse(json)) {
         if (seen.has(job.url)) continue;
         seen.add(job.url);

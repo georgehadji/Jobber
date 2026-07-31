@@ -90,11 +90,20 @@ try {
   } else {
     fail(`normalizeAgenticSalary() both-bounds wrong: ${JSON.stringify(bothBounds)}`);
   }
+  // A null bound stays null — never 0 (which would read as real comp data) and
+  // never omitted (Job.salary requires all three keys present, see _types.js).
   const minOnly = normalizeAgenticSalary({ salaryMin: 100000, salaryMax: null, salaryCurrency: 'USD' });
-  if (minOnly && minOnly.min === 100000 && !('max' in minOnly)) {
-    pass('normalizeAgenticSalary() omits a null bound instead of coercing it to 0');
+  if (minOnly && minOnly.min === 100000 && 'max' in minOnly && minOnly.max === null) {
+    pass('normalizeAgenticSalary() nulls a missing bound (key present, never coerced to 0)');
   } else {
     fail(`normalizeAgenticSalary() min-only wrong: ${JSON.stringify(minOnly)}`);
+  }
+  // currency is always a string — '' when the API omits it, never undefined.
+  const noCurrency = normalizeAgenticSalary({ salaryMin: 100000, salaryMax: null, salaryCurrency: null });
+  if (noCurrency && noCurrency.currency === '') {
+    pass('normalizeAgenticSalary() emits currency as "" when absent (key always present)');
+  } else {
+    fail(`normalizeAgenticSalary() absent-currency wrong: ${JSON.stringify(noCurrency)}`);
   }
   if (normalizeAgenticSalary({ salaryMin: null, salaryMax: null, salaryCurrency: null }) === null) {
     pass('normalizeAgenticSalary() returns null when neither bound is present');

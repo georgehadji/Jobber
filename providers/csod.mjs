@@ -139,7 +139,7 @@ export default {
     if (typeof url !== 'string') return null;
     // Host check (not a path substring) so evil.com/x.csod.com can't spoof it,
     // and the URL must carry the careersite path shape we know how to drive.
-    return resolveConfig({ api: url }) ? { url } : null;
+    return resolveConfig(/** @type {import('./_types.js').PortalEntry} */ ({ api: url })) ? { url } : null;
   },
 
   async fetch(entry, ctx) {
@@ -158,7 +158,7 @@ export default {
 
     for (let page = 1; page <= maxPages; page++) {
       if (page > 1) await wait(PAGE_DELAY_MS);
-      const json = await ctx.fetchJson(cfg.searchApi, {
+      const json = /** @type {any} */ (await ctx.fetchJson(cfg.searchApi, {
         method: 'POST',
         redirect: 'error',
         headers: {
@@ -184,7 +184,7 @@ export default {
           customFieldDropdowns: [],
           customFieldRadios: [],
         }),
-      });
+      }));
       if (total === null) {
         total = typeof json?.data?.totalCount === 'number' ? json.data.totalCount : null;
       }

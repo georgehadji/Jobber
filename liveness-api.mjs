@@ -169,7 +169,15 @@ export function resolveAtsApi(rawUrl) {
     return null;
   }
   if (u.protocol !== 'https:') return null;
-  for (const provider of ATS_PROVIDERS) {
+  for (const providerEntry of ATS_PROVIDERS) {
+    // Each ATS_PROVIDERS element pairs its own match()/api()/interpret() around
+    // a provider-specific `parts` shape (board/id, tenant/shard/site/jobPath,
+    // etc.) — genuinely heterogeneous by design, same as PortalEntry's
+    // provider-specific extras. TS can't express "this provider's interpret
+    // always receives this provider's parts" across a plain array, so it's
+    // cast to `any` here rather than widened to `Record<string,string>` (which
+    // would be a lie about the runtime shape).
+    const provider = /** @type {any} */ (providerEntry);
     const parts = provider.match(u);
     if (!parts) continue;
     // SSRF guard: every derived value must be safe — a single path segment for

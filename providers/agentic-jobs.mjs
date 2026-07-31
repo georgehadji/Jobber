@@ -95,22 +95,28 @@ export function normalizeAgenticLocation(j) {
 
 /**
  * Extract {min, max, currency} from the API's flat salaryMin/salaryMax/
- * salaryCurrency fields, omitting a bound the API left null (never coerced
- * to 0 — a 0 min/max would read as real comp data downstream). Returns null
- * when neither bound is present. Exported for tests.
+ * salaryCurrency fields. Returns null when neither bound is present.
+ * Exported for tests.
+ *
+ * A bound the API left null stays `null` — NEVER coerced to 0 (a 0 min/max
+ * would read as real comp data downstream) and never omitted (the Job.salary
+ * contract in _types.js requires all three keys present whenever `salary` is).
+ * Unlike ashby.mjs/wttj.mjs, a one-sided range is NOT resolved to both bounds:
+ * this API distinguishes "no upper bound published" from "upper bound equals
+ * the minimum", and fabricating the missing side would erase that.
+ *
  * @param {any} j
+ * @returns {{min: number|null, max: number|null, currency: string}|null}
  */
 export function normalizeAgenticSalary(j) {
   const hasMin = typeof j?.salaryMin === 'number' && Number.isFinite(j.salaryMin);
   const hasMax = typeof j?.salaryMax === 'number' && Number.isFinite(j.salaryMax);
   if (!hasMin && !hasMax) return null;
-  /** @type {{min?: number, max?: number, currency?: string}} */
-  const salary = {};
-  if (hasMin) salary.min = j.salaryMin;
-  if (hasMax) salary.max = j.salaryMax;
-  const currency = typeof j?.salaryCurrency === 'string' ? j.salaryCurrency.trim().toUpperCase() : '';
-  if (currency) salary.currency = currency;
-  return salary;
+  return {
+    min: hasMin ? j.salaryMin : null,
+    max: hasMax ? j.salaryMax : null,
+    currency: typeof j?.salaryCurrency === 'string' ? j.salaryCurrency.trim().toUpperCase() : '',
+  };
 }
 
 /**
@@ -126,7 +132,7 @@ export function normalizeAgenticJob(j) {
   // Slug feeds straight into a URL path — keep it to safe path characters.
   if (!title || !company || !slug || !/^[A-Za-z0-9_-]+$/.test(slug)) return null;
 
-  /** @type {{title: string, url: string, company: string, location: string, description?: string, postedAt?: number, salary?: {min?: number, max?: number, currency?: string}}} */
+  /** @type {{title: string, url: string, company: string, location: string, description?: string, postedAt?: number, salary?: {min: number|null, max: number|null, currency: string}}} */
   const job = {
     title,
     url: `${SITE_ORIGIN}/jobs/${slug}`,
@@ -163,7 +169,7 @@ export default {
     for (let page = 1; page <= MAX_PAGES; page++) {
       if (page > 1) await wait(PAGE_DELAY_MS);
       const url = assertAgenticUrl(`${API_BASE}/jobs?page=${page}`);
-      const json = await ctx.fetchJson(url, { redirect: 'error', headers: { accept: 'application/json' } });
+      const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error', headers: { accept: 'application/json' } }));
       // A missing/non-array `data` is a response-shape change, not a legitimate
       // empty page (the API returns `data: []` for that) — fail loudly instead
       // of silently truncating whatever pages were already collected.

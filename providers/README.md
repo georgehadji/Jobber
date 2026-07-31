@@ -47,6 +47,15 @@ export default {
   for free (no extra per-job request — the scanner is zero-token).
 - `postedAt` — optional epoch ms; omit when the source has no usable date.
 
+### Optional deferred-date hook (`enrichDate`)
+
+`enrichDate(job, ctx)` — optional. For sources whose list page carries no
+publish date, `scan-ats-full.mjs` calls this generically after `fetch()` for
+any job still undated; it should mutate `job` in place by setting
+`postedAt`, typically from a per-job detail-page request. `icims.mjs` is the
+reference implementation (JSON-LD `datePosted`). A thrown error just leaves
+the job undated — it never fails the scan.
+
 ### Context (`ctx`)
 
 `fetch` receives an HTTP context built by [`_http.mjs`](_http.mjs):
@@ -71,6 +80,21 @@ There is no index file — discovery is filesystem-convention-based
 Underscore-prefixed files are shared helpers, never loaded as providers:
 `_types.js` (contract typedefs), `_registry.mjs` (loader/router),
 `_http.mjs` (HTTP transport), `_html-entities.mjs`, `_trust-validator.mjs`.
+
+## Module contract test
+
+`tests/providers/_contract.test.mjs` loads every provider in this directory
+and asserts the shared interface above — export shape, unique/filename-
+matching `id`, `fetch`/`detect` arity and return shape, no stray top-level
+keys, and (best-effort) that any `salary` a provider returns is annualized,
+not a raw hourly/weekly rate. It touches no network: `detect()`/`fetch()`
+are probed with a synthetic entry pointing at `example.invalid` and a mock
+`ctx` that rejects immediately. New providers are covered automatically —
+no per-provider registration needed. Run it locally with:
+
+```bash
+node test-all.mjs --only providers/_contract
+```
 
 ## Security conventions
 

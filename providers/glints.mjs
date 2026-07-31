@@ -109,7 +109,7 @@ function deriveBaseUrl(apiUrl) {
  * @param {any} item — raw GraphQL result item from searchJobsV3
  * @param {string} baseUrl — scheme + hostname for resolving relative URLs
  * @param {string} fallbackCompany — company name fallback from portal entry
- * @returns {{title: string, url: string, company: string, location: string, postedAt: number|undefined}|null}
+ * @returns {{title: string, url: string, company: string, location: string, postedAt?: number}|null}
  */
 export function parseGlintsItem(item, baseUrl, fallbackCompany) {
   if (!item || typeof item !== 'object') return null;

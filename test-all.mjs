@@ -143,6 +143,23 @@ for (const f of mjsFiles) {
   }
 }
 
+// ── 1b. TYPE CHECKS ─────────────────────────────────────────────
+// Only files carrying `// @ts-check` are analyzed (tsconfig.json sets
+// checkJs:false). This enforces the JSDoc annotations that dozens of files
+// already declare but that nothing verified before (HARDENING-PLAN.md Phase 1).
+
+console.log('\n1b. Type checks (@ts-check opt-in files)');
+
+const tscBin = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
+if (existsSync(tscBin)) {
+  const tscResult = run(NODE, [tscBin, '--noEmit']);
+  if (tscResult !== null) pass('tsc --noEmit clean');
+  else fail('tsc --noEmit reported type errors');
+} else {
+  // Never hard-fail a contributor who ran `npm install --omit=dev`.
+  console.log('   ⊘ typescript not installed — skipped');
+}
+
 // ── 2. SCRIPT EXECUTION ─────────────────────────────────────────
 
 console.log('\n2. Script execution (graceful on empty data)');
@@ -195,6 +212,7 @@ const scripts = [
   { name: 'reply-matcher.test.mjs', expectExit: 0 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
+  { name: 'validate-typecheck-coverage.mjs --self-test', expectExit: 0 },
   // The bare coverage run is NOT here on purpose: this section executes each
   // script from a throwaway copy of the repo, and the coverage check needs
   // `git ls-files` on the REAL tree. Running it here validated nothing and
@@ -1016,6 +1034,20 @@ for (const f of skillEntrypoints) {
     pass('every tracked file is covered by SYSTEM_PATHS or USER_PATHS');
   } else {
     fail(`SYSTEM_PATHS coverage gap — a new file is unregistered and update-system will not ship it:\n${(cov.stderr || cov.stdout || '').trim()}`);
+  }
+}
+
+// The @ts-check adoption ratchet, run where it can see the real tree (same
+// git-ls-files-needs-the-real-tree reasoning as the SYSTEM_PATHS guard above).
+{
+  const tc = spawnSync(process.execPath, [join(ROOT, 'validate-typecheck-coverage.mjs')], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+  });
+  if (tc.status === 0) {
+    pass('@ts-check coverage is at or above the committed floor');
+  } else {
+    fail(`@ts-check coverage regressed below the committed floor:\n${(tc.stderr || tc.stdout || '').trim()}`);
   }
 }
 

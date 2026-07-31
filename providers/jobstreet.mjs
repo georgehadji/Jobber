@@ -108,7 +108,7 @@ function toEpochMs(value) {
  * @param {any} item — raw v5 API result item
  * @param {string} origin — scheme + hostname for building job detail URLs
  * @param {string} fallbackCompany — company name fallback from the portal entry
- * @returns {{title: string, url: string, company: string, location: string, postedAt: number|undefined}|null}
+ * @returns {{title: string, url: string, company: string, location: string, postedAt?: number}|null}
  */
 export function parseJobstreetItem(item, origin, fallbackCompany) {
   if (!item || typeof item !== 'object') return null;
