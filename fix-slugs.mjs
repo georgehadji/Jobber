@@ -35,7 +35,7 @@ import { pathToFileURL } from 'url';
 
 import { verifyPortalsFile } from './verify-portals.mjs';
 
-const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
+const DEFAULT_PORTALS_PATH = process.env.JOBBER_PORTALS || 'portals.yml';
 
 /** Matches a `tracked_companies` list-item start line: `  - name: Foo`. */
 const NAME_LINE_RE = /^([ \t]*)-\s*name:\s*(.+?)\s*$/;

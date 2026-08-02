@@ -1,5 +1,5 @@
 {
-  "name": "career-ops",
+  "name": "jobber",
   "version": "1.24.0",
   "description": "AI job search command center — evaluate offers, tailor CVs, scan portals, track applications",
   "author": {
@@ -7,6 +7,6 @@
     "url": "https://santifer.io"
   },
   "skills": [
-    "./.agents/skills/career-ops"
+    "./.agents/skills/jobber"
   ]
 }

@@ -1,9 +1,11 @@
-# career-ops
+<!-- jobber-source-sha: 82ff87c23f2f1eadc602c1566586c64bc96589d1 -->
+
+# Jobber
 
 [English](README.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Français](README.fr.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Dansk](README.da.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md) | [தமிழ்](README.ta.md)
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Multi-Agent Job Search System" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Multi-Agent Job Search System" width="800"></a>
 </p>
 
 <p align="center">
@@ -13,11 +15,11 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 <p align="center">
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>FEATURED IN</sub></p>
@@ -31,7 +33,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops Demo" width="800">
+  <img src="docs/demo.gif" alt="Jobber Demo" width="800">
 </p>
 
 <p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
@@ -40,7 +42,7 @@
   <a href="https://warpchart.dev/hq">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
-      <img alt="Live star telemetry of santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
+      <img alt="Live star telemetry of santifer/jobber" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
     </picture>
   </a>
 </p>
@@ -50,7 +52,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/santifer/career-ops/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2Fcareer-ops?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
+  <a href="https://github.com/santifer/jobber/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2FJobber?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
 </p>
 
 <p align="center">
@@ -76,9 +78,9 @@
   <a href="TRADEMARK.md"><img src="https://img.shields.io/badge/Trademark-Policy-blue.svg" alt="Trademark Policy"></a>
 </p>
 
-## career-ops அறிமுகம்
+## Jobber அறிமுகம்
 
-career-ops ([career-ops.org](https://career-ops.org), **careerops** என்றும் அழைக்கப்படுகிறது) என்பது எந்த AI Coding CLI-யையும் வேலை தேடலுக்கான முழுமையான கட்டுப்பாட்டு மையமாக மாற்றும் ஒரு Open Source அமைப்பு. Spreadsheet-ல் விண்ணப்பங்களைக் கைமுறையாகக் கண்காணிப்பதற்குப் பதிலாக, AI-ஆல் இயக்கப்படும் ஒரு செயல்முறையை இது வழங்குகிறது. இதன் மூலம் நீங்கள்:
+Jobber ([jobber.org](https://jobber.org), **Jobber** என்றும் அழைக்கப்படுகிறது) என்பது எந்த AI Coding CLI-யையும் வேலை தேடலுக்கான முழுமையான கட்டுப்பாட்டு மையமாக மாற்றும் ஒரு Open Source அமைப்பு. Spreadsheet-ல் விண்ணப்பங்களைக் கைமுறையாகக் கண்காணிப்பதற்குப் பதிலாக, AI-ஆல் இயக்கப்படும் ஒரு செயல்முறையை இது வழங்குகிறது. இதன் மூலம் நீங்கள்:
 
 - **வேலை வாய்ப்புகளை மதிப்பீடு** செய்யலாம் — 10 எடையிடப்பட்ட அம்சங்களைக் கொண்ட A–F மதிப்பீட்டு முறையின் மூலம்.
 - **தனிப்பயனாக்கப்பட்ட PDF-களை உருவாக்கலாம்** — ஒவ்வொரு வேலை விளக்கத்திற்கும் (Job Description) ஏற்ற ATS-optimized CV-கள்.
@@ -87,9 +89,9 @@ career-ops ([career-ops.org](https://career-ops.org), **careerops** என்ற
 - **அனைத்து விண்ணப்பங்களையும் ஒரே இடத்தில் கண்காணிக்கலாம்** — Integrity checks உடன் ஒரே நம்பகமான தரவு மூலத்தில்.
 - **நிறுவனங்களை ஆய்வு செய்து தொடர்புகொள்ள வேண்டிய சரியான நபரை கண்டறியலாம்** — விண்ணப்பிப்பது உங்கள் பெயரை வரிசையில் சேர்க்கும்; ஆனால் சரியான ஆய்வே உரையாடலுக்கான வாய்ப்பை உருவாக்கும்.
 
-> **முக்கிய குறிப்பு:** இது எல்லா வேலைகளுக்கும் கண்மூடித்தனமாக விண்ணப்பிக்கும் ("spray-and-pray") கருவி அல்ல. career-ops ஒரு வடிகட்டியாக செயல்படுகிறது. நூற்றுக்கணக்கான வேலை வாய்ப்புகளில் இருந்து உங்கள் நேரத்திற்கு உண்மையாக மதிப்புள்ள சிலவற்றைத் தேர்ந்தெடுக்க உதவுவதே இதன் நோக்கம். 4.0/5-க்கும் குறைவாக மதிப்பெண் பெறும் வேலைகளுக்கு விண்ணப்பிக்க வேண்டாம் என்று இந்த அமைப்பு வலியுறுத்துகிறது. உங்கள் நேரமும், பணியமர்த்துநரின் நேரமும் மதிப்புமிக்கவை. எந்த விண்ணப்பத்தையும் சமர்ப்பிக்கும் முன் எப்போதும் சரிபார்க்கவும்.
+> **முக்கிய குறிப்பு:** இது எல்லா வேலைகளுக்கும் கண்மூடித்தனமாக விண்ணப்பிக்கும் ("spray-and-pray") கருவி அல்ல. Jobber ஒரு வடிகட்டியாக செயல்படுகிறது. நூற்றுக்கணக்கான வேலை வாய்ப்புகளில் இருந்து உங்கள் நேரத்திற்கு உண்மையாக மதிப்புள்ள சிலவற்றைத் தேர்ந்தெடுக்க உதவுவதே இதன் நோக்கம். 4.0/5-க்கும் குறைவாக மதிப்பெண் பெறும் வேலைகளுக்கு விண்ணப்பிக்க வேண்டாம் என்று இந்த அமைப்பு வலியுறுத்துகிறது. உங்கள் நேரமும், பணியமர்த்துநரின் நேரமும் மதிப்புமிக்கவை. எந்த விண்ணப்பத்தையும் சமர்ப்பிக்கும் முன் எப்போதும் சரிபார்க்கவும்.
 
-career-ops ஒரு **Agentic** அமைப்பு. நீங்கள் தேர்வு செய்யும் AI Coding CLI:
+Jobber ஒரு **Agentic** அமைப்பு. நீங்கள் தேர்வு செய்யும் AI Coding CLI:
 
 - Playwright-ஐ பயன்படுத்தி Career Pages-ஐ உலாவுகிறது.
 - முக்கியச் சொற்களை (Keywords) மட்டும் பொருத்திப் பார்ப்பதற்குப் பதிலாக, உங்கள் CV மற்றும் Job Description-ஐப் பகுத்தறிந்து பொருத்தத்தை மதிப்பிடுகிறது.
@@ -97,7 +99,7 @@ career-ops ஒரு **Agentic** அமைப்பு. நீங்கள் �
 
 > **கவனத்திற்கு:** ஆரம்பத்தில் கிடைக்கும் மதிப்பீடுகள் மிகச் சிறப்பாக இருக்காது. காரணம், இந்த அமைப்பு இன்னும் உங்களைப் பற்றி அறிந்திருக்காது. உங்கள் CV, தொழில் பயணம், முக்கிய சாதனைகள், விருப்பங்கள், திறன்கள், தவிர்க்க விரும்பும் விஷயங்கள் போன்ற தகவல்களை வழங்குங்கள். நீங்கள் அதிக தகவல்களை வழங்கும் அளவுக்கு, இந்த அமைப்பு உங்களை நன்றாகப் புரிந்துகொண்டு தொடர்ந்து சிறந்த பரிந்துரைகளை வழங்கும். இதை ஒரு புதிய Recruiter-ஐ அறிமுகப்படுத்துவதைப் போல நினைத்துக் கொள்ளுங்கள். முதல் சில நாட்கள் அவர் உங்களைப் பற்றி கற்றுக்கொள்வார்; அதன் பிறகு அவர் மிகவும் பயனுள்ளவராக மாறுவார்.
 
-740-க்கும் மேற்பட்ட வேலை வாய்ப்புகளை மதிப்பீடு செய்து, 100-க்கும் மேற்பட்ட தனிப்பயனாக்கப்பட்ட CV-களை உருவாக்கி, **Head of Applied AI** பதவியைப் பெற்ற ஒருவரால் இந்த அமைப்பு உருவாக்கப்பட்டது. [முழுமையான அனுபவக் கட்டுரையை இங்கே படிக்கலாம்](https://santifer.io/career-ops-system).
+740-க்கும் மேற்பட்ட வேலை வாய்ப்புகளை மதிப்பீடு செய்து, 100-க்கும் மேற்பட்ட தனிப்பயனாக்கப்பட்ட CV-களை உருவாக்கி, **Head of Applied AI** பதவியைப் பெற்ற ஒருவரால் இந்த அமைப்பு உருவாக்கப்பட்டது. [முழுமையான அனுபவக் கட்டுரையை இங்கே படிக்கலாம்](https://santifer.io/jobber-system).
 
 ## Features
 
@@ -108,21 +110,21 @@ career-ops ஒரு **Agentic** அமைப்பு. நீங்கள் �
 | **Interview Story Bank** | ஒவ்வொரு மதிப்பீட்டிலும் STAR + Reflection கதைகளை சேமித்து, எந்த நடத்தை சார்ந்த (Behavioral) நேர்முகக் கேள்விக்கும் பயன்படுத்தக்கூடிய 5–10 முக்கியக் கதைகளை உருவாக்குகிறது. |
 | **Negotiation Scripts** | சம்பள பேச்சுவார்த்தை, புவியியல் அடிப்படையிலான சம்பளக் குறைப்பை எதிர்கொள்ளும் முறைகள், மற்றும் போட்டி வேலைவாய்ப்புகளை பயன்படுத்தி பேச்சுவார்த்தை நடத்துவதற்கான வழிகாட்டிகள். |
 | **ATS PDF Generation** | Space Grotesk மற்றும் DM Sans வடிவமைப்பைப் பயன்படுத்தி ATS-க்கு ஏற்ற Keyword-களுடன் CV-களை உருவாக்குகிறது. |
-| **Cover Letter Generator** | நிறுவன ஆய்வின் அடிப்படையில் Cover Letter-களை உருவாக்குகிறது. Keyword பொருத்தம், நான்கு வழிகாட்டும் கேள்விகள் (ஏன் / சிக்கல் / அணுகுமுறை / நடை), Chat-இல் ஒப்புதல், மற்றும் CV போலவே HTML + Playwright மூலம் A4 PDF உருவாக்கும் வசதி. ஒவ்வொரு மதிப்பீட்டிலும் வரைவு உருவாகும்; தேவையான போது `/career-ops cover` மூலம் முடித்து PDF உருவாக்கலாம். |
-| **Application Email Drafts** | மதிப்பீட்டு அறிக்கை அல்லது Job Description-இலிருந்து Recruiter, Referral அல்லது Cold Application-க்கான Email வரைவை உருவாக்குகிறது. இதில் Subject, இணைப்புகளின் பட்டியல், பொருத்தமான அம்சங்கள் மற்றும் Profile அடிப்படையிலான தொடர்பு விவரங்கள் இடம்பெறும். இது வரைவு மட்டுமே; career-ops Email-ஐ அனுப்பவோ, விண்ணப்பிக்கவோ, எந்த பொத்தானையும் அழுத்தவோ செய்யாது. |
+| **Cover Letter Generator** | நிறுவன ஆய்வின் அடிப்படையில் Cover Letter-களை உருவாக்குகிறது. Keyword பொருத்தம், நான்கு வழிகாட்டும் கேள்விகள் (ஏன் / சிக்கல் / அணுகுமுறை / நடை), Chat-இல் ஒப்புதல், மற்றும் CV போலவே HTML + Playwright மூலம் A4 PDF உருவாக்கும் வசதி. ஒவ்வொரு மதிப்பீட்டிலும் வரைவு உருவாகும்; தேவையான போது `/jobber cover` மூலம் முடித்து PDF உருவாக்கலாம். |
+| **Application Email Drafts** | மதிப்பீட்டு அறிக்கை அல்லது Job Description-இலிருந்து Recruiter, Referral அல்லது Cold Application-க்கான Email வரைவை உருவாக்குகிறது. இதில் Subject, இணைப்புகளின் பட்டியல், பொருத்தமான அம்சங்கள் மற்றும் Profile அடிப்படையிலான தொடர்பு விவரங்கள் இடம்பெறும். இது வரைவு மட்டுமே; Jobber Email-ஐ அனுப்பவோ, விண்ணப்பிக்கவோ, எந்த பொத்தானையும் அழுத்தவோ செய்யாது. |
 | **Portal Scanner** | Anthropic, OpenAI, ElevenLabs, Retool, n8n உள்ளிட்ட 45-க்கும் மேற்பட்ட நிறுவனங்களும், Ashby, Greenhouse, Lever, Wellfound போன்ற தளங்களுக்கான முன்கூட்டியே அமைக்கப்பட்ட தேடல்களும். |
 | **Batch Processing** | Headless CLI Workers (`claude -p` / `opencode run`) மூலம் பல வேலை வாய்ப்புகளை இணையாக மதிப்பிடுகிறது. |
 | **Dashboard TUI** | Terminal-இல் உங்கள் Pipeline-ஐ உலாவ, வடிகட்ட, மற்றும் வரிசைப்படுத்த உதவும் Dashboard. |
-| **Human-in-the-Loop** | AI மதிப்பீடு செய்து பரிந்துரைக்கிறது; ஆனால் இறுதி முடிவும் செயல்பாடும் உங்களுடையது. career-ops தானாக எந்த விண்ணப்பத்தையும் சமர்ப்பிக்காது. |
+| **Human-in-the-Loop** | AI மதிப்பீடு செய்து பரிந்துரைக்கிறது; ஆனால் இறுதி முடிவும் செயல்பாடும் உங்களுடையது. Jobber தானாக எந்த விண்ணப்பத்தையும் சமர்ப்பிக்காது. |
 | **Pipeline Integrity** | தானியங்கி Merge, Duplicate நீக்கம், நிலை (Status) ஒருமைப்படுத்தல், மற்றும் Health Checks. |
-| **Beyond the CV** | `deep` Mode நிறுவனத்தின் AI திட்டம், சமீபத்திய மாற்றங்கள், Engineering கலாச்சாரம் மற்றும் உங்கள் Profile-ஐ எவ்வாறு வெளிப்படுத்த வேண்டும் என்பதைக் கண்டறிய உதவுகிறது. `contacto` Mode சரியான Hiring Manager, Recruiter அல்லது Team உறுப்பினரை கண்டறிந்து, ஒவ்வொரு தொடர்பு வகைக்கும் ஏற்ற 300 எழுத்துகளுக்குள் LinkedIn செய்தியை உருவாக்குகிறது. `email` Mode மதிப்பீட்டு அறிக்கை அல்லது Job Description-இலிருந்து தொழில்முறை Email வரைவை உருவாக்குகிறது. career-ops எந்த Email-ஐயும் அனுப்பவோ, விண்ணப்பிக்கவோ, எந்த நடவடிக்கையையும் தானாக மேற்கொள்ளவோ செய்யாது. விண்ணப்பம் உங்களை வரிசையில் சேர்க்கும்; ஆனால் ஆய்வுதான் உரையாடலைத் தொடங்கும். |
+| **Beyond the CV** | `deep` Mode நிறுவனத்தின் AI திட்டம், சமீபத்திய மாற்றங்கள், Engineering கலாச்சாரம் மற்றும் உங்கள் Profile-ஐ எவ்வாறு வெளிப்படுத்த வேண்டும் என்பதைக் கண்டறிய உதவுகிறது. `contacto` Mode சரியான Hiring Manager, Recruiter அல்லது Team உறுப்பினரை கண்டறிந்து, ஒவ்வொரு தொடர்பு வகைக்கும் ஏற்ற 300 எழுத்துகளுக்குள் LinkedIn செய்தியை உருவாக்குகிறது. `email` Mode மதிப்பீட்டு அறிக்கை அல்லது Job Description-இலிருந்து தொழில்முறை Email வரைவை உருவாக்குகிறது. Jobber எந்த Email-ஐயும் அனுப்பவோ, விண்ணப்பிக்கவோ, எந்த நடவடிக்கையையும் தானாக மேற்கொள்ளவோ செய்யாது. விண்ணப்பம் உங்களை வரிசையில் சேர்க்கும்; ஆனால் ஆய்வுதான் உரையாடலைத் தொடங்கும். |
 
 ## Quick Start
 
 **வேகமாக தொடங்குவதற்கான வழி — ஒரு கட்டளை போதும்:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` என்பது [Node.js](https://nodejs.org)-உடன் கிடைக்கிறது. இது எந்த Global Installation-மும் இல்லாமல் Installer-ஐ ஒருமுறை இயக்கும்.
@@ -131,21 +133,21 @@ npx @santifer/career-ops init
 >
 > (ஏற்கனவே Claude Code / Gemini / Codex CLI பயன்படுத்துகிறீர்களா? அப்படியானால் தேவையானவை ஏற்கனவே உங்களிடம் உள்ளன.)
 
-இந்தக் கட்டளை, சமீபத்திய Release-ஐ `./career-ops` கோப்பகத்தில் Clone செய்து, தேவையான Dependencies-ஐ நிறுவும். அதன் பிறகு:
+இந்தக் கட்டளை, சமீபத்திய Release-ஐ `./jobber` கோப்பகத்தில் Clone செய்து, தேவையான Dependencies-ஐ நிறுவும். அதன் பிறகு:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # அல்லது codex / qwen / opencode / agy / grok — உங்கள் AI CLI-ஐ இங்கே திறக்கவும்
 ```
 
-**முதல் முறையாக இயக்கும்போது, career-ops உங்களுடன் உரையாடி உங்கள் CV, Profile மற்றும் இலக்கு பணியிடங்களை (Target Roles) அமைக்க உதவும். கைமுறையாக எந்த கோப்பையும் திருத்த வேண்டியதில்லை.**
+**முதல் முறையாக இயக்கும்போது, Jobber உங்களுடன் உரையாடி உங்கள் CV, Profile மற்றும் இலக்கு பணியிடங்களை (Target Roles) அமைக்க உதவும். கைமுறையாக எந்த கோப்பையும் திருத்த வேண்டியதில்லை.**
 
 <details>
 <summary><b>கைமுறையாக அமைக்க விரும்புகிறீர்களா? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # PDF உருவாக்குவதற்கு மட்டும் தேவை
 
 # 2. அமைப்பை சரிபார்க்கவும்
@@ -169,12 +171,12 @@ claude   # அல்லது codex / opencode / qwen / agy / grok
 
 # 6. பயன்படுத்தத் தொடங்குங்கள்
 # ஒரு Job URL அல்லது Job Description-ஐ ஒட்டினால் Auto-Pipeline தானாகத் தொடங்கும்.
-# உங்கள் CLI Slash Commands-ஐ ஆதரித்தால் /career-ops (அல்லது அதற்கான Alias)-ஐ பயன்படுத்தலாம்.
+# உங்கள் CLI Slash Commands-ஐ ஆதரித்தால் /jobber (அல்லது அதற்கான Alias)-ஐ பயன்படுத்தலாம்.
 # Codex-இல் அதே Mode-ஐ இயல்பான மொழியில் கேட்கலாம். உதாரணமாக:
-# "Run the career-ops scan mode"
-# "Run the career-ops pipeline mode for data/pipeline.md"
-# "Run the career-ops pdf mode for the latest evaluated role"
-# "Run the career-ops tracker mode and summarize the current statuses"
+# "Run the Jobber scan mode"
+# "Run the Jobber pipeline mode for data/pipeline.md"
+# "Run the Jobber pdf mode for the latest evaluated role"
+# "Run the Jobber tracker mode and summarize the current statuses"
 ```
 
 </details>
@@ -185,75 +187,75 @@ claude   # அல்லது codex / opencode / qwen / agy / grok
 
 ## Antigravity CLI Integration
 
-career-ops, Claude Code மற்றும் OpenCode போலவே, Antigravity CLI-யையும் இயல்பாக ஆதரிக்கிறது. அனைத்து Slash Commands-களும் ஒரே Shared Skill Entry Point வழியாக இயங்குகின்றன; அதே `modes/*.md` மதிப்பீட்டு செயல்முறையைப் பயன்படுத்துகின்றன.
+Jobber, Claude Code மற்றும் OpenCode போலவே, Antigravity CLI-யையும் இயல்பாக ஆதரிக்கிறது. அனைத்து Slash Commands-களும் ஒரே Shared Skill Entry Point வழியாக இயங்குகின்றன; அதே `modes/*.md` மதிப்பீட்டு செயல்முறையைப் பயன்படுத்துகின்றன.
 
 Google, Gemini CLI-க்கான பொதுப் பயன்பாட்டு அணுகலை Antigravity CLI-க்கு மாற்றியுள்ளது. இதனால், `GEMINI.md` தற்போது ஒரு Compatibility Guard ஆக மட்டுமே செயல்படுகிறது. Antigravity, `AGENTS.md` மற்றும் `GEMINI.md` ஆகிய இரண்டையும் படிக்கும் போது, ஒரே Project வழிமுறைகள் இரண்டு முறை சேர்க்கப்படாமல் இருப்பதை இது உறுதி செய்கிறது.
 
 ### Native Antigravity CLI
 
 ```bash
-# 1. Run in the career-ops directory
-cd career-ops
+# 1. Run in the Jobber directory
+cd Jobber
 agy
 
-# 2. Use the unified /career-ops command with subcommands:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Use the unified /jobber command with subcommands:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
-இந்த Skill, `.agents/skills/career-ops/SKILL.md`-ல் Open Standard-ஐப் பயன்படுத்தி வரையறுக்கப்பட்டுள்ளது. மேலும், ஆதரிக்கப்படும் ஒவ்வொரு CLI-க்கும் (எ.கா. `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`) Symlink அல்லது Reference செய்யப்பட்டிருக்கிறது.
+இந்த Skill, `.agents/skills/jobber/SKILL.md`-ல் Open Standard-ஐப் பயன்படுத்தி வரையறுக்கப்பட்டுள்ளது. மேலும், ஆதரிக்கப்படும் ஒவ்வொரு CLI-க்கும் (எ.கா. `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`) Symlink அல்லது Reference செய்யப்பட்டிருக்கிறது.
 
 ## Codex Integration
 
-career-ops, அதே Shared Router மூலம் Codex-ஐ ஆதரிக்கிறது. ஆனால், Slash Commands-ஐ தானாகப் பதிவு செய்யும் CLI-களுடன் ஒப்பிடும்போது, இதன் Invocation முறை வேறுபடும். முழுமையான வழிகாட்டிக்கு `docs/CODEX.md`-ஐப் பார்க்கவும்.
+Jobber, அதே Shared Router மூலம் Codex-ஐ ஆதரிக்கிறது. ஆனால், Slash Commands-ஐ தானாகப் பதிவு செய்யும் CLI-களுடன் ஒப்பிடும்போது, இதன் Invocation முறை வேறுபடும். முழுமையான வழிகாட்டிக்கு `docs/CODEX.md`-ஐப் பார்க்கவும்.
 
 ### Interactive Codex
 
 ```bash
-cd career-ops
+cd Jobber
 codex
 ```
 
-Codex-இல் Slash Commands எப்போதும் கிடைக்கும் என்ற உத்தரவாதம் இல்லை. `/career-ops` கிடைக்காவிட்டால், தேவையான Mode-ஐ இயல்பான மொழியில் Codex-இடம் கேட்கலாம்.
+Codex-இல் Slash Commands எப்போதும் கிடைக்கும் என்ற உத்தரவாதம் இல்லை. `/jobber` கிடைக்காவிட்டால், தேவையான Mode-ஐ இயல்பான மொழியில் Codex-இடம் கேட்கலாம்.
 
 ```text
-Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
-Run the career-ops scan mode and summarize new matches.
-Run the career-ops pipeline mode for data/pipeline.md.
-Run the career-ops pdf mode for the latest evaluated role.
-Run the career-ops tracker mode and summarize the current statuses.
+Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123
+Run the Jobber scan mode and summarize new matches.
+Run the Jobber pipeline mode for data/pipeline.md.
+Run the Jobber pdf mode for the latest evaluated role.
+Run the Jobber tracker mode and summarize the current statuses.
 ```
 
 ### One-shot Codex (`codex exec`)
 
 ```bash
-codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
-codex exec "Run career-ops scan mode in this repo and summarize new matches."
-codex exec "Run career-ops pipeline mode for data/pipeline.md."
-codex exec "Run career-ops pdf mode for the latest evaluated role."
-codex exec "Run career-ops tracker mode and summarize the current statuses."
+codex exec "Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123"
+codex exec "Run Jobber scan mode in this repo and summarize new matches."
+codex exec "Run Jobber pipeline mode for data/pipeline.md."
+codex exec "Run Jobber pdf mode for the latest evaluated role."
+codex exec "Run Jobber tracker mode and summarize the current statuses."
 ```
 
 ## Grok Build CLI Integration
 
-career-ops, Claude Code மற்றும் OpenCode போலவே, Grok Build CLI-யையும் இயல்பாக ஆதரிக்கிறது. `AGENTS.md` Project விதிமுறைகளாக தானாகவே ஏற்றப்படுகிறது. மேலும், அனைத்து Slash Commands-களும் ஒரே Shared Skill Entry Point வழியாக செயல்படுகின்றன.
+Jobber, Claude Code மற்றும் OpenCode போலவே, Grok Build CLI-யையும் இயல்பாக ஆதரிக்கிறது. `AGENTS.md` Project விதிமுறைகளாக தானாகவே ஏற்றப்படுகிறது. மேலும், அனைத்து Slash Commands-களும் ஒரே Shared Skill Entry Point வழியாக செயல்படுகின்றன.
 
 ### Native Grok Build CLI
 
 ```bash
-# 1. Run in the career-ops directory
-cd career-ops
+# 1. Run in the Jobber directory
+cd Jobber
 grok
 
-# 2. Use the unified /career-ops command with subcommands:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Use the unified /jobber command with subcommands:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
 Headless Batch Workers-க்கு `grok -p "prompt"`-ஐ பயன்படுத்தலாம். Tool Execution-களை தானாக அனுமதிக்க `--yolo` கொடியை (flag) சேர்க்கலாம்.
@@ -280,26 +282,26 @@ npm run gemini:eval -- "JD text here"
 
 ## Usage
 
-career-ops, அனைத்து CLI-களுக்கும் பொதுவான Command Router-ஐ பயன்படுத்துகிறது. Slash Commands-ஐ ஆதரிக்கும் CLI-களில் இது பின்வருமாறு செயல்படும்:
+Jobber, அனைத்து CLI-களுக்கும் பொதுவான Command Router-ஐ பயன்படுத்துகிறது. Slash Commands-ஐ ஆதரிக்கும் CLI-களில் இது பின்வருமாறு செயல்படும்:
 
 ```text
-/career-ops                → கிடைக்கக்கூடிய அனைத்து கட்டளைகளையும் காண்பி
-/career-ops {paste a JD}   → முழு Auto-Pipeline (மதிப்பீடு + PDF + Tracker)
-/career-ops scan           → புதிய வேலை வாய்ப்புகளை Scan செய்
-/career-ops pdf            → ATS-optimized CV உருவாக்கு
-/career-ops cover          → Cover Letter உருவாக்கு (JD அல்லது /career-ops cover {slug})
-/career-ops email          → தொழில்முறை விண்ணப்ப Email வரைவு (வரைவு மட்டும்; அனுப்பாது)
-/career-ops batch          → பல வேலை வாய்ப்புகளை ஒரே நேரத்தில் மதிப்பிடு
-/career-ops tracker        → விண்ணப்பங்களின் தற்போதைய நிலையை காட்டு
-/career-ops apply          → AI மூலம் விண்ணப்பப் படிவங்களை நிரப்பு
-/career-ops pipeline       → நிலுவையில் உள்ள URL-களை செயலாக்கு
-/career-ops contacto       → Hiring Manager / Recruiter / Team உறுப்பினரைக் கண்டறிந்து, LinkedIn செய்தி வரைவு உருவாக்கு
-/career-ops deep           → நிறுவனம் குறித்த 6 அம்சங்களைக் கொண்ட ஆய்வை உருவாக்கு
-/career-ops training       → ஒரு Course அல்லது Certification-ஐ மதிப்பிடு
-/career-ops project        → ஒரு Portfolio Project-ஐ மதிப்பிடு
+/jobber                → கிடைக்கக்கூடிய அனைத்து கட்டளைகளையும் காண்பி
+/jobber {paste a JD}   → முழு Auto-Pipeline (மதிப்பீடு + PDF + Tracker)
+/jobber scan           → புதிய வேலை வாய்ப்புகளை Scan செய்
+/jobber pdf            → ATS-optimized CV உருவாக்கு
+/jobber cover          → Cover Letter உருவாக்கு (JD அல்லது /jobber cover {slug})
+/jobber email          → தொழில்முறை விண்ணப்ப Email வரைவு (வரைவு மட்டும்; அனுப்பாது)
+/jobber batch          → பல வேலை வாய்ப்புகளை ஒரே நேரத்தில் மதிப்பிடு
+/jobber tracker        → விண்ணப்பங்களின் தற்போதைய நிலையை காட்டு
+/jobber apply          → AI மூலம் விண்ணப்பப் படிவங்களை நிரப்பு
+/jobber pipeline       → நிலுவையில் உள்ள URL-களை செயலாக்கு
+/jobber contacto       → Hiring Manager / Recruiter / Team உறுப்பினரைக் கண்டறிந்து, LinkedIn செய்தி வரைவு உருவாக்கு
+/jobber deep           → நிறுவனம் குறித்த 6 அம்சங்களைக் கொண்ட ஆய்வை உருவாக்கு
+/jobber training       → ஒரு Course அல்லது Certification-ஐ மதிப்பிடு
+/jobber project        → ஒரு Portfolio Project-ஐ மதிப்பிடு
 ```
 
-அல்லது, ஒரு Job URL அல்லது Job Description-ஐ நேரடியாக ஒட்டினாலே போதும். career-ops அதை தானாகக் கண்டறிந்து முழு Pipeline-ஐ இயக்கும்.
+அல்லது, ஒரு Job URL அல்லது Job Description-ஐ நேரடியாக ஒட்டினாலே போதும். Jobber அதை தானாகக் கண்டறிந்து முழு Pipeline-ஐ இயக்கும்.
 
 Codex-இல் Slash Commands எப்போதும் கிடைக்கும் என்ற உத்தரவாதம் இல்லை. அப்படியானால், அதே Mode-ன் பெயரை இயல்பான மொழியில் Prompt-ஆகக் கொடுக்கலாம் அல்லது `codex exec` மூலம் இயக்கலாம்.
 
@@ -380,7 +382,7 @@ npm run build:dashboard   # விருப்பமானது: Standalone Bin
 ## Project Structure
 
 ```text
-career-ops/
+jobber/
 ├── AGENTS.md                    # அனைத்து CLI-களுக்கும் பொதுவான Agent வழிமுறைகள்
 ├── CLAUDE.md                    # Claude Code Wrapper (AGENTS.md-ஐ பயன்படுத்துகிறது)
 ├── CODEX.md                     # Codex Wrapper (AGENTS.md-ஐ பயன்படுத்துகிறது)
@@ -435,11 +437,11 @@ career-ops/
 
 நான் **Santiago Fernández de Valderrama Aparicio (santifer)** — தற்போது **Head of Applied AI** ஆக பணியாற்றுகிறேன். இதற்கு முன்பு ஒரு நிறுவனத்தைத் தொடங்கி, பின்னர் அதை வெற்றிகரமாக விற்றேன்.
 
-career-ops-ஐ என் சொந்த வேலை தேடலை எளிதாக்க உருவாக்கினேன். அது வெற்றிகரமாக செயல்பட்டு, நான் தற்போது இருக்கும் பணியைப் பெற உதவியது.
+jobber-ஐ என் சொந்த வேலை தேடலை எளிதாக்க உருவாக்கினேன். அது வெற்றிகரமாக செயல்பட்டு, நான் தற்போது இருக்கும் பணியைப் பெற உதவியது.
 
 இந்த Repository-ஐ வாரத்திற்கு சுமார் **4 மணி நேரம்** மட்டுமே செலவழித்து எப்படி பராமரிக்கிறேன் என்பதை அறிய விரும்புகிறீர்களா?
 
-[Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet) என்ற கட்டுரையைப் படிக்கவும்.
+[Agentic maintenance: how Jobber is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet) என்ற கட்டுரையைப் படிக்கவும்.
 
 எனது Portfolio மற்றும் பிற Open Source திட்டங்களைப் பார்க்க:
 
@@ -448,12 +450,12 @@ career-ops-ஐ என் சொந்த வேலை தேடலை எளி�
 Wikidata:
 
 - Santiago Fernández de Valderrama Aparicio
-- career-ops
+- Jobber
 
 
 ## Disclaimer
 
-**career-ops என்பது உங்கள் கணினியில் இயங்கும் Local Open Source கருவி மட்டுமே; இது Hosted Service அல்ல.** இந்த மென்பொருளைப் பயன்படுத்துவதன் மூலம், நீங்கள் பின்வருவனவற்றை ஏற்றுக்கொள்கிறீர்கள்:
+**Jobber என்பது உங்கள் கணினியில் இயங்கும் Local Open Source கருவி மட்டுமே; இது Hosted Service அல்ல.** இந்த மென்பொருளைப் பயன்படுத்துவதன் மூலம், நீங்கள் பின்வருவனவற்றை ஏற்றுக்கொள்கிறீர்கள்:
 
 1. **உங்கள் தரவின் முழு கட்டுப்பாடும் உங்களிடமே இருக்கும்.** உங்கள் CV, தொடர்பு விவரங்கள் மற்றும் பிற தனிப்பட்ட தகவல்கள் உங்கள் கணினியிலேயே இருக்கும். அவை நீங்கள் தேர்வு செய்யும் AI வழங்குநருக்கு (Anthropic, OpenAI போன்றவை) மட்டுமே நேரடியாக அனுப்பப்படும். நாங்கள் உங்கள் தரவை சேகரிக்கவோ, சேமிக்கவோ அல்லது அணுகவோ மாட்டோம்.
 
@@ -470,21 +472,21 @@ Wikidata:
 
 ## Contributors
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
+<a href="https://github.com/santifer/jobber/graphs/contributors">
   <img
-  src="https://contrib.rocks/image?repo=santifer/career-ops"
-  alt="career-ops contributors"
+  src="https://contrib.rocks/image?repo=santifer/jobber"
+  alt="Jobber contributors"
 />
 </a>
 
-career-ops-ஐ பயன்படுத்தி வேலை கிடைத்ததா? [உங்கள் வெற்றிக் கதையைப் பகிருங்கள்!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+jobber-ஐ பயன்படுத்தி வேலை கிடைத்ததா? [உங்கள் வெற்றிக் கதையைப் பகிருங்கள்!](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 
 ## License & Trademark
 
 இந்த நிரலின் Code, **MIT License**-ன் கீழ் வழங்கப்படுகிறது.
 
-**career-ops** என்ற பெயரும் அதன் Brand-மும் [Trademark Policy](TRADEMARK.md)-க்கு உட்பட்டவை. சமூகப் பயன்பாட்டிற்கு அனுமதி வழங்கப்பட்டாலும், வணிகப் பொருட்களின் பெயரிடல் மற்றும் அதிகாரப்பூர்வ ஒப்புதலுக்கான உரிமைகள் பாதுகாக்கப்பட்டுள்ளன.
+**Jobber** என்ற பெயரும் அதன் Brand-மும் [Trademark Policy](TRADEMARK.md)-க்கு உட்பட்டவை. சமூகப் பயன்பாட்டிற்கு அனுமதி வழங்கப்பட்டாலும், வணிகப் பொருட்களின் பெயரிடல் மற்றும் அதிகாரப்பூர்வ ஒப்புதலுக்கான உரிமைகள் பாதுகாக்கப்பட்டுள்ளன.
 
 
 ## Let's Connect

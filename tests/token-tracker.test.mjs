@@ -1,6 +1,6 @@
 // tests/token-tracker.test.mjs — token tracking & cost estimation unit tests
 import { pass, fail } from './helpers.mjs';
-import { estimateCost, TokenAccumulator, formatBreakdown } from '../utils/token-tracker.mjs';
+import { estimateCost, TokenAccumulator, formatBreakdown } from '../lib/token-tracker.mjs';
 import { parseTokenVal } from '../batch/aggregate-tokens.mjs';
 
 console.log('\ntoken-tracker.mjs & aggregate-tokens.mjs unit tests');
@@ -31,14 +31,14 @@ try {
   }
 
   // 3. OpenRouter :free / free-rotation exemption
-  const origModelEnv = process.env.CAREER_OPS_MODEL;
-  delete process.env.CAREER_OPS_MODEL;
+  const origModelEnv = process.env.JOBBER_MODEL;
+  delete process.env.JOBBER_MODEL;
   const freeCost = estimateCost('meta-llama/llama-3.1-70b-instruct:free', usage, 'openrouter');
   if (origModelEnv !== undefined) {
-    process.env.CAREER_OPS_MODEL = origModelEnv;
+    process.env.JOBBER_MODEL = origModelEnv;
   }
   if (freeCost === 0) {
-    pass('OpenRouter :free / free-rotation exemption returns 0 cost when no CAREER_OPS_MODEL is pinned');
+    pass('OpenRouter :free / free-rotation exemption returns 0 cost when no JOBBER_MODEL is pinned');
   } else {
     fail(`OpenRouter free exemption failed: expected 0, got ${freeCost}`);
   }

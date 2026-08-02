@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 82ff87c23f2f1eadc602c1566586c64bc96589d1 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Multi-Agent Система Пошуку Роботи" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Multi-Agent Система Пошуку Роботи" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>Згадані у</sub></p>
@@ -33,7 +35,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Демо career-ops" width="800">
+  <img src="docs/demo.gif" alt="Демо Jobber" width="800">
 </p>
 
 <p align="center"><strong>740+ вакансій оцінено · 100+ персоналізованих резюме · 1 роботу мрії отримано</strong></p>
@@ -41,7 +43,7 @@
 <p align="center">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Приєднатися_до_спільноти-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   &nbsp;
-  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
+  <a href="https://www.npmjs.com/package/@santifer/jobber"><img src="https://img.shields.io/npm/dt/@santifer/jobber?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
 </p>
 
 <p align="center">
@@ -67,7 +69,7 @@
 
 ## Що це таке
 
-career-ops перетворює будь-який AI-кодинг CLI на повноцінний командний центр для пошуку роботи. Замість ручного відстеження заявок у таблиці, ви отримуєте AI-pipeline, який:
+Jobber перетворює будь-який AI-кодинг CLI на повноцінний командний центр для пошуку роботи. Замість ручного відстеження заявок у таблиці, ви отримуєте AI-pipeline, який:
 
 - **Оцінює вакансії** за структурованою оцінкою A-F (п'ять параметрів, що формують оцінку 1.0–5.0)
 - **Генерує персоналізовані PDF** — ATS-оптимізовані резюме під кожен опис вакансії
@@ -75,13 +77,13 @@ career-ops перетворює будь-який AI-кодинг CLI на по�
 - **Пакетна обробка** — оцінка 10+ вакансій паралельно суб-агентами
 - **Відстежує все** в єдиному джерелі даних з перевіркою цілісності
 
-> **Важливо: це НЕ інструмент для масової розсилки.** career-ops — це фільтр, який допомагає знайти кілька вакансій, вартих вашого часу, серед сотень. Система наполегливо рекомендує не подаватися на вакансії з балом нижче 4.0/5. Ваш час цінний, як і час рекрутера. Завжди перевіряйте все перед подачею заявки.
+> **Важливо: це НЕ інструмент для масової розсилки.** Jobber — це фільтр, який допомагає знайти кілька вакансій, вартих вашого часу, серед сотень. Система наполегливо рекомендує не подаватися на вакансії з балом нижче 4.0/5. Ваш час цінний, як і час рекрутера. Завжди перевіряйте все перед подачею заявки.
 
-career-ops працює агентно: Claude Code переходить на кар'єрні сторінки за допомогою Playwright, оцінює відповідність, аналізуючи ваше резюме відносно опису вакансії (не за ключовими словами), та адаптує ваше резюме під кожну вакансію.
+Jobber працює агентно: Claude Code переходить на кар'єрні сторінки за допомогою Playwright, оцінює відповідність, аналізуючи ваше резюме відносно опису вакансії (не за ключовими словами), та адаптує ваше резюме під кожну вакансію.
 
 > **Зверніть увагу: перші оцінки будуть не ідеальними.** Система ще не знає вас. Дайте їй контекст — ваше резюме, вашу кар'єрну історію, ваші досягнення, уподобання, сильні сторони, що хочете уникати. Чим більше ви її "навчаєте", тим краще вона стає. Уявіть, що ви вводите в курс справ нового рекрутера: перший тиждень він вивчає вас, а потім стає незамінним.
 
-Створено людиною, яка використовувала систему для оцінки 740+ вакансій, генерації 100+ персоналізованих резюме та отримання посади Head of Applied AI. [Читати повний кейс](https://santifer.io/career-ops-system).
+Створено людиною, яка використовувала систему для оцінки 740+ вакансій, генерації 100+ персоналізованих резюме та отримання посади Head of Applied AI. [Читати повний кейс](https://santifer.io/jobber-system).
 
 ## Що система вміє
 
@@ -103,7 +105,7 @@ career-ops працює агентно: Claude Code переходить на к
 **Найшвидший спосіб — одна команда:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` постачається разом із [Node.js](https://nodejs.org) — він запускає
@@ -111,21 +113,21 @@ npx @santifer/career-ops init
 > Спочатку встановіть його.
 > (Уже користуєтеся Claude Code / Gemini / Codex CLI? Тоді він у вас уже є.)
 
-Це клонує останній реліз у `./career-ops` та встановлює залежності. Потім:
+Це клонує останній реліз у `./jobber` та встановлює залежності. Потім:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # or gemini / codex / qwen / opencode — open your AI CLI here
 ```
 
-**Під час першого запуску career-ops проведе вас через налаштування — ваше резюме, профіль і цільові ролі — просто у форматі діалогу. Нічого не треба редагувати вручну.**
+**Під час першого запуску Jobber проведе вас через налаштування — ваше резюме, профіль і цільові ролі — просто у форматі діалогу. Нічого не треба редагувати вручну.**
 
 <details>
 <summary><b>Бажаєте налаштувати вручну? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # only needed for PDF generation
 claude
 ```
@@ -138,24 +140,24 @@ claude
 
 ## Використання
 
-career-ops — це одна слеш-команда з кількома режимами:
+Jobber — це одна слеш-команда з кількома режимами:
 
 ```text
-/career-ops                → Показати всі доступні команди
-/career-ops {вставити JD}  → Повний авто-конвеєр (оцінка + PDF + трекер)
-/career-ops scan           → Сканувати портали на нові вакансії
-/career-ops pdf            → Згенерувати ATS-оптимізоване резюме
-/career-ops batch          → Пакетна оцінка кількох вакансій
-/career-ops tracker        → Переглянути статус заявок
-/career-ops apply          → Заповнити форми заявок з AI
-/career-ops pipeline       → Обробити очікуючі URL
-/career-ops contacto       → Повідомлення для LinkedIn outreach
-/career-ops deep           → Глибоке дослідження компанії
-/career-ops training       → Оцінити курс/сертифікацію
-/career-ops project        → Оцінити портфоліо-проєкт
+/jobber                → Показати всі доступні команди
+/jobber {вставити JD}  → Повний авто-конвеєр (оцінка + PDF + трекер)
+/jobber scan           → Сканувати портали на нові вакансії
+/jobber pdf            → Згенерувати ATS-оптимізоване резюме
+/jobber batch          → Пакетна оцінка кількох вакансій
+/jobber tracker        → Переглянути статус заявок
+/jobber apply          → Заповнити форми заявок з AI
+/jobber pipeline       → Обробити очікуючі URL
+/jobber contacto       → Повідомлення для LinkedIn outreach
+/jobber deep           → Глибоке дослідження компанії
+/jobber training       → Оцінити курс/сертифікацію
+/jobber project        → Оцінити портфоліо-проєкт
 ```
 
-Або просто вставте URL вакансії чи її опис — career-ops автоматично визначить це та запустить повний конвеєр.
+Або просто вставте URL вакансії чи її опис — Jobber автоматично визначить це та запустить повний конвеєр.
 
 ## Як це працює
 
@@ -208,7 +210,7 @@ npm run build:dashboard   # optional: build the standalone binary
 ## Структура проєкту
 
 ```text
-career-ops/
+jobber/
 ├── CLAUDE.md                    # Інструкції для агента
 ├── cv.md                        # Ваше резюме (створіть цей файл)
 ├── article-digest.md            # Ваші досягнення (необов'язково)
@@ -257,25 +259,25 @@ career-ops/
 
 ## Про автора
 
-Я Сантьяго — Head of Applied AI, колишній засновник (побудував і продав бізнес, який досі працює під моїм ім'ям). Я створив career-ops для управління власним пошуком роботи. Це спрацювало: я використав його, щоб отримати свою поточну посаду.
+Я Сантьяго — Head of Applied AI, колишній засновник (побудував і продав бізнес, який досі працює під моїм ім'ям). Я створив Jobber для управління власним пошуком роботи. Це спрацювало: я використав його, щоб отримати свою поточну посаду.
 
 Моє портфоліо та інші open source проєкти → [santifer.io](https://santifer.io)
 
-☕ [Пригостіть мене кавою](https://buymeacoffee.com/santifer), якщо career-ops допоміг у вашому пошуку роботи.
+☕ [Пригостіть мене кавою](https://buymeacoffee.com/santifer), якщо Jobber допоміг у вашому пошуку роботи.
 
 ## Історія зірок
 
-<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
+<a href="https://www.star-history.com/?repos=santifer%2FJobber&type=timeline&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
-   <img alt="Графік історії зірок" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
+   <img alt="Графік історії зірок" src="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
  </picture>
 </a>
 
 ## Застереження
 
-**career-ops — це локальний інструмент з відкритим кодом, а НЕ хмарний сервіс.** Використовуючи це програмне забезпечення, ви підтверджуєте:
+**Jobber — це локальний інструмент з відкритим кодом, а НЕ хмарний сервіс.** Використовуючи це програмне забезпечення, ви підтверджуєте:
 
 1. **Ви контролюєте свої дані.** Ваше резюме, контактна інформація та персональні дані залишаються на вашому комп'ютері і надсилаються безпосередньо обраному вами AI-провайдеру (Anthropic, OpenAI тощо). Ми не збираємо, не зберігаємо та не маємо доступу до жодних ваших даних.
 2. **Ви контролюєте AI.** Промпти за замовчуванням інструктують AI не подавати заявки автоматично, але AI-моделі можуть поводитися непередбачувано. Якщо ви змінюєте промпти або використовуєте інші моделі, ви робите це на власний ризик. **Завжди перевіряйте AI-згенерований контент на точність перед подачею.**
@@ -286,11 +288,11 @@ career-ops/
 
 ## Контриб'ютори
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" alt="Контриб'ютори santifer/career-ops" />
+<a href="https://github.com/santifer/jobber/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/jobber" alt="Контриб'ютори santifer/jobber" />
 </a>
 
-Отримали роботу завдяки career-ops? [Поділіться своєю історією!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+Отримали роботу завдяки Jobber? [Поділіться своєю історією!](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 ## Ліцензія
 

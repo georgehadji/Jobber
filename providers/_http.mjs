@@ -4,11 +4,11 @@
 import './_dns-cache.mjs'; // memoize dns.lookup process-wide (see that file)
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; career-ops/1.3)';
+const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; jobber/1.3)';
 
 /**
  * Browser-like User-Agent for providers that must clear WAF/CDN bot
- * management blocking the default career-ops UA outright (seen live:
+ * management blocking the default Jobber UA outright (seen live:
  * Glints' firewall, Geico's Cloudflare-gated Workday tenant). Shared so
  * every provider working around such a block bumps one constant instead
  * of drifting Chrome versions independently per file.
@@ -16,7 +16,39 @@ const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; career-ops/1.3)';
 export const BROWSER_LIKE_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
-async function fetchWithTimeout(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, method = 'GET', body = null, redirect = 'follow' } = {}, consume) {
+// ── Shared per-host politeness limiter (#improvement-plan A3) ────────────
+// 67 providers share no rate limit today. Against free public ATS endpoints,
+// politeness is not an optimisation — it is the terms of use: an honest client
+// that spaces its hits is less likely to get a whole host blocked. This is a
+// minimal, opt-in spacing limiter: one recent-next-request-time per host. It is
+// a linear "don't hammer" gate, not a token bucket or a circuit breaker — a scan
+// that runs a few times a day does not need either.
+const hostNextAllowedMs = new Map(); // host -> earliest ms we may hit it again
+
+/**
+ * Wait until the host of `url` may be requested again, spacing calls that share
+ * a host by at least `minIntervalMs`. Always returns a Promise; no-op (resolves
+ * immediately) when `minIntervalMs` is falsy. Hopeless URLs (no parseable host)
+ * never block.
+ *
+ * @param {string} url - Request URL whose host to throttle.
+ * @param {number} [minIntervalMs] - Minimum gap between two hits of the same host.
+ * @returns {Promise<void>}
+ */
+export async function hostRateLimit(url, minIntervalMs) {
+  if (!minIntervalMs || minIntervalMs <= 0) return;
+  let host;
+  try { host = new URL(url).host; } catch { return; }
+  const now = Date.now();
+  const next = hostNextAllowedMs.get(host) ?? 0;
+  hostNextAllowedMs.set(host, Math.max(next, now + minIntervalMs));
+  if (now < next) {
+    await new Promise(r => setTimeout(r, next - now));
+  }
+}
+
+async function fetchWithTimeout(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, method = 'GET', body = null, redirect = 'follow', rateLimitMs = 0 } = {}, consume) {
+  await hostRateLimit(url, rateLimitMs);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -58,10 +90,10 @@ export async function fetchText(url, opts = {}) {
   return fetchWithTimeout(url, opts, (res) => res.text());
 }
 
-export function makeHttpCtx() {
+export function makeHttpCtx({ rateLimitMs = 0 } = {}) {
   return {
     transport: 'http',
-    fetchJson,
-    fetchText,
+    fetchJson: (url, opts = {}) => fetchJson(url, { rateLimitMs, ...opts }),
+    fetchText: (url, opts = {}) => fetchText(url, { rateLimitMs, ...opts }),
   };
 }

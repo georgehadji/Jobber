@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { matchCandidates, classifyReply } from './reply-matcher.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
-  openTrackerTransaction, rebuildRow, resolveTrackerPath,
+  openTrackerTransaction, rebuildRow, resolveTrackerPath, appendStatusLog,
 } from './tracker-utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -199,6 +199,18 @@ async function updateTrackerStatuses(updates) {
       parts[colmap.status] = update.newStatus;
       lines[i] = rebuildRow(parts);
       applied.add(update.num);
+      // Keep the transition ledger complete (#improvement-plan A4(b)): reply-watch
+      // writes status directly (not via set-status.mjs), so log the change here too,
+      // inside the same tracker transaction. source=manual — the change is an
+      // operator-approved classification, not an explicit set-status call.
+      try {
+        appendStatusLog(APPS_FILE, {
+          num: update.num, date: new Date().toISOString().slice(0, 10),
+          from: update.oldStatus, to: update.newStatus, source: 'manual',
+        });
+      } catch (err) {
+        console.warn(`⚠ status-log append failed for #${update.num}: ${err.message}`);
+      }
     }
 
     if (applied.size > 0) trackerTransaction.replace(lines.join('\n'));

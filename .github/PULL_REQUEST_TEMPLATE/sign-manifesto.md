@@ -1,17 +1,17 @@
 ---
-name: Sign the CareerOps Manifesto
+name: Sign the Jobber Manifesto
 about: Add your signature to SIGNATURES.md
 title: 'sign: @your-username'
 labels: manifesto-signature
 ---
 
-<!-- Thank you for signing The CareerOps Manifesto.
-     Canonical page: https://career-ops.org/manifesto -->
+<!-- Thank you for signing The Jobber Manifesto.
+     Canonical page: https://jobber.org/manifesto -->
 
-> CareerOps is the practice of running a job search the way engineers run production: with evidence, with discipline, and with tools on the candidate's side of the table.
+> Jobber is the practice of running a job search the way engineers run production: with evidence, with discipline, and with tools on the candidate's side of the table.
 >
 > — Coined by Santiago Fernández de Valderrama Aparicio in
-> [The CareerOps Manifesto](https://career-ops.org/manifesto), July 14, 2026.
+> [The Jobber Manifesto](https://jobber.org/manifesto), July 14, 2026.
 
 ## My signature
 

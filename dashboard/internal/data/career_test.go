@@ -11,7 +11,7 @@ import (
 )
 
 func TestTrackerLockDirMatchesNodeProtocol(t *testing.T) {
-	t.Setenv("CAREER_OPS_TRACKER_LOCK", "")
+	t.Setenv("JOBBER_TRACKER_LOCK", "")
 	_, trackerPath := writeTracker(t, insertedColumnTracker)
 	canonicalTracker, err := filepath.EvalSymlinks(trackerPath)
 	if err != nil {
@@ -22,7 +22,7 @@ func TestTrackerLockDirMatchesNodeProtocol(t *testing.T) {
 		t.Fatalf("canonical temp dir: %v", err)
 	}
 	sum := sha256.Sum256([]byte(canonicalTracker))
-	want := filepath.Join(canonicalTemp, fmt.Sprintf("career-ops-merge-tracker-%x.lock", sum[:8]))
+	want := filepath.Join(canonicalTemp, fmt.Sprintf("jobber-merge-tracker-%x.lock", sum[:8]))
 
 	got, err := trackerLockDirFor(trackerPath)
 	if err != nil {
@@ -34,7 +34,7 @@ func TestTrackerLockDirMatchesNodeProtocol(t *testing.T) {
 }
 
 func TestUpdateApplicationStatusWaitsForSharedLock(t *testing.T) {
-	t.Setenv("CAREER_OPS_TRACKER_LOCK", "")
+	t.Setenv("JOBBER_TRACKER_LOCK", "")
 	tempDir, trackerPath := writeTracker(t, insertedColumnTracker)
 	apps := ParseApplications(tempDir)
 	if len(apps) != 1 {
@@ -231,7 +231,7 @@ func TestParseApplicationsResolvesTrackerRelativeReportLinks(t *testing.T) {
 		t.Fatalf("expected legacy root-relative link to resolve to %q, got %q", wantSecond, apps[1].ReportPath)
 	}
 
-	// Every consumer joins ReportPath against careerOpsPath — both rows
+	// Every consumer joins ReportPath against jobberPath — both rows
 	// must point at files that exist.
 	for i, app := range apps {
 		if _, err := os.Stat(filepath.Join(tempDir, app.ReportPath)); err != nil {

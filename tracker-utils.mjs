@@ -8,17 +8,11 @@
  * copies — and every writer excludes every other writer through the same lock.
  */
 
-import { readFileSync, writeFileSync, renameSync, rmSync, mkdirSync, statSync, existsSync, realpathSync } from 'fs';
+import { readFileSync, writeFileSync, renameSync, rmSync, existsSync, realpathSync, appendFileSync } from 'fs';
 import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'path';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import yaml from 'js-yaml';
-
-/**
- * Minimum age before directory age alone may condemn an ownerless lock or
- * recover guard. See `lockCanRecover` for why the age check needs a floor.
- */
-export const OWNERLESS_GRACE_MS = 1_000;
 
 /**
  * Rebuild a markdown table row from the cells produced by `line.split('|')`.
@@ -76,17 +70,17 @@ export function cell(v) {
  * Resolve the tracker file path for the current workspace.
  *
  * Supports both layouts: `data/applications.md` (boilerplate) and
- * `applications.md` (original root layout). The `CAREER_OPS_TRACKER` env var
+ * `applications.md` (original root layout). The `JOBBER_TRACKER` env var
  * overrides the path (used by tests and non-standard layouts). The result is
  * canonicalized so every script that locks or hashes the tracker path agrees
  * on one spelling.
  *
- * @param {string} rootDir - The career-ops repository root.
+ * @param {string} rootDir - The Jobber repository root.
  * @returns {string} Absolute canonical tracker path.
  */
 export function resolveTrackerPath(rootDir) {
-  const raw = process.env.CAREER_OPS_TRACKER
-    ? process.env.CAREER_OPS_TRACKER
+  const raw = process.env.JOBBER_TRACKER
+    ? process.env.JOBBER_TRACKER
     : existsSync(join(rootDir, 'data/applications.md'))
       ? join(rootDir, 'data/applications.md')
       : join(rootDir, 'applications.md');
@@ -133,10 +127,10 @@ function pathIsInside(childPath, parentDir) {
  *
  * The lock name is derived from a hash of the canonical tracker path, so every
  * writer (`merge-tracker.mjs`, `set-status.mjs`) that targets the same tracker
- * contends on the same lock. `CAREER_OPS_TRACKER_LOCK` exists for tests and
+ * contends on the same lock. `JOBBER_TRACKER_LOCK` exists for tests and
  * unusual local layouts, but lock directories are removed recursively, so
  * env-provided paths must be absolute, live under the OS temp directory, and
- * use the career-ops lock-name prefix. Invalid values are ignored and the
+ * use the Jobber lock-name prefix. Invalid values are ignored and the
  * deterministic temp-dir default is used instead.
  *
  * @param {string} appsFile - Canonical tracker path (see canonicalizeTrackerPath).
@@ -145,109 +139,16 @@ function pathIsInside(childPath, parentDir) {
 export function trackerLockDirFor(appsFile) {
   const lockKey = createHash('sha256').update(appsFile).digest('hex').slice(0, 16);
   const tmpRoot = realpathSync(tmpdir());
-  const fallback = join(tmpRoot, `career-ops-merge-tracker-${lockKey}.lock`);
-  const envValue = process.env.CAREER_OPS_TRACKER_LOCK;
+  const fallback = join(tmpRoot, `jobber-merge-tracker-${lockKey}.lock`);
+  const envValue = process.env.JOBBER_TRACKER_LOCK;
   if (!envValue || !isAbsolute(envValue)) return fallback;
 
   const candidate = resolve(envValue);
   const parentDir = dirname(candidate);
   const canonicalParent = existsSync(parentDir) ? realpathSync(parentDir) : resolve(parentDir);
   if (!pathIsInside(canonicalParent, tmpRoot)) return fallback;
-  if (!basename(candidate).startsWith('career-ops-merge-tracker-')) return fallback;
+  if (!basename(candidate).startsWith('jobber-merge-tracker-')) return fallback;
   return candidate;
-}
-
-/**
- * Pause the async lock flow for a fixed number of milliseconds.
- *
- * Used in the lock retry loop, where waiting briefly avoids a tight CPU spin
- * while another process owns the tracker lock.
- *
- * @param {number} ms - Milliseconds to wait before resolving.
- * @returns {Promise<void>} Resolves after the requested delay.
- */
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Determine whether a process id still belongs to a live process.
- *
- * The tracker lock stores the owner PID in `owner.json`. When another process
- * finds an existing lock, this check lets it distinguish a valid live owner from
- * a crashed process that left a stale lock directory behind. `EPERM` counts as
- * alive because the process exists even if the current user cannot signal it.
- *
- * @param {number} pid - Process id recorded by the lock owner.
- * @returns {boolean} True when the process appears to still exist.
- */
-function processIsAlive(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err?.code === 'EPERM';
-  }
-}
-
-/**
- * Read lock ownership metadata from a tracker lock directory.
- *
- * The metadata contains the owner PID, a unique release token, the acquisition
- * timestamp, and the tracker path. Invalid or missing metadata is treated as
- * unreadable so the stale-lock recovery path can fall back to directory age.
- *
- * @param {string} lockDir - Directory that represents the active lock.
- * @returns {object|null} Parsed owner metadata, or null when unavailable.
- */
-function readLockOwner(lockDir) {
-  try {
-    return JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf-8'));
-  } catch {
-    return null;
-  }
-}
-
-function sameLockDirectory(left, right) {
-  return left.dev === right.dev && left.ino === right.ino
-    && (left.ino !== 0 || left.birthtimeMs === right.birthtimeMs);
-}
-
-/**
- * Decide whether an existing lock can be safely recovered.
- *
- * Recovery is conservative: if the lock has an owner PID and that process is
- * still alive, the lock is never considered stale merely because it is old. If
- * the owner process is gone, or if the metadata cannot be read and the lock
- * directory itself is older than the stale threshold, the waiting process may
- * remove the lock and retry acquisition.
- *
- * That age fallback needs a floor. Two directories are ownerless by
- * construction, not by accident: a lock between its `mkdirSync` and its
- * `owner.json` write, and the recover guard, which never carries `owner.json`
- * at all. Judging those on `age > staleMs` alone lets a caller with an
- * aggressive staleMs delete a directory created microseconds ago — either
- * stealing a winner's lock inside its acquisition window, or evicting a live
- * guard and putting two callers inside the decide-then-delete window the guard
- * exists to serialize. OWNERLESS_GRACE_MS is a lower bound on that patience,
- * never a cap: a larger caller staleMs still wins, and a genuinely abandoned
- * directory still ages out, so a crash while holding the guard cannot disable
- * recovery for good.
- *
- * @param {string} lockDir - Directory that represents the active lock.
- * @param {number} staleMs - Age threshold for metadata-free lock recovery, floored at OWNERLESS_GRACE_MS.
- * @returns {boolean} True when the caller may remove and recreate the lock.
- */
-function lockCanRecover(lockDir, staleMs) {
-  const owner = readLockOwner(lockDir);
-  if (owner?.pid) return !processIsAlive(owner.pid);
-
-  try {
-    return Date.now() - statSync(lockDir).mtimeMs > Math.max(staleMs, OWNERLESS_GRACE_MS);
-  } catch {
-    return true;
-  }
 }
 
 /**
@@ -271,141 +172,32 @@ function lockCanRecover(lockDir, staleMs) {
  * Lock handle with metadata and an idempotent release method.
  */
 export async function acquireTrackerLock(lockDir, options = {}) {
-  const timeoutMs = options.timeoutMs ?? 60_000;
-  const retryMs = options.retryMs ?? 75;
-  const staleMs = options.staleMs ?? 10 * 60_000;
-  const recoverGuardDir = `${lockDir}.recover`;
-  const token = randomUUID();
-  const startedAt = Date.now();
-  let attempts = 0;
-  let staleRecovered = false;
-
-  while (Date.now() - startedAt < timeoutMs) {
-    attempts++;
-    try {
-      mkdirSync(lockDir);
-      try {
-        writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
-          pid: process.pid,
-          token,
-          started_at: new Date().toISOString(),
-          tracker: options.tracker ?? '',
-        }, null, 2));
-      } catch (ownerErr) {
-        // We created the dir but could not record ownership. An empty,
-        // owner-less lock dir would block every future locker until the
-        // staleMs age-out — remove what we just created before rethrowing.
-        // Scoped to the owner write only: the mkdir EEXIST contention path
-        // is still handled by the outer catch.
-        rmSync(lockDir, { recursive: true, force: true });
-        throw ownerErr;
-      }
-
-      let ownerVerified = false;
-      let verifiedDir = null;
-      let released = false;
-      const removeLock = typeof options.removeLock === 'function'
-        ? options.removeLock
-        : path => rmSync(path, { recursive: true, force: true });
-      return {
-        attempts,
-        waitMs: Date.now() - startedAt,
-        staleRecovered,
-        release() {
-          if (released) return;
-          if (ownerVerified) {
-            let currentDir;
-            try {
-              currentDir = statSync(lockDir);
-            } catch (err) {
-              if (err?.code === 'ENOENT') {
-                released = true;
-                return;
-              }
-              throw err;
-            }
-            if (!sameLockDirectory(verifiedDir, currentDir)) {
-              released = true;
-              return;
-            }
-            const owner = readLockOwner(lockDir);
-            if (owner && owner.token !== token) {
-              released = true;
-              return;
-            }
-            if (!owner && existsSync(join(lockDir, 'owner.json'))) {
-              throw new Error(`Cannot verify tracker lock ownership at ${lockDir}`);
-            }
-          } else {
-            let beforeRead;
-            try {
-              beforeRead = statSync(lockDir);
-            } catch (err) {
-              if (err?.code === 'ENOENT') {
-                released = true;
-                return;
-              }
-              throw err;
-            }
-            const owner = readLockOwner(lockDir);
-            if (owner?.token !== token) {
-              if (owner) released = true;
-              else throw new Error(`Cannot verify tracker lock ownership at ${lockDir}`);
-              return;
-            }
-            const afterRead = statSync(lockDir);
-            if (!sameLockDirectory(beforeRead, afterRead)) {
-              released = true;
-              return;
-            }
-            ownerVerified = true;
-            verifiedDir = afterRead;
-          }
-          removeLock(lockDir);
-          released = true;
-        },
-      };
-    } catch (err) {
-      if (err?.code !== 'EEXIST') throw err;
-
-      let hasRecoverGuard = false;
-      try {
-        mkdirSync(recoverGuardDir);
-        hasRecoverGuard = true;
-      } catch (guardErr) {
-        if (guardErr?.code !== 'EEXIST') throw guardErr;
-        // A process killed between creating the guard and its cleanup leaves
-        // the guard behind forever, permanently disabling stale-lock recovery
-        // for every future writer. The guard normally lives for milliseconds,
-        // so an old one is judged stale by the same age rule as a
-        // metadata-free lock and removed; the next loop iteration can then
-        // take the guard and run recovery.
-        if (lockCanRecover(recoverGuardDir, staleMs)) {
-          rmSync(recoverGuardDir, { recursive: true, force: true });
-        }
-      }
-
-      if (hasRecoverGuard) {
-        try {
-          if (lockCanRecover(lockDir, staleMs)) {
-            rmSync(lockDir, { recursive: true, force: true });
-            staleRecovered = true;
-            continue;
-          }
-        } finally {
-          rmSync(recoverGuardDir, { recursive: true, force: true });
-        }
-      }
-
-      await sleep(retryMs);
+  // The tracker lock is the hardened reference implementation, now extracted
+  // once into lib/file-lock.mjs (#improvement-plan A2). This is a thin shim:
+  // it records the tracker path as the owner field, honors the env overrides
+  // (tests tune contention per-process), and re-tags the timeout error with
+  // `.code = 'LOCK_TIMEOUT'` — the marker callers (set-status.mjs etc.) use to
+  // tell "lock busy, retry later" apart from filesystem failures.
+  const { acquireLock } = await import('./lib/file-lock.mjs');
+  try {
+    return await acquireLock('', {
+      lockDir,
+      timeoutMs: options.timeoutMs ?? (Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000),
+      retryMs: options.retryMs ?? (Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75),
+      staleMs: options.staleMs ?? (Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000),
+      kind: 'tracker',
+      owner: { tracker: options.tracker ?? '' },
+      removeLock: options.removeLock,
+    });
+  } catch (err) {
+    if (err?.name === 'LockTimeoutError') {
+      // Preserve the legacy marker consumers branch on (set-status.mjs checks
+      // err.code === 'LOCK_TIMEOUT' → exit 4 / 'lock-timeout').
+      err.code = 'LOCK_TIMEOUT';
+      throw err;
     }
+    throw err;
   }
-
-  // Tag the timeout so callers can tell "lock is busy, retry later" apart
-  // from filesystem/configuration failures rethrown out of the loop above.
-  const timeoutErr = new Error(`Timed out waiting for tracker lock at ${lockDir}`);
-  timeoutErr.code = 'LOCK_TIMEOUT';
-  throw timeoutErr;
 }
 
 /**
@@ -417,9 +209,9 @@ export async function openTrackerTransaction(appsFile, options = {}) {
   const trackerPath = canonicalizeTrackerPath(appsFile);
   const { lockDir = trackerLockDirFor(trackerPath), ...lockOptions } = options;
   const lock = await acquireTrackerLock(lockDir, {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
     tracker: trackerPath,
     ...lockOptions,
   });
@@ -477,6 +269,38 @@ export function writeFileAtomic(path, content) {
 }
 
 /**
+ * Format one status-log.tsv line (append-only transition ledger).
+ *
+ * Every tracker writer that changes a row's state should append here — not
+ * just set-status.mjs (#improvement-plan A4(b)) — so funnel-velocity.mjs has a
+ * complete, dated event log. The ledger sits beside the tracker file it
+ * describes (deriving its path from the tracker path keeps JOBBER_TRACKER
+ * redirects in tests/custom layouts working).
+ *
+ * Line format: {tracker#}\t{date}\t{from}\t{to}\t{source}\t{note}
+ * `from` may be '-' when the prior state is unknown (a freshly created row);
+ * `to` = '-' retracts the row's latest observation. Sources follow
+ * funnel-velocity.mjs's VALID_SOURCES contract: set-status | correction |
+ * backfill | manual (only set-status/correction feed day-math).
+ *
+ * @param {string} trackerPath - Canonical active tracker path (see resolveTrackerPath).
+ * @param {object} entry - Ledger entry fields.
+ * @param {string|number} entry.num - Tracker row number.
+ * @param {string} entry.date - Event date as YYYY-MM-DD.
+ * @param {string} entry.from - Prior state label, or '-' when unknown.
+ * @param {string} entry.to - New state label, or '-' to retract.
+ * @param {string} entry.source - Valid source tag (see above; default 'set-status').
+ * @param {string} [entry.note] - Optional one-line note.
+ * @returns {void}
+ */
+export function appendStatusLog(trackerPath, entry) {
+  const { num, date, from, to, source = 'set-status', note = '' } = entry;
+  const logPath = join(dirname(trackerPath), 'status-log.tsv');
+  const line = `${num}\t${date}\t${from}\t${to}\t${source}\t${cell(note)}\n`;
+  appendFileSync(logPath, line);
+}
+
+/**
  * Load the canonical tracker states from `templates/states.yml`.
  *
  * states.yml is the single source of truth for the 8 canonical states and
@@ -496,6 +320,42 @@ export function loadCanonicalStates(statesPath) {
     label: String(s.label ?? ''),
     aliases: Array.isArray(s.aliases) ? s.aliases.map(String) : [],
   }));
+}
+
+/**
+ * Load the legal status-transition table from `templates/states.yml`.
+ *
+ * `transitions` maps a source state id to the ids it may legally become
+ * (#improvement-plan A4(a)). A state with no entry (or an empty list) is
+ * terminal: it has no forward edges, so any change out of it is a correction
+ * that must go through set-status's --force override. A client that only
+ * read states via loadCanonicalStates keeps working unchanged.
+ *
+ * @param {string} statesPath - Path to templates/states.yml.
+ * @returns {Record<string,string[]>} Source state id → allowed target state ids.
+ */
+export function loadStateTransitions(statesPath) {
+  const doc = yaml.load(readFileSync(statesPath, 'utf-8'));
+  const raw = doc && typeof doc.transitions === 'object' && doc.transitions !== null
+    ? doc.transitions
+    : {};
+  const out = {};
+  for (const [fromId, targets] of Object.entries(raw)) {
+    out[fromId] = Array.isArray(targets) ? targets.map(String) : [];
+  }
+  return out;
+}
+
+/**
+ * Whether a status transition is allowed by the states.yml table.
+ *
+ * @param {Record<string,string[]>} transitions - From loadStateTransitions().
+ * @param {string} fromId - Source state id.
+ * @param {string} toId - Target state id.
+ * @returns {boolean} True when `toId` is an allowed target of `fromId`.
+ */
+export function canTransition(transitions, fromId, toId) {
+  return Array.isArray(transitions[fromId]) && transitions[fromId].includes(toId);
 }
 
 /**

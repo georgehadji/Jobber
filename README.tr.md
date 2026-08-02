@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 82ff87c23f2f1eadc602c1566586c64bc96589d1 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Multi-Agent Job Search System" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Multi-Agent Job Search System" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,11 +19,11 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 <p align="center">
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>BASINDA</sub></p>
@@ -35,7 +37,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops Demo" width="800">
+  <img src="docs/demo.gif" alt="Jobber Demo" width="800">
 </p>
 
 <p align="center"><strong>740+ ilan değerlendirildi · 100+ kişiselleştirilmiş CV · 1 hayalindeki iş bulundu</strong></p>
@@ -44,7 +46,7 @@
   <a href="https://warpchart.dev/hq">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
-      <img alt="Live star telemetry of santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
+      <img alt="Live star telemetry of santifer/jobber" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
     </picture>
   </a>
 </p>
@@ -54,7 +56,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/santifer/career-ops/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2Fcareer-ops?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
+  <a href="https://github.com/santifer/jobber/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2FJobber?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
 </p>
 
 <p align="center">
@@ -82,7 +84,7 @@
 
 ## Bu Nedir
 
-career-ops ([career-ops.org](https://career-ops.org), diğer adıyla **careerops**), herhangi bir yapay zekâ kodlama CLI'sini eksiksiz bir iş arama komuta merkezine dönüştürür. Başvurularınızı elle bir tabloda takip etmek yerine, şunları yapan yapay zekâ destekli bir hattınız olur:
+Jobber ([jobber.org](https://jobber.org), diğer adıyla **Jobber**), herhangi bir yapay zekâ kodlama CLI'sini eksiksiz bir iş arama komuta merkezine dönüştürür. Başvurularınızı elle bir tabloda takip etmek yerine, şunları yapan yapay zekâ destekli bir hattınız olur:
 
 - **İlanları değerlendirir** -- yapılandırılmış A-F değerlendirmesiyle (bütüncül 1.0-5.0 puana giden beş puanlama boyutu)
 - **Kişiselleştirilmiş PDF'ler üretir** -- her iş ilanına özel, ATS uyumlu CV'ler
@@ -91,17 +93,17 @@ career-ops ([career-ops.org](https://career-ops.org), diğer adıyla **careerops
 - **Her şeyi izler** -- bütünlük kontrolleriyle tek bir doğruluk kaynağında
 - **Şirketleri araştırır ve doğru kişiyi bulur** -- başvuru sizi kuyruğa sokar; araştırma size bir sohbet kazandırır
 
-> **Önemli: Bu bir "gelişigüzel her yere başvur" aracı DEĞİLDİR.** career-ops bir filtredir -- yüzlerce ilan arasından zamanınıza değecek birkaçını bulmanıza yardım eder. Sistem 4.0/5'in altında puan alan hiçbir ilana başvurmamanızı kesinlikle önerir. Sizin zamanınız değerlidir, işe alım uzmanının zamanı da öyle. Göndermeden önce her zaman gözden geçirin.
+> **Önemli: Bu bir "gelişigüzel her yere başvur" aracı DEĞİLDİR.** Jobber bir filtredir -- yüzlerce ilan arasından zamanınıza değecek birkaçını bulmanıza yardım eder. Sistem 4.0/5'in altında puan alan hiçbir ilana başvurmamanızı kesinlikle önerir. Sizin zamanınız değerlidir, işe alım uzmanının zamanı da öyle. Göndermeden önce her zaman gözden geçirin.
 
-career-ops agentiktir: seçtiğiniz yapay zekâ kodlama CLI'si Playwright ile kariyer sayfalarında gezinir, CV'nizle iş ilanını karşılaştırarak uygunluğu değerlendirir (anahtar kelime eşleştirmesi değil) ve özgeçmişinizi her ilana göre uyarlar.
+Jobber agentiktir: seçtiğiniz yapay zekâ kodlama CLI'si Playwright ile kariyer sayfalarında gezinir, CV'nizle iş ilanını karşılaştırarak uygunluğu değerlendirir (anahtar kelime eşleştirmesi değil) ve özgeçmişinizi her ilana göre uyarlar.
 
 > **Not: ilk değerlendirmeler mükemmel olmayacak.** Sistem sizi henüz tanımıyor. Ona bağlam verin -- CV'niz, kariyer hikayeniz, kanıt noktalarınız, tercihleriniz, iyi olduğunuz ve kaçınmak istediğiniz şeyler. Ne kadar besleyip geliştirirseniz o kadar iyileşir. Yeni bir işe alım uzmanını işe alıştırmak gibi düşünün: ilk hafta sizi tanıması gerekir, sonra vazgeçilmez hale gelir.
 
-740+ iş ilanını değerlendirmek, 100+ özel CV üretmek ve bir Head of Applied AI (Uygulamalı Yapay Zekâ Direktörü) rolüne ulaşmak için bu sistemi kullanan biri tarafından geliştirildi. [Tam vaka çalışmasını okuyun](https://santifer.io/career-ops-system).
+740+ iş ilanını değerlendirmek, 100+ özel CV üretmek ve bir Head of Applied AI (Uygulamalı Yapay Zekâ Direktörü) rolüne ulaşmak için bu sistemi kullanan biri tarafından geliştirildi. [Tam vaka çalışmasını okuyun](https://santifer.io/jobber-system).
 
-## CareerOps Manifestosu
+## Jobber Manifestosu
 
-career-ops, [CareerOps Manifestosu](https://career-ops.org/manifesto?utm_source=readme)'nun ilk referans uygulamasıdır. okuyun. inandıklarınızı yansıtıyorsa imzalayın. imzanız bir commit olur.
+Jobber, [Jobber Manifestosu](https://jobber.org/manifesto?utm_source=readme)'nun ilk referans uygulamasıdır. okuyun. inandıklarınızı yansıtıyorsa imzalayın. imzanız bir commit olur.
 
 ## Özellikler
 
@@ -112,8 +114,8 @@ career-ops, [CareerOps Manifestosu](https://career-ops.org/manifesto?utm_source=
 | **Mülakat Hikaye Bankası** | Değerlendirmeler boyunca STAR+Yansıma hikayeleri biriktirir -- her davranışsal soruyu yanıtlayan 5-10 ana hikaye                        |
 | **Pazarlık Senaryoları**  | Maaş pazarlığı çerçeveleri, coğrafi indirim itirazları, rakip teklif kaldıracı                                                          |
 | **ATS PDF Üretimi**       | Space Grotesk + DM Sans tasarımıyla anahtar kelime enjekte edilmiş CV'ler                                                                |
-| **Ön Yazı Üretici**       | Anahtar kelime yansıtmalı, dört etkileşimli açı sorulu (neden/sorunlar/yaklaşım/ton), sohbet içi taslak onay kapılı, CV'lerle aynı HTML + Playwright hattından A4 PDF'li araştırma destekli ön yazılar. Her değerlendirmede otomatik taslak oluşturur; `/career-ops cover` ile talep üzerine tamamlanır ve üretilir |
-| **Başvuru E-postası Taslakları** | Bir rapordan veya yapıştırılan iş ilanından resmi işe alım uzmanı/referans/soğuk başvuru e-postaları -- konu satırı, ek kontrol listesi, kaynağa dayalı uyum noktaları ve profil odaklı iletişim bloğu ile. Yalnızca taslak -- career-ops hiçbir şeyi göndermez, iletmez veya tıklamaz. |
+| **Ön Yazı Üretici**       | Anahtar kelime yansıtmalı, dört etkileşimli açı sorulu (neden/sorunlar/yaklaşım/ton), sohbet içi taslak onay kapılı, CV'lerle aynı HTML + Playwright hattından A4 PDF'li araştırma destekli ön yazılar. Her değerlendirmede otomatik taslak oluşturur; `/jobber cover` ile talep üzerine tamamlanır ve üretilir |
+| **Başvuru E-postası Taslakları** | Bir rapordan veya yapıştırılan iş ilanından resmi işe alım uzmanı/referans/soğuk başvuru e-postaları -- konu satırı, ek kontrol listesi, kaynağa dayalı uyum noktaları ve profil odaklı iletişim bloğu ile. Yalnızca taslak -- Jobber hiçbir şeyi göndermez, iletmez veya tıklamaz. |
 | **Portal Tarayıcı**       | 45+ önceden yapılandırılmış şirket (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + Ashby, Greenhouse, Lever, Wellfound genelinde özel sorgular |
 | **Toplu İşleme**          | Headless CLI çalışanlarıyla paralel değerlendirme (`claude -p` / `opencode run`)                                                        |
 | **Dashboard TUI**         | Hattınızı gezmek, filtrelemek ve sıralamak için terminal arayüzü                                                                          |
@@ -126,28 +128,28 @@ career-ops, [CareerOps Manifestosu](https://career-ops.org/manifesto?utm_source=
 **En hızlı yol — tek komut:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx`, [Node.js](https://nodejs.org) ile birlikte gelir — herhangi bir şeyi global olarak
 > kurmadan yükleyiciyi bir kez çalıştırır. Node yoksa önce onu kurun.
 > (Zaten bir Claude Code / Gemini / Codex CLI kullanıyor musunuz? O zaman zaten sahipsiniz.)
 
-Bu, en güncel sürümü `./career-ops` içine klonlar ve bağımlılıkları kurar. Ardından:
+Bu, en güncel sürümü `./jobber` içine klonlar ve bağımlılıkları kurar. Ardından:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # veya codex / qwen / opencode / agy / grok — yapay zekâ CLI'nizi burada açın
 ```
 
-**İlk açılışta career-ops sizi kurulum boyunca yönlendirir — CV'niz, profiliniz ve hedef rolleriniz — sadece sohbet ederek. Elle düzenlenecek hiçbir şey yok.**
+**İlk açılışta Jobber sizi kurulum boyunca yönlendirir — CV'niz, profiliniz ve hedef rolleriniz — sadece sohbet ederek. Elle düzenlenecek hiçbir şey yok.**
 
 <details>
 <summary><b>Elle kurmayı mı tercih edersiniz? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # yalnızca PDF üretimi için gerekli
 
 # 2. Kurulumu kontrol edin
@@ -171,91 +173,91 @@ claude   # veya codex / opencode / qwen / agy / grok
 
 # 6. Kullanmaya başlayın
 # Otomatik hattı tetiklemek için bir iş ilanı URL'si veya metni yapıştırın
-# CLI'niz slash komutlarını destekliyorsa /career-ops (veya CLI'ye özel takma adını) kullanın
+# CLI'niz slash komutlarını destekliyorsa /jobber (veya CLI'ye özel takma adını) kullanın
 # Codex'te aynı modu düz dille isteyin, örneğin:
-# "career-ops scan modunu çalıştır"
-# "career-ops pipeline modunu data/pipeline.md için çalıştır"
-# "career-ops pdf modunu son değerlendirilen rol için çalıştır"
-# "career-ops tracker modunu çalıştır ve mevcut durumları özetle"
+# "Jobber scan modunu çalıştır"
+# "Jobber pipeline modunu data/pipeline.md için çalıştır"
+# "Jobber pdf modunu son değerlendirilen rol için çalıştır"
+# "Jobber tracker modunu çalıştır ve mevcut durumları özetle"
 ```
 
 </details>
 
 > **Sistem, yapay zekâ kodlama CLI'nizin kendisi tarafından özelleştirilmek üzere tasarlanmıştır.** Modlar, arketipler, puanlama ağırlıkları, pazarlık senaryoları -- onlardan bunları değiştirmesini istemeniz yeterli. Kullandığı dosyaların aynılarını okur, bu yüzden tam olarak neyi düzenleyeceğini bilir.
 
-Tam kurulum kılavuzu için [docs/SETUP.md](docs/SETUP.md)'ye, özel veya yerel modeller kullanarak career-ops'u ucuza çalıştırma talimatları için [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md)'ye, ATS otomatik doldurma akışının ayrıntıları için [docs/APPLY_AUTOFILL.md](docs/APPLY_AUTOFILL.md)'ye ve sık sorulan kurulum sorularının yanıtları için [docs/FAQ.md](docs/FAQ.md)'ye bakın.
+Tam kurulum kılavuzu için [docs/SETUP.md](docs/SETUP.md)'ye, özel veya yerel modeller kullanarak Jobber'u ucuza çalıştırma talimatları için [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md)'ye, ATS otomatik doldurma akışının ayrıntıları için [docs/APPLY_AUTOFILL.md](docs/APPLY_AUTOFILL.md)'ye ve sık sorulan kurulum sorularının yanıtları için [docs/FAQ.md](docs/FAQ.md)'ye bakın.
 
 ## Antigravity CLI Entegrasyonu
 
-career-ops, Claude Code ve OpenCode'u desteklediği gibi Antigravity CLI'yi de doğal olarak destekler. Tüm slash komutları, aynı `modes/*.md` değerlendirme mantığını kullanan ortak skill giriş noktası üzerinden kullanılabilir.
+Jobber, Claude Code ve OpenCode'u desteklediği gibi Antigravity CLI'yi de doğal olarak destekler. Tüm slash komutları, aynı `modes/*.md` değerlendirme mantığını kullanan ortak skill giriş noktası üzerinden kullanılabilir.
 
 Google, tüketici Gemini CLI erişimini Antigravity CLI'ye taşıdı. `GEMINI.md` artık Antigravity hem `AGENTS.md` hem de `GEMINI.md`'yi okuduğunda proje talimatlarını iki kez yüklemesin diye no-op bir uyumluluk koruması.
 
 ### Yerel Antigravity CLI
 
 ```bash
-# 1. career-ops dizininde çalıştırın
-cd career-ops
+# 1. Jobber dizininde çalıştırın
+cd Jobber
 agy
 
-# 2. Alt komutlarla birleşik /career-ops komutunu kullanın:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Alt komutlarla birleşik /jobber komutunu kullanın:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
-Skill, `.agents/skills/career-ops/SKILL.md` içinde açık standart kullanılarak tanımlanır ve desteklenen her CLI için sembolik bağlanır/referanslanır (ör. `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`).
+Skill, `.agents/skills/jobber/SKILL.md` içinde açık standart kullanılarak tanımlanır ve desteklenen her CLI için sembolik bağlanır/referanslanır (ör. `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`).
 
 ## Codex Entegrasyonu
 
-career-ops, Codex'i aynı paylaşılan yönlendirici üzerinden destekler, ancak çağırma modeli slash komutlarını otomatik kaydeden CLI'lerden farklıdır. Tam kılavuz için bkz. [docs/CODEX.md](docs/CODEX.md).
+Jobber, Codex'i aynı paylaşılan yönlendirici üzerinden destekler, ancak çağırma modeli slash komutlarını otomatik kaydeden CLI'lerden farklıdır. Tam kılavuz için bkz. [docs/CODEX.md](docs/CODEX.md).
 
 ### Etkileşimli Codex
 
 ```bash
-cd career-ops
+cd Jobber
 codex
 ```
 
-Slash komutları Codex'te garanti değildir. `/career-ops` kullanılamıyorsa, Codex'ten modu doğrudan düz dille çalıştırmasını isteyin:
+Slash komutları Codex'te garanti değildir. `/jobber` kullanılamıyorsa, Codex'ten modu doğrudan düz dille çalıştırmasını isteyin:
 
 ```text
-Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
-Run the career-ops scan mode and summarize new matches.
-Run the career-ops pipeline mode for data/pipeline.md.
-Run the career-ops pdf mode for the latest evaluated role.
-Run the career-ops tracker mode and summarize the current statuses.
+Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123
+Run the Jobber scan mode and summarize new matches.
+Run the Jobber pipeline mode for data/pipeline.md.
+Run the Jobber pdf mode for the latest evaluated role.
+Run the Jobber tracker mode and summarize the current statuses.
 ```
 
 ### Tek seferlik Codex (`codex exec`)
 
 ```bash
-codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
-codex exec "Run career-ops scan mode in this repo and summarize new matches."
-codex exec "Run career-ops pipeline mode for data/pipeline.md."
-codex exec "Run career-ops pdf mode for the latest evaluated role."
-codex exec "Run career-ops tracker mode and summarize the current statuses."
+codex exec "Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123"
+codex exec "Run Jobber scan mode in this repo and summarize new matches."
+codex exec "Run Jobber pipeline mode for data/pipeline.md."
+codex exec "Run Jobber pdf mode for the latest evaluated role."
+codex exec "Run Jobber tracker mode and summarize the current statuses."
 ```
 
 ## Grok Build CLI Entegrasyonu
 
-career-ops, Claude Code ve OpenCode'u desteklediği gibi Grok Build CLI'yi de doğal olarak destekler. `AGENTS.md` proje kuralları olarak otomatik yüklenir ve tüm slash komutları ortak skill giriş noktası üzerinden kullanılabilir.
+Jobber, Claude Code ve OpenCode'u desteklediği gibi Grok Build CLI'yi de doğal olarak destekler. `AGENTS.md` proje kuralları olarak otomatik yüklenir ve tüm slash komutları ortak skill giriş noktası üzerinden kullanılabilir.
 
 ### Yerel Grok Build CLI
 
 ```bash
-# 1. career-ops dizininde çalıştırın
-cd career-ops
+# 1. Jobber dizininde çalıştırın
+cd Jobber
 grok
 
-# 2. Alt komutlarla birleşik /career-ops komutunu kullanın:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Alt komutlarla birleşik /jobber komutunu kullanın:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
 Headless toplu işlemler için `grok -p "prompt"` kullanın (araç çalıştırmalarını otomatik onaylamak için `--yolo` ekleyin).
@@ -281,26 +283,26 @@ npm run gemini:eval -- "JD text here"
 
 ## Kullanım
 
-career-ops paylaşılan bir komut yönlendiricisi kullanır. Slash komutlarını kaydeden CLI'lerde şöyle görünür:
+Jobber paylaşılan bir komut yönlendiricisi kullanır. Slash komutlarını kaydeden CLI'lerde şöyle görünür:
 
 ```
-/career-ops                → Tüm kullanılabilir komutları göster
-/career-ops {bir iş ilanı yapıştırın}   → Tam otomatik hat (değerlendirme + PDF + tracker)
-/career-ops scan           → Yeni ilanlar için portalları tara
-/career-ops pdf            → ATS uyumlu CV üret
-/career-ops cover          → Ön yazı üretici (iş ilanı yapıştırın veya /career-ops cover {slug})
-/career-ops email          → Resmi başvuru e-postası taslağı (yalnızca taslak; asla göndermez, iletmez veya tıklamaz)
-/career-ops batch          → Birden fazla ilanı toplu değerlendir
-/career-ops tracker        → Başvuru durumunu görüntüle
-/career-ops apply          → Yapay zekâ ile başvuru formlarını doldur
-/career-ops pipeline       → Bekleyen URL'leri işle
-/career-ops contacto       → İşe alım uzmanı / recruiter / ekip üyesi bul + her kişi türü için ≤300 karakterlik LinkedIn mesajı taslağı hazırla
-/career-ops deep           → Yapılandırılmış 6 eksenli bir araştırma istemi üret (yapay zekâ stratejisi, son hamleler, kültür, zorluklar, rakipler, aday açısı)
-/career-ops training       → Bir kurs/sertifikayı değerlendir
-/career-ops project        → Bir portföy projesini değerlendir
+/jobber                → Tüm kullanılabilir komutları göster
+/jobber {bir iş ilanı yapıştırın}   → Tam otomatik hat (değerlendirme + PDF + tracker)
+/jobber scan           → Yeni ilanlar için portalları tara
+/jobber pdf            → ATS uyumlu CV üret
+/jobber cover          → Ön yazı üretici (iş ilanı yapıştırın veya /jobber cover {slug})
+/jobber email          → Resmi başvuru e-postası taslağı (yalnızca taslak; asla göndermez, iletmez veya tıklamaz)
+/jobber batch          → Birden fazla ilanı toplu değerlendir
+/jobber tracker        → Başvuru durumunu görüntüle
+/jobber apply          → Yapay zekâ ile başvuru formlarını doldur
+/jobber pipeline       → Bekleyen URL'leri işle
+/jobber contacto       → İşe alım uzmanı / recruiter / ekip üyesi bul + her kişi türü için ≤300 karakterlik LinkedIn mesajı taslağı hazırla
+/jobber deep           → Yapılandırılmış 6 eksenli bir araştırma istemi üret (yapay zekâ stratejisi, son hamleler, kültür, zorluklar, rakipler, aday açısı)
+/jobber training       → Bir kurs/sertifikayı değerlendir
+/jobber project        → Bir portföy projesini değerlendir
 ```
 
-Ya da doğrudan bir iş ilanı URL'si veya açıklaması yapıştırın -- career-ops bunu otomatik algılar ve tam hattı çalıştırır.
+Ya da doğrudan bir iş ilanı URL'si veya açıklaması yapıştırın -- Jobber bunu otomatik algılar ve tam hattı çalıştırır.
 
 Codex'te slash komutları garanti değildir. Bunun yerine bir istem içinde aynı mod adlarını kullanın veya bunları `codex exec`'ten çağırın.
 
@@ -366,7 +368,7 @@ Ayrıca **deneysel bir web arayüzü** de var (alfa, opt-in — siz başlatmadı
 ## Proje Yapısı
 
 ```
-career-ops/
+jobber/
 ├── AGENTS.md                    # Kanonik ajan talimatları (tüm CLI'ler)
 ├── CLAUDE.md                    # Claude Code sarmalayıcısı (AGENTS.md'yi içe aktarır)
 ├── CODEX.md                     # Codex sarmalayıcısı (AGENTS.md'yi içe aktarır)
@@ -422,37 +424,37 @@ career-ops/
 
 ## SSS
 
-**career-ops nedir?**
-career-ops, açık kaynaklı, CLI'den bağımsız bir iş arama komuta merkezidir. Herhangi bir yapay zekâ kodlama CLI'sini, iş ilanlarını CV'nizle karşılaştırarak değerlendiren, ATS uyumlu PDF'ler üreten, doğru kişiyi bulan ve her şeyi tek bir yerde izleyen -- son kararı sizde bırakan -- bir hatta dönüştürür. CareerOps Manifestosu'nun ilk referans uygulamasıdır. Daha fazlası için [career-ops.org](https://career-ops.org).
+**Jobber nedir?**
+Jobber, açık kaynaklı, CLI'den bağımsız bir iş arama komuta merkezidir. Herhangi bir yapay zekâ kodlama CLI'sini, iş ilanlarını CV'nizle karşılaştırarak değerlendiren, ATS uyumlu PDF'ler üreten, doğru kişiyi bulan ve her şeyi tek bir yerde izleyen -- son kararı sizde bırakan -- bir hatta dönüştürür. Jobber Manifestosu'nun ilk referans uygulamasıdır. Daha fazlası için [jobber.org](https://jobber.org).
 
-**career-ops'u ücretsiz veya daha ucuz/yerel bir modelle çalıştırabilir miyim?**
-Evet. career-ops CLI'den bağımsızdır ve ücretsiz ile yerel modellerde çalışır -- OpenRouter ücretsiz modelleri, Ollama veya herhangi bir OpenAI uyumlu uç nokta üzerinden -- bu yüzden ücretli bir aboneliğe bağlı değilsiniz. Tam kurulum için bkz. [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md).
+**Jobber'u ücretsiz veya daha ucuz/yerel bir modelle çalıştırabilir miyim?**
+Evet. Jobber CLI'den bağımsızdır ve ücretsiz ile yerel modellerde çalışır -- OpenRouter ücretsiz modelleri, Ollama veya herhangi bir OpenAI uyumlu uç nokta üzerinden -- bu yüzden ücretli bir aboneliğe bağlı değilsiniz. Tam kurulum için bkz. [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md).
 
-**career-ops hangi yapay zekâ CLI'leriyle çalışır?**
-career-ops, açık Agent Skill Standard aracılığıyla herhangi bir büyük yapay zekâ kodlama CLI'sinde çalışır -- Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen ve daha fazlası -- bu yüzden hiçbir zaman tek bir sağlayıcıya kilitlenmez. Zaten sahip olduğunuz CLI'yi kullanın.
+**Jobber hangi yapay zekâ CLI'leriyle çalışır?**
+Jobber, açık Agent Skill Standard aracılığıyla herhangi bir büyük yapay zekâ kodlama CLI'sinde çalışır -- Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen ve daha fazlası -- bu yüzden hiçbir zaman tek bir sağlayıcıya kilitlenmez. Zaten sahip olduğunuz CLI'yi kullanın.
 
-**career-ops'u Windows'a nasıl kurarım?**
-career-ops Windows'ta çalışır. Kurulum sırasında skill'ler bir sembolik bağlantı hatasıyla yüklenemezse, çözüm [docs/FAQ.md](docs/FAQ.md) içinde. Tam adımlar için bkz. [docs/SETUP.md](docs/SETUP.md).
+**Jobber'u Windows'a nasıl kurarım?**
+Jobber Windows'ta çalışır. Kurulum sırasında skill'ler bir sembolik bağlantı hatasıyla yüklenemezse, çözüm [docs/FAQ.md](docs/FAQ.md) içinde. Tam adımlar için bkz. [docs/SETUP.md](docs/SETUP.md).
 
-**career-ops işlere benim yerime otomatik başvuruyor mu?**
-Hayır. career-ops bir filtredir, gelişigüzel her yere başvuran bir araç değil. Yapay zekâ değerlendirir, sıralar ve taslak hazırlar; siz gözden geçirir ve karar verirsiniz. Hiçbir şeyi göndermez, iletmez veya tıklamaz -- son söz her zaman sizindir. Bu insan-onaylı-döngü tasarımı işin tam da özüdür.
+**Jobber işlere benim yerime otomatik başvuruyor mu?**
+Hayır. Jobber bir filtredir, gelişigüzel her yere başvuran bir araç değil. Yapay zekâ değerlendirir, sıralar ve taslak hazırlar; siz gözden geçirir ve karar verirsiniz. Hiçbir şeyi göndermez, iletmez veya tıklamaz -- son söz her zaman sizindir. Bu insan-onaylı-döngü tasarımı işin tam da özüdür.
 
-**career-ops ücretsiz ve açık kaynak mı?**
-Evet. career-ops ücretsiz ve açık kaynaktır ve aday için her zaman öyle kalacaktır -- [CareerOps Manifestosu](https://career-ops.org/manifesto)'nun ilk referans uygulamasıdır. Okuyun ve inandıklarınızı yansıtıyorsa imzalayın.
+**Jobber ücretsiz ve açık kaynak mı?**
+Evet. Jobber ücretsiz ve açık kaynaktır ve aday için her zaman öyle kalacaktır -- [Jobber Manifestosu](https://jobber.org/manifesto)'nun ilk referans uygulamasıdır. Okuyun ve inandıklarınızı yansıtıyorsa imzalayın.
 
 ## Yazar Hakkında
 
-Ben [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, eski girişimci (hâlâ adımla çalışan bir işi kurup sattım). career-ops'u kendi iş aramamı yönetmek için inşa ettim. İşe yaradı: mevcut rolüme ulaşmak için onu kullandım.
+Ben [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, eski girişimci (hâlâ adımla çalışan bir işi kurup sattım). Jobber'u kendi iş aramamı yönetmek için inşa ettim. İşe yaradı: mevcut rolüme ulaşmak için onu kullandım.
 
-Bu deponun haftada ~4 saatle nasıl sürdürüldüğünü merak ediyorsanız [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet) yazısını okuyun.
+Bu deponun haftada ~4 saatle nasıl sürdürüldüğünü merak ediyorsanız [Agentic maintenance: how Jobber is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet) yazısını okuyun.
 
 Portföyüm ve diğer açık kaynak projelerim → [santifer.io](https://santifer.io)
 
-Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [Jobber](https://www.wikidata.org/wiki/Q139007988).
 
 ## Sorumluluk Reddi
 
-**career-ops yerel, açık kaynaklı bir araçtır, barındırılan bir hizmet DEĞİLDİR.** Bu yazılımı kullanarak şunları kabul edersiniz:
+**Jobber yerel, açık kaynaklı bir araçtır, barındırılan bir hizmet DEĞİLDİR.** Bu yazılımı kullanarak şunları kabul edersiniz:
 
 1. **Verinizin kontrolü sizde.** CV'niz, iletişim bilgileriniz ve kişisel verileriniz kendi makinenizde kalır ve doğrudan seçtiğiniz yapay zekâ sağlayıcısına (Anthropic, OpenAI vb.) gönderilir. Verilerinizi toplamıyor, saklamıyor veya bunlara erişimimiz yok.
 2. **Yapay zekânın kontrolü sizde.** Varsayılan istemler yapay zekâya başvuruları otomatik göndermemesini söyler, ancak yapay zekâ modelleri öngörülemez davranabilir. İstemleri değiştirir veya farklı modeller kullanırsanız, bunu kendi sorumluluğunuzda yaparsınız. **Göndermeden önce yapay zekâ tarafından üretilen içeriğin doğruluğunu her zaman kontrol edin.**
@@ -463,15 +465,15 @@ Tüm ayrıntılar için bkz. [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md). Bu yaz�
 
 ## Katkıda Bulunanlar
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+<a href="https://github.com/santifer/jobber/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/jobber" />
 </a>
 
-career-ops kullanarak işe mi girdiniz? [Hikayenizi paylaşın!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+Jobber kullanarak işe mi girdiniz? [Hikayenizi paylaşın!](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 ## Lisans ve Ticari Marka
 
-Kod [MIT](LICENSE) altında lisanslanmıştır. "career-ops" adı ve
+Kod [MIT](LICENSE) altında lisanslanmıştır. "jobber" adı ve
 markası, topluluk kullanımı için serbestçe uygulanan ancak ticari ürün
 adlandırma ve onayı için saklı tutulan [Ticari Marka Politikası](TRADEMARK.md)
 tarafından yönetilir.

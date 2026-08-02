@@ -137,7 +137,7 @@ const dupPair = parseContacts([
 ].join('\n'));
 eq('duplicate pair: both rows kept in JSON', dupPair.contacts.length, 2);
 eq('duplicate pair: one quality.duplicates entry', dupPair.quality.duplicates,
-  [{ uid: 'careerops-jane-doe-bc225ac5--acme-293abb6b', name: 'Jane Doe', company: 'Acme', count: 2 }]);
+  [{ uid: 'jobber-jane-doe-bc225ac5--acme-293abb6b', name: 'Jane Doe', company: 'Acme', count: 2 }]);
 
 // ============================================================================
 // 4. escapeVcard — backslash first, then ; , then newline
@@ -199,7 +199,7 @@ eq('leading/trailing dashes trimmed', slug('--Acme  Inc.--'), 'acme-inc');
 eq('slug is deterministic', slug('Jane Doe'), slug('Jane Doe'));
 
 const jane = { name: 'Jane Doe', company: 'Acme', type: 'recruiter', title: '', phone: '', email: '', linkedin: '', tracker: null, notes: '' };
-ok('UID = careerops-{uidPart(name)}--{uidPart(company)}', /UID:careerops-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}\r\n/.test(contactToVcard(jane, { rev: REV })));
+ok('UID = jobber-{uidPart(name)}--{uidPart(company)}', /UID:jobber-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}\r\n/.test(contactToVcard(jane, { rev: REV })));
 eq('same contact -> identical card under pinned REV', contactToVcard(jane, { rev: REV }), contactToVcard(jane, { rev: REV }));
 
 // Each UID part is {slug}-{8-hex sha1 of the normalized value}, or the bare
@@ -233,13 +233,13 @@ const taro = { name: '山田 太郎', company: 'Globex', type: 'hiring-manager',
 eq('CJK contact UID: same input -> same UID across two calls',
   contactToVcard(taro, { rev: REV }).match(/UID:[^\r]+/)[0],
   contactToVcard(taro, { rev: REV }).match(/UID:[^\r]+/)[0]);
-ok('CJK contact UID = careerops-{8-hex}--globex-{8-hex}', /UID:careerops-[0-9a-f]{8}--globex-[0-9a-f]{8}/.test(contactToVcard(taro, { rev: REV })));
+ok('CJK contact UID = jobber-{8-hex}--globex-{8-hex}', /UID:jobber-[0-9a-f]{8}--globex-[0-9a-f]{8}/.test(contactToVcard(taro, { rev: REV })));
 // Both name AND company fully non-ASCII: each slug is '' so BOTH uidParts fall
 // back to the bare 8-hex raw hash -> the dual-bare UID shape.
 const taroKk = { name: '山田 太郎', company: '株式会社', type: 'hiring-manager', title: '', phone: '', email: '', linkedin: '', tracker: null, notes: '' };
-ok('both-non-ASCII name+company UID is dual-bare careerops-{8-hex}--{8-hex}',
-  /^careerops-[0-9a-f]{8}--[0-9a-f]{8}$/.test(contactToVcard(taroKk, { rev: REV }).match(/UID:([^\r]+)/)[1]));
-ok('ASCII UID = careerops-jane-doe-{8-hex}--acme-{8-hex}', /^careerops-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}$/.test(contactUid(jane)));
+ok('both-non-ASCII name+company UID is dual-bare jobber-{8-hex}--{8-hex}',
+  /^jobber-[0-9a-f]{8}--[0-9a-f]{8}$/.test(contactToVcard(taroKk, { rev: REV }).match(/UID:([^\r]+)/)[1]));
+ok('ASCII UID = jobber-jane-doe-{8-hex}--acme-{8-hex}', /^jobber-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}$/.test(contactUid(jane)));
 
 // ============================================================================
 // 7. contactToVcard — structure, expected string built in code (no fixture)
@@ -254,7 +254,7 @@ const fullContact = {
 const expectedCard = [
   'BEGIN:VCARD',
   'VERSION:3.0',
-  'UID:careerops-jane-doe-bc225ac5--acme-293abb6b',
+  'UID:jobber-jane-doe-bc225ac5--acme-293abb6b',
   'FN:Jane Doe',
   'N:Doe;Jane;;;',
   'ORG:Acme',
@@ -263,7 +263,7 @@ const expectedCard = [
   'EMAIL;TYPE=INTERNET:jane@acme.io',
   'URL:https://linkedin.com/in/janedoe',
   'NOTE:recruiter — tracker #012 — met at screen\\; email\\, ok',
-  'CATEGORIES:career-ops',
+  'CATEGORIES:jobber',
   `REV:${REV}`,
   'END:VCARD',
 ].join('\r\n');
@@ -325,7 +325,7 @@ try {
 }
 
 // contacts.mjs resolves its paths from import.meta.url and is zero-dep, so a
-// copy of the script into a temp dir is a fully isolated career-ops root:
+// copy of the script into a temp dir is a fully isolated Jobber root:
 // data/contacts.tsv and output/ under the temp dir, no dependence on whatever
 // the caller's real workspace contains — a contributor with a real phonebook
 // gets the same results as CI.
@@ -357,7 +357,7 @@ try {
   ok('--vcf writes output/contacts.vcf by default', existsSync(vcfPath));
   const written = readFileSync(vcfPath, 'utf-8');
   ok('written vcf uses CRLF', written.includes('\r\n') && !/[^\r]\n/.test(written));
-  ok('written vcf carries UIDs', /UID:careerops-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}/.test(written));
+  ok('written vcf carries UIDs', /UID:jobber-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}/.test(written));
   ok('written vcf keeps the CJK name intact', written.includes('山田 太郎'));
   ok('default FN has no caller-id suffix', written.includes('FN:Jane Doe\r\n'));
 

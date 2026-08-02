@@ -1,6 +1,6 @@
-# career-ops Trademark Policy
+# Jobber Trademark Policy
 
-This document explains how the "career-ops" name and brand may be used.
+This document explains how the "jobber" name and brand may be used.
 It complements — not replaces — the MIT [LICENSE](LICENSE) that governs
 the source code.
 
@@ -16,7 +16,7 @@ the source code.
 
 The MIT license grants broad freedoms to use, copy, modify, and
 redistribute the source code. It does not grant rights to the name
-"career-ops," its visual identity, or any associated brand assets.
+"Jobber," its visual identity, or any associated brand assets.
 Those are reserved by the project's maintainer, Santiago Fernández de
 Valderrama, and any successor entity stewarding the project.
 
@@ -30,10 +30,10 @@ The following uses are explicitly welcome:
 
 - **Forking and modifying the code** — per MIT, no permission needed.
 - **Describing compatibility, origin, and lineage** — "works with
-  career-ops," "based on career-ops," "fork of career-ops," "extends
-  career-ops" are all welcome and encouraged with attribution.
+  Jobber," "based on Jobber," "fork of Jobber," "extends
+  Jobber" are all welcome and encouraged with attribution.
 - **Naming a fork distinctly** — pick your own product name; mention
-  career-ops as origin if you like.
+  Jobber as origin if you like.
 - **Educational, journalistic, and personal use** — blog posts,
   tutorials, videos, talks, papers, research.
 - **Community contributions** — using the name freely in PRs, issues,
@@ -45,20 +45,20 @@ The following uses are reserved because they cause — or can be
 reasonably perceived to cause — confusion about official affiliation,
 endorsement, or sponsorship:
 
-- **Product, service, or company names** that include "career-ops" or
+- **Product, service, or company names** that include "jobber" or
   close variants. This includes prefixes, suffixes, and capitalizations:
-  "career-ops Cloud," "career-ops Pro," "career-ops SaaS," "Career-Ops
-  Hosted," "CareerOps by [vendor]," "Cloud career-ops," etc.
+  "Jobber Cloud," "Jobber Pro," "Jobber SaaS," "Jobber
+  Hosted," "Jobber by [vendor]," "Cloud Jobber," etc.
 - **Endorsement, sponsorship, or affiliation claims** in any context:
-  "Powered by career-ops," "Official career-ops," "Sponsored by
-  career-ops," "Partner of career-ops," "Featured by career-ops," and
+  "Powered by Jobber," "Official Jobber," "Sponsored by
+  Jobber," "Partner of Jobber," "Featured by Jobber," and
   similar phrasings.
 - **Domain names, social handles, and app store listings** containing
-  "career-ops" or close variants for commercial purposes.
+  "jobber" or close variants for commercial purposes.
 - **Logos, wordmarks, color schemes, and visual identity assets** in
   any commercial context.
 - **Compatibility certifications** that imply official testing or
-  approval ("career-ops Certified," "career-ops Verified").
+  approval ("Jobber Certified," "Jobber Verified").
 
 This list is illustrative, not exhaustive. The principle is: if your
 use suggests an official relationship that doesn't exist, please ask.
@@ -79,7 +79,7 @@ use case described.
 
 ## Why this policy exists
 
-career-ops is a community-built project used by tens of thousands of
+Jobber is a community-built project used by tens of thousands of
 people. A clear brand allows the code to remain free, the documentation
 trustworthy, and contributors confident that no one is impersonating
 the project.
@@ -102,7 +102,7 @@ will be announced in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-© 2026 Santiago Fernández de Valderrama. "career-ops"™ is a trademark of
+© 2026 Santiago Fernández de Valderrama. "jobber"™ is a trademark of
 Santiago Fernández de Valderrama. A trademark application has been filed
 with the Spanish Patent and Trademark Office (OEPM) in classes 9
 (downloadable software) and 42 (Software-as-a-Service); registration

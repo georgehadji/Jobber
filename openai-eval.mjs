@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * openai-eval.mjs — OpenAI-compatible Job Offer Evaluator for career-ops
+ * openai-eval.mjs — OpenAI-compatible Job Offer Evaluator for Jobber
  *
  * Evaluate job offers with ANY OpenAI-compatible chat endpoint instead of Claude.
  * Works with OpenAI, OpenRouter, Together, Groq, DeepSeek, Zhipu GLM, MiniMax,
@@ -34,7 +34,7 @@ import { outputLanguageInstruction, parseOutputLanguage } from './profile-langua
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
-import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils/token-tracker.mjs';
+import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './lib/token-tracker.mjs';
 import { buildBudgetedPrompt } from './lib/context-budget.mjs';
 
 const tracker = new TokenAccumulator();
@@ -67,7 +67,7 @@ const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
-║       career-ops — OpenAI-compatible Evaluator (any endpoint)     ║
+║       Jobber — OpenAI-compatible Evaluator (any endpoint)     ║
 ╚══════════════════════════════════════════════════════════════════╝
 
   Evaluate a job offer with any OpenAI-compatible chat API instead of Claude.
@@ -246,7 +246,7 @@ if (budgetReport.compressed) {
   console.log(`📊  Token budget: ${budgetReport.totalTokens} tokens (within ${budgetReport.budget} limit)`);
 }
 
-const systemPrompt = `You are career-ops, an AI-powered job search assistant.
+const systemPrompt = `You are Jobber, an AI-powered job search assistant.
 You evaluate job offers against the user's CV using a structured A-G scoring system.
 
 Your evaluation methodology is defined below. Follow it exactly.
@@ -357,7 +357,7 @@ try {
 // Display evaluation
 // ---------------------------------------------------------------------------
 console.log('\n' + '═'.repeat(66));
-console.log('  CAREER-OPS EVALUATION — powered by ' + modelName + ' (' + endpointHost + ')');
+console.log('  JOBBER EVALUATION — powered by ' + modelName + ' (' + endpointHost + ')');
 console.log('═'.repeat(66) + '\n');
 console.log(evaluationText);
 

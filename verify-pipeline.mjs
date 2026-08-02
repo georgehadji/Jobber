@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * verify-pipeline.mjs — Health check for career-ops pipeline integrity
+ * verify-pipeline.mjs — Health check for Jobber pipeline integrity
  *
  * Checks:
  * 1. All statuses are canonical (per states.yml)
@@ -16,7 +16,7 @@
  * 11. Via channel consistency (see #1596)
  * 12. No # value reused across 2+ tracker rows (error — see #1704)
  *
- * Run: node career-ops/verify-pipeline.mjs
+ * Run: node jobber/verify-pipeline.mjs
  */
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, unlinkSync, statSync } from 'fs';
@@ -24,23 +24,23 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { looksLikeScoreCell, isSeparatorRow, isHeaderRow, resolveColumns } from './tracker-parse.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
-// CAREER_OPS_TRACKER overrides the path (used by tests and non-standard layouts).
-const APPS_FILE = process.env.CAREER_OPS_TRACKER
-  ? process.env.CAREER_OPS_TRACKER
-  : existsSync(join(CAREER_OPS, 'data/applications.md'))
-    ? join(CAREER_OPS, 'data/applications.md')
-    : join(CAREER_OPS, 'applications.md');
-const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
-// CAREER_OPS_REPORTS overrides the reports dir (used by tests, mirrors CAREER_OPS_TRACKER).
-const REPORTS_DIR = process.env.CAREER_OPS_REPORTS || join(CAREER_OPS, 'reports');
-const STATES_FILE = existsSync(join(CAREER_OPS, 'templates/states.yml'))
-  ? join(CAREER_OPS, 'templates/states.yml')
-  : join(CAREER_OPS, 'states.yml');
+// JOBBER_TRACKER overrides the path (used by tests and non-standard layouts).
+const APPS_FILE = process.env.JOBBER_TRACKER
+  ? process.env.JOBBER_TRACKER
+  : existsSync(join(JOBBER, 'data/applications.md'))
+    ? join(JOBBER, 'data/applications.md')
+    : join(JOBBER, 'applications.md');
+const ADDITIONS_DIR = join(JOBBER, 'batch/tracker-additions');
+// JOBBER_REPORTS overrides the reports dir (used by tests, mirrors JOBBER_TRACKER).
+const REPORTS_DIR = process.env.JOBBER_REPORTS || join(JOBBER, 'reports');
+const STATES_FILE = existsSync(join(JOBBER, 'templates/states.yml'))
+  ? join(JOBBER, 'templates/states.yml')
+  : join(JOBBER, 'states.yml');
 
 // Ensure required directories exist (fresh setup)
-mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(join(JOBBER, 'data'), { recursive: true });
 mkdirSync(REPORTS_DIR, { recursive: true });
 
 const CANONICAL_STATUSES = [
@@ -168,7 +168,7 @@ for (const e of entries) {
   const match = e.report.match(/\]\(([^)]+)\)/);
   if (!match) continue;
   const link = match[1];
-  if (!existsSync(join(TRACKER_DIR, link)) && !existsSync(join(CAREER_OPS, link))) {
+  if (!existsSync(join(TRACKER_DIR, link)) && !existsSync(join(JOBBER, link))) {
     error(`#${e.num}: Report not found: ${link}`);
     brokenReports++;
   }

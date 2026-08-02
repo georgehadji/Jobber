@@ -69,7 +69,7 @@ jobs:
             const login = context.payload.pull_request.user.login;
             await github.rest.issues.createComment({
               ...context.repo, issue_number: context.payload.pull_request.number,
-              body: `Format valid. You're in the queue — signatures land in waves. Your line will live at https://career-ops.org/manifesto/s/${login}\n\nIf GitHub reports a merge conflict, do nothing; we handle it.`
+              body: `Format valid. You're in the queue — signatures land in waves. Your line will live at https://jobber.org/manifesto/s/${login}\n\nIf GitHub reports a merge conflict, do nothing; we handle it.`
             });
       - name: Friendly fix-it (invalid)
         if: failure()

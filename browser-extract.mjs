@@ -37,7 +37,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { LIVENESS_CONTEXT_OPTIONS, rejectPrivateOrInvalid } from './liveness-browser.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const HYDRATION_WAIT_MS = 2_000;
@@ -61,7 +61,7 @@ const NAV_LABEL_STOPWORDS = new Set([
  * @param {string} [profilePath]
  * @returns {'cli'|'mcp'}
  */
-export function resolveExtractorMode(profilePath = join(CAREER_OPS, 'config/profile.yml')) {
+export function resolveExtractorMode(profilePath = join(JOBBER, 'config/profile.yml')) {
   try {
     if (!existsSync(profilePath)) return 'mcp';
     const raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};

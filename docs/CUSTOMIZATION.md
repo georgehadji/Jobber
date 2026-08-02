@@ -52,7 +52,7 @@ The negotiation section provides frameworks for salary discussions. Replace the 
 
 ## Hooks (Optional)
 
-Career-ops can integrate with external systems via Claude Code hooks. Example hooks:
+Jobber can integrate with external systems via Claude Code hooks. Example hooks:
 
 ```json
 {
@@ -60,7 +60,7 @@ Career-ops can integrate with external systems via Claude Code hooks. Example ho
     "SessionStart": [{
       "hooks": [{
         "type": "command",
-        "command": "echo 'Career-ops session started'"
+        "command": "echo 'Jobber session started'"
       }]
     }]
   }

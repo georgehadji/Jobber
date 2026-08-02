@@ -1,10 +1,10 @@
 ---
-name: career-ops
+name: jobber
 description: >-
   AI job search command center -- evaluate offers, generate CVs, scan portals,
   track applications. Use when the user pastes a job URL or JD, asks to scan
   portals, generate a CV/PDF, track applications, prepare for interviews, draft
-  outreach/emails, or run any career-ops mode.
+  outreach/emails, or run any Jobber mode.
 arguments: mode
 user_invocable: true
 user-invocable: true
@@ -12,26 +12,26 @@ argument-hint: "[scan | discover | deep | pdf | latex | latex-tex | cover | emai
 license: MIT
 ---
 
-# career-ops -- Router
+# Jobber -- Router
 
-career-ops is a multi-CLI job-search command center. The routing below is shared across supported agent CLIs even when the invocation surface differs.
+Jobber is a multi-CLI job-search command center. The routing below is shared across supported agent CLIs even when the invocation surface differs.
 
 ## Invocation Notes
 
-- CLIs with slash-command registration can expose this router as `/career-ops`.
-- In Cursor, this skill lives at `.cursor/skills/career-ops/` and is auto-discovered; ask for a mode by name, or paste a JD/URL to trigger auto-pipeline.
-- Interactive Codex sessions use `codex` in the repo root. Slash commands are not guaranteed in Codex, so ask Codex to run the same mode by name if `/career-ops` is unavailable.
+- CLIs with slash-command registration can expose this router as `/jobber`.
+- In Cursor, this skill lives at `.cursor/skills/jobber/` and is auto-discovered; ask for a mode by name, or paste a JD/URL to trigger auto-pipeline.
+- Interactive Codex sessions use `codex` in the repo root. Slash commands are not guaranteed in Codex, so ask Codex to run the same mode by name if `/jobber` is unavailable.
 - Headless Codex workers use `codex exec "prompt"`.
 - The routing semantics below stay the same regardless of whether the entrypoint is a slash command or a natural-language prompt.
 
 Codex prompt examples that map to the same router semantics:
 
 ```text
-Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
-Run the career-ops scan mode and summarize new matches.
-Run the career-ops pipeline mode for data/pipeline.md.
-Run the career-ops pdf mode for the latest evaluated role.
-Run the career-ops tracker mode and summarize the current statuses.
+Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123
+Run the Jobber scan mode and summarize new matches.
+Run the Jobber pipeline mode for data/pipeline.md.
+Run the Jobber pdf mode for the latest evaluated role.
+Run the Jobber tracker mode and summarize the current statuses.
 ```
 
 ## Mode Routing
@@ -103,62 +103,62 @@ Inject this directive after loading the mode instructions and before producing a
 
 ## Discovery Mode (no arguments)
 
-If your CLI supports `/career-ops`, show this menu. In Codex, surface the same options in plain text and map the requested mode the same way.
+If your CLI supports `/jobber`, show this menu. In Codex, surface the same options in plain text and map the requested mode the same way.
 
 Concrete equivalents for Codex prompt-driven sessions:
 
 ```text
-/career-ops {JD}           ↔ "Evaluate this JD with career-ops auto-pipeline: {JD or URL}"
-/career-ops scan           ↔ "Run the career-ops scan mode and summarize new matches."
-/career-ops pipeline       ↔ "Run the career-ops pipeline mode for data/pipeline.md."
-/career-ops pdf            ↔ "Run the career-ops pdf mode for the latest evaluated role."
-/career-ops email          ↔ "Run the career-ops email mode for the latest evaluated role."
-/career-ops tracker        ↔ "Run the career-ops tracker mode and summarize the current statuses."
+/jobber {JD}           ↔ "Evaluate this JD with Jobber auto-pipeline: {JD or URL}"
+/jobber scan           ↔ "Run the Jobber scan mode and summarize new matches."
+/jobber pipeline       ↔ "Run the Jobber pipeline mode for data/pipeline.md."
+/jobber pdf            ↔ "Run the Jobber pdf mode for the latest evaluated role."
+/jobber email          ↔ "Run the Jobber email mode for the latest evaluated role."
+/jobber tracker        ↔ "Run the Jobber tracker mode and summarize the current statuses."
 ```
 
 Show this menu:
 
 ```
-career-ops -- Command Center
+Jobber -- Command Center
 
 Available commands:
-  /career-ops {JD}      → AUTO-PIPELINE: evaluate + report + PDF + tracker (paste text or URL)
-  /career-ops pipeline  → Process pending URLs from inbox (data/pipeline.md)
-  /career-ops oferta    → Evaluation only A-F (no auto PDF)
-  /career-ops ofertas   → Compare and rank multiple offers
-  /career-ops contacto  → LinkedIn power move: find contacts + draft message
-  /career-ops deep      → Deep research prompt about company
-  /career-ops interview-prep → Generate company-specific interview prep doc
-  /career-ops interview    → Interactive profile/CV onboarding interview
-  /career-ops eu-swe    → Calibrate a European SWE application before CV/apply/interview
-  /career-ops eu-fintech → Scan 21 EU fintech portals for Product Manager roles (zero-token)
-  /career-ops interview/plan → Time-blocked prep plan for an upcoming interview
-  /career-ops interview/practice → Practice interview, one question at a time with feedback
-  /career-ops interview/debrief → Post-interview debrief: close gaps, predict next round
-  /career-ops pdf       → PDF only, ATS-optimized CV
-  /career-ops latex     → Export CV as LaTeX/Overleaf .tex
-  /career-ops latex-tex → Tailor your own resume.tex in place (opt-in; cv.md stays default)
-  /career-ops cover     → Cover letter: standalone JD paste or /career-ops cover {slug}
-  /career-ops email     → Formal application email draft (draft-only; never sends, submits, or clicks)
-  /career-ops add       → Add a project/paper/role to your CV (fetch + preview + confirm)
-  /career-ops expand    → Auto-discover and add missing competencies from profile links
-  /career-ops training  → Evaluate course/cert against North Star
-  /career-ops project   → Evaluate portfolio project idea
-  /career-ops tracker   → Application status overview
-  /career-ops agent-inbox → Queue/drain requests for the next session (data/agent-inbox.md)
-  /career-ops apply     → Live application assistant (reads form + generates answers)
-  /career-ops scan      → Scan portals and discover new offers
-  /career-ops discover  → Resolve a company list to scannable ATS boards + append to portals.yml (zero-token)
-  /career-ops batch     → Batch processing with parallel workers
-  /career-ops patterns  → Analyze rejection patterns and improve targeting
-  /career-ops offer-prep → Read a received offer/contract with the candidate: clause walk + lawyer questions (not legal advice)
-  /career-ops titles    → Suggest adjacent job titles from your CV to broaden the search
-  /career-ops upskill   → Aggregate skill-gap analysis from your evaluated reports
-  /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
-  /career-ops outcome   → Record application outcome & archive artifacts
-  /career-ops update    → Update career-ops system files with diff preview + compat check
+  /jobber {JD}      → AUTO-PIPELINE: evaluate + report + PDF + tracker (paste text or URL)
+  /jobber pipeline  → Process pending URLs from inbox (data/pipeline.md)
+  /jobber oferta    → Evaluation only A-F (no auto PDF)
+  /jobber ofertas   → Compare and rank multiple offers
+  /jobber contacto  → LinkedIn power move: find contacts + draft message
+  /jobber deep      → Deep research prompt about company
+  /jobber interview-prep → Generate company-specific interview prep doc
+  /jobber interview    → Interactive profile/CV onboarding interview
+  /jobber eu-swe    → Calibrate a European SWE application before CV/apply/interview
+  /jobber eu-fintech → Scan 21 EU fintech portals for Product Manager roles (zero-token)
+  /jobber interview/plan → Time-blocked prep plan for an upcoming interview
+  /jobber interview/practice → Practice interview, one question at a time with feedback
+  /jobber interview/debrief → Post-interview debrief: close gaps, predict next round
+  /jobber pdf       → PDF only, ATS-optimized CV
+  /jobber latex     → Export CV as LaTeX/Overleaf .tex
+  /jobber latex-tex → Tailor your own resume.tex in place (opt-in; cv.md stays default)
+  /jobber cover     → Cover letter: standalone JD paste or /jobber cover {slug}
+  /jobber email     → Formal application email draft (draft-only; never sends, submits, or clicks)
+  /jobber add       → Add a project/paper/role to your CV (fetch + preview + confirm)
+  /jobber expand    → Auto-discover and add missing competencies from profile links
+  /jobber training  → Evaluate course/cert against North Star
+  /jobber project   → Evaluate portfolio project idea
+  /jobber tracker   → Application status overview
+  /jobber agent-inbox → Queue/drain requests for the next session (data/agent-inbox.md)
+  /jobber apply     → Live application assistant (reads form + generates answers)
+  /jobber scan      → Scan portals and discover new offers
+  /jobber discover  → Resolve a company list to scannable ATS boards + append to portals.yml (zero-token)
+  /jobber batch     → Batch processing with parallel workers
+  /jobber patterns  → Analyze rejection patterns and improve targeting
+  /jobber offer-prep → Read a received offer/contract with the candidate: clause walk + lawyer questions (not legal advice)
+  /jobber titles    → Suggest adjacent job titles from your CV to broaden the search
+  /jobber upskill   → Aggregate skill-gap analysis from your evaluated reports
+  /jobber followup  → Follow-up cadence tracker: flag overdue, generate drafts
+  /jobber outcome   → Record application outcome & archive artifacts
+  /jobber update    → Update Jobber system files with diff preview + compat check
 
-Inbox: add URLs to data/pipeline.md → /career-ops pipeline
+Inbox: add URLs to data/pipeline.md → /jobber pipeline
 Or paste a JD directly to run the full pipeline.
 ```
 
@@ -190,7 +190,7 @@ For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as a wor
 Agent(
   subagent_type="general-purpose",
   prompt="[output language directive]\n\n[content of modes/_shared.md]\n\n[content of modes/_profile.md if exists]\n\n[content of modes/_custom.md if exists]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
-  description="career-ops {mode}"
+  description="Jobber {mode}"
 )
 ```
 

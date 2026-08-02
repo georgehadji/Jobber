@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * plugins/_engine.mjs — the career-ops plugin engine.
+ * plugins/_engine.mjs — the Jobber plugin engine.
  *
  * Generalizes the proven providers/ auto-loader (scan.mjs `loadProviders`) into
  * a sibling `plugins/` layer for integrations that need a KEY or talk to an
@@ -43,10 +43,10 @@ export const HOOK_KINDS = ['provider', 'ingest', 'search', 'notify', 'export'];
  */
 export const RESERVED_ENV = new Set([
   'GEMINI_API_KEY', 'GEMINI_MODEL',
-  'OPENROUTER_API_KEY', 'CAREER_OPS_MODEL',
+  'OPENROUTER_API_KEY', 'JOBBER_MODEL',
   'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'OPENAI_MODEL',
   'ANTHROPIC_API_KEY',
-  'CAREER_OPS_PORTALS', 'CAREER_OPS_PROFILE',
+  'JOBBER_PORTALS', 'JOBBER_PROFILE',
   'PATH', 'HOME', 'NODE_OPTIONS', 'LD_PRELOAD', 'NODE_EXTRA_CA_CERTS',
 ]);
 

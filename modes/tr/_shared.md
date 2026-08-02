@@ -1,4 +1,4 @@
-# Ortak Bağlam -- career-ops (Türkçe)
+# Ortak Bağlam -- Jobber (Türkçe)
 
 <!-- ============================================================
      BU DOSYA OTOMATİK GÜNCELLENEBİLİR. Buraya kişisel veri ekleme.

@@ -1,10 +1,10 @@
-# Delt kontekst -- career-ops (Dansk)
+# Delt kontekst -- Jobber (Dansk)
 
 <!-- ============================================================
      TILPASNING AF DENNE FIL
      ============================================================
-     Denne fil indeholder den delte kontekst for alle career-ops-modes
-     i den danske version. Før du bruger career-ops, SKAL du:
+     Denne fil indeholder den delte kontekst for alle jobber-modes
+     i den danske version. Før du bruger Jobber, SKAL du:
      1. Udfylde config/profile.yml med dine personlige oplysninger
      2. Oprette cv.md i projektets rod (CV i Markdown)
      3. (Valgfrit) Oprette article-digest.md med dine proof points

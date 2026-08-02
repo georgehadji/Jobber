@@ -23,7 +23,7 @@ jobs:
             const pr = context.payload.pull_request;
             const esc = (s) => s.replace(/([*_~`|\\])/g, '\\$1');
             const first = pr.author_association === 'FIRST_TIME_CONTRIBUTOR'
-              ? '\n🎉 first contribution to career-ops' : '';
+              ? '\n🎉 first contribution to Jobber' : '';
             const embed = {
               description: `**PR #${pr.number} merged** — ${esc(pr.title)} — by @${esc(pr.user.login)}${first}`,
               url: pr.html_url,
@@ -32,7 +32,7 @@ jobs:
             const r = await fetch(process.env.WEBHOOK, {
               method: 'POST', headers: { 'content-type': 'application/json' },
               body: JSON.stringify({
-                username: 'career-ops bot',
+                username: 'Jobber bot',
                 avatar_url: 'https://cdn.discordapp.com/avatars/1491495413184725002/af49719ebbad192020cfe0af6531ce57.webp',
                 embeds: [embed]
               })

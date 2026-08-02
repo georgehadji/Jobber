@@ -21,7 +21,7 @@
  * would still let a cold parallel burst through. With both, the 29 above
  * becomes 1.
  *
- * Why patch `dns.lookup` rather than configure the HTTP client: career-ops
+ * Why patch `dns.lookup` rather than configure the HTTP client: Jobber
  * depends on no HTTP library — providers call the global `fetch()`. Node
  * exposes no supported way to give `fetch()` a custom resolver without
  * taking on `undici` as a direct dependency to build an `Agent` with a
@@ -43,9 +43,9 @@
  *   - Failed resolutions are never cached, so an outage cannot be pinned in.
  *
  * Two env knobs, both read at import time:
- *   - `CAREER_OPS_NO_DNS_CACHE=1` opts out entirely — no memoization AND no
+ *   - `JOBBER_NO_DNS_CACHE=1` opts out entirely — no memoization AND no
  *     pacing, since both live inside this patched lookup.
- *   - `CAREER_OPS_DNS_LOOKUPS_PER_MIN` caps resolver-bound lookups
+ *   - `JOBBER_DNS_LOOKUPS_PER_MIN` caps resolver-bound lookups
  *     (default 400; `0` disables pacing but keeps the cache).
  */
 
@@ -330,7 +330,7 @@ export function createCachedLookup(realLookup, options = {}) {
  * @returns {number} Lookups per minute; 0 disables pacing.
  */
 export function lookupsPerMinFromEnv(env = process.env) {
-  const raw = env.CAREER_OPS_DNS_LOOKUPS_PER_MIN;
+  const raw = env.JOBBER_DNS_LOOKUPS_PER_MIN;
   // Trim before the blank check: Number(' ') is 0, and 0 is the documented
   // "pacing off" value, so a whitespace-only setting would silently disable
   // the limiter rather than fall back like any other unusable value.
@@ -338,7 +338,7 @@ export function lookupsPerMinFromEnv(env = process.env) {
   const n = Number(raw);
   if (!Number.isFinite(n) || n < 0) {
     console.error(
-      `⚠ CAREER_OPS_DNS_LOOKUPS_PER_MIN=${raw} is not a non-negative number — `
+      `⚠ JOBBER_DNS_LOOKUPS_PER_MIN=${raw} is not a non-negative number — `
       + `using the default ${DEFAULT_LOOKUPS_PER_MIN} lookups/min`,
     );
     return DEFAULT_LOOKUPS_PER_MIN;
@@ -360,7 +360,7 @@ export function dnsPacingStats() {
   return patched ? patched.pacingStats() : { delayed: 0, waitedMs: 0 };
 }
 
-if (process.env.CAREER_OPS_NO_DNS_CACHE !== '1') {
+if (process.env.JOBBER_NO_DNS_CACHE !== '1') {
   patched = /** @type {any} */ (createCachedLookup(dns.lookup, { lookupsPerMin: lookupsPerMinFromEnv() }));
   dns.lookup = /** @type {any} */ (patched);
 }

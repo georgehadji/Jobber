@@ -1,6 +1,6 @@
 # Hardening Plan
 
-Implementation plan for type enforcement, contract testing, dead-code detection, and style floor in career-ops — derived from a comparative review against [JobOps](https://github.com/DaKheera47/job-ops).
+Implementation plan for type enforcement, contract testing, dead-code detection, and style floor in Jobber — derived from a comparative review against [JobOps](https://github.com/DaKheera47/job-ops).
 
 **Status:** proposal. Nothing here is implemented yet.
 
@@ -13,14 +13,14 @@ Every item below is designed against the architecture in [ARCHITECTURE.md](../AR
 | Constraint | Consequence for this plan |
 |---|---|
 | **No build step** — pure ESM `.mjs`, run directly by `node` | Type checking must be *analysis-only* (`--noEmit`). No transpile, no `dist/`, no source rewrite. TypeScript syntax is off the table; JSDoc is the vehicle. |
-| **Flat root is deliberate** ([#1386](https://github.com/santifer/career-ops/issues/1386)) | New tooling adds config files at root, not directory reorganization. |
+| **Flat root is deliberate** ([#1386](https://github.com/santifer/jobber/issues/1386)) | New tooling adds config files at root, not directory reorganization. |
 | **Every tracked file must be in `SYSTEM_PATHS` or `USER_PATHS`** | Each new file below names its registration explicitly. `validate-system-paths-coverage.mjs` fails CI otherwise. |
 | **Files are canonical, DBs derived** | Untouched. Nothing here introduces a store. |
 | **The brain is Markdown** | No scoring logic moves into code. |
 | **Local-first, zero-keys** | No new runtime dependency. Everything added is a `devDependency` or zero-dep. |
 | **`--self-test` convention** | New validators embed their own self-tests behind `--self-test`, matching `validate-system-paths-coverage.mjs`, `analyze-patterns.mjs`, et al. |
 
-**Paradigm note.** career-ops is not object-oriented and should not become so. It is *module-oriented functional*: pure functions over plain data, side effects pushed to the edges (`fs`, `fetch`), dependency injection by parameter (the `ctx` object handed to `provider.fetch`). Every pattern named below is chosen to fit that grain — no classes, no inheritance, no DI container.
+**Paradigm note.** Jobber is not object-oriented and should not become so. It is *module-oriented functional*: pure functions over plain data, side effects pushed to the edges (`fs`, `fetch`), dependency injection by parameter (the `ctx` object handed to `provider.fetch`). Every pattern named below is chosen to fit that grain — no classes, no inheritance, no DI container.
 
 ---
 
@@ -402,7 +402,7 @@ CI already does exactly this.
 
 ## Phase 6 — Location intelligence (plugin, sketch only)
 
-JobOps carries ~29 KB of location-domain logic plus dedicated visa-sponsorship providers. career-ops has substring `location_filter` matching in `portals.yml`.
+JobOps carries ~29 KB of location-domain logic plus dedicated visa-sponsorship providers. Jobber has substring `location_filter` matching in `portals.yml`.
 
 For a tool shipping six market-specific mode sets, *"is this role actually reachable from where I live, and will they sponsor?"* is a real scoring input currently unmodelled.
 

@@ -1,5 +1,5 @@
 {
-  "name": "career-ops",
+  "name": "jobber",
   "version": "1.24.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, Codex, OpenCode, Antigravity, Grok, Qwen, Kimi, Copilot)",
   "private": true,
@@ -69,8 +69,7 @@
     "claude-code",
     "opencode",
     "career",
-    "career-ops",
-    "careerops",
+    "jobber",
     "automation",
     "codex",
     "antigravity",
@@ -84,7 +83,7 @@
   "homepage": "https://santifer.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/santifer/career-ops"
+    "url": "https://github.com/santifer/jobber"
   },
   "license": "MIT",
   "dependencies": {

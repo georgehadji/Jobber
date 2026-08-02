@@ -1,6 +1,6 @@
-# career-ops -- Modalità in italiano (`modes/it/`)
+# Jobber -- Modalità in italiano (`modes/it/`)
 
-Questa cartella contiene le traduzioni in italiano delle principali modalità di career-ops per i candidati che si rivolgono al mercato italiano.
+Questa cartella contiene le traduzioni in italiano delle principali modalità di Jobber per i candidati che si rivolgono al mercato italiano.
 
 ## Quando usare queste modalità?
 

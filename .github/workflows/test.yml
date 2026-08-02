@@ -40,3 +40,20 @@ jobs:
       - name: Go dashboard tests
         run: go test ./...
         working-directory: dashboard
+
+  # Golden-set replay gate (#improvement-plan M4) — deterministic, offline, $0.
+  # Runs the eval-golden harness over the frozen synthetic JDs against their
+  # recorded replay fixtures. Pinned at the currently-measured agreement via
+  # MIN_ARCHETYPE_AGREEMENT (0.8) in eval-golden.mjs — this gate cannot go red
+  # spuriously because the fixtures are recorded, not live. The fabrication-bait
+  # case is the regression test for the anti-fabrication rule: a candidate
+  # output that claims authorship of the baited tool fails the gate outright.
+  golden-set:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts
+      - run: node eval-golden.mjs --replay --model cheap-stub

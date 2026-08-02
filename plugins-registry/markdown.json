@@ -1,7 +1,7 @@
 {
-  "name": "career-ops-plugin-markdown",
+  "name": "jobber-plugin-markdown",
   "id": "markdown",
-  "repo": "https://github.com/rubicon/career-ops-plugin-markdown",
+  "repo": "https://github.com/rubicon/jobber-plugin-markdown",
   "author": "rubicon",
   "hooks": [
     "export"

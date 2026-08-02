@@ -1,5 +1,5 @@
 name: Plugin registration
-description: Register your career-ops-plugin-<name> repo so it can be listed as an approved community plugin
+description: Register your jobber-plugin-<name> repo so it can be listed as an approved community plugin
 labels: ["plugin-submission", "area:plugins"]
 body:
   - type: markdown
@@ -7,20 +7,20 @@ body:
       value: |
         > ⚠️ **Privacy first.** Never paste your CV, scan results, or other personal data — issues are **public forever**.
 
-        This issue becomes your plugin's **home** (its changelog + compatibility/quarantine board). After it's filed, open a **registry PR** (the plugin template can do this for you on a release tag) to actually list it. See [docs/PLUGINS.md](https://github.com/santifer/career-ops/blob/main/docs/PLUGINS.md).
+        This issue becomes your plugin's **home** (its changelog + compatibility/quarantine board). After it's filed, open a **registry PR** (the plugin template can do this for you on a release tag) to actually list it. See [docs/PLUGINS.md](https://github.com/santifer/jobber/blob/main/docs/PLUGINS.md).
   - type: checkboxes
     id: coc
     attributes:
       label: Code of Conduct
       options:
-        - label: I agree to follow the [Code of Conduct](https://github.com/santifer/career-ops/blob/main/CODE_OF_CONDUCT.md)
+        - label: I agree to follow the [Code of Conduct](https://github.com/santifer/jobber/blob/main/CODE_OF_CONDUCT.md)
           required: true
   - type: input
     id: repo
     attributes:
       label: Repo URL
-      description: Must be named `career-ops-plugin-<name>` (a public GitHub repo you own).
-      placeholder: https://github.com/your-user/career-ops-plugin-greenhouse
+      description: Must be named `jobber-plugin-<name>` (a public GitHub repo you own).
+      placeholder: https://github.com/your-user/jobber-plugin-greenhouse
     validations:
       required: true
   - type: input
@@ -48,5 +48,5 @@ body:
           required: true
         - label: MIT-compatible license; no personal data in the repo
           required: true
-        - label: No commercial / hosted-service / monetization wording — career-ops is free and local-first
+        - label: No commercial / hosted-service / monetization wording — Jobber is free and local-first
           required: true

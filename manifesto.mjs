@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// manifesto.mjs — read The CareerOps Manifesto and open the signing page.
+// manifesto.mjs — read The Jobber Manifesto and open the signing page.
 // Zero dependencies. No network calls beyond opening your own browser.
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const PAGE = 'https://career-ops.org/manifesto';
+const PAGE = 'https://jobber.org/manifesto';
 
 try {
   const text = readFileSync(join(here, 'MANIFESTO.md'), 'utf8');

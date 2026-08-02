@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/santifer/career-ops/dashboard/internal/model"
+	"github.com/santifer/jobber/dashboard/internal/model"
 )
 
 var (
@@ -31,19 +31,19 @@ var (
 )
 
 // resolveReportPath converts a report link from the tracker into a path
-// relative to careerOpsPath. Links are normally relative to the tracker
+// relative to jobberPath. Links are normally relative to the tracker
 // file's own directory (see merge-tracker.mjs link normalization, #760);
 // legacy trackers may still carry root-relative links, so fall back to the
 // raw link when the tracker-relative resolution does not exist on disk.
-func resolveReportPath(careerOpsPath, trackerPath, link string) string {
+func resolveReportPath(jobberPath, trackerPath, link string) string {
 	resolved := filepath.Join(filepath.Dir(trackerPath), link)
 	if _, err := os.Stat(resolved); err != nil {
-		legacy := filepath.Join(careerOpsPath, link)
+		legacy := filepath.Join(jobberPath, link)
 		if _, err2 := os.Stat(legacy); err2 == nil {
 			resolved = legacy
 		}
 	}
-	if rel, err := filepath.Rel(careerOpsPath, resolved); err == nil {
+	if rel, err := filepath.Rel(jobberPath, resolved); err == nil {
 		return rel
 	}
 	return link
@@ -51,12 +51,12 @@ func resolveReportPath(careerOpsPath, trackerPath, link string) string {
 
 // ParseApplications reads applications.md and returns parsed applications.
 // It tries both {path}/applications.md and {path}/data/applications.md for compatibility.
-func ParseApplications(careerOpsPath string) []model.CareerApplication {
-	filePath := filepath.Join(careerOpsPath, "applications.md")
+func ParseApplications(jobberPath string) []model.CareerApplication {
+	filePath := filepath.Join(jobberPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		// Fallback: try data/ subdirectory
-		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
+		filePath = filepath.Join(jobberPath, "data", "applications.md")
 		content, err = os.ReadFile(filePath)
 		if err != nil {
 			return nil
@@ -117,12 +117,12 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 		// Parse report link. Tracker links are written relative to the
 		// tracker file itself (e.g. ../reports/... when the tracker lives in
 		// data/), so resolve against the tracker's directory and normalize
-		// back to a careerOpsPath-relative path, which is what every
+		// back to a jobberPath-relative path, which is what every
 		// consumer joins against. Legacy root-relative links are kept as a
 		// fallback when the resolved file does not exist.
 		if rm := reReportLink.FindStringSubmatch(at("report")); rm != nil {
 			app.ReportNumber = rm[1]
-			app.ReportPath = resolveReportPath(careerOpsPath, filePath, rm[2])
+			app.ReportPath = resolveReportPath(jobberPath, filePath, rm[2])
 		}
 
 		// Notes column, when present.
@@ -140,14 +140,14 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 	// 3. report_num -> batch-state completed mapping (legacy)
 	// 4. scan-history.tsv (pipeline scan entries matched by company+role)
 	// 5. company name fallback from batch-input.tsv
-	batchURLs := loadBatchInputURLs(careerOpsPath)
-	reportNumURLs := loadJobURLs(careerOpsPath)
+	batchURLs := loadBatchInputURLs(jobberPath)
+	reportNumURLs := loadJobURLs(jobberPath)
 
 	for i := range apps {
 		if apps[i].ReportPath == "" {
 			continue
 		}
-		fullReport := filepath.Join(careerOpsPath, apps[i].ReportPath)
+		fullReport := filepath.Join(jobberPath, apps[i].ReportPath)
 		reportContent, err := os.ReadFile(fullReport)
 		if err != nil {
 			continue
@@ -182,17 +182,17 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 	}
 
 	// Strategy 4: scan-history.tsv (pipeline scan entries matched by company+role)
-	enrichFromScanHistory(careerOpsPath, apps)
+	enrichFromScanHistory(jobberPath, apps)
 
 	// Strategy 5: company name fallback from batch-input.tsv
-	enrichAppURLsByCompany(careerOpsPath, apps)
+	enrichAppURLsByCompany(jobberPath, apps)
 
 	return apps
 }
 
 // loadBatchInputURLs reads batch-input.tsv and returns a map of batch ID -> job URL.
-func loadBatchInputURLs(careerOpsPath string) map[string]string {
-	inputPath := filepath.Join(careerOpsPath, "batch", "batch-input.tsv")
+func loadBatchInputURLs(jobberPath string) map[string]string {
+	inputPath := filepath.Join(jobberPath, "batch", "batch-input.tsv")
 	inputData, err := os.ReadFile(inputPath)
 	if err != nil {
 		return nil
@@ -232,9 +232,9 @@ type batchEntry struct {
 // loadJobURLs reads batch TSV files and returns a map of report_num -> job URL.
 // Uses two strategies: (1) report_num mapping for completed jobs, (2) company name
 // matching as fallback for failed/missing jobs.
-func loadJobURLs(careerOpsPath string) map[string]string {
+func loadJobURLs(jobberPath string) map[string]string {
 	// Read batch-input.tsv: id \t url \t source \t notes
-	inputPath := filepath.Join(careerOpsPath, "batch", "batch-input.tsv")
+	inputPath := filepath.Join(jobberPath, "batch", "batch-input.tsv")
 	inputData, err := os.ReadFile(inputPath)
 	if err != nil {
 		return nil
@@ -278,7 +278,7 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 	}
 
 	// Read batch-state.tsv: id \t url \t status \t ... \t report_num \t ...
-	statePath := filepath.Join(careerOpsPath, "batch", "batch-state.tsv")
+	statePath := filepath.Join(jobberPath, "batch", "batch-state.tsv")
 	stateData, err := os.ReadFile(statePath)
 	if err != nil {
 		return nil
@@ -309,8 +309,8 @@ func loadJobURLs(careerOpsPath string) map[string]string {
 }
 
 // enrichFromScanHistory fills JobURL from scan-history.tsv by matching company name.
-func enrichFromScanHistory(careerOpsPath string, apps []model.CareerApplication) {
-	scanPath := filepath.Join(careerOpsPath, "scan-history.tsv")
+func enrichFromScanHistory(jobberPath string, apps []model.CareerApplication) {
+	scanPath := filepath.Join(jobberPath, "scan-history.tsv")
 	scanData, err := os.ReadFile(scanPath)
 	if err != nil {
 		return
@@ -380,8 +380,8 @@ func normalizeCompany(name string) string {
 
 // enrichAppURLsByCompany fills in JobURL for apps that didn't get one via report_num mapping.
 // It matches by company name from batch-input.tsv notes.
-func enrichAppURLsByCompany(careerOpsPath string, apps []model.CareerApplication) {
-	inputPath := filepath.Join(careerOpsPath, "batch", "batch-input.tsv")
+func enrichAppURLsByCompany(jobberPath string, apps []model.CareerApplication) {
+	inputPath := filepath.Join(jobberPath, "batch", "batch-input.tsv")
 	inputData, err := os.ReadFile(inputPath)
 	if err != nil {
 		return
@@ -493,7 +493,7 @@ func ComputeMetrics(apps []model.CareerApplication) model.PipelineMetrics {
 }
 
 // NormalizeStatus normalizes raw status text to a canonical form.
-// Aliases match states.yml -- keep in sync with career-ops/states.yml
+// Aliases match states.yml -- keep in sync with jobber/states.yml
 func NormalizeStatus(raw string) string {
 	// Strip markdown bold and trailing dates
 	s := strings.ReplaceAll(raw, "**", "")
@@ -530,8 +530,8 @@ func NormalizeStatus(raw string) string {
 }
 
 // LoadReportSummary extracts key fields from a report file.
-func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remote, comp string) {
-	fullPath := filepath.Join(careerOpsPath, reportPath)
+func LoadReportSummary(jobberPath, reportPath string) (archetype, tldr, remote, comp string) {
+	fullPath := filepath.Join(jobberPath, reportPath)
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return
@@ -657,8 +657,8 @@ func resolveTrackerColumns(lines []string) map[string]int {
 }
 
 // UpdateApplicationStatus updates the status of an application in applications.md.
-func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
-	return UpdateApplicationStatusAndNotes(careerOpsPath, app, newStatus, "")
+func UpdateApplicationStatus(jobberPath string, app model.CareerApplication, newStatus string) error {
+	return UpdateApplicationStatusAndNotes(jobberPath, app, newStatus, "")
 }
 
 // UpdateApplicationStatusAndNotes atomically updates both the Status cell and
@@ -670,10 +670,10 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 // notesAppend is appended (with a space separator if notes are non-empty) to
 // whatever the Notes cell already contains. Pass an empty string to leave
 // notes unchanged.
-func UpdateApplicationStatusAndNotes(careerOpsPath string, app model.CareerApplication, newStatus, notesAppend string) (returnErr error) {
-	filePath := filepath.Join(careerOpsPath, "applications.md")
+func UpdateApplicationStatusAndNotes(jobberPath string, app model.CareerApplication, newStatus, notesAppend string) (returnErr error) {
+	filePath := filepath.Join(jobberPath, "applications.md")
 	if _, err := os.Stat(filePath); err != nil {
-		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
+		filePath = filepath.Join(jobberPath, "data", "applications.md")
 		if _, err := os.Stat(filePath); err != nil {
 			return err
 		}
@@ -1039,7 +1039,7 @@ func safePct(part, whole int) float64 {
 }
 
 // LoadReportDiscardReasons parses predicted discard reasons from a report file.
-func LoadReportDiscardReasons(careerOpsPath, reportPath string) []string {
+func LoadReportDiscardReasons(jobberPath, reportPath string) []string {
 	if reportPath == "" {
 		return nil
 	}
@@ -1049,7 +1049,7 @@ func LoadReportDiscardReasons(careerOpsPath, reportPath string) []string {
 		p = p[idx+2:]
 		p = strings.TrimSuffix(p, ")")
 	}
-	fullPath := filepath.Join(careerOpsPath, p)
+	fullPath := filepath.Join(jobberPath, p)
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return nil
@@ -1070,8 +1070,8 @@ func LoadReportDiscardReasons(careerOpsPath, reportPath string) []string {
 }
 
 // SaveAnonymousStat records an anonymized win stat to data/reported-hires.tsv.
-func SaveAnonymousStat(careerOpsPath string, role string, weeks int) error {
-	dirPath := filepath.Join(careerOpsPath, "data")
+func SaveAnonymousStat(jobberPath string, role string, weeks int) error {
+	dirPath := filepath.Join(jobberPath, "data")
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		return err
 	}

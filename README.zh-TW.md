@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 82ff87c23f2f1eadc602c1566586c64bc96589d1 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops 多代理求職系統" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber 多代理求職系統" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>媒體報導</sub></p>
@@ -33,7 +35,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops 示範" width="800">
+  <img src="docs/demo.gif" alt="Jobber 示範" width="800">
 </p>
 
 <p align="center"><strong>評估超過 740 份職缺 · 生成超過 100 份個人化履歷 · 成功獲得理想職位</strong></p>
@@ -41,7 +43,7 @@
 <p align="center">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社群-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   &nbsp;
-  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
+  <a href="https://www.npmjs.com/package/@santifer/jobber"><img src="https://img.shields.io/npm/dt/@santifer/jobber?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
 </p>
 
 <p align="center">
@@ -67,7 +69,7 @@
 
 ## 這是什麼
 
-career-ops 能將任何 AI 程式碼 CLI 轉化為完整的求職指揮中心。不再需要手動用試算表追蹤應徵紀錄，而是獲得一個 AI 驅動的管道，能夠：
+Jobber 能將任何 AI 程式碼 CLI 轉化為完整的求職指揮中心。不再需要手動用試算表追蹤應徵紀錄，而是獲得一個 AI 驅動的管道，能夠：
 
 - **評估職缺** — 結構化的 A-F 評估報告（五個維度組成 1.0-5.0 的評分）
 - **生成客製化 PDF** — 針對每份職缺描述進行 ATS 最佳化的履歷
@@ -75,13 +77,13 @@ career-ops 能將任何 AI 程式碼 CLI 轉化為完整的求職指揮中心。
 - **批次處理** — 透過子代理並行評估 10 份以上的職缺
 - **集中管理一切** — 單一資料來源，附完整性檢查
 
-> **重要：這不是廣撒網的工具。** career-ops 是一個篩選器 — 它幫助你從數百份職缺中找出真正值得投入的少數機會。本系統強烈建議不要應徵評分低於 4.0/5 的職缺。你的時間很寶貴，招募人員的時間也是。送出前務必仔細審閱。
+> **重要：這不是廣撒網的工具。** Jobber 是一個篩選器 — 它幫助你從數百份職缺中找出真正值得投入的少數機會。本系統強烈建議不要應徵評分低於 4.0/5 的職缺。你的時間很寶貴，招募人員的時間也是。送出前務必仔細審閱。
 
-career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面，藉由推理你的履歷與職缺描述的契合度（而非關鍵字比對）進行評估，並針對每份職缺調整你的履歷。
+Jobber 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面，藉由推理你的履歷與職缺描述的契合度（而非關鍵字比對）進行評估，並針對每份職缺調整你的履歷。
 
 > **注意：最初幾次評估的品質可能不盡理想。** 因為系統還不了解你。請提供更多背景資訊 — 你的履歷、職涯故事、成就佐證、個人偏好、你的專長以及希望避免的事情。你餵給它的資訊越多，它就越準確。把它當作招募新人的招募顧問：第一週需要學習認識你，之後就會成為不可或缺的夥伴。
 
-這個系統由一位親身使用它評估超過 740 份職缺、生成超過 100 份客製化履歷、並成功獲得 Head of Applied AI 職位的人所打造。[閱讀完整案例研究](https://santifer.io/career-ops-system)。
+這個系統由一位親身使用它評估超過 740 份職缺、生成超過 100 份客製化履歷、並成功獲得 Head of Applied AI 職位的人所打造。[閱讀完整案例研究](https://santifer.io/jobber-system)。
 
 ## 功能特色
 
@@ -103,28 +105,28 @@ career-ops 具有代理能力：Claude Code 透過 Playwright 瀏覽求職頁面
 **最快的方式 — 一行指令：**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` 隨 [Node.js](https://nodejs.org) 一起提供 — 它會執行安裝程式一次，
 > 而不會在全域安裝任何東西。還沒有 Node？請先安裝它。
 > （已經在使用 Claude Code / Gemini / Codex CLI？那你已經有了。）
 
-這會把最新版本複製到 `./career-ops` 並安裝相依套件。接著：
+這會把最新版本複製到 `./jobber` 並安裝相依套件。接著：
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # 或 gemini / codex / qwen / opencode — 在此開啟你的 AI CLI
 ```
 
-**首次啟動時，career-ops 會透過對話帶你完成設定 — 你的履歷、個人檔案與目標職位 — 完全不需要手動編輯。**
+**首次啟動時，Jobber 會透過對話帶你完成設定 — 你的履歷、個人檔案與目標職位 — 完全不需要手動編輯。**
 
 <details>
 <summary><b>偏好手動設定？（git clone）</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # 僅 PDF 生成所需
 claude   # 開啟你的 AI CLI — 首次啟動時會帶你完成設定
 ```
@@ -137,24 +139,24 @@ claude   # 開啟你的 AI CLI — 首次啟動時會帶你完成設定
 
 ## 使用方式
 
-career-ops 是一個具有多種模式的單一斜線指令：
+Jobber 是一個具有多種模式的單一斜線指令：
 
 ```
-/career-ops                → 顯示所有可用指令
-/career-ops {貼上職缺描述}  → 完整自動管道（評估 + PDF + 追蹤）
-/career-ops scan           → 掃描平台尋找新職缺
-/career-ops pdf            → 生成 ATS 最佳化履歷
-/career-ops batch          → 批次評估多份職缺
-/career-ops tracker        → 查看應徵狀態
-/career-ops apply          → AI 協助填寫應徵表單
-/career-ops pipeline       → 處理待辦 URL
-/career-ops contacto       → LinkedIn 外寄訊息
-/career-ops deep           → 深度公司研究
-/career-ops training       → 評估課程/證照
-/career-ops project        → 評估作品集專案
+/jobber                → 顯示所有可用指令
+/jobber {貼上職缺描述}  → 完整自動管道（評估 + PDF + 追蹤）
+/jobber scan           → 掃描平台尋找新職缺
+/jobber pdf            → 生成 ATS 最佳化履歷
+/jobber batch          → 批次評估多份職缺
+/jobber tracker        → 查看應徵狀態
+/jobber apply          → AI 協助填寫應徵表單
+/jobber pipeline       → 處理待辦 URL
+/jobber contacto       → LinkedIn 外寄訊息
+/jobber deep           → 深度公司研究
+/jobber training       → 評估課程/證照
+/jobber project        → 評估作品集專案
 ```
 
-或者直接貼上職缺 URL 或描述 — career-ops 會自動偵測並執行完整管道。
+或者直接貼上職缺 URL 或描述 — Jobber 會自動偵測並執行完整管道。
 
 ## 運作原理
 
@@ -207,7 +209,7 @@ npm run build:dashboard   # optional: build the standalone binary
 ## 專案結構
 
 ```
-career-ops/
+jobber/
 ├── CLAUDE.md                    # 代理指令
 ├── cv.md                        # 你的履歷（需自行建立）
 ├── article-digest.md            # 你的成就佐證（選填）
@@ -256,23 +258,23 @@ career-ops/
 
 ## 關於作者
 
-我是 Santiago — Head of Applied AI，前創業者（創建並出售了一家至今仍以我名字營運的公司）。我打造 career-ops 是為了管理自己的求職過程，並成功用它找到了現在這份工作。
+我是 Santiago — Head of Applied AI，前創業者（創建並出售了一家至今仍以我名字營運的公司）。我打造 Jobber 是為了管理自己的求職過程，並成功用它找到了現在這份工作。
 
 個人作品集與其他開源專案 → [santifer.io](https://santifer.io)
 
 ## Star 歷史
 
-<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
+<a href="https://www.star-history.com/?repos=santifer%2FJobber&type=timeline&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
  </picture>
 </a>
 
 ## 免責聲明
 
-**career-ops 是一個本地端開源工具 — 並非託管服務。** 使用本軟體即表示你確認：
+**Jobber 是一個本地端開源工具 — 並非託管服務。** 使用本軟體即表示你確認：
 
 1. **你掌控自己的資料。** 你的履歷、聯絡資訊和個人資料僅儲存於你的裝置上，並直接傳送至你所選擇的 AI 服務供應商（Anthropic、OpenAI 等）。我們不會收集、儲存或存取你的任何資料。
 2. **你掌控 AI。** 預設提示詞已指示 AI 不要自動送出應徵，但 AI 模型的行為可能無法預測。如果你修改提示詞或使用不同的模型，風險由你自行承擔。**送出前務必確認 AI 生成內容的正確性。**
@@ -283,11 +285,11 @@ career-ops/
 
 ## 貢獻者
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+<a href="https://github.com/santifer/jobber/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/jobber" />
 </a>
 
-使用 career-ops 找到工作了嗎？[分享你的故事！](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+使用 Jobber 找到工作了嗎？[分享你的故事！](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 ## 授權條款
 

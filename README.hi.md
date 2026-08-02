@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 82ff87c23f2f1eadc602c1566586c64bc96589d1 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Multi-Agent Job Search System" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Multi-Agent Job Search System" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,11 +19,11 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 <p align="center">
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>FEATURED IN</sub></p>
@@ -35,7 +37,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops Demo" width="800">
+  <img src="docs/demo.gif" alt="Jobber Demo" width="800">
 </p>
 
 <p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
@@ -44,7 +46,7 @@
   <a href="https://warpchart.dev/hq">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
-      <img alt="Live star telemetry of santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
+      <img alt="Live star telemetry of santifer/jobber" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
     </picture>
   </a>
 </p>
@@ -54,7 +56,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/santifer/career-ops/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2Fcareer-ops?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
+  <a href="https://github.com/santifer/jobber/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2FJobber?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
 </p>
 
 <p align="center">
@@ -82,7 +84,7 @@
 
 ## यह क्या है
 
-career-ops ([career-ops.org](https://career-ops.org), जिसे **careerops** भी कहते हैं) किसी भी AI coding CLI को एक पूर्ण job search command center में बदल देता है। Applications को spreadsheet में manually track करने की जगह, आपको एक AI-powered pipeline मिलती है जो:
+Jobber ([jobber.org](https://jobber.org), जिसे **Jobber** भी कहते हैं) किसी भी AI coding CLI को एक पूर्ण job search command center में बदल देता है। Applications को spreadsheet में manually track करने की जगह, आपको एक AI-powered pipeline मिलती है जो:
 
 - **Offers evaluate करती है** एक structured A-F evaluation के साथ (पाँच dimensions जो 1.0-5.0 का score देते हैं)
 - **Tailored PDFs generate करती है** -- job description के अनुसार customize किए गए ATS-optimized CVs
@@ -90,13 +92,13 @@ career-ops ([career-ops.org](https://career-ops.org), जिसे **careerops**
 - **Batch में process करती है** -- sub-agents के साथ parallel में 10+ offers evaluate करती है
 - **सब कुछ track करती है** integrity checks के साथ single source of truth में
 
-> **Important: यह spray-and-pray tool नहीं है।** career-ops एक filter है -- यह सैकड़ों offers में से उन कुछ offers को ढूंढने में मदद करता है जो आपके समय के लायक हैं। System strongly recommend करता है कि 4.0/5 से कम score वाले offers पर apply न करें। आपका समय मूल्यवान है, और recruiter का भी। Submit करने से पहले हमेशा review करें।
+> **Important: यह spray-and-pray tool नहीं है।** Jobber एक filter है -- यह सैकड़ों offers में से उन कुछ offers को ढूंढने में मदद करता है जो आपके समय के लायक हैं। System strongly recommend करता है कि 4.0/5 से कम score वाले offers पर apply न करें। आपका समय मूल्यवान है, और recruiter का भी। Submit करने से पहले हमेशा review करें।
 
-career-ops agentic है: जो भी AI coding CLI आप चुनें वह Playwright से career pages navigate करता है, आपके CV बनाम job description के बारे में reasoning करके fit evaluate करता है (keyword matching नहीं), और हर listing के लिए आपका resume adapt करता है।
+Jobber agentic है: जो भी AI coding CLI आप चुनें वह Playwright से career pages navigate करता है, आपके CV बनाम job description के बारे में reasoning करके fit evaluate करता है (keyword matching नहीं), और हर listing के लिए आपका resume adapt करता है।
 
 > **ध्यान दें: पहले कुछ evaluations बहुत अच्छे नहीं होंगे।** System अभी आपको नहीं जानता। इसे context दें -- आपका CV, आपकी career story, आपके proof points, आपकी preferences, आप किसमें अच्छे हैं, क्या avoid करना चाहते हैं। जितना ज़्यादा nurture करेंगे, उतना बेहतर होगा। इसे एक नए recruiter को onboard करने की तरह समझें: पहले हफ्ते उन्हें आपके बारे में सीखना है, फिर वे invaluable बन जाते हैं।
 
-किसी ऐसे व्यक्ति ने बनाया जिसने इसे 740+ job offers evaluate करने, 100+ tailored CVs generate करने, और Head of Applied AI role land करने के लिए use किया। [पूरा case study पढ़ें](https://santifer.io/career-ops-system)।
+किसी ऐसे व्यक्ति ने बनाया जिसने इसे 740+ job offers evaluate करने, 100+ tailored CVs generate करने, और Head of Applied AI role land करने के लिए use किया। [पूरा case study पढ़ें](https://santifer.io/jobber-system)।
 
 ## Features
 
@@ -107,7 +109,7 @@ career-ops agentic है: जो भी AI coding CLI आप चुनें �
 | **Interview Story Bank** | Evaluations में STAR+Reflection stories accumulate करता है -- 5-10 master stories जो किसी भी behavioral question का जवाब देती हैं     |
 | **Negotiation Scripts**  | Salary negotiation frameworks, geographic discount pushback, competing offer leverage                                                    |
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
-| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, और A4 PDF। Auto-drafts हर evaluation पर; demand पर `/career-ops cover` से generate करें |
+| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, और A4 PDF। Auto-drafts हर evaluation पर; demand पर `/jobber cover` से generate करें |
 | **Portal Scanner**       | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing**     | Headless CLI workers के साथ parallel evaluation (`claude -p` / `opencode run`)                                                          |
 | **Dashboard TUI**        | Pipeline browse, filter, और sort करने के लिए Terminal UI                                                                               |
@@ -119,28 +121,28 @@ career-ops agentic है: जो भी AI coding CLI आप चुनें �
 **सबसे तेज़ तरीका — एक command:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` [Node.js](https://nodejs.org) के साथ आता है — यह installer एक बार run करता है,
 > globally कुछ install किए बिना। Node नहीं है? पहले install करें।
 > (Claude Code / Gemini / Codex CLI पहले से use कर रहे हैं? तो आपके पास पहले से है।)
 
-यह latest release को `./career-ops` में clone करता है और dependencies install करता है। फिर:
+यह latest release को `./jobber` में clone करता है और dependencies install करता है। फिर:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # या gemini / codex / qwen / opencode / agy / grok — यहाँ अपना AI CLI खोलें
 ```
 
-**पहले launch पर, career-ops setup के through walk करता है — आपका CV, profile और target roles — simply chatting करके। कुछ manually edit नहीं करना।**
+**पहले launch पर, Jobber setup के through walk करता है — आपका CV, profile और target roles — simply chatting करके। कुछ manually edit नहीं करना।**
 
 <details>
 <summary><b>Manually setup करना पसंद करते हैं? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # केवल PDF generation के लिए ज़रूरी
 
 # 2. Setup check करें
@@ -164,91 +166,91 @@ claude   # या codex / opencode / gemini / qwen / agy / grok
 
 # 6. Use शुरू करें
 # Auto-pipeline trigger करने के लिए job URL या JD text paste करें
-# यदि CLI slash commands support करता है, /career-ops use करें (या CLI-specific alias)
+# यदि CLI slash commands support करता है, /jobber use करें (या CLI-specific alias)
 # Codex में, same mode को plain language में ask करें, जैसे:
-# "Run the career-ops scan mode"
-# "Run the career-ops pipeline mode for data/pipeline.md"
-# "Run the career-ops pdf mode for the latest evaluated role"
-# "Run the career-ops tracker mode and summarize the current statuses"
+# "Run the Jobber scan mode"
+# "Run the Jobber pipeline mode for data/pipeline.md"
+# "Run the Jobber pdf mode for the latest evaluated role"
+# "Run the Jobber tracker mode and summarize the current statuses"
 ```
 
 </details>
 
 > **System को आपका AI coding CLI खुद customize करने के लिए design किया गया है।** Modes, archetypes, scoring weights, negotiation scripts -- बस उसे change करने को कहें। वह वही files पढ़ता है जो वह use करता है, इसलिए उसे exactly पता है क्या edit करना है।
 
-Full setup guide के लिए [docs/SETUP.md](docs/SETUP.md) देखें, budget पर career-ops चलाने के लिए [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md), और common setup questions के answers के लिए [docs/FAQ.md](docs/FAQ.md)।
+Full setup guide के लिए [docs/SETUP.md](docs/SETUP.md) देखें, budget पर Jobber चलाने के लिए [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md), और common setup questions के answers के लिए [docs/FAQ.md](docs/FAQ.md)।
 
 ## Antigravity CLI Integration
 
-career-ops Antigravity CLI को natively support करता है, वैसे ही जैसे Claude Code और OpenCode को। सभी slash commands shared skill entrypoint के through available हैं, same `modes/*.md` evaluation logic use करके।
+Jobber Antigravity CLI को natively support करता है, वैसे ही जैसे Claude Code और OpenCode को। सभी slash commands shared skill entrypoint के through available हैं, same `modes/*.md` evaluation logic use करके।
 
 Google ने consumer Gemini CLI access को Antigravity CLI में transition किया है। `GEMINI.md` अब एक no-op compatibility guard है ताकि Antigravity `AGENTS.md` और `GEMINI.md` दोनों पढ़ने पर full project instructions duplicate न करे।
 
 ### Native Antigravity CLI
 
 ```bash
-# 1. career-ops directory में run करें
-cd career-ops
+# 1. Jobber directory में run करें
+cd Jobber
 agy
 
-# 2. Unified /career-ops command subcommands के साथ use करें:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Unified /jobber command subcommands के साथ use करें:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
-Skill open standard में `.agents/skills/career-ops/SKILL.md` में defined है और हर supported CLI के लिए symlinked/referenced है (जैसे `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`)।
+Skill open standard में `.agents/skills/jobber/SKILL.md` में defined है और हर supported CLI के लिए symlinked/referenced है (जैसे `.claude/`, `.qwen/`, `.antigravitycli/`, `.grok/`)।
 
 ## Codex Integration
 
-career-ops Codex को same shared router के through support करता है, लेकिन invocation model CLIs से अलग है जो slash commands auto-register करते हैं। Full guide के लिए [docs/CODEX.md](docs/CODEX.md) देखें।
+Jobber Codex को same shared router के through support करता है, लेकिन invocation model CLIs से अलग है जो slash commands auto-register करते हैं। Full guide के लिए [docs/CODEX.md](docs/CODEX.md) देखें।
 
 ### Interactive Codex
 
 ```bash
-cd career-ops
+cd Jobber
 codex
 ```
 
-Slash commands Codex में guaranteed नहीं हैं। यदि `/career-ops` unavailable हो, Codex से mode को plain language में run करने को कहें:
+Slash commands Codex में guaranteed नहीं हैं। यदि `/jobber` unavailable हो, Codex से mode को plain language में run करने को कहें:
 
 ```text
-Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
-Run the career-ops scan mode and summarize new matches.
-Run the career-ops pipeline mode for data/pipeline.md.
-Run the career-ops pdf mode for the latest evaluated role.
-Run the career-ops tracker mode and summarize the current statuses.
+Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123
+Run the Jobber scan mode and summarize new matches.
+Run the Jobber pipeline mode for data/pipeline.md.
+Run the Jobber pdf mode for the latest evaluated role.
+Run the Jobber tracker mode and summarize the current statuses.
 ```
 
 ### One-shot Codex (`codex exec`)
 
 ```bash
-codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
-codex exec "Run career-ops scan mode in this repo and summarize new matches."
-codex exec "Run career-ops pipeline mode for data/pipeline.md."
-codex exec "Run career-ops pdf mode for the latest evaluated role."
-codex exec "Run career-ops tracker mode and summarize the current statuses."
+codex exec "Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123"
+codex exec "Run Jobber scan mode in this repo and summarize new matches."
+codex exec "Run Jobber pipeline mode for data/pipeline.md."
+codex exec "Run Jobber pdf mode for the latest evaluated role."
+codex exec "Run Jobber tracker mode and summarize the current statuses."
 ```
 
 ## Grok Build CLI Integration
 
-career-ops Grok Build CLI को natively support करता है, वैसे ही जैसे Claude Code और OpenCode को। `AGENTS.md` project rules के रूप में auto-load होता है, और सभी slash commands shared skill entrypoint के through available हैं।
+Jobber Grok Build CLI को natively support करता है, वैसे ही जैसे Claude Code और OpenCode को। `AGENTS.md` project rules के रूप में auto-load होता है, और सभी slash commands shared skill entrypoint के through available हैं।
 
 ### Native Grok Build CLI
 
 ```bash
-# 1. career-ops directory में run करें
-cd career-ops
+# 1. Jobber directory में run करें
+cd Jobber
 grok
 
-# 2. Unified /career-ops command subcommands के साथ use करें:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Unified /jobber command subcommands के साथ use करें:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
 Headless batch workers के लिए, `grok -p "prompt"` use करें (tool executions auto-approve करने के लिए `--yolo` add करें)।
@@ -273,25 +275,25 @@ npm run gemini:eval -- "JD text here"
 
 ## Usage
 
-career-ops एक shared command router use करता है। CLIs में जो slash commands register करते हैं, यह इस तरह दिखता है:
+Jobber एक shared command router use करता है। CLIs में जो slash commands register करते हैं, यह इस तरह दिखता है:
 
 ```
-/career-ops                → सभी available commands दिखाएं
-/career-ops {JD paste करें}   → Full auto-pipeline (evaluate + PDF + tracker)
-/career-ops scan           → नए offers के लिए portals scan करें
-/career-ops pdf            → ATS-optimized CV generate करें
-/career-ops cover          → Cover letter generator (JD paste करें या /career-ops cover {slug})
-/career-ops batch          → Multiple offers batch evaluate करें
-/career-ops tracker        → Application status देखें
-/career-ops apply          → AI से application forms fill करें
-/career-ops pipeline       → Pending URLs process करें
-/career-ops contacto       → LinkedIn outreach message
-/career-ops deep           → Deep company research
-/career-ops training       → Course/cert evaluate करें
-/career-ops project        → Portfolio project evaluate करें
+/jobber                → सभी available commands दिखाएं
+/jobber {JD paste करें}   → Full auto-pipeline (evaluate + PDF + tracker)
+/jobber scan           → नए offers के लिए portals scan करें
+/jobber pdf            → ATS-optimized CV generate करें
+/jobber cover          → Cover letter generator (JD paste करें या /jobber cover {slug})
+/jobber batch          → Multiple offers batch evaluate करें
+/jobber tracker        → Application status देखें
+/jobber apply          → AI से application forms fill करें
+/jobber pipeline       → Pending URLs process करें
+/jobber contacto       → LinkedIn outreach message
+/jobber deep           → Deep company research
+/jobber training       → Course/cert evaluate करें
+/jobber project        → Portfolio project evaluate करें
 ```
 
-या बस job URL या description directly paste करें -- career-ops auto-detect करेगा और full pipeline run करेगा।
+या बस job URL या description directly paste करें -- Jobber auto-detect करेगा और full pipeline run करेगा।
 
 Codex में, slash commands guaranteed नहीं हैं। Same mode names को एक prompt में use करें, या उन्हें `codex exec` से call करें।
 
@@ -354,7 +356,7 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 ## Project Structure
 
 ```
-career-ops/
+jobber/
 ├── AGENTS.md                    # Canonical agent instructions (all CLIs)
 ├── CLAUDE.md                    # Claude Code wrapper (imports AGENTS.md)
 ├── CODEX.md                     # Codex wrapper (imports AGENTS.md)
@@ -409,25 +411,25 @@ career-ops/
 
 ## अक्सर पूछे जाने वाले प्रश्न (FAQ)
 
-**career-ops क्या है?**  
-career-ops एक ओपन-सोर्स, CLI-agnostic जॉब सर्च कमांड सेंटर है। यह किसी भी AI कोडिंग CLI को ऐसे पाइपलाइन में बदल देता है जो आपके CV के अनुसार नौकरी के ऑफ़र्स का मूल्यांकन करता है, ATS-अनुकूल PDF तैयार करता है, सही व्यक्ति का संपर्क ढूँढता है, और पूरी प्रक्रिया को एक ही जगह ट्रैक करता है — जबकि अंतिम निर्णय हमेशा आपका होता है। यह CareerOps Manifesto का पहला reference implementation है। अधिक जानकारी के लिए देखें: [career-ops.org](https://career-ops.org).
+**Jobber क्या है?**  
+Jobber एक ओपन-सोर्स, CLI-agnostic जॉब सर्च कमांड सेंटर है। यह किसी भी AI कोडिंग CLI को ऐसे पाइपलाइन में बदल देता है जो आपके CV के अनुसार नौकरी के ऑफ़र्स का मूल्यांकन करता है, ATS-अनुकूल PDF तैयार करता है, सही व्यक्ति का संपर्क ढूँढता है, और पूरी प्रक्रिया को एक ही जगह ट्रैक करता है — जबकि अंतिम निर्णय हमेशा आपका होता है। यह Jobber Manifesto का पहला reference implementation है। अधिक जानकारी के लिए देखें: [jobber.org](https://jobber.org).
 
-**क्या मैं career-ops को मुफ्त में या किसी सस्ते / लोकल मॉडल के साथ चला सकता हूँ?**  
-हाँ। career-ops CLI-agnostic है और OpenRouter के मुफ्त मॉडल, Ollama, या किसी भी OpenAI-compatible endpoint के माध्यम से मुफ्त तथा लोकल मॉडलों पर चल सकता है। इसलिए आप किसी पेड सब्सक्रिप्शन पर निर्भर नहीं हैं। पूरी सेटअप प्रक्रिया के लिए [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) देखें।
+**क्या मैं Jobber को मुफ्त में या किसी सस्ते / लोकल मॉडल के साथ चला सकता हूँ?**  
+हाँ। Jobber CLI-agnostic है और OpenRouter के मुफ्त मॉडल, Ollama, या किसी भी OpenAI-compatible endpoint के माध्यम से मुफ्त तथा लोकल मॉडलों पर चल सकता है। इसलिए आप किसी पेड सब्सक्रिप्शन पर निर्भर नहीं हैं। पूरी सेटअप प्रक्रिया के लिए [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) देखें।
 
 ## Author के बारे में
 
-मैं [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) हूँ -- Head of Applied AI, former founder (एक ऐसा business build किया और बेचा जो अभी भी मेरे नाम से चलता है)। मैंने career-ops अपनी खुद की job search manage करने के लिए बनाया। यह काम आया: मैंने इसे अपना current role land करने के लिए use किया।
+मैं [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) हूँ -- Head of Applied AI, former founder (एक ऐसा business build किया और बेचा जो अभी भी मेरे नाम से चलता है)। मैंने Jobber अपनी खुद की job search manage करने के लिए बनाया। यह काम आया: मैंने इसे अपना current role land करने के लिए use किया।
 
-क्या आप जानना चाहते हैं कि यह repo हफ्ते में सिर्फ ~4 घंटे में कैसे maintain होता है? पढ़ें [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet)।
+क्या आप जानना चाहते हैं कि यह repo हफ्ते में सिर्फ ~4 घंटे में कैसे maintain होता है? पढ़ें [Agentic maintenance: how Jobber is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet)।
 
 मेरा portfolio और अन्य open source projects → [santifer.io](https://santifer.io)
 
-Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [Jobber](https://www.wikidata.org/wiki/Q139007988).
 
 ## Disclaimer
 
-**career-ops एक local, open-source tool है, hosted service नहीं।** यह software use करके आप acknowledge करते हैं:
+**Jobber एक local, open-source tool है, hosted service नहीं।** यह software use करके आप acknowledge करते हैं:
 
 1. **आपका data आपके control में है।** आपका CV, contact info, और personal data आपकी machine पर रहता है और directly उस AI provider को भेजा जाता है जो आप choose करते हैं (Anthropic, OpenAI, आदि)। हम आपका कोई भी data collect, store, या access नहीं करते।
 2. **AI आपके control में है।** Default prompts AI को auto-submit applications के लिए instruct नहीं करते, लेकिन AI models अप्रत्याशित रूप से behave कर सकते हैं। यदि आप prompts modify करते हैं या अलग models use करते हैं, तो आप अपने risk पर करते हैं। **Submit करने से पहले accuracy के लिए AI-generated content हमेशा review करें।**
@@ -438,15 +440,15 @@ Full details के लिए [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) दे�
 
 ## Contributors
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+<a href="https://github.com/santifer/jobber/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/jobber" />
 </a>
 
-career-ops use करके hired हुए? [अपनी story share करें!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+Jobber use करके hired हुए? [अपनी story share करें!](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 ## License & Trademark
 
-Code [MIT](LICENSE) के under licensed है। "career-ops" नाम और brand [Trademark Policy](TRADEMARK.md) के under governed हैं, community use के लिए permissive, commercial product naming और endorsement के लिए reserved।
+Code [MIT](LICENSE) के under licensed है। "jobber" नाम और brand [Trademark Policy](TRADEMARK.md) के under governed हैं, community use के लिए permissive, commercial product naming और endorsement के लिए reserved।
 
 ## Connect करें
 

@@ -16,7 +16,7 @@ import { acquirePortalHealthLock, LockTimeoutError } from '../portal-health-lock
 
 console.log('\napplyScriptDirGuard() — safe cleanup of a possibly-regressed script-dir write');
 
-const dir = mkdtempSync(join(tmpdir(), 'career-ops-guard-'));
+const dir = mkdtempSync(join(tmpdir(), 'jobber-guard-'));
 const marker = 'Portal Health CWD Fixture TEST-MARKER';
 const HEADER = 'timestamp\tcompany\tstatus\n';
 
@@ -77,10 +77,10 @@ try {
   {
     const p = join(dir, 'locked.tsv');
     writeFileSync(p, HEADER + '2026-01-01\t' + marker + '\treachable\n', 'utf-8');
-    const prevTimeout = process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_TIMEOUT_MS;
-    const prevRetry = process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_RETRY_MS;
-    process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_TIMEOUT_MS = '200';
-    process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_RETRY_MS = '20';
+    const prevTimeout = process.env.JOBBER_PORTAL_HEALTH_LOCK_TIMEOUT_MS;
+    const prevRetry = process.env.JOBBER_PORTAL_HEALTH_LOCK_RETRY_MS;
+    process.env.JOBBER_PORTAL_HEALTH_LOCK_TIMEOUT_MS = '200';
+    process.env.JOBBER_PORTAL_HEALTH_LOCK_RETRY_MS = '20';
     const held = await acquirePortalHealthLock(p);
     try {
       await applyScriptDirGuard({ path: p, existedBefore: false, marker });
@@ -90,10 +90,10 @@ try {
       else fail(`lock sharing: expected LockTimeoutError, got: ${e?.constructor?.name}: ${e?.message}`);
     } finally {
       held.release();
-      if (prevTimeout === undefined) delete process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_TIMEOUT_MS;
-      else process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_TIMEOUT_MS = prevTimeout;
-      if (prevRetry === undefined) delete process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_RETRY_MS;
-      else process.env.CAREER_OPS_PORTAL_HEALTH_LOCK_RETRY_MS = prevRetry;
+      if (prevTimeout === undefined) delete process.env.JOBBER_PORTAL_HEALTH_LOCK_TIMEOUT_MS;
+      else process.env.JOBBER_PORTAL_HEALTH_LOCK_TIMEOUT_MS = prevTimeout;
+      if (prevRetry === undefined) delete process.env.JOBBER_PORTAL_HEALTH_LOCK_RETRY_MS;
+      else process.env.JOBBER_PORTAL_HEALTH_LOCK_RETRY_MS = prevRetry;
     }
   }
 } finally {

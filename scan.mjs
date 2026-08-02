@@ -61,8 +61,8 @@ const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
-const PROFILE_PATH = process.env.CAREER_OPS_PROFILE || 'config/profile.yml';
+const PORTALS_PATH = process.env.JOBBER_PORTALS || 'portals.yml';
+const PROFILE_PATH = process.env.JOBBER_PROFILE || 'config/profile.yml';
 const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
@@ -1537,10 +1537,10 @@ export function loadFingerprintHistory(historyPath = SCAN_HISTORY_PATH) {
 }
 
 // Standard skeleton created on fresh install — matches the format documented
-// in modes/pipeline.md and expected by /career-ops pipeline.
+// in modes/pipeline.md and expected by /jobber pipeline.
 const PIPELINE_SKELETON = `# Pipeline — Pending URLs
 
-Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
+Paste job URLs below as \`- [ ] {url}\` then run \`/jobber pipeline\`.
 
 ## Pending
 
@@ -1743,6 +1743,55 @@ export function computeConsecutiveFailures(healthRecords) {
     }
   }
   return streaks;
+}
+
+/**
+ * Which portals to skip this run because they keep failing (#improvement-plan A3).
+ *
+ * Consecutive failures over a threshold earn the portal a backoff window that
+ * grows exponentially and caps after a few days; the portal is skipped until
+ * its window elapses, then probed again. This replaces "record the failure,
+ * print a warning, hit the same dead portal again next run" — the signal is
+ * finally actuated instead of collected. Pure fold over the append-only
+ * portal-health.tsv records; no I/O here so it is unit-testable.
+ *
+ * `status` resets on reachable/empty (a live board with 0 jobs is healthy);
+ * the backoff counts from the LAST failure timestamp.
+ *
+ * @param {Array<{timestamp:string,company:string,status:string}>} healthRecords
+ * @param {object} [opts]
+ * @param {number} [opts.threshold=3] - Consecutive failures before a portal is eligible to be skipped.
+ * @param {number} [opts.baseDelayDays=1] - Backoff after hitting the threshold (doubles per extra failure).
+ * @param {number} [opts.capDelayDays=4] - Backoff ceiling, in days.
+ * @param {number} [opts.now=Date.now()] - Reference time (injectable for tests).
+ * @returns {Map<string,{streak:number,lastFailureTs:number|null,skipUntilTs:number}>}
+ */
+export function computePortalSkipTargets(healthRecords, {
+  threshold = 3, baseDelayDays = 1, capDelayDays = 4, now = Date.now(),
+} = {}) {
+  const byCompany = new Map();
+  for (const r of healthRecords) {
+    let c = byCompany.get(r.company);
+    if (!c) { c = { streak: 0, lastFailureTs: null }; byCompany.set(r.company, c); }
+    if (r.status === 'reachable' || r.status === 'empty') {
+      c.streak = 0;
+      c.lastFailureTs = null;
+    } else {
+      c.streak += 1;
+      const ts = Date.parse(r.timestamp);
+      if (!Number.isNaN(ts) && (c.lastFailureTs === null || ts > c.lastFailureTs)) c.lastFailureTs = ts;
+    }
+  }
+  const out = new Map();
+  for (const [company, c] of byCompany) {
+    if (c.streak < threshold) continue;
+    const backoffMs = Math.min(capDelayDays, baseDelayDays * Math.pow(2, c.streak - threshold)) * 86_400_000;
+    const skipUntilTs = (c.lastFailureTs ?? now) + backoffMs;
+    if (now < skipUntilTs) {
+      out.set(company, { streak: c.streak, lastFailureTs: c.lastFailureTs, skipUntilTs });
+    }
+  }
+  return out;
 }
 
 // ── Parallel fetch with concurrency limit ───────────────────────────
@@ -1979,9 +2028,9 @@ async function main() {
   const visaEnabled = Boolean(config.visa_filter) && config.visa_filter.enabled !== false;
 
   // 3. Resolve a provider for each enabled company / board
-  const targets = [];
-  let skippedCount = 0;
-  let boardCount = 0;
+  // `let`: targets may be filtered below when a dead portal is being skipped.
+  let targets = [];
+  let skippedCount = 0;  let boardCount = 0;
   const resolveErrors = [];
   const agentHandoff = [];
 
@@ -2069,6 +2118,27 @@ async function main() {
   const newOffers = [];
   const errors = [...resolveErrors];
   const emptyTargets = [];
+
+  // Skip dead portals before hitting them again (#improvement-plan A3). The
+  // health ledger was previously read only to print warnings; now a portal with
+  // enough consecutive failures earns a backoff window and is skipped entirely
+  // until it elapses — the run summary says so, and it reopens on its own.
+  const skipThreshold = config.portal_health_threshold || 3;
+  const skipConf = config.portal_skip || {};
+  const skipTargets = computePortalSkipTargets(loadPortalHealth(), {
+    threshold: skipThreshold,
+    baseDelayDays: skipConf.base_delay_days ?? 1,
+    capDelayDays: skipConf.cap_delay_days ?? 4,
+  });
+  const skipAnnounce = [];
+  if (skipTargets.size > 0) {
+    const before = targets.length;
+    targets = targets.filter(t => !skipTargets.has(t.name));
+    for (const [name, info] of skipTargets) {
+      skipAnnounce.push(`${name} (unreachable ${info.streak}×, retry ${new Date(info.skipUntilTs).toISOString().slice(0, 10)})`);
+    }
+    console.log(`🟡 Skipping ${skipAnnounce.length} dead portal${skipAnnounce.length === 1 ? '' : 's'}: ${skipAnnounce.join(', ')} (of ${before} targets)`);
+  }
 
   const tasks = targets.map(company => async () => {
     let provider = company._provider;
@@ -2491,7 +2561,7 @@ async function main() {
     });
   }
 
-  console.log(`\n→ Run /career-ops pipeline to evaluate new offers.`);
+  console.log(`\n→ Run /jobber pipeline to evaluate new offers.`);
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 
   // One-time-ever manifesto note: first successful REAL run only. The state
@@ -2505,8 +2575,8 @@ async function main() {
       || !!process.env.WT_SESSION || !!process.env.KITTY_WINDOW_ID
       || parseInt(process.env.VTE_VERSION || '0', 10) >= 5000;
     const link = osc8
-      ? '\x1b]8;;https://career-ops.org/manifesto?utm_source=cli\x1b\\career-ops.org/manifesto\x1b]8;;\x1b\\'
-      : 'career-ops.org/manifesto?utm_source=cli';
+      ? '\x1b]8;;https://jobber.org/manifesto?utm_source=cli\x1b\\jobber.org/manifesto\x1b]8;;\x1b\\'
+      : 'jobber.org/manifesto?utm_source=cli';
     console.log(`\nthe practice behind this tool has a name and a manifesto: ${link}`);
     try { writeFileSync('.manifesto-noted', new Date().toISOString() + '\n'); } catch { /* best-effort */ }
   }

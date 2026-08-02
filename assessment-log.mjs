@@ -30,8 +30,8 @@ import { readFileSync, existsSync, appendFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const LOG_PATH = join(CAREER_OPS, 'data/assessments.tsv');
+const JOBBER = dirname(fileURLToPath(import.meta.url));
+const LOG_PATH = join(JOBBER, 'data/assessments.tsv');
 
 const HEADER_COMMENT = [
   '# assessments.tsv — append-only skills-assessment log (user layer). Never rewrite rows.',

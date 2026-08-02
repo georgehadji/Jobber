@@ -1,5 +1,5 @@
 {
-  "name": "career-ops",
+  "name": "jobber",
   "metadata": {
     "description": "AI job search command center — evaluate offers, tailor CVs, scan portals, track applications",
     "version": "1.24.0"
@@ -10,7 +10,7 @@
   },
   "plugins": [
     {
-      "name": "career-ops",
+      "name": "jobber",
       "source": "./",
       "description": "AI job search pipeline — evaluate offers, tailor CVs, scan portals, track applications",
       "category": "productivity",

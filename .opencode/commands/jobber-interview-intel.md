@@ -8,8 +8,8 @@ Show the interview intelligence guide for the following company:
 
 $ARGUMENTS
 
-Load the career-ops skill:
+Load the Jobber skill:
 
 ```javascript
-skill({ name: "career-ops" })
+skill({ name: "jobber" })
 ```

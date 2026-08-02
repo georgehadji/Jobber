@@ -38,7 +38,7 @@ function makeSandbox() {
   const dir = mkdtempSync(join(tmpdir(), 'co-seed-'));
   const tracker = join(dir, 'applications.md');
   const followups = join(dir, 'follow-ups.md');
-  const lock = join(dir, `career-ops-followups-test-${Math.random().toString(36).slice(2)}.lock`);
+  const lock = join(dir, `jobber-followups-test-${Math.random().toString(36).slice(2)}.lock`);
   return { dir, tracker, followups, lock };
 }
 
@@ -62,9 +62,9 @@ function trackerRow(num, date, company, role, score, status, notes) {
 function run(args, sandbox, extraEnv = {}) {
   const env = {
     ...process.env,
-    CAREER_OPS_TRACKER: sandbox.tracker,
-    CAREER_OPS_FOLLOWUPS: sandbox.followups,
-    CAREER_OPS_FOLLOWUPS_LOCK: sandbox.lock,
+    JOBBER_TRACKER: sandbox.tracker,
+    JOBBER_FOLLOWUPS: sandbox.followups,
+    JOBBER_FOLLOWUPS_LOCK: sandbox.lock,
     ...extraEnv,
   };
   try {
@@ -291,7 +291,7 @@ function cleanup(sandbox) {
   writeTracker(sb, [trackerRow(1, '2026-05-01', 'Acme', 'Engineer', '4.0/5', 'Applied', 'Applied 2026-06-20.')]);
   mkdirSync(sb.lock, { recursive: true });
   writeFileSync(join(sb.lock, 'owner.json'), JSON.stringify({ pid: process.pid, token: 'x', startedAt: new Date().toISOString() }));
-  const res = run(['1'], sb, { CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS: '200' });
+  const res = run(['1'], sb, { JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS: '200' });
   if (res.code === 4) pass('9. lock held by live pid → exit 4');
   else fail(`9. lock held by live pid → exit 4 — got ${res.code}\n${res.stdout}${res.stderr}`);
   cleanup(sb);
@@ -390,8 +390,8 @@ function cleanup(sandbox) {
   utimesSync(sb.lock, anHourAgo, anHourAgo);
   utimesSync(guard, anHourAgo, anHourAgo);
   const res = run(['1'], sb, {
-    CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS: '10',
-    CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS: '3000',
+    JOBBER_FOLLOWUPS_LOCK_STALE_MS: '10',
+    JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS: '3000',
   });
   if (res.code === 0) pass('14. orphaned recover guard does not block stale-lock recovery');
   else fail(`14. orphaned recover guard does not block stale-lock recovery — got ${res.code}\n${res.stdout}${res.stderr}`);
@@ -419,8 +419,8 @@ function cleanup(sandbox) {
   // reach 60s of age inside this run no matter how the retry loop is scheduled,
   // so "fresh" stays true for the whole window rather than expiring mid-test.
   const res = run(['1'], sb, {
-    CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS: '60000',
-    CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS: '400',
+    JOBBER_FOLLOWUPS_LOCK_STALE_MS: '60000',
+    JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS: '400',
   });
   if (res.code === 4) pass('15. a guard inside its age window is respected → exit 4');
   else fail(`15. a guard inside its age window is respected → exit 4 — got ${res.code}\n${res.stdout}${res.stderr}`);
@@ -438,16 +438,23 @@ function cleanup(sandbox) {
   const sb = makeSandbox();
   writeTracker(sb, [trackerRow(1, '2026-05-01', 'Acme', 'Engineer', '4.0/5', 'Applied', 'Applied 2026-06-20.')]);
   // Ownerless for 100ms: past the caller's staleMs (so the unfloored code
-  // reclaims it immediately) but far inside the 1s floor. Pinning both sides
-  // of the relation keeps the test off the wall clock — against a directory
+  // reclaims it immediately) but far inside the floor. Pinning both sides of
+  // the relation keeps the test off the wall clock — against a directory
   // created "just now" this would instead depend on whether a sub-millisecond
   // age drifts past a 1ms threshold before the retry loop looks again.
+  //
+  // The floor is widened to 30s rather than left at the 1s production default.
+  // The age gap is what is under test, not its absolute size: with a 1s floor
+  // the assertion also required this process to spawn node and reach the first
+  // lockCanRecover within ~900ms, and startup alone exceeds that on a loaded
+  // machine — the lock then aged out and was recovered, flipping exit 4 to 0.
   mkdirSync(sb.lock, { recursive: true });
   const heldSince = new Date(Date.now() - 100);
   utimesSync(sb.lock, heldSince, heldSince);
   const res = run(['1'], sb, {
-    CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS: '10',
-    CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS: '300',
+    JOBBER_FOLLOWUPS_LOCK_STALE_MS: '10',
+    JOBBER_FOLLOWUPS_LOCK_GRACE_MS: '30000',
+    JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS: '300',
   });
   if (res.code === 4) pass('16. ownerless lock inside the grace period is not stolen → exit 4');
   else fail(`16. ownerless lock inside the grace period is not stolen → exit 4 — got ${res.code}\n${res.stdout}${res.stderr}`);
@@ -466,8 +473,8 @@ function cleanup(sandbox) {
   const when = new Date(Date.now() - 60_000);
   utimesSync(sb.lock, when, when);                  // a real orphan, not a new lock
   const res = run(['1'], sb, {
-    CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS: '10',
-    CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS: '2000',
+    JOBBER_FOLLOWUPS_LOCK_STALE_MS: '10',
+    JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS: '2000',
   });
   if (res.code === 0) pass('17. ownerless lock older than the grace period is still recovered');
   else fail(`17. ownerless lock older than the grace period is still recovered — got ${res.code}\n${res.stdout}${res.stderr}`);

@@ -47,7 +47,7 @@ const cleanStatus = (s) =>
  * The report number and path come from the Report cell's markdown link. The
  * path is normalized to be root-relative: trackers at `data/applications.md`
  * carry `../reports/...` links (relative to the tracker file, see #760), which
- * would be misleading when printed from the career-ops root.
+ * would be misleading when printed from the Jobber root.
  *
  * @param {string} text - Full contents of applications.md.
  * @returns {Array<{trackerNum:number,date:string,company:string,role:string,score:string,status:string,reportNum:string|null,reportPath:string|null}>}
@@ -135,7 +135,7 @@ function main() {
     return;
   }
 
-  const trackerPath = process.env.CAREER_OPS_TRACKER || resolve(ROOT, 'data', 'applications.md');
+  const trackerPath = process.env.JOBBER_TRACKER || resolve(ROOT, 'data', 'applications.md');
   if (!existsSync(trackerPath)) {
     console.error(`Error: ${trackerPath} not found — nothing to search.`);
     process.exitCode = 1;

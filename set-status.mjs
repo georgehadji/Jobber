@@ -48,18 +48,19 @@
  * tracker remains the source of truth for state. Read by funnel-velocity.mjs.
  */
 
-import { readFileSync, existsSync, appendFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { extractTrackerReportNumbers, resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import {
   rebuildRow, resolveTrackerPath, trackerLockDirFor, acquireTrackerLock,
-  writeFileAtomic, loadCanonicalStates, resolveCanonicalState, normalizeCompany, cell,
+  writeFileAtomic, appendStatusLog, loadCanonicalStates, loadStateTransitions,
+  resolveCanonicalState, normalizeCompany, cell,
 } from './tracker-utils.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const STATES_FILE = join(CAREER_OPS, 'templates/states.yml');
+const JOBBER = dirname(fileURLToPath(import.meta.url));
+const STATES_FILE = join(JOBBER, 'templates/states.yml');
 
 const EXIT_OK = 0;
 const EXIT_USAGE = 1;
@@ -177,10 +178,20 @@ if (!newStatus) {
   const valid = states.map(s => s.label).join(' · ');
   failWith(EXIT_USAGE, 'invalid-state', `"${stateInput}" is not a canonical state. Valid states: ${valid}`);
 }
+// Legal-transition table from the same file that defines the states — a new
+// state or edge lands in one place and every writer follows (#improvement-plan
+// A4(a)). Loaded here (before the tracker touch) so a malformed table aborts
+// before anything is written.
+let transitions;
+try {
+  transitions = loadStateTransitions(STATES_FILE);
+} catch (err) {
+  failWith(EXIT_USAGE, 'states-error', `Cannot load status transitions from ${STATES_FILE}: ${err.message}`);
+}
 
 // ── tracker access ───────────────────────────────────────────────
 
-const APPS_FILE = resolveTrackerPath(CAREER_OPS);
+const APPS_FILE = resolveTrackerPath(JOBBER);
 if (!existsSync(APPS_FILE)) {
   failWith(EXIT_NOT_FOUND, 'no-tracker', `No tracker found at ${APPS_FILE}`);
 }
@@ -249,9 +260,9 @@ let lock = null;
 if (!flags.dryRun) {
   try {
     lock = await acquireTrackerLock(trackerLockDirFor(APPS_FILE), {
-      timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-      retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-      staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+      timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+      retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+      staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
       tracker: APPS_FILE,
     });
   } catch (err) {
@@ -345,12 +356,47 @@ if (flags.role && !flags.force && !roleMatchesTarget) {
 const oldStatus = target.status;
 const note = flags.note != null ? cell(flags.note) : null;
 
+// State-machine gate (#improvement-plan A4(a)): map both labels to their ids
+// (normalized the same way resolveCanonicalState does). The lifecycle is a DAG
+// read from states.yml. A state with an empty transition list is TERMINAL —
+// rejected/discarded/hired — and may never move again (no-op excepted): it is
+// the funnel's end, and letting it flap back into a live state would corrupt
+// every denominator behind it. Escaping a terminal state — Rejected → Interview,
+// Hired → Evaluated — fails closed unless --force records an explicit override,
+// the same escape hatch --force already provides for report-link mismatches.
+// Live states stay free-form both forward and backward: a move like
+// Applied → Evaluated is a normal ledger CORRECTION (status-log.tsv records it
+// with a correction context and funnel-velocity treats it as a correction, not
+// a fresh pipeline event), so it is not gated.
+const labelToId = new Map(states.map(s => [s.label.toLowerCase(), s.id]));
+const oldId = labelToId.get(String(oldStatus).replace(/\*\*/g, '').trim().toLowerCase());
+const newId = labelToId.get(String(newStatus).replace(/\*\*/g, '').trim().toLowerCase());
+const statusChanged = oldStatus !== newStatus;
+const oldIsTerminal = !statusChanged ? false : (transitions[oldId] ?? []).length === 0;
+if (statusChanged && oldIsTerminal && !flags.force) {
+  const legal = new Set([
+    ...(transitions[oldId] ?? []),
+    oldId, // staying put is always legal (a no-op transition must not be refused)
+  ]);
+  const legalLabels = states.filter(s => legal.has(s.id)).map(s => s.label).join(' · ');
+  failWith(
+    EXIT_USAGE,
+    'illegal-transition',
+    `Illegal status transition: ${oldStatus} → ${newStatus}. ${oldStatus} is a terminal state ` +
+      `(${STATES_FILE} gives it no forward edges) — changing it is a correction that must be explicit. ` +
+      `Legal moves from ${oldStatus}: ${legalLabels}. Re-run with --force to override.`,
+    { from: oldStatus, to: newStatus, terminal: true, legal: [...legal] },
+  );
+}
+
 // Rebuild only the matched line: change the Status cell, append the note, keep
 // every other cell exactly as parsed.
 const parts = lines[target.lineIdx].split('|').map(s => s.trim());
 while (parts.length <= Math.max(colmap.status, colmap.notes ?? 0)) parts.push('');
 
-const statusChanged = parts[colmap.status] !== newStatus;
+// statusChanged is set by the state-machine gate above (oldStatus !== newStatus);
+// the cell always round-trips to the same value it came from, so this is the
+// same signal the write loop has always used.
 parts[colmap.status] = newStatus;
 
 let noteChanged = false;
@@ -392,15 +438,14 @@ if (changed && !flags.dryRun) {
 // Observation trail only: the tracker stays the source of truth for STATE,
 // the ledger records WHEN transitions happened. A failed append is a warning,
 // never a failure — the status write above already succeeded. Sibling of the
-// tracker file so CAREER_OPS_TRACKER redirects (tests, custom layouts) keep
+// tracker file so JOBBER_TRACKER redirects (tests, custom layouts) keep
 // the ledger next to the tracker it describes. Inside the lock window, so
 // concurrent writers can't interleave lines.
 let statusLogged = false;
 if (statusChanged && !flags.dryRun) {
-  const logPath = join(dirname(APPS_FILE), 'status-log.tsv');
   const eventDate = flags.on ?? new Date().toISOString().slice(0, 10);
   try {
-    appendFileSync(logPath, `${target.num}\t${eventDate}\t${oldStatus}\t${newStatus}\tset-status\t\n`);
+    appendStatusLog(APPS_FILE, { num: target.num, date: eventDate, from: oldStatus, to: newStatus, source: 'set-status' });
     statusLogged = true;
   } catch (err) {
     console.error(`⚠ status-log append failed (status change itself succeeded): ${err.message}`);

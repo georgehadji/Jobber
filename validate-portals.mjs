@@ -17,7 +17,7 @@ import yaml from 'js-yaml';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PROVIDERS_DIR = join(ROOT, 'providers');
-const DEFAULT_PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
+const DEFAULT_PORTALS_PATH = process.env.JOBBER_PORTALS || 'portals.yml';
 
 function add(list, path, message) {
   list.push({ path, message });
@@ -253,7 +253,7 @@ async function validateFile(filePath) {
 }
 
 async function runSelfTest() {
-  const tmp = mkdtempSync(join(tmpdir(), 'career-ops-validate-portals-self-test-'));
+  const tmp = mkdtempSync(join(tmpdir(), 'jobber-validate-portals-self-test-'));
   try {
     const file = join(tmp, 'bad.yml');
     writeFileSync(file, `

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
+# Jobber batch runner — standalone orchestrator for claude -p workers
 # Reads batch-input.tsv, delegates each offer to a claude -p worker,
 # tracks state in batch-state.tsv for resumability.
 #
@@ -54,7 +54,7 @@ is_decimal_number() {
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
+Jobber batch runner — process job offers in batch via claude -p workers
 Uses spend_tier from config/profile.yml unless --model overrides it.
 
 Usage: batch-runner.sh [OPTIONS]
@@ -927,7 +927,7 @@ main() {
     exit 0
   fi
 
-  echo "=== career-ops batch runner ==="
+  echo "=== Jobber batch runner ==="
   if (( LIMIT > 0 )); then
     echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES | Limit: $LIMIT"
   else

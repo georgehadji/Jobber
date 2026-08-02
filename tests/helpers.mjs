@@ -19,7 +19,7 @@ let warnings = 0;
  * Record and print one passing test assertion.
  *
  * The suite uses these small counters instead of a framework so it can run in
- * any freshly cloned career-ops checkout with only Node.js available.
+ * any freshly cloned Jobber checkout with only Node.js available.
  *
  * @param {string} msg - Human-readable success message for the terminal log.
  * @returns {void}
@@ -112,11 +112,27 @@ function resolveAllowedExecutable(cmd) {
  * @param {object} [opts={}] - Extra child_process options.
  * @returns {string|null} Trimmed stdout, or null when the command fails.
  */
+// A hang-guard, not an assertion. The old 30s default was under the real
+// runtime of several callers — full suites here measure 28-82s, and
+// batch-runner.sh alone waits up to STATE_LOCK_TIMEOUT_SECONDS=30 on its state
+// lock — so those were SIGTERMed mid-run and returned null, which callers
+// reported as "crashed" or as an empty-output assertion failure. Because the
+// kill tracked machine load, the same tree passed or failed run to run. Tests
+// that genuinely assert on a short timeout pass one explicitly.
+const RUN_TIMEOUT_MS = 120000;
+
 export function run(cmd, args = [], opts = {}) {
   const exe = resolveAllowedExecutable(cmd);
   try {
-    return execFileSync(exe, args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
+    return execFileSync(exe, args, { cwd: ROOT, encoding: 'utf-8', timeout: RUN_TIMEOUT_MS, ...opts }).trim();
   } catch (e) {
+    // The null return is the contract every caller checks, so keep it — but
+    // stop discarding *why*. Set JOBBER_TEST_VERBOSE=1 to tell a timeout apart
+    // from a non-zero exit instead of guessing from a bare "crashed".
+    if (process.env.JOBBER_TEST_VERBOSE) {
+      const why = e?.code === 'ETIMEDOUT' || e?.signal ? `timed out/${e.signal ?? e.code}` : `exit ${e?.status}`;
+      console.error(`  [run] ${cmd} ${args.join(' ').slice(0, 120)} → ${why}`);
+    }
     return null;
   }
 }
@@ -124,7 +140,7 @@ export function run(cmd, args = [], opts = {}) {
 /**
  * Check whether a repo-relative file exists.
  *
- * @param {string} path - Path relative to the career-ops repository root.
+ * @param {string} path - Path relative to the Jobber repository root.
  * @returns {boolean} True when the file exists.
  */
 export function fileExists(path) { return existsSync(join(ROOT, path)); }

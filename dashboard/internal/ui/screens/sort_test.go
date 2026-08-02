@@ -3,8 +3,8 @@ package screens
 import (
 	"testing"
 
-	"github.com/santifer/career-ops/dashboard/internal/model"
-	"github.com/santifer/career-ops/dashboard/internal/theme"
+	"github.com/santifer/jobber/dashboard/internal/model"
+	"github.com/santifer/jobber/dashboard/internal/theme"
 )
 
 func TestSortCycleIncludesNewColumns(t *testing.T) {

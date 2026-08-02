@@ -2,7 +2,7 @@
 
 ## Overview
 
-career-ops is maintained by [@santifer](https://github.com/santifer) under a **BDFL (Benevolent Dictator for Life)** model with a clear path for community members to earn trust and take on responsibilities.
+Jobber is maintained by [@santifer](https://github.com/santifer) under a **BDFL (Benevolent Dictator for Life)** model with a clear path for community members to earn trust and take on responsibilities.
 
 The goal is to build a self-sustaining community where the project thrives even when the maintainer is offline.
 

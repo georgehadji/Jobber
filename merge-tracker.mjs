@@ -11,7 +11,7 @@
  * If duplicate with higher score → update in-place, update report link
  * Validates status against states.yml (rejects non-canonical, logs warning)
  *
- * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
+ * Run: node jobber/merge-tracker.mjs [--dry-run] [--verify]
  */
 
 import { readFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
@@ -22,24 +22,24 @@ import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import { parsePdfIndex } from './find.mjs';
 import { LEGACY_COLMAP, detectColumns, resolveScoreStatus, normalizeVia, SEPARATOR_ROW_RE } from './tracker-parse.mjs';
-import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, normalizeCompany, cell } from './tracker-utils.mjs';
+import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, appendStatusLog, normalizeCompany, cell } from './tracker-utils.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md
-// (original). CAREER_OPS_TRACKER overrides the path (used by tests and
+// (original). JOBBER_TRACKER overrides the path (used by tests and
 // non-standard layouts). Resolution lives in tracker-utils.mjs so every tracker
 // writer agrees on the same canonical path (and therefore the same lock).
-const APPS_FILE = resolveTrackerPath(CAREER_OPS);
+const APPS_FILE = resolveTrackerPath(JOBBER);
 const TRACKER_DIR = dirname(APPS_FILE);
-// CAREER_OPS_ADDITIONS overrides the additions dir (used by tests, mirrors CAREER_OPS_TRACKER).
-const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS
-  ? process.env.CAREER_OPS_ADDITIONS
-  : join(CAREER_OPS, 'batch/tracker-additions');
+// JOBBER_ADDITIONS overrides the additions dir (used by tests, mirrors JOBBER_TRACKER).
+const ADDITIONS_DIR = process.env.JOBBER_ADDITIONS
+  ? process.env.JOBBER_ADDITIONS
+  : join(JOBBER, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
-// CAREER_OPS_BATCH_STATE overrides the batch-state.tsv path (used by tests).
-const BATCH_STATE_FILE = process.env.CAREER_OPS_BATCH_STATE
-  ? process.env.CAREER_OPS_BATCH_STATE
-  : join(CAREER_OPS, 'batch/batch-state.tsv');
+// JOBBER_BATCH_STATE overrides the batch-state.tsv path (used by tests).
+const BATCH_STATE_FILE = process.env.JOBBER_BATCH_STATE
+  ? process.env.JOBBER_BATCH_STATE
+  : join(JOBBER, 'batch/batch-state.tsv');
 
 // Cross-check against batch-state.tsv (found 2026-07-30): a worker can write
 // a well-formed tracker TSV even when its own JSON result said "failed" --
@@ -71,8 +71,8 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
 const MIGRATE_VIA = process.argv.includes('--migrate-via');
-const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
-const MERGE_READY_IPC = process.env.CAREER_OPS_MERGE_READY_IPC === '1';
+const MERGE_HOLD_MS = Number(process.env.JOBBER_MERGE_HOLD_MS) || 0;
+const MERGE_READY_IPC = process.env.JOBBER_MERGE_READY_IPC === '1';
 
 const TRACKER_LOCK_DIR = trackerLockDirFor(APPS_FILE);
 
@@ -95,13 +95,13 @@ const PDF_INDEX_FILE = join(REPORTS_ROOT, 'data', 'pdf-index.tsv');
 const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_DIR, REPORTS_ROOT);
 
 // Ensure required directories exist (fresh setup)
-mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(join(JOBBER, 'data'), { recursive: true });
 mkdirSync(ADDITIONS_DIR, { recursive: true });
 
 /**
  * Pause the async merge flow for a fixed number of milliseconds.
  *
- * Used by the regression test hook (`CAREER_OPS_MERGE_HOLD_MS`), which
+ * Used by the regression test hook (`JOBBER_MERGE_HOLD_MS`), which
  * deliberately holds the first merge after it reads `applications.md` so a
  * second merge can try to enter the same critical section. (The lock retry
  * loop's own sleep lives in tracker-utils.mjs with the lock.)
@@ -116,9 +116,9 @@ function sleep(ms) {
 let trackerLock;
 try {
   trackerLock = await acquireTrackerLock(TRACKER_LOCK_DIR, {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
     tracker: APPS_FILE,
   });
   process.once('exit', () => trackerLock?.release());
@@ -499,7 +499,7 @@ if (MIGRATE) {
     console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
   } else {
     writeFileAtomic(APPS_FILE, migrated.join('\n'));
-    console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
+    console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === JOBBER ? 'repo root' : 'data/'}`);
   }
   process.exit(0);
 }
@@ -776,6 +776,22 @@ for (const file of tsvFiles) {
     });
     newLines.push(newLine);
     added++;
+    // Leave a dated anchor in the transition ledger for freshly created rows
+    // (#improvement-plan A4(b)): funnel-velocity.mjs read this ledger for
+    // per-stage velocity, and a row that appears with no baseline observation
+    // would otherwise be invisible to it (it falls back to parsing tracker
+    // notes). backfill-source lines are recognized but, by contract, do NOT
+    // feed day-math. The date is the row's own (the TSV date = report date);
+    // inside the tracker lock so concurrent writers can't interleave.
+    if (!DRY_RUN) {
+      try {
+        appendStatusLog(APPS_FILE, {
+          num: entryNum, date: addition.date, from: '-', to: addition.status, source: 'backfill',
+        });
+      } catch (err) {
+        console.warn(`⚠ status-log backfill append failed for #${entryNum}: ${err.message}`);
+      }
+    }
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
   }
 }
@@ -816,7 +832,7 @@ trackerLock.release();
 // Sync PDF flags (idempotent; uses its own lock/transaction)
 if (!DRY_RUN) {
   try {
-    execFileSync('node', [join(CAREER_OPS, 'sync-pdf-flags.mjs')], { stdio: 'inherit' });
+    execFileSync('node', [join(JOBBER, 'sync-pdf-flags.mjs')], { stdio: 'inherit' });
   } catch (e) {
     console.warn(`⚠️  Failed to sync PDF flags: ${e.message}`);
   }
@@ -826,7 +842,7 @@ if (!DRY_RUN) {
 if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
   try {
-    execFileSync('node', [join(CAREER_OPS, 'verify-pipeline.mjs')], { stdio: 'inherit' });
+    execFileSync('node', [join(JOBBER, 'verify-pipeline.mjs')], { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * discover-ats.mjs — Company-list → scannable ATS board resolver for career-ops
+ * discover-ats.mjs — Company-list → scannable ATS board resolver for Jobber
  *
  * Takes a list of companies and resolves each to a scannable ATS board by
- * probing the public JSON APIs career-ops already supports (Greenhouse, Ashby,
+ * probing the public JSON APIs Jobber already supports (Greenhouse, Ashby,
  * Lever) via the existing providers/ layer — zero LLM tokens, zero auth. A
  * company "resolves" when a vendor's board exists AND currently lists ≥1 job.
  *
@@ -25,10 +25,10 @@
  *      node discover-ats.mjs --in companies.yml --vendors gh,ashby
  *      node discover-ats.mjs --self-test
  *
- * Probing hits live third-party APIs, so honor CAREER_OPS_PORTALS to point at a
+ * Probing hits live third-party APIs, so honor JOBBER_PORTALS to point at a
  * scratch portals file during tests/experiments.
  *
- * Issue #1864 — github.com/santifer/career-ops
+ * Issue #1864 — github.com/santifer/jobber
  */
 
 import { readFileSync, existsSync, writeFileSync, renameSync } from 'fs';
@@ -42,8 +42,8 @@ import ashby from './providers/ashby.mjs';
 import lever from './providers/lever.mjs';
 import workday from './providers/workday.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || join(CAREER_OPS, 'portals.yml');
+const JOBBER = dirname(fileURLToPath(import.meta.url));
+const PORTALS_PATH = process.env.JOBBER_PORTALS || join(JOBBER, 'portals.yml');
 
 // Safe charset for a slug that will be interpolated into an ATS URL. Consistent
 // with the SLUG_RE guard in scan-ats-full.mjs and seeds/vc-portfolios.mjs — a
@@ -596,7 +596,7 @@ export async function runDiscovery(companies, { vendors = VENDOR_ORDER, ctx, con
 
 function printSummary({ resolved, unresolved, duplicates }) {
   console.log(`\n${'='.repeat(78)}`);
-  console.log('  ATS Discovery — career-ops');
+  console.log('  ATS Discovery — Jobber');
   console.log(`  resolved: ${resolved.length} | unresolved: ${unresolved.length} | duplicates skipped: ${duplicates.length}`);
   console.log(`${'='.repeat(78)}\n`);
 
@@ -841,7 +841,7 @@ async function main() {
   // Data-contract rule: portals.yml is a USER-LAYER file and is NEVER written
   // unless the user explicitly opts in with --write. The default is preview —
   // we print the entries we WOULD add and touch nothing. This mirrors how the
-  // rest of career-ops treats user files (see DATA_CONTRACT.md).
+  // rest of Jobber treats user files (see DATA_CONTRACT.md).
   let written = false;
   if (opts.write && fresh.length && existsSync(PORTALS_PATH)) {
     const current = readFileSync(PORTALS_PATH, 'utf-8');
