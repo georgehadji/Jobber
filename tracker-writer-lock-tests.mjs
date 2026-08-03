@@ -122,8 +122,14 @@ async function runWhileLocked({
   const probe = launchWriter(200);
   const probeResult = await waitForWriter(probe, SPAWN_GUARD_MS);
   const probeOutput = probe.output();
+  // LockTimeoutError's message moved from "Timed out waiting for tracker
+  // lock at X" to "tracker lock timeout: X held > Yms" when the tracker lock
+  // was extracted into lib/file-lock.mjs (#improvement-plan A2) as a shared
+  // primitive serving multiple lock kinds. `err.code = 'LOCK_TIMEOUT'` is the
+  // stable contract callers branch on (see acquireTrackerLock's catch); the
+  // prose is not. Match the current wording, not the pre-extraction one.
   if (!probeResult.timedOut && probeResult.code !== 0
-      && `${probeOutput.stdout}${probeOutput.stderr}`.includes('Timed out waiting for tracker lock')
+      && `${probeOutput.stdout}${probeOutput.stderr}`.includes('lock timeout')
       && readFileSync(tracker, 'utf-8') === content) {
     pass(`${name}: contends on the shared lock before reading or writing`);
   } else {
