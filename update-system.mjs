@@ -143,6 +143,7 @@ const SYSTEM_PATHS = [
   'lib/context-budget.test.mjs',
   'lib/golden-budget-analysis.mjs',
   'lib/token-tracker.mjs',
+  'lib/llm-providers.mjs',
   'lib/file-lock.mjs',
   'lib/report-schema.mjs',
   'lib/score-summary.mjs',

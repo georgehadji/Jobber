@@ -30,6 +30,7 @@ import { pathToFileURL } from 'url';
 import { resolveAndValidate } from './_net.mjs';
 import { readLock, writeLockEntry, diffPlugin, hashPluginTree, consentSurface } from './_lock.mjs';
 import { loadRegistry } from './_registry.mjs';
+import { PROVIDERS } from '../lib/llm-providers.mjs';
 
 /** The complete, closed set of hook kinds. Anything else (apply/submit/…) is rejected. */
 export const HOOK_KINDS = ['provider', 'ingest', 'search', 'notify', 'export'];
@@ -42,10 +43,11 @@ export const HOOK_KINDS = ['provider', 'ingest', 'search', 'notify', 'export'];
  * boundary (process.env stays globally reachable — see the trust note).
  */
 export const RESERVED_ENV = new Set([
-  'GEMINI_API_KEY', 'GEMINI_MODEL',
-  'OPENROUTER_API_KEY', 'JOBBER_MODEL',
-  'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'OPENAI_MODEL',
-  'ANTHROPIC_API_KEY',
+  // Provider env vars are DERIVED from lib/llm-providers.mjs, not listed here —
+  // adding a provider there must reserve its key automatically, or the next one
+  // added is silently smuggle-able.
+  ...Object.values(PROVIDERS).flatMap(spec =>
+    [spec.keyEnv, spec.modelEnv, spec.baseUrlEnv, spec.timeoutEnv].filter(Boolean)),
   'JOBBER_PORTALS', 'JOBBER_PROFILE',
   'PATH', 'HOME', 'NODE_OPTIONS', 'LD_PRELOAD', 'NODE_EXTRA_CA_CERTS',
 ]);

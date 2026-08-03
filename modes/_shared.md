@@ -42,13 +42,15 @@ The files below are the **ONLY** sources for user-facing content (CV, cover lett
 
 | CLI | economy | standard | premium | Extended thinking |
 |-----|---------|----------|---------|--------------------|
-| Claude Code | Haiku 4.5 | Sonnet 5 | Opus 5 | off / off / adaptive |
+| Claude Code | Haiku 4.5 (`claude-haiku-4-5`) | Sonnet 5 (`claude-sonnet-5`) | Opus 5 (`claude-opus-5`) | off / off / adaptive |
 | OpenCode | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Gemini CLI | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Copilot CLI | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Codex | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Qwen | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Antigravity CLI | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
+
+The Claude Code row's model ids are the single source of truth's values (`SPEND_TIER_MODELS` in `lib/llm-providers.mjs`), which is what `batch/batch-runner.sh` passes to `claude -p --model`; a test asserts this row and that object agree, so changing one without the other fails CI.
 
 The Claude Code row uses concrete model names because that lineup is well-established. The other rows intentionally avoid naming specific models -- nobody on this project can verify current model lineups for those CLIs with confidence, and a wrong specific guess routes users to a model that doesn't exist. If you actively use one of these CLIs and know its current cheapest/balanced/most-capable models, a follow-up PR filling in concrete names for that row is welcome.
 

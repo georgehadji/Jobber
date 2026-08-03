@@ -28,6 +28,7 @@ import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
 import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './lib/token-tracker.mjs';
+import { baseUrlFor, apiKeyFor, pinnedModelFor, MAX_OUTPUT_TOKENS } from './lib/llm-providers.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const tracker = new TokenAccumulator();
@@ -49,9 +50,9 @@ if (fs.existsSync(envPath)) {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const OPENROUTER_API_URL    = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
-const MAX_TOKENS            = 8192;
+const OPENROUTER_API_URL    = `${baseUrlFor('openrouter')}/chat/completions`;
+const OPENROUTER_MODELS_URL = `${baseUrlFor('openrouter')}/models`;
+const MAX_TOKENS            = MAX_OUTPUT_TOKENS;
 const RATE_LIMIT_DELAY_MS   = 2500;  // pause between requests on free tier
 const MODEL_TIMEOUT_MS      = 15_000; // abort a single model call after 15 s
 
@@ -105,7 +106,7 @@ async function loadFreeModels() {
 
   try {
     const resp = await fetch(OPENROUTER_MODELS_URL, {
-      headers: { 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}` }
+      headers: { 'Authorization': `Bearer ${apiKeyFor('openrouter')}` }
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
@@ -135,7 +136,7 @@ async function loadFreeModels() {
     console.log(`[models] ${freeModels.length} free models loaded from OpenRouter API.`);
   } catch (e) {
     const reason = e instanceof Error ? e.message : String(e);
-    const hasKey = Boolean(process.env.OPENROUTER_API_KEY);
+    const hasKey = Boolean(apiKeyFor('openrouter'));
     throw new Error(
       `[models] Failed to fetch free model list: ${reason}. ` +
       (hasKey ? 'Check that your API key is valid and that network access to OpenRouter is available.'
@@ -195,7 +196,7 @@ export function buildCachedSystemMessage(systemPrompt) {
 // OpenRouter API call — automatic model rotation with fallback
 // ---------------------------------------------------------------------------
 async function callOpenRouter(systemPrompt, userMessage) {
-  const key = process.env.OPENROUTER_API_KEY;
+  const key = apiKeyFor('openrouter');
   if (!key) {
     throw new Error(
       'OPENROUTER_API_KEY not found.\n' +
@@ -204,7 +205,7 @@ async function callOpenRouter(systemPrompt, userMessage) {
     );
   }
 
-  const pinnedModel = process.env.JOBBER_MODEL;
+  const pinnedModel = pinnedModelFor('openrouter');
   if (pinnedModel) {
     activeModel = pinnedModel;
     process.stdout.write(`[model] ${pinnedModel} (pinned) ... `);
@@ -794,7 +795,7 @@ const [,, command, ...args] = invokedDirectly ? process.argv : [];
 const ctx = invokedDirectly ? loadContext() : null;
 
 // Load free models list before running any AI command (skip when a model is pinned)
-if (invokedDirectly && ['evaluate', 'eval', 'pipeline', 'apply', 'models'].includes(command) && !process.env.JOBBER_MODEL) {
+if (invokedDirectly && ['evaluate', 'eval', 'pipeline', 'apply', 'models'].includes(command) && !pinnedModelFor('openrouter')) {
   await loadFreeModels();
 }
 
@@ -847,6 +848,6 @@ MODEL SELECTION:
 }
 
 if (invokedDirectly && ['scan', 'evaluate', 'eval', 'pipeline', 'apply'].includes(command)) {
-  const modelName = process.env.JOBBER_MODEL || activeModel || 'free-rotation';
+  const modelName = pinnedModelFor('openrouter') || activeModel || 'free-rotation';
   console.log('\n' + formatBreakdown(tracker, modelName, 'openrouter'));
 }

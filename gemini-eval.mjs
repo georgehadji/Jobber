@@ -14,7 +14,8 @@
  * Requires:
  *   GEMINI_API_KEY in .env (or environment variable)
  *
- * Default model: gemini-3.6-flash (GA July 2026)
+ * Default model: see PROVIDERS.gemini.defaultModel in lib/llm-providers.mjs
+ * (the single source of truth for every model id, key name and base URL).
  *
  * Model deprecation reference (per Google AI for Developers, May 2026):
  *   - gemini-2.0-flash       deprecated 2026-03-31  (do not use — generateContent 404)
@@ -27,7 +28,7 @@
  * Source: https://ai.google.dev/gemini-api/docs/models
  *
  * When the current default approaches its deprecation date, bump
- * `modelName` below and the `--model` examples accordingly.
+ * `PROVIDERS.gemini.defaultModel` in lib/llm-providers.mjs — nothing here.
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
@@ -44,6 +45,13 @@ import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
 import { buildBudgetedPrompt } from './lib/context-budget.mjs';
+import {
+  PROVIDERS,
+  defaultModelFor,
+  contextTokensFor,
+  apiKeyFor,
+  MAX_OUTPUT_TOKENS,
+} from './lib/llm-providers.mjs';
 
 // ---------------------------------------------------------------------------
 // Bootstrap: load .env before anything else
@@ -92,11 +100,11 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   USAGE
     node gemini-eval.mjs "<JD text>"
     node gemini-eval.mjs --file ./jds/my-job.txt
-    node gemini-eval.mjs --model gemini-3.6-flash "<JD text>"
+    node gemini-eval.mjs --model ${PROVIDERS.gemini.defaultModel} "<JD text>"
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <name>   Gemini model to use (default: gemini-3.6-flash)
+    --model <name>   Gemini model to use (default: ${PROVIDERS.gemini.defaultModel})
     --no-save        Do not save report to reports/ directory
     --no-compress    Skip token budget compression (full context injection)
     --help           Show this help
@@ -115,7 +123,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText = '';
-let modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+let modelName = defaultModelFor('gemini');
 let saveReport = true;
 let noCompress = false;
 
@@ -146,7 +154,7 @@ if (!jdText) {
 // ---------------------------------------------------------------------------
 // Validate environment
 // ---------------------------------------------------------------------------
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = apiKeyFor('gemini');
 if (!apiKey) {
   console.error(`
 ❌  GEMINI_API_KEY not found.
@@ -250,7 +258,7 @@ const { contextBody, budgetReport } = buildBudgetedPrompt({
   profileContent,
   jdText,
   noCompress,
-  maxTokens: 1_048_576, // gemini-2.5-flash context window
+  maxTokens: contextTokensFor('gemini'),
 });
 
 // Log token budget info
@@ -311,7 +319,7 @@ const model = genAI.getGenerativeModel({
   systemInstruction: systemPrompt,
   generationConfig: {
     temperature: 0.4,      // deterministic enough for structured evaluation
-    maxOutputTokens: 8192, // full 7-block evaluation
+    maxOutputTokens: MAX_OUTPUT_TOKENS, // full 7-block evaluation
   },
 });
 

@@ -342,13 +342,11 @@ read_spend_tier() {
   esac
 }
 
-# Tier -> model mapping. Keep in sync with the table in modes/_shared.md.
+# Tier -> model mapping. NOT restated here: read from the single source of
+# truth in lib/llm-providers.mjs (SPEND_TIER_MODELS), which is also what the
+# modes/_shared.md table is asserted against.
 spend_tier_to_model() {
-  case "$1" in
-    economy) echo "claude-haiku-4-5" ;;
-    premium) echo "claude-opus-5" ;;
-    standard|*) echo "claude-sonnet-5" ;;
-  esac
+  node "$PROJECT_DIR/lib/llm-providers.mjs" --spend-tier "$1"
 }
 
 # Resolve the model to pass to `claude -p --model`. --model always wins.

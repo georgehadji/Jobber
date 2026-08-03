@@ -30,6 +30,9 @@ import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
 import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './lib/token-tracker.mjs';
+import {
+  PROVIDERS, defaultModelFor, baseUrlFor, requestTimeoutMsFor,
+} from './lib/llm-providers.mjs';
 
 const tracker = new TokenAccumulator();
 tracker.recordZeroToken('scan');
@@ -73,8 +76,8 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <name>   Ollama model to use (default: llama3.3)
-    --url <url>      Ollama base URL (default: http://localhost:11434)
+    --model <name>   Ollama model to use (default: ${PROVIDERS.ollama.defaultModel})
+    --url <url>      Ollama base URL (default: ${PROVIDERS.ollama.baseUrl})
     --no-save        Do not save report to reports/ directory
     --help           Show this help
 
@@ -94,8 +97,8 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText    = '';
-let modelName = process.env.OLLAMA_MODEL || 'llama3.3';
-let baseUrl   = (process.env.OLLAMA_BASE_URL || 'http://localhost:11434').replace(/\/$/, '');
+let modelName = defaultModelFor('ollama');
+let baseUrl   = baseUrlFor('ollama');
 let saveReport = true;
 
 for (let i = 0; i < args.length; i++) {
@@ -249,9 +252,11 @@ LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
 // Call Ollama
 // ---------------------------------------------------------------------------
 const endpoint = `${baseUrl}/v1/chat/completions`;
-const timeoutMs = parseInt(process.env.OLLAMA_TIMEOUT_MS || '300000', 10);
-if (Number.isNaN(timeoutMs) || timeoutMs <= 0) {
-  console.error(`❌  Invalid OLLAMA_TIMEOUT_MS: "${process.env.OLLAMA_TIMEOUT_MS}" — must be a positive integer (milliseconds).`);
+let timeoutMs;
+try {
+  timeoutMs = requestTimeoutMsFor('ollama');
+} catch (err) {
+  console.error(`❌  ${err.message}`);
   process.exit(1);
 }
 

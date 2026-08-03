@@ -36,6 +36,14 @@ import {
 } from './reserve-report-num.mjs';
 import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './lib/token-tracker.mjs';
 import { buildBudgetedPrompt } from './lib/context-budget.mjs';
+import {
+  PROVIDERS,
+  defaultModelFor,
+  baseUrlFor,
+  apiKeyFor,
+  contextTokensFor,
+  requestTimeoutMsFor,
+} from './lib/llm-providers.mjs';
 
 const tracker = new TokenAccumulator();
 tracker.recordZeroToken('scan');
@@ -79,9 +87,9 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <id>     Model id            (env OPENAI_MODEL, default gpt-4o-mini)
+    --model <id>     Model id            (env ${PROVIDERS.openai.modelEnv}, default ${PROVIDERS.openai.defaultModel})
     --url <base>     OpenAI-compatible base URL, including any /v1
-                     (env OPENAI_BASE_URL, default https://api.openai.com/v1)
+                     (env ${PROVIDERS.openai.baseUrlEnv}, default ${PROVIDERS.openai.baseUrl})
     --key <key>      API key             (env OPENAI_API_KEY)
     --no-save        Do not save report to reports/ directory
     --no-compress    Skip token budget compression (full context injection)
@@ -107,9 +115,9 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText     = '';
-let modelName  = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-let baseUrl    = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
-let apiKey     = process.env.OPENAI_API_KEY || '';
+let modelName  = defaultModelFor('openai');
+let baseUrl    = baseUrlFor('openai');
+let apiKey     = apiKeyFor('openai');
 let saveReport = true;
 let noCompress = false;
 
@@ -230,7 +238,7 @@ const { contextBody, budgetReport } = buildBudgetedPrompt({
   profileYml,
   jdText,
   noCompress,
-  maxTokens: 128_000, // gpt-4o-mini context window
+  maxTokens: contextTokensFor('openai'),
 });
 
 // Log token budget info
@@ -294,9 +302,11 @@ export function buildSystemMessage(prompt, host) {
 // ---------------------------------------------------------------------------
 // Call the OpenAI-compatible endpoint
 // ---------------------------------------------------------------------------
-const timeoutMs = parseInt(process.env.OPENAI_TIMEOUT_MS || '300000', 10);
-if (Number.isNaN(timeoutMs) || timeoutMs <= 0) {
-  console.error(`❌  Invalid OPENAI_TIMEOUT_MS: "${process.env.OPENAI_TIMEOUT_MS}" — must be a positive integer (milliseconds).`);
+let timeoutMs;
+try {
+  timeoutMs = requestTimeoutMsFor('openai');
+} catch (err) {
+  console.error(`❌  ${err.message}`);
   process.exit(1);
 }
 
