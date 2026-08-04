@@ -8,7 +8,7 @@
  * copies — and every writer excludes every other writer through the same lock.
  */
 
-import { readFileSync, writeFileSync, renameSync, rmSync, existsSync, realpathSync, appendFileSync } from 'fs';
+import { readFileSync, writeFileSync, renameSync, rmSync, existsSync, realpathSync, appendFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'path';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
@@ -380,4 +380,43 @@ export function resolveCanonicalState(input, states) {
     if (s.aliases.some(a => a.toLowerCase() === clean)) return s.label;
   }
   return null;
+}
+
+// ── Report-number reservation sentinel GC (shared) ─────────────────────────
+// reserve-report-num.mjs drops NNN-RESERVED.md files in reports/ when a
+// number is claimed. If the process crashed before writing the real report
+// and deleting the sentinel, it lingers. Sentinels older than 4h are stale;
+// remove them so they don't skew the next slot allocation. One shared
+// implementation — merge-tracker (pre-merge self-clean) and verify-pipeline
+// (Check 8) both call this, so the age constant can never drift between them.
+
+export const SENTINEL_MAX_AGE_MS = 4 * 60 * 60 * 1000;
+
+/**
+ * Garbage-collect stale report-number reservation sentinels.
+ *
+ * @param {string} reportsDir - Path to the reports/ directory.
+ * @param {{log?: (msg: string) => void}} [opts] - Optional logging callback
+ *   (defaults to console.log) so callers can route messages.
+ * @returns {number} Number of stale sentinels removed.
+ */
+export function gcStaleSentinels(reportsDir, { log = console.log } = {}) {
+  if (!existsSync(reportsDir)) return 0;
+  let removed = 0;
+  const now = Date.now();
+  for (const name of readdirSync(reportsDir)) {
+    if (!name.endsWith('-RESERVED.md')) continue;
+    const full = join(reportsDir, name);
+    try {
+      const { mtimeMs } = statSync(full);
+      if (now - mtimeMs > SENTINEL_MAX_AGE_MS) {
+        unlinkSync(full);
+        log(`🧹 Removed stale reservation sentinel: ${name}`);
+        removed++;
+      }
+    } catch {
+      // Already gone between readdir and stat — fine.
+    }
+  }
+  return removed;
 }

@@ -29,6 +29,20 @@ import { checkLivenessViaApi } from './liveness-api.mjs';
 async function main() {
   const args = process.argv.slice(2);
 
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node check-liveness.mjs [options] <url1> [url2] ...');
+    console.log('       node check-liveness.mjs [options] --file urls.txt');
+    console.log('');
+    console.log('Check whether job postings are still live (zero-token, no LLM).');
+    console.log('');
+    console.log('Options:');
+    console.log('  --file <path>     Read URLs from a text file (one per line, # comments)');
+    console.log('  --no-fallback     Stay fully headless (skip the headed-browser retry)');
+    console.log('  --throttle[=ms]   Wait base..2x ms between checks (default 5000)');
+    console.log('  -h, --help        Show this help');
+    process.exit(0);
+  }
+
   // Portals like pracuj.pl serve a Cloudflare anti-bot wall to headless Chromium.
   // On a challenge we retry once in a headed browser (which clears it); pass
   // --no-fallback to stay fully headless (e.g. on a machine with no display).

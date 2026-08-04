@@ -1,0 +1,27 @@
+name: Provider health
+
+# Daily canary check of the major ATS APIs (Greenhouse, Lever, Ashby, Workday).
+# Zero-token, one request per vendor. Fails only when a vendor is DOWN
+# (--ci exit 1); degraded/skipped are reported but do not fail the run.
+# A red run means the zero-token scanner silently lost a vendor — worth
+# knowing before a user's next scan, not after a stats gap.
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # Daily 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts
+      - name: Probe provider APIs
+        run: node provider-health.mjs --ci --no-cache

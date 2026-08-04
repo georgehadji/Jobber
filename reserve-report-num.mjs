@@ -287,6 +287,25 @@ async function runCli() {
   const [,, cmd, arg] = process.argv;
   const options = {};
 
+  if (cmd === '--help' || cmd === '-h') {
+    process.stdout.write(
+`Usage: node reserve-report-num.mjs [options]
+
+Reserve the next report number atomically (shared lock + O_EXCL sentinel).
+
+Options:
+  --count <N>       Reserve N consecutive numbers (prints e.g. 042-049)
+  --release <NNN>   Release a reservation (single number or range 042-049)
+  --release <NNN>-<MMM>
+                    Release a range of reservations
+  --gc              Garbage-collect stale reservation sentinels (> 4h old)
+  -h, --help        Show this help
+
+Run with no arguments to reserve the next single number.
+`);
+    return 0;
+  }
+
   if (cmd === '--release') {
     const match = (arg || '').match(/^(\d+)(?:-(\d+))?$/);
     if (!match) {

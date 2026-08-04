@@ -415,6 +415,21 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
 async function generatePDF() {
   const args = process.argv.slice(2);
 
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node generate-pdf.mjs <input.html> <output.pdf> [options]');
+    console.log('');
+    console.log('Render an already-built HTML file (ATS-safe) to PDF via Playwright.');
+    console.log('');
+    console.log('Options:');
+    console.log('  --format=letter|a4   Page format (default a4)');
+    console.log('  --report=NNN         Tracker/report number for the pdf-index manifest');
+    console.log('  --max-pages=N        Cap output at N pages (default 2)');
+    console.log('  --allow-reorder      Allow section reordering during normalization');
+    console.log('  --strict-pages       Fail if the page cap is exceeded');
+    console.log('  -h, --help           Show this help');
+    process.exit(0);
+  }
+
   // Parse arguments
   let inputPath, outputPath, format = 'a4', reportNum = '', allowReorder = false;
   let maxPages = 2, maxPagesInput = '2', strictPages = false;

@@ -78,11 +78,16 @@ const USAGE = `Usage: node set-status.mjs <report#|company> <state> [--note "...
                      pass it when the transition happened earlier than it's recorded)
   --force            Allow a numeric selector when the row's report link carries a different ID
   --dry-run          Resolve and validate, but write nothing
-  --json             Machine-readable output on stdout (errors included)`;
+  --json             Machine-readable output on stdout (errors included)
+  -h, --help         Show this help`;
 
 // ── argument parsing ─────────────────────────────────────────────
 
 const rawArgs = process.argv.slice(2);
+if (rawArgs.includes('--help') || rawArgs.includes('-h')) {
+  console.log(USAGE);
+  process.exit(0);
+}
 const positional = [];
 const flags = { note: null, role: null, on: null, force: false, dryRun: false, json: false };
 const VALUE_FLAGS = { '--note': 'note', '--role': 'role', '--on': 'on' };

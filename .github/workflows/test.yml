@@ -57,3 +57,33 @@ jobs:
           node-version: '24'
       - run: npm install --ignore-scripts
       - run: node eval-golden.mjs --replay --model cheap-stub
+
+  # Translation-freshness gate (HARDEN plan): surfaces stale README
+  # translations as PR annotations. Deliberately non-blocking — a stale
+  # translation is a quality gap, not a broken build, so the human decides
+  # whether to refresh (script contract: exit always 0).
+  translation-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts
+      - name: Check README translation freshness
+        run: node check-translation-freshness.mjs --ci
+
+  # Mode↔script invocation gate (HARDEN plan): every `node <script>.mjs`
+  # referenced in modes/*.md must resolve to a real script at the repo root.
+  # Hard-fails only on a MISSING script (a mode that would break for every
+  # user); flag drift on --help-capable scripts is a warning, not a failure.
+  mode-invocations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts
+      - name: Validate mode→script invocations
+        run: node validate-mode-invocations.mjs --ci

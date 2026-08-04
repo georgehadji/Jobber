@@ -182,7 +182,12 @@ async function readDom(page) {
 }
 
 async function main() {
-  const { url, mode, max, maxChars, timeout } = parseArgs(process.argv.slice(2));
+  const args = process.argv.slice(2);
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node browser-extract.mjs <url> [--mode jd|listing] [--max N] [--max-chars N] [--timeout MS]\n\nExtract the distilled main text of a job posting (or listing) page for evaluation.\n\nOptions:\n  --mode jd|listing   What to extract (default jd)\n  --max N             Max results for listing mode\n  --max-chars N       Truncate extracted text to N chars\n  --timeout MS        Navigation timeout in ms\n  -h, --help          Show this help');
+    process.exit(0);
+  }
+  const { url, mode, max, maxChars, timeout } = parseArgs(args);
 
   if (!url) {
     console.error(JSON.stringify({ error: 'usage: browser-extract.mjs <url> [--mode jd|listing] [--max N] [--max-chars N]', code: 'no_url' }));

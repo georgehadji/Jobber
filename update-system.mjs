@@ -202,6 +202,8 @@ const SYSTEM_PATHS = [
   'discover-ats.test.mjs',
   'check-table-freshness.mjs',
   'check-translation-freshness.mjs',
+  'provider-health.mjs',
+  'validate-mode-invocations.mjs',
   'fingerprint-core.mjs',
   'process-quality.mjs',
   'process-quality.test.mjs',

@@ -32,6 +32,7 @@
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { pathToFileURL, fileURLToPath } from 'url';
 import path from 'path';
 import yaml from 'js-yaml';
@@ -1939,6 +1940,7 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const verify = args.includes('--verify');
+  const healthCheck = args.includes('--health-check');
   // Opt-in: on an anti-bot challenge (e.g. pracuj.pl Cloudflare wall), retry the
   // URL in a headed browser. Off by default — headed Chromium needs a display, so
   // scheduled/unattended scans should not rely on it.
@@ -2026,6 +2028,51 @@ async function main() {
   const countryEligibilityFilter = buildCountryEligibilityFilter(config.country_eligibility_filter, candidateCountry);
   const visaFilter = buildVisaFilter(config.visa_filter);
   const visaEnabled = Boolean(config.visa_filter) && config.visa_filter.enabled !== false;
+
+  // 2.5 Health preflight (--health-check): zero-token canary probe of the
+  // major ATS APIs before any scanning work. Non-blocking — a down vendor
+  // is reported but the scan proceeds (per-provider retry/fallback still
+  // applies; the user decides whether to skip a vendor).
+  // S-01: read the cache file directly when it's fresh — spawning a whole
+  // Node process (~500ms cold start) just to re-print a 15-minute-old result
+  // is waste. Only spawn provider-health.mjs on a cache miss.
+  if (healthCheck) {
+    try {
+      const { tmpdir } = await import('os');
+      const { readFileSync } = await import('fs');
+      const cacheFile = process.env.JOBBER_HEALTH_CACHE
+        || path.join(tmpdir(), 'jobber-provider-health.json');
+      let cachedResults = null;
+      try {
+        const { ts, results } = JSON.parse(readFileSync(cacheFile, 'utf-8'));
+        if (results && Array.isArray(results) && Date.now() - ts < 15 * 60_000) {
+          cachedResults = results;
+        }
+      } catch {
+        // No cache, stale, or corrupted — fall through to the probe below.
+      }
+
+      const STATUS_ICON = { healthy: '✅', degraded: '⚠️', down: '❌', skipped: '⏭️' };
+      console.log('── Provider health preflight ──');
+      if (cachedResults) {
+        for (const r of cachedResults) {
+          const lat = r.latencyMs ? ` (${r.latencyMs}ms)` : '';
+          const err = r.error ? ` — ${r.error}` : '';
+          console.log(`  ${STATUS_ICON[r.status] || '❓'} ${r.name || r.provider}: ${r.status}${lat}${err}`);
+        }
+        console.log('  (cached results — use --no-cache on provider-health.mjs for a fresh check)');
+      } else {
+        const healthOut = execFileSync(
+          'node', [path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'provider-health.mjs'), '--summary'],
+          { encoding: 'utf-8', timeout: 60_000 },
+        );
+        console.log(healthOut.trim().split('\n').map(l => `  ${l}`).join('\n'));
+      }
+      console.log('──────────────────────────────\n');
+    } catch (e) {
+      console.warn(`⚠️  Health preflight failed (continuing): ${e.message}`);
+    }
+  }
 
   // 3. Resolve a provider for each enabled company / board
   // `let`: targets may be filtered below when a dead portal is being skipped.
