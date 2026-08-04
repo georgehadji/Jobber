@@ -1,5 +1,7 @@
 # Jobber -- Tryby polskie (`modes/pl/`)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Ten folder zawiera polskie tłumaczenia głównych trybów Jobber dla kandydatów celujących w polski rynek pracy (Polska oraz polskojęzyczne zespoły).
 
 ## Kiedy używać tych trybów?

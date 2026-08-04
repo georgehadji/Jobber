@@ -1,5 +1,7 @@
 # Jobber — Deutsche Modi (`modes/de/`)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Dieser Ordner enthält die deutschen Übersetzungen der wichtigsten jobber-Modi für Bewerber:innen, die im DACH-Raum (Deutschland, Österreich, Schweiz) suchen oder mit deutschen Stellenanzeigen arbeiten.
 
 ## Wann diese Modi nutzen?

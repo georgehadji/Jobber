@@ -26,6 +26,7 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
+import { readContextFile, parseScoreSummary } from './eval-runner.mjs';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
@@ -134,20 +135,8 @@ if (!jdText) {
 // ---------------------------------------------------------------------------
 // File helpers
 // ---------------------------------------------------------------------------
-/**
- * Read a file and return its trimmed contents, or a placeholder if missing.
- * Emits a console warning when the file is absent so the user knows context is incomplete.
- * @param {string} path - Absolute path to the file.
- * @param {string} label - Human-readable label used in the warning and placeholder.
- * @returns {string} File contents or a "[label not found]" placeholder.
- */
-function readFile(path, label) {
-  if (!existsSync(path)) {
-    console.warn(`⚠️   ${label} not found at: ${path}`);
-    return `[${label} not found — skipping]`;
-  }
-  return readFileSync(path, 'utf-8').trim();
-}
+// readContextFile lives in eval-runner.mjs (shared across the three
+// evaluators); the doc comment moved with it.
 
 // ---------------------------------------------------------------------------
 // Loopback guard — cv.md + full JD are sent to this endpoint.
@@ -199,10 +188,10 @@ try {
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext = readFile(PATHS.shared, 'modes/_shared.md');
-const ofertaLogic   = readFile(PATHS.oferta, 'modes/oferta.md');
-const cvContent     = readFile(PATHS.cv,     'cv.md');
-const profileYml    = readFile(PATHS.profileYml, 'config/profile.yml');
+const sharedContext = readContextFile(PATHS.shared, 'modes/_shared.md');
+const ofertaLogic   = readContextFile(PATHS.oferta, 'modes/oferta.md');
+const cvContent     = readContextFile(PATHS.cv,     'cv.md');
+const profileYml    = readContextFile(PATHS.profileYml, 'config/profile.yml');
 const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
 // ---------------------------------------------------------------------------
@@ -319,25 +308,10 @@ console.log(evaluationText);
 // ---------------------------------------------------------------------------
 // Parse score summary
 // ---------------------------------------------------------------------------
-const summaryMatch = evaluationText.match(/---SCORE_SUMMARY---\s*([\s\S]*?)---END_SUMMARY---/);
-
-let company    = 'unknown';
-let role       = 'unknown';
-let score      = '?';
-let archetype  = 'unknown';
-let legitimacy = 'unknown';
-
-if (summaryMatch) {
-  const extract = (key) => {
-    const m = summaryMatch[1].match(new RegExp(`${key}:\\s*(.+)`));
-    return m ? m[1].trim() : 'unknown';
-  };
-  company    = extract('COMPANY');
-  role       = extract('ROLE');
-  score      = extract('SCORE');
-  archetype  = extract('ARCHETYPE');
-  legitimacy = extract('LEGITIMACY');
-}
+// ---------------------------------------------------------------------------
+// Parse score summary (shared parser — eval-runner.mjs)
+// ---------------------------------------------------------------------------
+const { company, role, score, archetype, legitimacy } = parseScoreSummary(evaluationText);
 
 // ---------------------------------------------------------------------------
 // Save report

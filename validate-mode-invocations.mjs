@@ -77,15 +77,23 @@ export function collectInvocations(modesDir = MODES_DIR) {
       const text = readFileSync(full, 'utf-8');
       for (const m of text.matchAll(INVOCATION_RE)) {
         const script = m[1];
-        // Re-scan the line context for flags following this invocation, but
-        // only capture flags on the same logical line (no multiline commands
-        // in modes). m.index is absolute in `text`; offset it against the
-        // line slice start so the matchAll scans the line-relative range.
+        // Re-scan the line context for flags following this invocation.
+        // m.index is absolute in `text`; offset it against the line slice
+        // start so the matchAll scans the line-relative range. The capture
+        // window is bounded by the next `node ` invocation on the same line
+        // (a line can list several commands, e.g. pipeline mode's
+        // "run merge-tracker.mjs, verify-pipeline.mjs, ..." — flags must
+        // never leak across commands).
         const lineStart = text.lastIndexOf('\n', m.index) + 1;
         const lineEnd = text.indexOf('\n', m.index);
         const line = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
+        const afterInvocation = line.slice(m.index - lineStart + script.length + 6);
+        const nextInvocation = afterInvocation.search(/node\s+[a-zA-Z0-9_-]+\.mjs\b/);
+        const flagWindow = nextInvocation === -1
+          ? afterInvocation
+          : afterInvocation.slice(0, nextInvocation);
         const flags = [];
-        for (const fm of line.slice(m.index - lineStart).matchAll(FLAG_RE)) {
+        for (const fm of flagWindow.matchAll(FLAG_RE)) {
           const f = fm[0];
           if (PLACEHOLDER_RE.test(f)) continue;
           flags.push(f);
@@ -107,6 +115,15 @@ export function collectInvocations(modesDir = MODES_DIR) {
 function helpFlags(script) {
   const scriptPath = join(JOBBER, script);
   if (!existsSync(scriptPath)) return null;
+
+  // T4: prefer the machine-readable --capabilities contract when the script
+  // implements it. It is JSON, needs no parsing heuristics, and (unlike
+  // --help probing) never pays a lazy-import or playwright cost for scripts
+  // that gate it before their heavy imports. Fall back to --help parsing
+  // when the script has no --capabilities handler.
+  const capFlags = capabilitiesFlags(scriptPath);
+  if (capFlags !== null) return capFlags;
+
   // Does the script even handle --help? Grep the source for a help branch —
   // cheaper than running every script, and avoids side effects.
   const src = readFileSync(scriptPath, 'utf-8');
@@ -137,6 +154,34 @@ function helpFlags(script) {
     // Script crashed on --help (or --help printed to stderr / exited 1) —
     // treat as "cannot validate flags", existence is still the hard gate.
     return null;
+  }
+}
+
+/**
+ * Read a script's --capabilities JSON contract, when it has one.
+ *
+ * Requires the source to reference '--capabilities' (cheap grep first — never
+ * spawn a script that doesn't implement the flag), then spawns it once and
+ * parses the JSON. Returns the flags array, or null when the contract is
+ * absent or unparseable (caller falls back to --help).
+ *
+ * @param {string} scriptPath - Absolute path to the script.
+ * @returns {string[]|null} Documented flags (including --help), or null.
+ */
+function capabilitiesFlags(scriptPath) {
+  const src = readFileSync(scriptPath, 'utf-8');
+  if (!src.includes('--capabilities')) return null;
+  try {
+    const { status, stdout } = spawnSync('node', [scriptPath, '--capabilities'], {
+      encoding: 'utf-8', timeout: 10_000, cwd: JOBBER,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (status !== 0) return null;
+    const parsed = JSON.parse(stdout.trim());
+    if (!parsed || !Array.isArray(parsed.flags)) return null;
+    return parsed.flags.filter(f => f !== '--capabilities');
+  } catch {
+    return null; // malformed or crashed — fall back to --help
   }
 }
 

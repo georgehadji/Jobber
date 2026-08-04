@@ -1,5 +1,7 @@
 # Modalità: pipeline -- Inbox degli URL (Second Brain)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Elabora gli URL degli annunci accumulati in `data/pipeline.md`. Il candidato aggiunge gli URL quando vuole, poi esegue `/jobber pipeline` per elaborarli tutti in una volta.
 
 ## Workflow

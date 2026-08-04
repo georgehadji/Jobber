@@ -17,6 +17,17 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = __dirname;
 
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no checks run.
+if (process.argv.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'cv-sync-check.mjs', version: 1,
+    flags: ['--help'],
+    description: 'Verify CV and profile files are in sync with config',
+  }));
+  process.exit(0);
+}
+
 const warnings = [];
 const errors = [];
 

@@ -31,6 +31,17 @@ import { dirname } from 'path';
 
 const PATH = process.env.JOBBER_INBOX || 'data/agent-inbox.md';
 
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no inbox operations.
+if (process.argv.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'agent-inbox.mjs', version: 1,
+    flags: ['list', 'resolve', '--all', '--result', '--help'],
+    description: 'Append-only agent request queue',
+  }));
+  process.exit(0);
+}
+
 const HEADER = [
   '# Agent Inbox',
   '',

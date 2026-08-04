@@ -1,5 +1,7 @@
 # Mode: pipeline -- Inbox URL (Second Brain)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Memproses URL lowongan yang menumpuk di `data/pipeline.md`. Kandidat menambahkan URL kapan pun ia mau lalu menjalankan `/jobber pipeline` untuk memproses semuanya sekaligus.
 
 ## Alur kerja

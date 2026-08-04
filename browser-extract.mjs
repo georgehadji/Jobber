@@ -183,6 +183,16 @@ async function readDom(page) {
 
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes('--capabilities')) {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — before playwright import, exits 0.
+    console.log(JSON.stringify({
+      script: 'browser-extract.mjs', version: 1,
+      flags: ['--mode', '--max', '--max-chars', '--timeout', '--help'],
+      description: 'Extract distilled JD/listing text from a page via Playwright',
+    }));
+    process.exit(0);
+  }
   if (args.includes('--help') || args.includes('-h')) {
     console.log('Usage: node browser-extract.mjs <url> [--mode jd|listing] [--max N] [--max-chars N] [--timeout MS]\n\nExtract the distilled main text of a job posting (or listing) page for evaluation.\n\nOptions:\n  --mode jd|listing   What to extract (default jd)\n  --max N             Max results for listing mode\n  --max-chars N       Truncate extracted text to N chars\n  --timeout MS        Navigation timeout in ms\n  -h, --help          Show this help');
     process.exit(0);

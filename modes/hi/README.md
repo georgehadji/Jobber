@@ -1,5 +1,7 @@
 # Jobber — हिन्दी मोड्स (`modes/hi/`)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 यह folder Jobber modes के हिन्दी अनुवाद रखता है, उन candidates के लिए जो भारतीय job market में नौकरी ढूंढ रहे हैं या हिन्दी job listings के साथ काम कर रहे हैं।
 
 ## कब उपयोग करें?

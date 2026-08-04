@@ -1,5 +1,7 @@
 # Jobber -- Modalità in italiano (`modes/it/`)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Questa cartella contiene le traduzioni in italiano delle principali modalità di Jobber per i candidati che si rivolgono al mercato italiano.
 
 ## Quando usare queste modalità?

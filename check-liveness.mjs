@@ -15,7 +15,6 @@
  * Exit code: 0 if all active, 1 if any expired or uncertain
  */
 
-import { chromium } from 'playwright';
 import { readFile } from 'fs/promises';
 import {
   checkUrlLivenessWithFallback,
@@ -26,8 +25,29 @@ import {
 } from './liveness-browser.mjs';
 import { checkLivenessViaApi } from './liveness-api.mjs';
 
+// Lazy playwright: importing 'playwright' at module top costs ~15s (Chromium
+// resolves its browser path at import time). Most liveness checks are served
+// by the zero-browser API rung; only URLs that need the browser fallback pay
+// the import cost. Also lets --help / --capabilities exit instantly.
+let chromium = null;
+async function ensureChromium() {
+  if (!chromium) ({ chromium } = await import('playwright'));
+  return chromium;
+}
+
 async function main() {
   const args = process.argv.slice(2);
+
+  if (args.includes('--capabilities')) {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — before playwright import, exits 0.
+    console.log(JSON.stringify({
+      script: 'check-liveness.mjs', version: 1,
+      flags: ['--file', '--no-fallback', '--throttle', '--help'],
+      description: 'Check whether job postings are still live (zero-token)',
+    }));
+    process.exit(0);
+  }
 
   if (args.includes('--help') || args.includes('-h')) {
     console.log('Usage: node check-liveness.mjs [options] <url1> [url2] ...');
@@ -79,9 +99,10 @@ async function main() {
   let browser = null, page = null, headed = null;
   async function ensureBrowser() {
     if (browser) return;
-    browser = await chromium.launch({ headless: true });
+    const cr = await ensureChromium();
+    browser = await cr.launch({ headless: true });
     page = await newLivenessPage(browser);
-    headed = noFallback ? null : createHeadedPageProvider(chromium);
+    headed = noFallback ? null : createHeadedPageProvider(cr);
   }
 
   let active = 0, expired = 0, uncertain = 0, viaApi = 0;

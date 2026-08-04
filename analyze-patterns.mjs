@@ -18,6 +18,7 @@ import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
+import { readTrackerSafe } from './tracker-utils.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(JOBBER, 'data/applications.md'))
@@ -412,7 +413,9 @@ risk_summary:
 // --- Parse applications.md ---
 function parseTracker() {
   if (!existsSync(APPS_FILE)) return [];
-  const content = readFileSync(APPS_FILE, 'utf-8');
+  // T5: safe read — a concurrent merge can leave a mid-write snapshot on
+  // Windows; one bounded retry avoids misreading the tracker.
+  const content = readTrackerSafe(APPS_FILE);
   const lines = content.split('\n');
   const colmap = resolveColumns(lines);
   const entries = [];

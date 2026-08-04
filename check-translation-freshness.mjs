@@ -35,7 +35,7 @@
  * Companion to #improvement-plan A8.
  */
 
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -82,22 +82,91 @@ export function checkTranslations({ sourceSha }) {
   return findings.sort((a, b) => a.lang.localeCompare(b.lang));
 }
 
+/**
+ * Check translated mode files (modes/<lang>/<file>.md) against their English
+ * sources (modes/<file>.md). Same stamp mechanism as README translations,
+ * backfilled by stamp-translations.mjs (T2).
+ *
+ * Discovery is automatic: every subdirectory of modes/ whose files have an
+ * English counterpart in modes/*.md is treated as a translation dir. The
+ * per-language source SHA comes from the same single git pass the README
+ * check uses, so a translator refreshes by re-running stamp-translations.mjs.
+ *
+ * @param {{sourceShas?: Map<string,string>}} opts - Optional precomputed
+ *   map of `modes/<file>.md` → SHA (single git pass).
+ * @returns {Array<{lang: string, file: string, stale: boolean, reason: string, storedSha?: string, sourceSha?: string}>}
+ */
+export function checkModeTranslations({ sourceShas } = {}) {
+  const findings = [];
+  const MODES_DIR = join(JOBBER, 'modes');
+  const rootFiles = new Set(readdirSync(MODES_DIR).filter(n => n.endsWith('.md')));
+  const SKIP_DIRS = new Set(['interview', 'heuristics', 'regional']);
+
+  for (const lang of readdirSync(MODES_DIR)) {
+    const langDir = join(MODES_DIR, lang);
+    let st;
+    try { st = statSync(langDir); } catch { continue; }
+    if (!st.isDirectory()) continue;
+    if (SKIP_DIRS.has(lang)) continue;
+    for (const f of readdirSync(langDir)) {
+      if (!f.endsWith('.md') || !rootFiles.has(f)) continue;
+      let head;
+      try { head = readFileSync(join(langDir, f), 'utf-8').split('\n').slice(0, 20).join('\n'); } catch { continue; }
+      const shaMatch = SHA_RE.exec(head);
+      const source = `modes/${f}`;
+      const expected = sourceShas?.get(source) ?? null;
+      if (!shaMatch) {
+        findings.push({ lang, file: `modes/${lang}/${f}`, stale: true, reason: 'no jobber-source-sha stamp' });
+      } else if (expected && shaMatch[1] !== expected) {
+        findings.push({
+          lang, file: `modes/${lang}/${f}`, stale: true,
+          reason: `${f} changed since translation`, storedSha: shaMatch[1], sourceSha: expected,
+        });
+      }
+    }
+  }
+  return findings.sort((a, b) => a.file.localeCompare(b.file));
+}
+
 const sourceSha = currentSourceSha();
 const findings = checkTranslations({ sourceSha });
+// T2: also check translated mode files (stamped by stamp-translations.mjs).
+// Uses the same single-git-pass semantics; when the mode SHAs can't be
+// computed (no git), only README findings are reported.
+let modeFindings = [];
+try {
+  const { execSync } = await import('child_process');
+  const modeShas = new Map();
+  const out = execSync('git log --format=%H --name-only -- modes/', { cwd: JOBBER, encoding: 'utf-8' });
+  let currentSha = null;
+  for (const line of out.split('\n')) {
+    const t = line.trim();
+    if (/^[0-9a-f]{40}$/.test(t)) { currentSha = t; continue; }
+    if (t.startsWith('modes/') && t.endsWith('.md') && currentSha && !modeShas.has(t)) modeShas.set(t, currentSha);
+  }
+  modeFindings = checkModeTranslations({ sourceShas: modeShas });
+} catch {
+  modeFindings = [];
+}
+const allFindings = [...findings, ...modeFindings];
 
 if (SUMMARY) {
   for (const f of findings) {
     console.log(`⚠  ${f.file} stale — ${f.reason}`);
   }
-  console.log(`${readdirSync(JOBBER).filter(f => LANG_RE.test(f)).length} translations; ${findings.length} stale${sourceSha ? ` (README.md @ ${sourceSha.slice(0, 12)})` : ' (source SHA unavailable — git required)'}`);
+  for (const f of modeFindings) {
+    console.log(`⚠  ${f.file} stale — ${f.reason}`);
+  }
+  const readmeCount = readdirSync(JOBBER).filter(f => LANG_RE.test(f)).length;
+  console.log(`${readmeCount} README translations + ${modeFindings.length > 0 ? 'mode translations' : '0 mode translations scanned'} — ${allFindings.length} stale total${sourceSha ? ` (README.md @ ${sourceSha.slice(0, 12)})` : ' (source SHA unavailable — git required)'}`);
 } else if (CI) {
   // GitHub Actions annotations — visible on the PR checks page, non-blocking.
   // One annotation per stale translation so the file is directly clickable.
-  for (const f of findings) {
+  for (const f of allFindings) {
     console.log(`::warning file=${f.file},title=Stale translation::${f.file} is stale — ${f.reason}`);
   }
-  if (findings.length === 0) console.log('✅ All README translations are fresh.');
+  if (allFindings.length === 0) console.log('✅ All README and mode translations are fresh.');
 } else {
-  console.log(JSON.stringify({ sourceSha, source: SOURCE, stale: findings }, null, 2));
+  console.log(JSON.stringify({ sourceSha, source: SOURCE, stale: findings, modeTranslations: modeFindings }, null, 2));
 }
 process.exit(0);

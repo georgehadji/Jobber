@@ -1,5 +1,7 @@
 # Mode: apply -- Live-assistent til ansøgningsformularer
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Interaktiv mode til det øjeblik, hvor kandidaten udfylder en ansøgningsformular i Chrome. Den læser, hvad der er på skærmen, indlæser konteksten fra opslagets tidligere evaluering og genererer personaliserede svar til hvert spørgsmål i formularen.
 
 ## Forudsætninger

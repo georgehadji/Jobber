@@ -1,5 +1,7 @@
 # Modo: oferta -- Evaluación completa A-F
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Cuando el candidato pegue una oferta (texto o URL), SIEMPRE entregar los 6 bloques.
 
 ## Paso 0 -- Detección de arquetipo

@@ -792,6 +792,18 @@ function parseArgs(argv) {
 // ── Main ──────────────────────────────────────────────────────────────
 
 async function main() {
+  // --capabilities contract (T4): machine-readable flag list for
+  // validate-mode-invocations.mjs — checked BEFORE the strict flag parser,
+  // which would reject the unknown --capabilities flag. Exits 0 with JSON.
+  if (process.argv.includes('--capabilities')) {
+    console.log(JSON.stringify({
+      script: 'discover-ats.mjs', version: 1,
+      flags: ['--in', '--vendors', '--write', '--dry-run', '--summary', '--self-test', '--help'],
+      description: 'Discover ATS vendor for a careers URL',
+    }));
+    process.exit(0);
+  }
+
   const opts = parseArgs(process.argv);
   if (opts.selfTest) runSelfTest();
 

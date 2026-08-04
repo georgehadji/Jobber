@@ -71,6 +71,16 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
 const MIGRATE_VIA = process.argv.includes('--migrate-via');
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no lock, no writes.
+if (process.argv.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'merge-tracker.mjs', version: 1,
+    flags: ['--dry-run', '--verify', '--strict', '--summary', '--migrate', '--migrate-via', '--help'],
+    description: 'Merge batch tracker additions into applications.md',
+  }));
+  process.exit(0);
+}
 const SUMMARY = process.argv.includes('--summary');
 // --strict: a single malformed TSV aborts the whole batch (no partial merge).
 // Default (no --strict) keeps the long-standing tested behavior: malformed

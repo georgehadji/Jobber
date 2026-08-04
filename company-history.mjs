@@ -47,7 +47,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 import { parseScanHistory, detectReposts } from './detect-reposts.mjs';
-import { normalizeCompany, resolveTrackerPath } from './tracker-utils.mjs';
+import { normalizeCompany, resolveTrackerPath, readTrackerSafe } from './tracker-utils.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
   parseFollowups,
@@ -202,7 +202,8 @@ function resolveNow(now) {
 export function loadTrackerRows(rootDir = JOBBER) {
   const path = resolveTrackerPath(rootDir);
   if (!existsSync(path)) return { rows: [], loaded: false };
-  const content = readFileSync(path, 'utf-8');
+  // T5: safe read — concurrent merge can leave a mid-write snapshot on Windows.
+  const content = readTrackerSafe(path);
   const lines = content.split('\n');
   const colmap = resolveColumns(lines);
   const rows = [];

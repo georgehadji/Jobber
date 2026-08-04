@@ -21,6 +21,10 @@
  * Provider tests live in tests/providers/{name}.test.mjs and are
  * auto-discovered — no registration needed. To add a test for a new
  * provider, create that one file; do not add a section to this file.
+ *
+ * NOTE (T1): the canonical full suite stays here (85 inline core sections +
+ * discovered files). test-runner.mjs provides fast parallel feedback over
+ * the discovered files only — see its header for the counter model.
  */
 
 

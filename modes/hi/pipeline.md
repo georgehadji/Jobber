@@ -1,5 +1,7 @@
 # Mode: pipeline -- URL Inbox (Second Brain)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 `data/pipeline.md` में accumulated offer URLs process करता है। Candidate जब चाहे URLs add करता है और फिर एक बार में सब process करने के लिए `/jobber pipeline` run करता है।
 
 ## Workflow

@@ -420,3 +420,47 @@ export function gcStaleSentinels(reportsDir, { log = console.log } = {}) {
   }
   return removed;
 }
+
+// ── Safe tracker reads (T5: reader-writer consistency) ─────────────────────
+// Writers (merge-tracker, set-status, dedup, normalize) hold the exclusive
+// tracker lock and write atomically (writeFileAtomic → rename). POSIX rename
+// is atomic so readers always see old or new — but Windows rename over an
+// existing target is NOT atomic (FAT/exFAT semantics), so a reader can catch
+// the file mid-swap and see a truncated/empty snapshot. Readers don't take
+// the lock (that would serialize every stats call behind every merge), so the
+// safe-read helper validates the snapshot and retries once on the failure
+// mode that actually occurs. Valid snapshots take the fast path — zero cost.
+
+/**
+ * Read the tracker file with one bounded retry against a truncated snapshot.
+ *
+ * A valid tracker must contain the header row (`| # |`) and a separator row
+ * (`|---|`); anything less is a mid-write artifact. Retry once after 50ms;
+ * if it still fails, return the content anyway (best-effort) so a reader
+ * never crashes a pipeline report — the caller decides severity.
+ *
+ * @param {string} filePath - Absolute path to data/applications.md.
+ * @returns {string} Tracker contents (possibly best-effort after 1 retry).
+ */
+export function readTrackerSafe(filePath) {
+  const read = () => {
+    const content = readFileSync(filePath, 'utf-8');
+    const hasHeader = /^\s*\|.*#.*\|/m.test(content);
+    const hasSeparator = /^\s*\|[\s:|-]+\|/m.test(content);
+    return { content, valid: hasHeader && hasSeparator };
+  };
+  let attempt = read();
+  if (!attempt.valid) {
+    // Truncated/mid-write snapshot — wait for the writer's rename to finish.
+    // Atomics.wait is a true synchronous sleep (allowed on the main thread
+    // in Node) — no busy-wait burn.
+    const buffer = new SharedArrayBuffer(4);
+    const lock = new Int32Array(buffer);
+    Atomics.wait(lock, 0, 0, 50); // sleep up to 50ms
+    attempt = read();
+    if (!attempt.valid) {
+      console.warn(`⚠️  Tracker read at ${filePath} caught a mid-write snapshot after 1 retry — continuing with partial data`);
+    }
+  }
+  return attempt.content;
+}

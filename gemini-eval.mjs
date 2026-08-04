@@ -35,6 +35,7 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { TokenAccumulator, formatBreakdown } from './lib/token-tracker.mjs';
+import { readContextFile, parseScoreSummary, slugifyCompany } from './eval-runner.mjs';
 
 const tracker = new TokenAccumulator();
 tracker.recordZeroToken('scan');
@@ -169,13 +170,9 @@ if (!apiKey) {
 // ---------------------------------------------------------------------------
 // File helpers
 // ---------------------------------------------------------------------------
-function readFile(path, label) {
-  if (!existsSync(path)) {
-    console.warn(`⚠️   ${label} not found at: ${path}`);
-    return `[${label} not found — skipping]`;
-  }
-  return readFileSync(path, 'utf-8').trim();
-}
+// readContextFile and slugifyCompany live in eval-runner.mjs (shared across
+// the three evaluators). tsvSafe/normalizedTrackerScore stay local here —
+// gemini's tracker-row contract differs from the shared normalization.
 
 function validateEvaluationShape(text) {
   const issues = [];
@@ -218,13 +215,6 @@ function validateEvaluationShape(text) {
   }
 }
 
-function slugifyCompany(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'unknown';
-}
-
 function tsvSafe(value) {
   return String(value ?? '').replace(/[\t\r\n]+/g, ' ').trim();
 }
@@ -240,11 +230,11 @@ function normalizedTrackerScore(value) {
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext  = readFile(PATHS.shared,      'modes/_shared.md');
-const ofertaLogic    = readFile(PATHS.oferta,      'modes/oferta.md');
-const cvContent      = readFile(PATHS.cv,          'cv.md');
-const profileContent = readFile(PATHS.profile,     'modes/_profile.md');
-const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
+const sharedContext  = readContextFile(PATHS.shared,      'modes/_shared.md');
+const ofertaLogic    = readContextFile(PATHS.oferta,      'modes/oferta.md');
+const cvContent      = readContextFile(PATHS.cv,          'cv.md');
+const profileContent = readContextFile(PATHS.profile,     'modes/_profile.md');
+const profileYml     = readContextFile(PATHS.profileYml,  'config/profile.yml');
 const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
 // ---------------------------------------------------------------------------
@@ -362,37 +352,11 @@ console.log('═'.repeat(66) + '\n');
 console.log(evaluationText);
 
 // ---------------------------------------------------------------------------
-// Parse score summary
+// Parse score summary (shared parser — eval-runner.mjs)
 // ---------------------------------------------------------------------------
-const summaryMatch = evaluationText.match(
-  /---SCORE_SUMMARY---\s*([\s\S]*?)---END_SUMMARY---/
-);
-
-let company    = 'unknown';
-let role       = 'unknown';
-let score      = '?';
-let archetype  = 'unknown';
-let legitimacy = 'unknown';
-
-if (summaryMatch) {
-  const block = summaryMatch[1];
-  const extract = (key) => {
-    const prefix = `${key}:`;
-    const lines = block.split('\n');
-    for (const line of lines) {
-      const trimmed = line.trimStart();
-      if (trimmed.startsWith(prefix)) {
-        return trimmed.slice(prefix.length).trim();
-      }
-    }
-    return 'unknown';
-  };
-  company    = extract('COMPANY');
-  role       = extract('ROLE');
-  score      = extract('SCORE');
-  archetype  = extract('ARCHETYPE');
-  legitimacy = extract('LEGITIMACY');
-}
+const {
+  company, role, score, archetype, legitimacy,
+} = parseScoreSummary(evaluationText);
 
 // ---------------------------------------------------------------------------
 // Save report

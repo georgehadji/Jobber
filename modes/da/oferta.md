@@ -1,5 +1,7 @@
 # Mode: oferta -- Fuld evaluering A-F
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Når kandidaten indsætter et opslag (tekst eller URL), så lever ALTID alle 6 blokke.
 
 ## Trin 0 -- Arketype-detektion

@@ -1,5 +1,7 @@
 # 共通コンテキスト -- Jobber（日本語）
 
+<!-- jobber-source-sha: 5d80485de48a2b88d16c105c52e99d45fef521fb -->
+
 <!-- ============================================================
      THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
 

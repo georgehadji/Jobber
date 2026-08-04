@@ -306,6 +306,17 @@ Run with no arguments to reserve the next single number.
     return 0;
   }
 
+  if (cmd === '--capabilities') {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — exits 0 with JSON, no lock, no writes.
+    process.stdout.write(JSON.stringify({
+      script: 'reserve-report-num.mjs', version: 1,
+      flags: ['--count', '--release', '--gc', '--help'],
+      description: 'Atomic report-number allocator',
+    }));
+    return 0;
+  }
+
   if (cmd === '--release') {
     const match = (arg || '').match(/^(\d+)(?:-(\d+))?$/);
     if (!match) {

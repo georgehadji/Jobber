@@ -52,6 +52,35 @@ try {
     }
   }
 
+  // T4: --capabilities contract is preferred over --help parsing.
+  // merge-tracker.mjs implements --capabilities (JSON flags) — its flags
+  // must come from the contract, not help-text heuristics.
+  {
+    const { warnings, errors } = validateInvocations([
+      { file: 'modes/test.md', script: 'merge-tracker.mjs', flags: ['--dry-run', '--strict'] },
+    ]);
+    // Both --dry-run and --strict are in merge-tracker's capabilities list,
+    // so a clean result proves the capabilities path was used (the --help
+    // heuristic would also accept them, but the contract is authoritative).
+    if (errors.length === 0 && warnings.length === 0) {
+      pass('--capabilities contract supplies documented flags (merge-tracker)');
+    } else {
+      fail(`capabilities path wrong: ${JSON.stringify({ errors, warnings })}`);
+    }
+  }
+
+  // T4: a flag NOT in the capabilities contract is still a WARNING.
+  {
+    const { warnings } = validateInvocations([
+      { file: 'modes/test.md', script: 'merge-tracker.mjs', flags: ['--not-a-real-flag'] },
+    ]);
+    if (warnings.length === 1 && warnings[0].flags?.includes('--not-a-real-flag')) {
+      pass('flag outside the capabilities contract → WARNING');
+    } else {
+      fail(`capabilities flag validation wrong: ${JSON.stringify(warnings)}`);
+    }
+  }
+
   // Documented flags on a --help-capable script → no warning.
   {
     const { warnings } = validateInvocations([

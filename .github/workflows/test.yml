@@ -41,6 +41,23 @@ jobs:
         run: go test ./...
         working-directory: dashboard
 
+  # Test-runner gate (T1): fast parallel feedback over the discovered
+  # tests/**/*.test.mjs files with per-file attribution. This complements —
+  # does NOT replace — the canonical test-all.mjs matrix above, which also
+  # runs 85 inline core sections (syntax, data contract, personal-data,
+  # portal validation, etc.) the runner does not own. A failure here names
+  # the exact test file on the first triage line.
+  test-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts
+      - name: Run discovered test files in parallel
+        run: node test-runner.mjs --parallel 4
+
   # Golden-set replay gate (#improvement-plan M4) — deterministic, offline, $0.
   # Runs the eval-golden harness over the frozen synthetic JDs against their
   # recorded replay fixtures. Pinned at the currently-measured agreement via

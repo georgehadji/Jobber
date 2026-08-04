@@ -26,7 +26,6 @@
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
-import { chromium } from 'playwright';
 import { resolve, dirname, relative, sep, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
@@ -415,6 +414,17 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
 async function generatePDF() {
   const args = process.argv.slice(2);
 
+  if (args.includes('--capabilities')) {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — before playwright import, exits 0.
+    console.log(JSON.stringify({
+      script: 'generate-pdf.mjs', version: 1,
+      flags: ['--format', '--report', '--max-pages', '--allow-reorder', '--strict-pages', '--help'],
+      description: 'Render an HTML file (ATS-safe) to PDF via Playwright',
+    }));
+    process.exit(0);
+  }
+
   if (args.includes('--help') || args.includes('-h')) {
     console.log('Usage: node generate-pdf.mjs <input.html> <output.pdf> [options]');
     console.log('');
@@ -616,7 +626,14 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
   const { writeFile, unlink } = await import('fs/promises');
   await writeFile(tmpHtmlPath, html, 'utf-8');
 
-  const launchBrowser = opts.launchBrowser || ((options) => chromium.launch(options));
+  const launchBrowser = opts.launchBrowser || (async (options) => {
+    // Lazy playwright: importing 'playwright' at module top costs ~15s
+    // (Chromium resolves its browser path at import time). PDF generation
+    // always needs the browser, but --help / --capabilities / validation
+    // paths must not pay that cost.
+    const { chromium } = await import('playwright');
+    return chromium.launch(options);
+  });
   let browser = null;
   try {
     browser = await launchBrowser({ headless: true });

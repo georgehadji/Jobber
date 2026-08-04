@@ -40,7 +40,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { computeFunnel, computeTrackerStats } from './stats.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
-import { resolveTrackerPath, loadCanonicalStates, resolveCanonicalState } from './tracker-utils.mjs';
+import { resolveTrackerPath, loadCanonicalStates, resolveCanonicalState, readTrackerSafe } from './tracker-utils.mjs';
 import { parseAppliedDate, normalizeStatus } from './followup-cadence.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
@@ -665,7 +665,9 @@ function main() {
   const states = loadCanonicalStates(STATES_FILE);
   const trackerPath = resolveTrackerPath(JOBBER);
   const logPath = join(dirname(trackerPath), 'status-log.tsv');
-  const trackerContent = existsSync(trackerPath) ? readFileSync(trackerPath, 'utf-8') : '';
+  // T5: safe read — status-log.tsv is append-only (never renamed mid-write),
+  // but the tracker itself is written atomically by locked writers.
+  const trackerContent = existsSync(trackerPath) ? readTrackerSafe(trackerPath) : '';
   const logContent = existsSync(logPath) ? readFileSync(logPath, 'utf-8') : '';
   const todayStr = new Date().toISOString().slice(0, 10);
 

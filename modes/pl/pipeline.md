@@ -1,5 +1,7 @@
 # Tryb: pipeline -- Inbox URL-i (Second Brain)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Przetwarza URL-e ofert nagromadzone w `data/pipeline.md`. Kandydat dodaje URL-e, kiedy chce, a potem uruchamia `/jobber pipeline`, by przetworzyć je wszystkie naraz.
 
 ## Workflow

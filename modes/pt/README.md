@@ -1,5 +1,7 @@
 # Jobber -- Modos em Português BR (`modes/pt/`)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Esta pasta contém as traduções em português brasileiro dos principais modos do Jobber para candidatos que buscam vagas no mercado brasileiro ou em empresas que operam em português.
 
 ## Quando usar estes modos?

@@ -88,6 +88,16 @@ if (rawArgs.includes('--help') || rawArgs.includes('-h')) {
   console.log(USAGE);
   process.exit(0);
 }
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no lock, no writes.
+if (rawArgs.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'set-status.mjs', version: 1,
+    flags: ['--note', '--role', '--on', '--force', '--dry-run', '--json', '--help'],
+    description: 'Canonical tracker-row status update',
+  }));
+  process.exit(0);
+}
 const positional = [];
 const flags = { note: null, role: null, on: null, force: false, dryRun: false, json: false };
 const VALUE_FLAGS = { '--note': 'note', '--role': 'role', '--on': 'on' };

@@ -202,6 +202,7 @@ const SYSTEM_PATHS = [
   'discover-ats.test.mjs',
   'check-table-freshness.mjs',
   'check-translation-freshness.mjs',
+  'stamp-translations.mjs',
   'provider-health.mjs',
   'validate-mode-invocations.mjs',
   'fingerprint-core.mjs',
@@ -226,12 +227,15 @@ const SYSTEM_PATHS = [
   'ollama-eval.mjs',
   'openai-eval.mjs',
   'openai-tailor.mjs',
+  'eval-runner.mjs',
+  'capabilities.mjs',
   'eval-golden.mjs',
   'evals/',
   'openrouter-runner.mjs',
   'jd-similarity.mjs',
   'jd-similarity.test.mjs',
   'test-all.mjs',
+  'test-runner.mjs',
   'detect-reposts.test.mjs',
   'test-salary-filter.mjs',
   'test-trust-validator.mjs',
@@ -287,6 +291,8 @@ const SYSTEM_PATHS = [
   'MANIFESTO.md',
   'manifesto.mjs',
   'SIGNATURES.md',
+  'implementation_plan.md',
+  'implementation_audit_report.md',
   'CONTRIBUTING.md',
   'MAINTAINERS.md',
   'ARCHITECTURE.md',
@@ -1346,6 +1352,17 @@ function dismiss() {
 // live update check.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const cmd = process.argv[2] || 'check';
+
+  // --capabilities contract (T4): machine-readable flag list for
+  // validate-mode-invocations.mjs — exits 0 with JSON, no update runs.
+  if (cmd === '--capabilities') {
+    console.log(JSON.stringify({
+      script: 'update-system.mjs', version: 1,
+      flags: ['check', 'apply', 'rollback', '--help'],
+      description: 'Self-update system files from upstream without touching user data',
+    }));
+    process.exit(0);
+  }
 
   try {
     switch (cmd) {

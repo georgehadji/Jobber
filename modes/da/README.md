@@ -1,5 +1,7 @@
 # Jobber -- Danske modes (`modes/da/`)
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Denne mappe indeholder de danske oversættelser af de vigtigste jobber-modes for kandidater, der søger på det danske marked.
 
 ## Hvornår skal du bruge disse modes?
