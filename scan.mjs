@@ -2039,7 +2039,7 @@ async function main() {
   if (healthCheck) {
     try {
       const { tmpdir } = await import('os');
-      const { readFileSync } = await import('fs');
+      // readFileSync already imported statically at line 34
       const cacheFile = process.env.JOBBER_HEALTH_CACHE
         || path.join(tmpdir(), 'jobber-provider-health.json');
       let cachedResults = null;
