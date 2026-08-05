@@ -41,6 +41,7 @@ import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { spawnSync } from 'child_process';
+import { cpus } from 'os';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)));
 const TESTS_DIR = join(ROOT, 'tests');
@@ -51,7 +52,9 @@ const QUICK = args.includes('--quick');
 const JSON_OUT = args.includes('--json');
 const CI_MODE = args.includes('--ci');
 const parallelIdx = args.indexOf('--parallel');
-const PARALLEL = parallelIdx !== -1 ? Math.max(1, parseInt(args[parallelIdx + 1], 10) || 1) : 0;
+const PARALLEL = parallelIdx !== -1
+  ? Math.min(Math.max(1, parseInt(args[parallelIdx + 1], 10) || 1), cpus().length)
+  : 0;
 const onlyIdx = args.indexOf('--only');
 const ONLY = onlyIdx !== -1 ? (args[onlyIdx + 1] ?? null) : null;
 
@@ -165,9 +168,17 @@ async function runParallel(files, concurrency) {
       }
       const stdout = (res.stdout || '') + (res.stderr || '');
       // Count the shared-counter markers as they appear in child stdout.
-      const passed = (stdout.match(/✅/g) || []).length;
-      const failed = (stdout.match(/❌/g) || []).length;
-      const warnings = (stdout.match(/⚠️/g) || []).length;
+      // Count only the markers tests/helpers.mjs emits — two-space indent,
+      // emoji, trailing space (warn uses two). A bare /✅/g also matched emoji
+      // appearing *inside* a test's own description: sync-pdf-flags names an
+      // assertion "flips ❌ to ✅ when present in manifest", which scored two
+      // phantom passes and one phantom failure. That turned a file that exits
+      // 0 into a red run on every parallel invocation, while serial mode —
+      // which reads the real counters — stayed green. Deterministic, not flaky.
+      const countMarker = (re) => (stdout.match(re) || []).length;
+      const passed = countMarker(/^ {2}✅ /gm);
+      const failed = countMarker(/^ {2}❌ /gm);
+      const warnings = countMarker(/^ {2}⚠️ {2}/gm);
       // A crash (non-zero exit + no finish() line) still counts as failure.
       const crashed = res.status !== 0 && !/📊 Results:/m.test(stdout);
       if (crashed) {
