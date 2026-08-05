@@ -1,5 +1,5 @@
 ---
-name: jobber-plugin-notion
+name: career-ops-plugin-notion
 description: How to mirror the Jobber tracker to a Notion database and read records back as job leads.
 license: MIT
 ---

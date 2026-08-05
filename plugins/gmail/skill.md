@@ -1,5 +1,5 @@
 ---
-name: jobber-plugin-gmail
+name: career-ops-plugin-gmail
 description: How to pull job leads from a Gmail label into the Jobber pipeline.
 license: MIT
 ---

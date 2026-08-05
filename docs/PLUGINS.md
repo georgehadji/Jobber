@@ -55,7 +55,7 @@ trust).
 ## Publishing + getting approved
 
 1. Develop locally, then publish your plugin as its **own public GitHub repo**
-   named exactly `jobber-plugin-<name>` (the template repo gives you the
+   named exactly `career-ops-plugin-<name>` (the template repo gives you the
    right shape + a release workflow). Minimum files: `manifest.json`,
    `index.mjs`, `README.md`, `LICENSE`, plus `skill.md` + `test/smoke.mjs` to be
    listable.
@@ -81,13 +81,13 @@ and stable on purpose, **not** a home for ongoing feature work.
 We **don't take feature PRs against bundled plugins.** If you want to extend one
 (more options, a richer mapping, new behavior), own it properly:
 
-1. Publish `jobber-plugin-<id>` with the **same `id`** as the bundled plugin
+1. Publish `career-ops-plugin-<id>` with the **same `id`** as the bundled plugin
    (start from the bundled plugin's code — it's MIT and credits its origins).
 2. In your registry PR, set **`"supersedesBundled": true`** on your entry.
-3. Once approved + pinned, anyone who runs `node plugins.mjs add jobber-plugin-<id>`
+3. Once approved + pinned, anyone who runs `node plugins.mjs add career-ops-plugin-<id>`
    installs your version, and the engine gives **your maintained successor
    precedence over the bundled reference** of the same id. `node plugins.mjs available`
-   surfaces the link: *"gmail — 🔁 maintained version: jobber-plugin-gmail"*.
+   surfaces the link: *"gmail — 🔁 maintained version: career-ops-plugin-gmail"*.
 
 This keeps the core lean and **puts the integration in your hands, with your name
 on it** — while the bundled seed stays as the always-present fallback, so the
@@ -110,11 +110,11 @@ Every community plugin in the registry is reviewed and pinned to an exact commit
 
 | Plugin | What it does | Hooks | Keys needed | Author |
 | --- | --- | --- | --- | --- |
-| [jobber-plugin-tavily](https://github.com/Schlaflied/jobber-plugin-tavily) | Tavily search/extract for job scanning, liveness checks, and company research. | search | `TAVILY_API_KEY` | @Schlaflied |
-| [jobber-plugin-google-calendar](https://github.com/Schlaflied/jobber-plugin-google-calendar) | Google Calendar ingest — detect upcoming interview events and surface them in the Jobber pipeline. | ingest | `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `GOOGLE_CALENDAR_REFRESH_TOKEN` | @Schlaflied |
-| [jobber-plugin-linkedin-alerts](https://github.com/Schlaflied/jobber-plugin-linkedin-alerts) | LinkedIn job alert ingest — parse LinkedIn alert emails from your Gmail inbox, normalize tracking links to canonical job URLs, and surface them in the Jobber pipeline. | ingest | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | @Schlaflied |
-| [jobber-plugin-outlook-interviews](https://github.com/Schlaflied/jobber-plugin-outlook-interviews) | Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link, and surface them in the Jobber pipeline. | ingest | `MSGRAPH_CLIENT_ID`, `MSGRAPH_REFRESH_TOKEN` (optional: `MSGRAPH_CLIENT_SECRET`) | @Schlaflied |
-| [jobber-plugin-obsidian](https://github.com/Schlaflied/jobber-plugin-obsidian) | Obsidian export — mirror the tracker into your vault as frontmatter notes queryable by Dataview/Bases; frontmatter belongs to the machine, the note body belongs to you. | export | None | @Schlaflied |
+| [career-ops-plugin-tavily](https://github.com/Schlaflied/career-ops-plugin-tavily) | Tavily search/extract for job scanning, liveness checks, and company research. | search | `TAVILY_API_KEY` | @Schlaflied |
+| [career-ops-plugin-google-calendar](https://github.com/Schlaflied/career-ops-plugin-google-calendar) | Google Calendar ingest — detect upcoming interview events and surface them in the Jobber pipeline. | ingest | `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `GOOGLE_CALENDAR_REFRESH_TOKEN` | @Schlaflied |
+| [career-ops-plugin-linkedin-alerts](https://github.com/Schlaflied/career-ops-plugin-linkedin-alerts) | LinkedIn job alert ingest — parse LinkedIn alert emails from your Gmail inbox, normalize tracking links to canonical job URLs, and surface them in the Jobber pipeline. | ingest | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | @Schlaflied |
+| [career-ops-plugin-outlook-interviews](https://github.com/Schlaflied/career-ops-plugin-outlook-interviews) | Outlook interview ingest — detect interview invitation emails via Microsoft Graph, extract company / role / meeting link, and surface them in the Jobber pipeline. | ingest | `MSGRAPH_CLIENT_ID`, `MSGRAPH_REFRESH_TOKEN` (optional: `MSGRAPH_CLIENT_SECRET`) | @Schlaflied |
+| [career-ops-plugin-obsidian](https://github.com/Schlaflied/career-ops-plugin-obsidian) | Obsidian export — mirror the tracker into your vault as frontmatter notes queryable by Dataview/Bases; frontmatter belongs to the machine, the note body belongs to you. | export | None | @Schlaflied |
 
 To add your own plugin to the registry, follow the [Publishing + getting approved](#publishing--getting-approved) flow above.
 

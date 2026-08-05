@@ -224,7 +224,7 @@ async function cmdAvailable() {
   }
   console.log('\n✓ Community plugins approved by jobber:\n');
   if (reg.plugins.length === 0) {
-    console.log('  (none yet — publish yours as `jobber-plugin-<name>` and open a registry PR; see docs/PLUGINS.md)');
+    console.log('  (none yet — publish yours as `career-ops-plugin-<name>` and open a registry PR; see docs/PLUGINS.md)');
   } else {
     for (const p of reg.plugins) {
       const seed = p.supersedesBundled === true ? `  🔁 maintained successor of the bundled "${p.id}" reference` : '';
@@ -304,7 +304,7 @@ function cmdNew(args) {
   console.log(`✓ Scaffolded plugins.local/${name}/`);
   console.log('  Next: edit manifest.json + index.mjs, then either');
   console.log(`    A) develop locally:  node plugins.mjs enable ${name}`);
-  console.log(`    B) publish:          push a github repo named "jobber-plugin-${name}", then open a registry PR (docs/PLUGINS.md)`);
+  console.log(`    B) publish:          push a github repo named "career-ops-plugin-${name}", then open a registry PR (docs/PLUGINS.md)`);
 }
 
 async function cmdAdd(args) {

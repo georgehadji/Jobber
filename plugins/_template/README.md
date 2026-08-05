@@ -1,4 +1,4 @@
-# jobber-plugin-{{NAME}}
+# career-ops-plugin-{{NAME}}
 
 A community plugin for [Jobber](https://github.com/santifer/jobber).
 
@@ -13,7 +13,7 @@ TODO: one paragraph.
 node plugins.mjs add {{NAME}}
 
 # Before listing (install directly from your repo at a pinned commit):
-node plugins.mjs add <your-github-user>/jobber-plugin-{{NAME}} --sha <40-hex-commit>
+node plugins.mjs add <your-github-user>/career-ops-plugin-{{NAME}} --sha <40-hex-commit>
 ```
 
 Then enable + consent:

@@ -1,5 +1,5 @@
 ---
-name: jobber-plugin-apify
+name: career-ops-plugin-apify
 description: How to scan a job source through an Apify actor as a keyed provider.
 license: MIT
 ---
