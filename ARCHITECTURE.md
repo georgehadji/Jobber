@@ -82,8 +82,18 @@ scan ──► data/pipeline.md ──► evaluate (oferta + cv) ──► repor
 ## Quality gates
 
 - `test-all.mjs` — the full suite (500+ checks across scoring, scan, tracker, PDF, security, updater).
+- `test-runner.mjs` — parallel discovered-test runner (110 files, per-file attribution, golden-parity counter model).
 - `updater-migration-tests.mjs` — enforces the system/user boundary and safe cross-version upgrades.
+- `validate-mode-invocations.mjs` — cross-validates every `node <script>.mjs` call in modes against real scripts and `--capabilities` contracts.
+- `check-translation-freshness.mjs` — monitors README and mode translation staleness (SHA stamps).
+- `provider-health.mjs` — daily canary probes of the major ATS APIs (zero-token, 15-min cache).
 - CI: `test` + CodeQL are required; CodeRabbit reviews every PR; Renovate keeps deps current.
+
+## Operations
+
+- `.healing/` — self-healing infrastructure: failure catalog (4 entries, 3 resolved), living runbook, healing profile.
+- `stamp-translations.mjs` — idempotent SHA stamping for 85 translated files (69 mode + 16 README); single git-pass.
+- `capabilities` contract — 11 top scripts expose machine-readable flag lists via `--capabilities` (JSON, exits 0 before side effects).
 
 ## Where to start reading
 

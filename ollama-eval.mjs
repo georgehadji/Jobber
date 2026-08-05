@@ -25,8 +25,9 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
 import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
-import { readContextFile, parseScoreSummary } from './eval-runner.mjs';
+import { readContextFile, parseScoreSummary, slugifyCompany } from './eval-runner.mjs';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
@@ -55,7 +56,18 @@ const PATHS = {
   cv:      join(ROOT, 'cv.md'),
   profileYml: join(ROOT, 'config', 'profile.yml'),
   reports: join(ROOT, 'reports'),
+  trackerAdditions: join(ROOT, 'batch', 'tracker-additions'),
 };
+
+// ── D-04: tracker-cell helpers (consistent with gemini-eval.mjs) ─
+function tsvSafe(value) {
+  return String(value ?? '').replace(/[\t\r\n]+/g, ' ').trim();
+}
+function normalizedTrackerScore(value) {
+  const clean = tsvSafe(value);
+  if (!clean || clean === '?') return 'N/A';
+  return /\/5$/i.test(clean) ? clean : `${clean}/5`;
+}
 
 // ---------------------------------------------------------------------------
 // CLI argument parsing
@@ -347,8 +359,34 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
     writeFileSync(reportPath, reportContent, 'utf-8');
     console.log(`\n✅  Report saved: reports/${filename}`);
 
-    console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score}/5 | Evaluated | ❌ | [${num}](reports/${filename}) |`);
+    // D-04: write tracker TSV + merge, consistent with gemini-eval.mjs.
+    try {
+      mkdirSync(PATHS.trackerAdditions, { recursive: true });
+      const trackerFields = [
+        String(parseInt(num, 10)),
+        today,
+        tsvSafe(company),
+        tsvSafe(role),
+        'Evaluated',
+        normalizedTrackerScore(score),
+        '❌',
+        `[${num}](reports/${filename})`,
+        `Ollama evaluation (${modelName})`,
+      ];
+      writeFileSync(`${PATHS.trackerAdditions}/${num}-${companySlug}.tsv`, `${trackerFields.join('\t')}\n`, 'utf-8');
+      console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
+
+      try {
+        execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
+          cwd: ROOT, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        console.log('📊  Tracker merged into data/applications.md.');
+      } catch (mergeErr) {
+        console.warn(`⚠️   Could not merge tracker addition: ${mergeErr.message}`);
+      }
+    } catch (tsvErr) {
+      console.warn(`⚠️   Could not save tracker addition: ${tsvErr.message}`);
+    }
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   } finally {

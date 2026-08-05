@@ -31,7 +31,12 @@ jobs:
             // User-layer paths from DATA_CONTRACT.md and update-system.mjs.
             // voice-dna.md is omitted on purpose: it ships as a populated
             // system default, so edits to it are legit.
+            // .env (S-01): gitignored but `git add -f .env` bypasses the
+            // ignore — this guard blocks any PR that accidentally includes
+            // the secrets file. API keys in git history are P1.
             const USER_PATHS = [
+              /^\.env$/,
+              /^\.env\..*$/,
               /^cv\.md$/,
               /^config\/profile\.yml$/,
               /^modes\/_profile\.md$/,

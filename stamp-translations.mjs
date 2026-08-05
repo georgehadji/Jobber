@@ -54,7 +54,7 @@ const SKIP_DIRS = new Set([
 function sourceShas() {
   const map = new Map();
   try {
-    const out = execSync('git log --format=%H --name-only -- modes/', { cwd: JOBBER, encoding: 'utf-8' });
+    const out = execSync('git log --format=%H --name-only -- modes/ README.md', { cwd: JOBBER, encoding: 'utf-8' });
     let currentSha = null;
     for (const line of out.split('\n')) {
       const trimmed = line.trim();
@@ -123,6 +123,8 @@ function stampAll() {
   const out = [];
   const rootFiles = new Set(readdirSync(MODES_DIR).filter(n => n.endsWith('.md')));
   const shas = sourceShas();
+
+  // ── Mode translations (modes/<lang>/<file>.md) ──────────────
   for (const lang of readdirSync(MODES_DIR)) {
     const langDir = join(MODES_DIR, lang);
     if (!statSync(langDir).isDirectory()) continue;
@@ -143,6 +145,21 @@ function stampAll() {
       out.push({ file: `modes/${lang}/${f}`, source: sourceRel, changed, line });
     }
   }
+
+  // ── README translations (README.<lang>.md at repo root) ─────
+  // FC-004: these use the same <!-- jobber-source-sha --> stamp
+  // mechanism as mode translations, but live in the repo root.
+  const README_LANG_RE = /^README\.([a-z]{2}(?:-[A-Z]{2})?)\.md$/;
+  const readmeSha = shas.get('README.md') ?? sourceSha('README.md');
+  if (readmeSha) {
+    for (const f of readdirSync(JOBBER)) {
+      if (!README_LANG_RE.test(f)) continue;
+      const transPath = join(JOBBER, f);
+      const { changed, line } = stampFile(transPath, 'README.md', readmeSha, !DRY_RUN);
+      out.push({ file: f, source: 'README.md', changed, line });
+    }
+  }
+
   return out;
 }
 

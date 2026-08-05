@@ -1,0 +1,66 @@
+{
+  "catalog_version": "1.0.0",
+  "updated": "2026-08-04T13:43:42.092Z",
+  "entries": [
+    {
+      "id": "FC-001",
+      "failure_mode": "Tracker merge concurrent write test: row lost when two parallel merges write near-simultaneously despite shared lock",
+      "detection_signal": "test-all.mjs inline test: 'concurrent tracker merge lost a row' — flaky, retries once and fails on this machine",
+      "circuit_breaker_exists": true,
+      "circuit_breaker": "merge-tracker.mjs:trackerLock (acquireTrackerLock in tracker-utils.mjs) — serializes writes",
+      "test_exists": true,
+      "test_location": "test-all.mjs:concurrent merge section (spawns two merge workers with MERGE_HOLD_MS + MERGE_READY_IPC)",
+      "runbook_section": "§concurrent-merge-test-flake",
+      "first_observed": "2026-08-04",
+      "recurrence_count": 5,
+      "severity": "P2",
+      "status": "open",
+      "notes": "Fails on this Windows machine; passes on CI (ubuntu). Likely OS-specific rename-not-atomic behavior (Windows FAT/exFAT race window). T5's readTrackerSafe mitigates reader-side; writer-side remains. Not reproducible on Linux/macOS."
+    },
+    {
+      "id": "FC-002",
+      "failure_mode": "Tier-2 merge test: batch-state.tsv marks report 022 as 'failed', test fixture uses report 22 → FAILED_REPORT_NUMBERS gate skips the fixture row",
+      "detection_signal": "test-all.mjs inline test: 'tier-2 match/update broken: 1 Initech rows'",
+      "circuit_breaker_exists": false,
+      "circuit_breaker": "None — the test does not override JOBBER_BATCH_STATE env var, so it reads the user's real batch/batch-state.tsv",
+      "test_exists": true,
+      "test_location": "test-all.mjs:7843 (merge-tracker tier-2 title preservation)",
+      "runbook_section": "§batch-state-contamination",
+      "first_observed": "2026-08-04",
+      "recurrence_count": 5,
+      "severity": "P3",
+      "status": "open",
+      "notes": "Purely environmental — the user's real batch-state.tsv (from a paused batch run) has report 022=failed, and the test fixture happens to use report number 22. Fix: the test should set JOBBER_BATCH_STATE to a temp file. Low priority — only affects this machine."
+    },
+    {
+      "id": "FC-003",
+      "failure_mode": "capabilities.mjs helper exported but never imported — dead code from implementation pivot",
+      "detection_signal": "Audit CQ-01: grep for imports from './capabilities.mjs' across all *.mjs files returns 0 results. All 11 scripts implement --capabilities inline.",
+      "circuit_breaker_exists": false,
+      "circuit_breaker": "None — dead code won't break anything but violates YAGNI",
+      "test_exists": false,
+      "test_location": null,
+      "runbook_section": null,
+      "first_observed": "2026-08-04",
+      "recurrence_count": 1,
+      "severity": "P3",
+      "status": "fixed",
+      "notes": "FIXED in healing run: capabilities.mjs deleted (0 imports confirmed). SYSTEM_PATHS entry removed from update-system.mjs."
+    },
+    {
+      "id": "FC-004",
+      "failure_mode": "README translations stale: 16 of 17 translated READMEs carry a source SHA that doesn't match the current README.md HEAD SHA",
+      "detection_signal": "check-translation-freshness.mjs --json reports stale: 16 items every run. CI translation-freshness job emits 16 ::warning:: annotations per PR.",
+      "circuit_breaker_exists": true,
+      "circuit_breaker": "CI job (translation-freshness gate) surfaces drift as annotations, non-blocking. Human decides whether to refresh.",
+      "test_exists": true,
+      "test_location": "check-translation-freshness.mjs:60 — checkTranslations()",
+      "runbook_section": "§translation-drift",
+      "first_observed": "2026-08-03",
+      "recurrence_count": 2,
+      "severity": "P3",
+      "status": "open",
+      "notes": "Soft failure only (script contract: exit always 0). Mode translations (T2) are now stamped and fresh; READMEs remain stale. Non-blocking — a stale README is a quality gap, not a broken build."
+    }
+  ]
+}
