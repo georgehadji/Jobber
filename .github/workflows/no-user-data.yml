@@ -36,7 +36,10 @@ jobs:
             // the secrets file. API keys in git history are P1.
             const USER_PATHS = [
               /^\.env$/,
-              /^\.env\..*$/,
+              // .env.local, .env.production, … but NOT the tracked templates:
+              // .env.example is committed on purpose, and a bare /^\.env\..*$/
+              // flagged it on every PR that touched it.
+              /^\.env\.(?!example$|sample$|template$)/,
               /^cv\.md$/,
               /^config\/profile\.yml$/,
               /^modes\/_profile\.md$/,

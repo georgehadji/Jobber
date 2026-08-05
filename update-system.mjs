@@ -58,6 +58,11 @@ export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.JOBBER_REEX
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
+  // Self-healing protocol artifacts (profile, failure catalog, fix plan,
+  // runbook). tests/stamp-translations.test.mjs asserts these are present,
+  // so they are tracked and must be registered here or the SYSTEM_PATHS
+  // coverage check fails.
+  '.healing/',
   'modes/README.md',
   'modes/_shared.md',
   'modes/_writing.md',
