@@ -228,7 +228,6 @@ const SYSTEM_PATHS = [
   'openai-eval.mjs',
   'openai-tailor.mjs',
   'eval-runner.mjs',
-  'capabilities.mjs',
   'eval-golden.mjs',
   'evals/',
   'openrouter-runner.mjs',
