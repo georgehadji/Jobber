@@ -1,7 +1,7 @@
 {
-  "name": "jobber-plugin-docx",
+  "name": "career-ops-plugin-docx",
   "id": "docx",
-  "repo": "https://github.com/rubicon/jobber-plugin-docx",
+  "repo": "https://github.com/rubicon/career-ops-plugin-docx",
   "author": "rubicon",
   "hooks": [
     "export"
