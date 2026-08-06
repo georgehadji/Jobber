@@ -11,7 +11,7 @@
  * If duplicate with higher score → update in-place, update report link
  * Validates status against states.yml (rejects non-canonical, logs warning)
  *
- * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
+ * Run: node jobber/merge-tracker.mjs [--dry-run] [--verify]
  */
 
 import { readFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
@@ -22,24 +22,24 @@ import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import { parsePdfIndex } from './find.mjs';
 import { LEGACY_COLMAP, detectColumns, resolveScoreStatus, normalizeVia, SEPARATOR_ROW_RE } from './tracker-parse.mjs';
-import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, normalizeCompany, cell } from './tracker-utils.mjs';
+import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, appendStatusLog, normalizeCompany, cell, gcStaleSentinels } from './tracker-utils.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md
-// (original). CAREER_OPS_TRACKER overrides the path (used by tests and
+// (original). JOBBER_TRACKER overrides the path (used by tests and
 // non-standard layouts). Resolution lives in tracker-utils.mjs so every tracker
 // writer agrees on the same canonical path (and therefore the same lock).
-const APPS_FILE = resolveTrackerPath(CAREER_OPS);
+const APPS_FILE = resolveTrackerPath(JOBBER);
 const TRACKER_DIR = dirname(APPS_FILE);
-// CAREER_OPS_ADDITIONS overrides the additions dir (used by tests, mirrors CAREER_OPS_TRACKER).
-const ADDITIONS_DIR = process.env.CAREER_OPS_ADDITIONS
-  ? process.env.CAREER_OPS_ADDITIONS
-  : join(CAREER_OPS, 'batch/tracker-additions');
+// JOBBER_ADDITIONS overrides the additions dir (used by tests, mirrors JOBBER_TRACKER).
+const ADDITIONS_DIR = process.env.JOBBER_ADDITIONS
+  ? process.env.JOBBER_ADDITIONS
+  : join(JOBBER, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
-// CAREER_OPS_BATCH_STATE overrides the batch-state.tsv path (used by tests).
-const BATCH_STATE_FILE = process.env.CAREER_OPS_BATCH_STATE
-  ? process.env.CAREER_OPS_BATCH_STATE
-  : join(CAREER_OPS, 'batch/batch-state.tsv');
+// JOBBER_BATCH_STATE overrides the batch-state.tsv path (used by tests).
+const BATCH_STATE_FILE = process.env.JOBBER_BATCH_STATE
+  ? process.env.JOBBER_BATCH_STATE
+  : join(JOBBER, 'batch/batch-state.tsv');
 
 // Cross-check against batch-state.tsv (found 2026-07-30): a worker can write
 // a well-formed tracker TSV even when its own JSON result said "failed" --
@@ -71,9 +71,30 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 const MIGRATE = process.argv.includes('--migrate');
 const MIGRATE_VIA = process.argv.includes('--migrate-via');
-const MERGE_HOLD_MS = Number(process.env.CAREER_OPS_MERGE_HOLD_MS) || 0;
-const MERGE_READY_IPC = process.env.CAREER_OPS_MERGE_READY_IPC === '1';
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no lock, no writes.
+if (process.argv.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'merge-tracker.mjs', version: 1,
+    flags: ['--dry-run', '--verify', '--strict', '--summary', '--migrate', '--migrate-via', '--help'],
+    description: 'Merge batch tracker additions into applications.md',
+  }));
+  process.exit(0);
+}
+const SUMMARY = process.argv.includes('--summary');
+// --strict: a single malformed TSV aborts the whole batch (no partial merge).
+// Default (no --strict) keeps the long-standing tested behavior: malformed
+// files are skipped with warnings, the valid ones merge. --strict is the
+// hardening gate for users who want all-or-nothing integrity.
+const STRICT = process.argv.includes('--strict');
+const MERGE_HOLD_MS = Number(process.env.JOBBER_MERGE_HOLD_MS) || 0;
+const MERGE_READY_IPC = process.env.JOBBER_MERGE_READY_IPC === '1';
 
+// Stale report-number reservation sentinels (reports/NNN-RESERVED.md) older
+// than this are garbage — the claiming process crashed before writing the real
+// report. Shared constant + GC live in tracker-utils.mjs (same rule as
+// verify-pipeline.mjs Check 8); the merge path self-cleans so a long merge
+// queue can't be skewed by old reservations.
 const TRACKER_LOCK_DIR = trackerLockDirFor(APPS_FILE);
 
 // The reports/ dir sits at the repo root, which is the tracker's parent in the
@@ -95,13 +116,13 @@ const PDF_INDEX_FILE = join(REPORTS_ROOT, 'data', 'pdf-index.tsv');
 const normalizeReportLink = (reportField) => normalizeLink(reportField, TRACKER_DIR, REPORTS_ROOT);
 
 // Ensure required directories exist (fresh setup)
-mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(join(JOBBER, 'data'), { recursive: true });
 mkdirSync(ADDITIONS_DIR, { recursive: true });
 
 /**
  * Pause the async merge flow for a fixed number of milliseconds.
  *
- * Used by the regression test hook (`CAREER_OPS_MERGE_HOLD_MS`), which
+ * Used by the regression test hook (`JOBBER_MERGE_HOLD_MS`), which
  * deliberately holds the first merge after it reads `applications.md` so a
  * second merge can try to enter the same critical section. (The lock retry
  * loop's own sleep lives in tracker-utils.mjs with the lock.)
@@ -113,12 +134,18 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Pre-lock sentinel GC (R-02/S-02): reports/ is not the tracker file, so this
+// must NOT hold the merge lock. Concurrent writers wait on the lock; keeping
+// the directory walk out of the critical section shaves the readdir+stat cost
+// off every lock-waiter's block time.
+gcStaleSentinels(join(REPORTS_ROOT, 'reports'));
+
 let trackerLock;
 try {
   trackerLock = await acquireTrackerLock(TRACKER_LOCK_DIR, {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
     tracker: APPS_FILE,
   });
   process.once('exit', () => trackerLock?.release());
@@ -145,7 +172,14 @@ const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Off
  * @returns {string} Canonical tracker status.
  */
 function validateStatus(status) {
-  const clean = status.replace(/\*\*/g, '').replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
+  // Strip markdown bold, trailing bare dates ("Applied 2026-01-05"), and
+  // parenthesized dates ("Hired (2026-01-05)") — all real agent-output
+  // patterns that must not mask the canonical state or trigger the
+  // silent-downgrade-to-Evaluated path.
+  const clean = status
+    .replace(/\*\*/g, '')
+    .replace(/\s+\(?\d{4}-\d{2}-\d{2}\)?.*$/, '')
+    .trim();
   const lower = clean.toLowerCase();
 
   for (const valid of CANONICAL_STATES) {
@@ -499,7 +533,7 @@ if (MIGRATE) {
     console.log(`🔎 Migration (dry-run): ${changed} row(s) would be rewritten in ${basename(APPS_FILE)}`);
   } else {
     writeFileAtomic(APPS_FILE, migrated.join('\n'));
-    console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === CAREER_OPS ? 'repo root' : 'data/'}`);
+    console.log(`✅ Migration: rewrote ${changed} report link(s) in ${basename(APPS_FILE)} relative to ${TRACKER_DIR === JOBBER ? 'repo root' : 'data/'}`);
   }
   process.exit(0);
 }
@@ -624,11 +658,51 @@ tsvFiles.sort((a, b) => {
 
 console.log(`📥 Found ${tsvFiles.length} pending additions`);
 
-const newLines = [];
+// Garbage-collect stale report-number reservation sentinels (shared helper in
+// tracker-utils.mjs, same rule as verify-pipeline.mjs Check 8). Runs BEFORE
+// the tracker lock is acquired: it reads reports/ (not the tracker file), so
+// holding the merge lock during the directory walk would needlessly block a
+// concurrent merge. Self-cleaning here keeps the reserve → merge cycle safe
+// even when verify is never run.
 
+// Pre-merge integrity pass: parse EVERY pending TSV before touching the
+// tracker, so all problems are visible at once (not interleaved with merge
+// output). In --strict mode one malformed file aborts the whole batch — the
+// user sees every error at once and fixes or removes the offending file(s),
+// then re-runs. Default mode keeps the long-standing tested behavior: a
+// malformed file is skipped with a warning while the valid ones merge (the
+// #1427 column-order test pins exactly this). Score-based skips (duplicate
+// with lower score) are NOT errors in either mode — they are the normal dedup
+// path.
+const parsedAdditions = new Map();
+const premergeErrors = [];
 for (const file of tsvFiles) {
   const content = readFileSync(join(ADDITIONS_DIR, file), 'utf-8').trim();
   const addition = parseTsvContent(content, file);
+  if (!addition) {
+    premergeErrors.push(file);
+    continue;
+  }
+  parsedAdditions.set(file, addition);
+}
+if (STRICT && premergeErrors.length > 0) {
+  console.error(`\n❌ Pre-merge validation failed (--strict): ${premergeErrors.length} of ${tsvFiles.length} pending TSV(s) are malformed and were NOT merged:`);
+  for (const f of premergeErrors) console.error(`   - ${f}`);
+  console.error('Fix or remove the file(s), then re-run. No changes were written.');
+  trackerLock.release();
+  process.exit(1);
+}
+if (premergeErrors.length > 0) {
+  console.warn(`\n⚠️  ${premergeErrors.length} malformed TSV(s) will be skipped (pass --strict to abort the whole batch instead): ${premergeErrors.join(', ')}`);
+}
+
+const newLines = [];
+const summaryRows = [];
+
+for (const file of tsvFiles) {
+  const addition = parsedAdditions.get(file);
+  // Pre-merge validation already rejected malformed files, so a missing entry
+  // here is impossible unless the file vanished between readdir and parse.
   if (!addition) { skipped++; continue; }
 
   // A via= tag can only be stored if the tracker has a Via column — warn
@@ -727,6 +801,7 @@ for (const file of tsvFiles) {
 
     if (newScore > oldScore) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
+      summaryRows.push({ action: 'update', num: duplicate.num, company: addition.company, role: addition.role, score: `${oldScore}→${newScore}` });
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
         const pdf = reportNum && pdfIndex.has(String(reportNum)) ? '✅' : duplicate.pdf;
@@ -744,6 +819,7 @@ for (const file of tsvFiles) {
       }
     } else {
       console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
+      summaryRows.push({ action: 'skip', num: duplicate.num, company: addition.company, role: addition.role, score: `${oldScore} >= new ${newScore}` });
       skipped++;
     }
   } else {
@@ -776,6 +852,23 @@ for (const file of tsvFiles) {
     });
     newLines.push(newLine);
     added++;
+    summaryRows.push({ action: 'add', num: entryNum, company: addition.company, role: addition.role, score: addition.score });
+    // Leave a dated anchor in the transition ledger for freshly created rows
+    // (#improvement-plan A4(b)): funnel-velocity.mjs read this ledger for
+    // per-stage velocity, and a row that appears with no baseline observation
+    // would otherwise be invisible to it (it falls back to parsing tracker
+    // notes). backfill-source lines are recognized but, by contract, do NOT
+    // feed day-math. The date is the row's own (the TSV date = report date);
+    // inside the tracker lock so concurrent writers can't interleave.
+    if (!DRY_RUN) {
+      try {
+        appendStatusLog(APPS_FILE, {
+          num: entryNum, date: addition.date, from: '-', to: addition.status, source: 'backfill',
+        });
+      } catch (err) {
+        console.warn(`⚠ status-log backfill append failed for #${entryNum}: ${err.message}`);
+      }
+    }
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
   }
 }
@@ -813,10 +906,30 @@ console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${sk
 if (DRY_RUN) console.log('(dry-run — no changes written)');
 trackerLock.release();
 
+// Human-readable summary table (--summary): grouped WOULD ADD / WOULD UPDATE /
+// SKIP sections so a user can eyeball exactly what a dry-run would do (or what
+// a real run just did) without parsing the log stream.
+if (SUMMARY && summaryRows.length > 0) {
+  const heading = DRY_RUN ? 'DRY-RUN SUMMARY (no changes written)' : 'MERGE SUMMARY';
+  console.log(`\n=== ${heading} ===`);
+  const group = (label, action) => {
+    const rows = summaryRows.filter(r => r.action === action);
+    if (rows.length === 0) return;
+    console.log(`\n${label} (${rows.length}):`);
+    console.log('| # | Company | Role | Score |');
+    console.log('|---|---------|------|-------|');
+    for (const r of rows) console.log(`| ${r.num} | ${cell(r.company)} | ${cell(r.role)} | ${r.score} |`);
+  };
+  group('WOULD ADD', 'add');
+  group('WOULD UPDATE', 'update');
+  group('SKIPPED (duplicate, lower/equal score)', 'skip');
+  if (DRY_RUN) console.log('\nNo changes were written.');
+}
+
 // Sync PDF flags (idempotent; uses its own lock/transaction)
 if (!DRY_RUN) {
   try {
-    execFileSync('node', [join(CAREER_OPS, 'sync-pdf-flags.mjs')], { stdio: 'inherit' });
+    execFileSync('node', [join(JOBBER, 'sync-pdf-flags.mjs')], { stdio: 'inherit' });
   } catch (e) {
     console.warn(`⚠️  Failed to sync PDF flags: ${e.message}`);
   }
@@ -826,7 +939,7 @@ if (!DRY_RUN) {
 if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
   try {
-    execFileSync('node', [join(CAREER_OPS, 'verify-pipeline.mjs')], { stdio: 'inherit' });
+    execFileSync('node', [join(JOBBER, 'verify-pipeline.mjs')], { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

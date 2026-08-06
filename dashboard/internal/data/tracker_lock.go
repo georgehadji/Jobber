@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const trackerLockPrefix = "career-ops-merge-tracker-"
+const trackerLockPrefix = "jobber-merge-tracker-"
 
 type trackerLockOptions struct {
 	timeout time.Duration
@@ -59,9 +59,9 @@ func envMilliseconds(name string, fallback time.Duration) time.Duration {
 
 func defaultTrackerLockOptions() trackerLockOptions {
 	return trackerLockOptions{
-		timeout: envMilliseconds("CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS", 60*time.Second),
-		retry:   envMilliseconds("CAREER_OPS_TRACKER_LOCK_RETRY_MS", 75*time.Millisecond),
-		stale:   envMilliseconds("CAREER_OPS_TRACKER_LOCK_STALE_MS", 10*time.Minute),
+		timeout: envMilliseconds("JOBBER_TRACKER_LOCK_TIMEOUT_MS", 60*time.Second),
+		retry:   envMilliseconds("JOBBER_TRACKER_LOCK_RETRY_MS", 75*time.Millisecond),
+		stale:   envMilliseconds("JOBBER_TRACKER_LOCK_STALE_MS", 10*time.Minute),
 	}
 }
 
@@ -98,7 +98,7 @@ func trackerLockDirFor(trackerPath string) (string, error) {
 	sum := sha256.Sum256([]byte(canonicalTracker))
 	fallback := filepath.Join(canonicalTemp, fmt.Sprintf("%s%x.lock", trackerLockPrefix, sum[:8]))
 
-	override := os.Getenv("CAREER_OPS_TRACKER_LOCK")
+	override := os.Getenv("JOBBER_TRACKER_LOCK")
 	if override == "" || !filepath.IsAbs(override) {
 		return fallback, nil
 	}

@@ -1,4 +1,4 @@
-# Career-Ops Profile Configuration
+# Jobber Profile Configuration
 # Copy this file to config/profile.yml and fill in your details.
 # This is the single source of truth for your personal data across all modes.
 
@@ -6,7 +6,7 @@ candidate:
   full_name: "Jane Smith"
   email: "jane@example.com"
   phone: "+1-555-0123"
-  # Optional. Used by `/career-ops email` contact blocks in markets where WeChat
+  # Optional. Used by `/jobber email` contact blocks in markets where WeChat
   # is an expected recruiting channel. Omit or leave blank if not applicable.
   wechat: ""
   location: "San Francisco, CA"
@@ -112,6 +112,13 @@ language:
 # See the tier -> model mapping table in modes/_shared.md.
 spend_tier: standard
 
+# ── Sunset (the right to an ending, improvement-plan M5) ─────────────────
+# `node sunset.mjs` proposes putting silent applications to rest (marked
+# Discarded). A waiting row (Applied/Responded) is a candidate when it has gone
+# this many days with no dated ledger activity. Dry-run by default; --apply
+# writes. Default when absent: 45.
+# sunset_after_days: 45
+
 # (Optional) Visual theming for the generated CV and cover-letter PDFs (#1837).
 # Each token is injected as a CSS custom property that overrides the template
 # default — omit the block (or any key) to keep the built-in look unchanged.
@@ -124,7 +131,7 @@ spend_tier: standard
 
 cv:
   output_format: "html" # "html" (default) or "latex"
-  # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
+  # (Optional) Canva resume design ID for visual CV generation via /jobber pdf.
   # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
@@ -150,14 +157,14 @@ cv:
 #   # If false (or absent), lack of evidence defaults to a neutral 3/5.
 #   deprioritize_if_absent: true
 
-# Optional user-owned LaTeX CV for `/career-ops latex-tex` (opt-in tailoring in place).
+# Optional user-owned LaTeX CV for `/jobber latex-tex` (opt-in tailoring in place).
 # cv.md remains the default source of truth for evaluations and auto-pipeline.
 # latex:
 #   source: resume.tex
 
 # ── Cover Letter Settings ──────────────────────────────────────────────────
 #
-# Used by `/career-ops cover` and the cover letter sub-flow in `/career-ops pdf`.
+# Used by `/jobber cover` and the cover letter sub-flow in `/jobber pdf`.
 # All fields are optional — omit any you don't need.
 
 cover_letter:
@@ -190,20 +197,20 @@ cover_letter:
 
 # ── Contact Preferences ──────────────────────────────────────────────────────
 #
-# Used by `/career-ops contacto` (outreach CTA) and `/career-ops email` (contact
+# Used by `/jobber contacto` (outreach CTA) and `/jobber email` (contact
 # block) to steer drafted messages toward how you actually want to be reached.
 # Optional. Omit the whole block, or set preferred_channel to "either", to keep
 # today's behavior unchanged (no channel steering).
 #
 # contact_preferences:
 #   preferred_channel: "email"   # email | phone | either — default "either" if omitted
-#   # Optional. Surfaced near the contact block in `/career-ops email` drafts and
-#   # can inform the CTA wording in `/career-ops contacto`. Keep it one line.
+#   # Optional. Surfaced near the contact block in `/jobber email` drafts and
+#   # can inform the CTA wording in `/jobber contacto`. Keep it one line.
 #   note: "Screens unknown numbers — please email or text first to schedule a call"
 
 # ── Outreach / greeting ─────────────────────────────────────────────────────
 #
-# Used by the greeting variant of `/career-ops contacto` (the short first-touch
+# Used by the greeting variant of `/jobber contacto` (the short first-touch
 # message for BOSS Zhipin 打招呼, job-board chat, or a cold-email opener).
 #
 # greeting_max_chars is the hard character budget for that message. Default when
@@ -214,7 +221,7 @@ cover_letter:
 
 # ── Application Email Drafts ────────────────────────────────────────────────
 #
-# Used by `/career-ops email` when drafting formal application emails. This is
+# Used by `/jobber email` when drafting formal application emails. This is
 # separate from `contacto` short outreach and `cover` full cover letters.
 # All fields are optional.
 #
@@ -240,7 +247,7 @@ cover_letter:
 
 # ── Auto-PDF threshold ──────────────────────────────────────────────────────
 #
-# Auto-PDF threshold during evaluation (used by `/career-ops pipeline` and
+# Auto-PDF threshold during evaluation (used by `/jobber pipeline` and
 # `bash batch/batch-runner.sh`).
 #
 # An offer's tailored CV PDF is auto-generated only when its score is
@@ -249,19 +256,19 @@ cover_letter:
 # become an actual application — so the gate avoids wasted renders.
 #
 # Default (key absent OR commented out): 3.0 — the original gate of
-# `/career-ops pipeline`. Both evaluation paths apply the same default, so
+# `/jobber pipeline`. Both evaluation paths apply the same default, so
 # a batch run and an interactive run treat the same offer identically.
 #
 # Raise it (e.g. 4.0) to auto-generate PDFs only for stronger matches and
 # leave the rest report-only — those can still be produced on demand via
-# `/career-ops pdf {company-slug}`. Fractional thresholds work (e.g. 3.5 —
+# `/jobber pdf {company-slug}`. Fractional thresholds work (e.g. 3.5 —
 # half-point scores like 3.5/5 occur in evaluations). Set it to 0 to
 # generate a PDF for every offer.
 # auto_pdf_score_threshold: 4.0
 
 # ── Two-pass triage gate ────────────────────────────────────────────────────
 #
-# Used by `/career-ops pipeline`. Before running the full A-G evaluation on
+# Used by `/jobber pipeline`. Before running the full A-G evaluation on
 # every URL in a batch, a lightweight first pass (`modes/triage.md`) scores each
 # role from a compact profile brief (`modes/_brief.md`) and filters out the ones
 # that would clearly disqualify — so the expensive full evaluation only runs on

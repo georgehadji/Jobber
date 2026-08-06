@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * analyze-patterns.mjs — Rejection Pattern Detector for career-ops
+ * analyze-patterns.mjs — Rejection Pattern Detector for Jobber
  *
  * Parses applications.md + all linked reports, extracts dimensions
  * (archetype, seniority, remote, gaps, scores), classifies outcomes,
@@ -18,12 +18,13 @@ import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { resolveColumns, parseTrackerRow, normalizeVia } from './tracker-parse.mjs';
+import { readTrackerSafe } from './tracker-utils.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
-const REPORTS_DIR = join(CAREER_OPS, 'reports');
+const JOBBER = dirname(fileURLToPath(import.meta.url));
+const APPS_FILE = existsSync(join(JOBBER, 'data/applications.md'))
+  ? join(JOBBER, 'data/applications.md')
+  : join(JOBBER, 'applications.md');
+const REPORTS_DIR = join(JOBBER, 'reports');
 
 const MACHINE_SUMMARY_FIELDS = new Set([
   'company',
@@ -412,7 +413,9 @@ risk_summary:
 // --- Parse applications.md ---
 function parseTracker() {
   if (!existsSync(APPS_FILE)) return [];
-  const content = readFileSync(APPS_FILE, 'utf-8');
+  // T5: safe read — a concurrent merge can leave a mid-write snapshot on
+  // Windows; one bounded retry avoids misreading the tracker.
+  const content = readTrackerSafe(APPS_FILE);
   const lines = content.split('\n');
   const colmap = resolveColumns(lines);
   const entries = [];
@@ -655,9 +658,9 @@ function analyze() {
     let reportPath = null;
     if (reportMatch) {
       const fromTracker = join(dirname(APPS_FILE), reportMatch[1]);
-      const candidate = existsSync(fromTracker) ? fromTracker : join(CAREER_OPS, reportMatch[1]);
+      const candidate = existsSync(fromTracker) ? fromTracker : join(JOBBER, reportMatch[1]);
       
-      const repoRelative = relative(CAREER_OPS, candidate).split(sep).join('/');
+      const repoRelative = relative(JOBBER, candidate).split(sep).join('/');
       if (repoRelative.startsWith('reports/') && !repoRelative.includes('..')) {
         reportPath = existsSync(candidate) ? candidate : null;
       }

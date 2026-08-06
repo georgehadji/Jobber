@@ -1,6 +1,8 @@
-# career-ops — Deutsche Modi (`modes/de/`)
+# Jobber — Deutsche Modi (`modes/de/`)
 
-Dieser Ordner enthält die deutschen Übersetzungen der wichtigsten career-ops-Modi für Bewerber:innen, die im DACH-Raum (Deutschland, Österreich, Schweiz) suchen oder mit deutschen Stellenanzeigen arbeiten.
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Dieser Ordner enthält die deutschen Übersetzungen der wichtigsten jobber-Modi für Bewerber:innen, die im DACH-Raum (Deutschland, Österreich, Schweiz) suchen oder mit deutschen Stellenanzeigen arbeiten.
 
 ## Wann diese Modi nutzen?
 
@@ -15,7 +17,7 @@ Wenn die meisten deiner Stellenanzeigen auf Englisch sind, bleib bei den Standar
 
 ## Wie aktivieren?
 
-career-ops hat keinen "Sprach-Schalter" als Code-Flag. Stattdessen gibt es zwei Wege:
+Jobber hat keinen "Sprach-Schalter" als Code-Flag. Stattdessen gibt es zwei Wege:
 
 ### Weg 1 — Pro Session, per Befehl
 

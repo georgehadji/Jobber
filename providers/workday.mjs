@@ -199,7 +199,7 @@ export default {
    * as providers/glints.mjs's firewall).
    *
    * @param {{ name?: string, api?: string, careers_url?: string, max_pages?: number }} entry
-   * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, sinceMs?: number, maxPages?: number }} ctx
+   * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, sinceMs?: number, maxPages?: number, includeUndated?: boolean }} ctx
    * @returns {Promise<Array<{title: string, url: string, company: string, location: string, postedAt?: number}>>}
    */
   async fetch(entry, ctx) {
@@ -278,6 +278,7 @@ export default {
     if (stopReason === 'complete') {
       for (; page < pagesToFetch; page++) {
         await sleep(INTER_PAGE_DELAY_MS, ctx);
+        /** @type {any} */
         let json;
         try {
           json = await fetchPageWithRetry(ctx, ep.api, { ...postOpts, body: makeBody(page * PAGE_SIZE) });
@@ -329,13 +330,13 @@ export default {
     // once per site) — a console.error per hit would repeat thousands of
     // times, so tag the array instead; scan-ats-full.mjs aggregates it into
     // one summary line.
-    if (stopReason === 'no-date-skip') jobs.workdayNoDateSkip = true;
+    if (stopReason === 'no-date-skip') /** @type {any} */ (jobs).workdayNoDateSkip = true;
     // 'fetch-error' means retries were exhausted mid-pagination while 19
     // other tenants were hammering the same uplink. scan-ats-full.mjs
     // collects tagged tenants and retries them sequentially after the
     // parallel sweep, when the line is quiet — same array-tag pattern as
     // workdayNoDateSkip (no extra per-tenant logging here).
-    if (stopReason === 'fetch-error') jobs.workdayTruncated = true;
+    if (stopReason === 'fetch-error') /** @type {any} */ (jobs).workdayTruncated = true;
 
     return jobs;
   },

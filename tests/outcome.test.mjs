@@ -42,7 +42,7 @@ try {
   try {
     execFileSync(NODE, [OUTCOME_SCRIPT, '1', 'invalid_outcome_type'], {
       cwd: testDir,
-      env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+      env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
       encoding: 'utf-8',
       stdio: 'pipe',
     });
@@ -55,7 +55,7 @@ try {
   try {
     execFileSync(NODE, [OUTCOME_SCRIPT, '999', 'rejected'], {
       cwd: testDir,
-      env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+      env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
       encoding: 'utf-8',
       stdio: 'pipe',
     });
@@ -67,7 +67,7 @@ try {
   // Test 4: Dry-run mode
   const dryRunOut = execFileSync(NODE, [OUTCOME_SCRIPT, '1', 'interview_progress', '--stage', 'Tech Screen', '--dry-run', '--json'], {
     cwd: testDir,
-    env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+    env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
     encoding: 'utf-8',
   });
   const dryRunJson = JSON.parse(dryRunOut);
@@ -84,7 +84,7 @@ try {
     '--json',
   ], {
     cwd: testDir,
-    env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+    env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
     encoding: 'utf-8',
   });
   const res1 = JSON.parse(outcome1Out);
@@ -112,7 +112,7 @@ try {
     '--json',
   ], {
     cwd: testDir,
-    env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+    env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
     encoding: 'utf-8',
   });
   const res2 = JSON.parse(outcome2Out);
@@ -141,7 +141,7 @@ try {
       '--json',
     ], {
       cwd: testDir,
-      env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+      env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
       encoding: 'utf-8',
     });
     const parsed = JSON.parse(out);
@@ -158,7 +158,7 @@ try {
     '--json',
   ], {
     cwd: testDir,
-    env: { ...process.env, CAREER_OPS_TRACKER: join(testDir, 'data', 'applications.md') },
+    env: { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') },
     encoding: 'utf-8',
   });
   const resWithPdf = JSON.parse(outWithPdf);

@@ -1,11 +1,13 @@
-# Contexto Compartilhado -- career-ops (Português BR)
+# Contexto Compartilhado -- Jobber (Português BR)
+
+<!-- jobber-source-sha: 5d80485de48a2b88d16c105c52e99d45fef521fb -->
 
 <!-- ============================================================
      THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
      
      Your customizations go in modes/_profile.md (never auto-updated).
      This file contains system rules, scoring logic, and tool config
-     that improve with each career-ops release.
+     that improve with each Jobber release.
      ============================================================ -->
 
 ## Fontes da Verdade (SEMPRE ler antes de cada avaliação)

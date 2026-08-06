@@ -314,6 +314,7 @@ async function fetchCsb(entry, cfg, ctx) {
     if (jobs.length >= MAX_JOBS) break;
     let total = null;
     for (let page = 0; page < maxPages; page++) {
+      /** @type {any} */
       let json;
       try {
         json = await ctx.fetchJson(cfg.jobsApi, {

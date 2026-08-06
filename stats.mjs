@@ -23,6 +23,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { readTrackerSafe } from './tracker-utils.mjs';
 import { normalizeStatus, analyzeFromContent } from './followup-cadence.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -154,7 +155,7 @@ export function computeColdAppNums(trackerContent, followupsContent) {
  * response is indistinguishable from one rejected after interviews — middle
  * stages are lower bounds until status-transition logging exists (#1428).
  *
- * This is the canonical funnel definition for career-ops going forward;
+ * This is the canonical funnel definition for Jobber going forward;
  * dashboard/web consuming this JSON instead of keeping independent copies is
  * a named follow-up in #1604.
  */
@@ -414,7 +415,9 @@ export function computeAllStats({
   portalHealthFile = PORTAL_HEALTH_FILE,
 } = {}) {
   const read = (f) => (existsSync(f) ? readFileSync(f, 'utf-8') : null);
-  const apps = read(appsFile);
+  // T5: applications.md is written by locked writers; use the safe read so a
+  // concurrent merge's mid-write snapshot can't corrupt the roll-up.
+  const apps = existsSync(appsFile) ? readTrackerSafe(appsFile) : null;
   const scanHist = read(scanHistoryFile);
   const fups = read(followupsFile);
   const portals = read(portalsFile);

@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops 多代理求职系统" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber 多代理求职系统" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>媒体报道</sub></p>
@@ -33,14 +35,14 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops 演示" width="800">
+  <img src="docs/demo.gif" alt="Jobber 演示" width="800">
 </p>
 
 <p align="center"><strong>评估超过 740 个职位 · 生成超过 100 份个性化简历 · 成功拿下理想职位</strong></p>
 
 <p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/加入社区-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   &nbsp;
-  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
+  <a href="https://www.npmjs.com/package/@santifer/jobber"><img src="https://img.shields.io/npm/dt/@santifer/jobber?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
 
 <p align="center">
   <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Built_with-Claude_Code-000?style=for-the-badge&logo=anthropic&logoColor=white" alt="Built with Claude Code"></a>
@@ -65,7 +67,7 @@
 
 ## 这是什么
 
-career-ops 可以把任何 AI 编码 CLI 变成完整的求职指挥中心。你不需要再手动用电子表格追踪申请流程，而是获得一个 AI 驱动的管道，能够：
+Jobber 可以把任何 AI 编码 CLI 变成完整的求职指挥中心。你不需要再手动用电子表格追踪申请流程，而是获得一个 AI 驱动的管道，能够：
 
 - **评估职位**，使用结构化的 A-F 评估报告（五个维度得出 1.0-5.0 的评分）
 - **生成定制 PDF**，针对每份职位描述输出 ATS 优化简历
@@ -73,13 +75,13 @@ career-ops 可以把任何 AI 编码 CLI 变成完整的求职指挥中心。你
 - **批量处理**，通过子代理并行评估 10 份以上职位
 - **集中管理一切**，用单一事实来源配合完整性检查
 
-> **重要：这不是海投工具。** career-ops 是一个过滤器，帮你从数百个职位里找出真正值得投入时间的少数机会。系统强烈建议不要申请评分低于 4.0/5 的职位。你的时间很宝贵，招聘方的时间也一样。提交前一定要自己复核。
+> **重要：这不是海投工具。** Jobber 是一个过滤器，帮你从数百个职位里找出真正值得投入时间的少数机会。系统强烈建议不要申请评分低于 4.0/5 的职位。你的时间很宝贵，招聘方的时间也一样。提交前一定要自己复核。
 
-career-ops 具备代理式工作能力：Claude Code 会用 Playwright 浏览招聘页面，通过推理你的简历与职位描述是否匹配来评估契合度，而不是只做关键词匹配；同时它也会根据每个职位调整你的简历。
+Jobber 具备代理式工作能力：Claude Code 会用 Playwright 浏览招聘页面，通过推理你的简历与职位描述是否匹配来评估契合度，而不是只做关键词匹配；同时它也会根据每个职位调整你的简历。
 
 > **提醒：最开始几次评估不会特别准。** 系统还不了解你。请给它更多上下文，比如你的简历、职业故事、成果证明、个人偏好、擅长的事、想避开的事。你喂给它的信息越多，它就越准确。把它当成在培养一个新招聘顾问：第一周它需要先了解你，之后就会变得非常有价值。
 
-这个系统的作者曾用它评估 740 多个职位、生成 100 多份定制简历，并拿到一份 Head of Applied AI 的工作。[阅读完整案例研究](https://santifer.io/career-ops-system)。
+这个系统的作者曾用它评估 740 多个职位、生成 100 多份定制简历，并拿到一份 Head of Applied AI 的工作。[阅读完整案例研究](https://santifer.io/jobber-system)。
 
 ## 功能特性
 
@@ -101,28 +103,28 @@ career-ops 具备代理式工作能力：Claude Code 会用 Playwright 浏览招
 **最快的方式 —— 一条命令：**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` 随 [Node.js](https://nodejs.org) 一起提供 —— 它只运行一次安装程序，
 > 不会全局安装任何东西。还没有 Node？请先安装它。
 > （已经在用 Claude Code / Gemini / Codex CLI？那你已经有它了。）
 
-这会把最新版本克隆到 `./career-ops` 并安装依赖。然后：
+这会把最新版本克隆到 `./jobber` 并安装依赖。然后：
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # 或 gemini / codex / qwen / opencode —— 在这里打开你的 AI CLI
 ```
 
-**首次启动时，career-ops 会通过对话带你完成设置 —— 你的简历、个人档案和目标职位 —— 完全无需手动编辑任何文件。**
+**首次启动时，Jobber 会通过对话带你完成设置 —— 你的简历、个人档案和目标职位 —— 完全无需手动编辑任何文件。**
 
 <details>
 <summary><b>更喜欢手动设置？（git clone）</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # 仅生成 PDF 时需要
 claude   # 打开你的 AI CLI —— 它会在首次启动时引导你完成设置
 ```
@@ -135,7 +137,7 @@ claude   # 打开你的 AI CLI —— 它会在首次启动时引导你完成设
 
 ## Gemini CLI 集成
 
-career-ops 原生支持 [Gemini CLI](https://github.com/google-gemini/gemini-cli) —— 与 Claude Code 和 OpenCode 的支持方式相同。所有 15 个斜杠命令均可使用，并基于相同的 `modes/*.md` 评估逻辑。
+Jobber 原生支持 [Gemini CLI](https://github.com/google-gemini/gemini-cli) —— 与 Claude Code 和 OpenCode 的支持方式相同。所有 15 个斜杠命令均可使用，并基于相同的 `modes/*.md` 评估逻辑。
 
 ### 选项 A —— 原生 Gemini CLI（推荐）
 
@@ -144,19 +146,19 @@ career-ops 原生支持 [Gemini CLI](https://github.com/google-gemini/gemini-cli
 npm install -g @google/gemini-cli
 # 或: npx @google/gemini-cli --version
 
-# 2. 在 career-ops 目录中运行 —— 首次启动时使用你的 Google 账号登录（免费）完成认证
-cd career-ops
+# 2. 在 Jobber 目录中运行 —— 首次启动时使用你的 Google 账号登录（免费）完成认证
+cd Jobber
 gemini
 
-# 3. 使用统一的 /career-ops 命令及其子命令：
-/career-ops "Anthropic 的资深 AI 工程师..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 3. 使用统一的 /jobber 命令及其子命令：
+/jobber "Anthropic 的资深 AI 工程师..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
-`GEMINI.md` 文件会自动作为上下文加载。所有子命令都通过统一的 `.agents/skills/career-ops/SKILL.md` 定义进行路由。
+`GEMINI.md` 文件会自动作为上下文加载。所有子命令都通过统一的 `.agents/skills/jobber/SKILL.md` 定义进行路由。
 
 ### 选项 B —— 独立 API 脚本（无需安装 CLI）
 
@@ -179,24 +181,24 @@ npm run gemini:eval -- "职位描述文本"
 
 ## 用法
 
-career-ops 是一个单一斜杠命令，带有多种模式：
+Jobber 是一个单一斜杠命令，带有多种模式：
 
 ```
-/career-ops                → 显示所有可用命令
-/career-ops {粘贴职位描述}  → 完整自动管道（评估 + PDF + 追踪）
-/career-ops scan           → 扫描平台上的新职位
-/career-ops pdf            → 生成 ATS 优化简历
-/career-ops batch          → 批量评估多个职位
-/career-ops tracker        → 查看申请状态
-/career-ops apply          → 用 AI 协助填写申请表
-/career-ops pipeline       → 处理待办 URL
-/career-ops contacto       → 生成 LinkedIn 外联消息
-/career-ops deep           → 深度公司研究
-/career-ops training       → 评估课程/证书
-/career-ops project        → 评估作品集项目
+/jobber                → 显示所有可用命令
+/jobber {粘贴职位描述}  → 完整自动管道（评估 + PDF + 追踪）
+/jobber scan           → 扫描平台上的新职位
+/jobber pdf            → 生成 ATS 优化简历
+/jobber batch          → 批量评估多个职位
+/jobber tracker        → 查看申请状态
+/jobber apply          → 用 AI 协助填写申请表
+/jobber pipeline       → 处理待办 URL
+/jobber contacto       → 生成 LinkedIn 外联消息
+/jobber deep           → 深度公司研究
+/jobber training       → 评估课程/证书
+/jobber project        → 评估作品集项目
 ```
 
-或者直接粘贴职位 URL 或职位描述，career-ops 会自动识别并运行完整流程。
+或者直接粘贴职位 URL 或职位描述，Jobber 会自动识别并运行完整流程。
 
 ## 工作原理
 
@@ -248,7 +250,7 @@ npm run build:dashboard   # optional: build the standalone binary
 ## 项目结构
 
 ```
-career-ops/
+jobber/
 ├── CLAUDE.md                    # 代理说明
 ├── cv.md                        # 你的简历（需要自行创建）
 ├── article-digest.md            # 你的成果证明（可选）
@@ -297,45 +299,45 @@ career-ops/
 
 ## 常见问题（FAQ）
 
-**career-ops 是什么？**
-career-ops 是一个开源且不受特定 CLI 限制的求职命令中心。它能把任意 AI 编程 CLI 变成一套求职流程：根据你的 CV 评估职位，生成适配 ATS 的 PDF，查找合适的联系人，并在一个地方记录所有进展，最终决定仍由你作出。它是 CareerOps Manifesto 的首个参考实现，详情见 [career-ops.org](https://career-ops.org)。
+**Jobber 是什么？**
+Jobber 是一个开源且不受特定 CLI 限制的求职命令中心。它能把任意 AI 编程 CLI 变成一套求职流程：根据你的 CV 评估职位，生成适配 ATS 的 PDF，查找合适的联系人，并在一个地方记录所有进展，最终决定仍由你作出。它是 Jobber Manifesto 的首个参考实现，详情见 [jobber.org](https://jobber.org)。
 
-**我可以免费运行 career-ops，或使用更便宜的本地模型吗？**
-可以。career-ops 不受特定 CLI 限制，可通过 OpenRouter 免费模型、Ollama 或任何兼容 OpenAI 的端点使用免费或本地模型，因此无需依赖付费订阅。完整设置方法见 [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md)。
+**我可以免费运行 Jobber，或使用更便宜的本地模型吗？**
+可以。Jobber 不受特定 CLI 限制，可通过 OpenRouter 免费模型、Ollama 或任何兼容 OpenAI 的端点使用免费或本地模型，因此无需依赖付费订阅。完整设置方法见 [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md)。
 
-**career-ops 支持哪些 AI CLI？**
-career-ops 支持主流 AI 编程 CLI，包括 Claude Code、Codex、Gemini / Antigravity、OpenCode、Grok、Qwen 等。它通过开放的 Agent Skill Standard 运行，不受单一厂商限制，你可以继续使用现有 CLI。
+**Jobber 支持哪些 AI CLI？**
+Jobber 支持主流 AI 编程 CLI，包括 Claude Code、Codex、Gemini / Antigravity、OpenCode、Grok、Qwen 等。它通过开放的 Agent Skill Standard 运行，不受单一厂商限制，你可以继续使用现有 CLI。
 
-**如何在 Windows 上安装 career-ops？**
-career-ops 可以在 Windows 上运行。如果安装时因符号链接（symlink）错误导致 skills 无法加载，请按 [docs/FAQ.md](docs/FAQ.md) 中的方法处理；完整安装步骤见 [docs/SETUP.md](docs/SETUP.md)。
+**如何在 Windows 上安装 Jobber？**
+Jobber 可以在 Windows 上运行。如果安装时因符号链接（symlink）错误导致 skills 无法加载，请按 [docs/FAQ.md](docs/FAQ.md) 中的方法处理；完整安装步骤见 [docs/SETUP.md](docs/SETUP.md)。
 
-**career-ops 会替我自动申请职位吗？**
-不会。career-ops 用来筛选职位，而不是盲目批量申请；AI 负责评估、排序和起草，你负责审阅与决定。它不会自行提交、发送或点击任何内容，最终决定始终在你手中。这正是保留人工审核的意义。
+**Jobber 会替我自动申请职位吗？**
+不会。Jobber 用来筛选职位，而不是盲目批量申请；AI 负责评估、排序和起草，你负责审阅与决定。它不会自行提交、发送或点击任何内容，最终决定始终在你手中。这正是保留人工审核的意义。
 
-**career-ops 是免费开源软件吗？**
-是。career-ops 是免费开源软件，而且对求职者会一直免费；它是 [CareerOps Manifesto](https://career-ops.org/manifesto) 的首个参考实现。欢迎阅读这份宣言，如果认同其内容，也可以签名支持。
+**Jobber 是免费开源软件吗？**
+是。Jobber 是免费开源软件，而且对求职者会一直免费；它是 [Jobber Manifesto](https://jobber.org/manifesto) 的首个参考实现。欢迎阅读这份宣言，如果认同其内容，也可以签名支持。
 
 ## 关于作者
 
-我是 [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about)（santifer），现任 Head of Applied AI，也曾是一名创业者（创建并出售过一家公司，那家公司至今仍以我的名字运营）。我构建 career-ops 是为了管理我自己的求职流程，而它确实奏效了：我用它拿到了现在这份工作。
+我是 [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about)（santifer），现任 Head of Applied AI，也曾是一名创业者（创建并出售过一家公司，那家公司至今仍以我的名字运营）。我构建 Jobber 是为了管理我自己的求职流程，而它确实奏效了：我用它拿到了现在这份工作。
 
 我的作品集和其他开源项目 → [santifer.io](https://santifer.io)
 
-Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [Jobber](https://www.wikidata.org/wiki/Q139007988).
 
 ## Star 历史
 
-<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
+<a href="https://www.star-history.com/?repos=santifer%2FJobber&type=timeline&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
  </picture>
 </a>
 
 ## 免责声明
 
-**career-ops 是一个本地开源工具，不是托管服务。** 使用本软件即表示你确认：
+**Jobber 是一个本地开源工具，不是托管服务。** 使用本软件即表示你确认：
 
 1. **数据由你掌控。** 你的简历、联系方式和个人数据都保留在你的设备上，并直接发送给你选择的 AI 提供商（Anthropic、OpenAI 等）。我们不会收集、存储或访问你的任何数据。
 2. **AI 由你掌控。** 默认提示词会明确要求 AI 不要自动提交申请，但 AI 模型的行为可能不可预测。如果你修改提示词或使用不同模型，风险由你自行承担。**提交前务必核查 AI 生成内容的准确性。**
@@ -346,15 +348,15 @@ Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/
 
 ## 贡献者
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+<a href="https://github.com/santifer/jobber/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/jobber" />
 </a>
 
-通过 career-ops 成功入职？[分享你的故事！](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+通过 Jobber 成功入职？[分享你的故事！](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 ## 许可证与商标
 
-代码以 [MIT](LICENSE) 许可证授权。"career-ops" 名称及品牌受 [商标政策](TRADEMARK.md) 约束 —— 允许社区使用，商业产品命名和背书需保留权利。
+代码以 [MIT](LICENSE) 许可证授权。"jobber" 名称及品牌受 [商标政策](TRADEMARK.md) 约束 —— 允许社区使用，商业产品命名和背书需保留权利。
 
 ## 联系我们
 

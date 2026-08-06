@@ -1,6 +1,8 @@
 # Modo: pipeline -- Inbox de URLs (Second Brain)
 
-Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona URLs quando quiser e depois executa `/career-ops pipeline` para processar todas de uma vez.
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona URLs quando quiser e depois executa `/jobber pipeline` para processar todas de uma vez.
 
 ## Workflow
 

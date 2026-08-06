@@ -1,6 +1,8 @@
-# career-ops -- Modes francophones (`modes/fr/`)
+# Jobber -- Modes francophones (`modes/fr/`)
 
-Ce dossier contient les traductions francaises des principaux modes career-ops pour les candidats qui ciblent le marche francophone (France, Belgique, Suisse romande, Luxembourg, Quebec).
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Ce dossier contient les traductions francaises des principaux modes Jobber pour les candidats qui ciblent le marche francophone (France, Belgique, Suisse romande, Luxembourg, Quebec).
 
 ## Quand utiliser ces modes ?
 

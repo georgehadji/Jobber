@@ -1,6 +1,8 @@
-# career-ops -- Modos en español (`modes/es/`)
+# Jobber -- Modos en español (`modes/es/`)
 
-Esta carpeta contiene las traducciones al español de los principales modos de career-ops para candidatos que apuntan al mercado hispanohablante (España, México, Argentina, Colombia, Chile y otros países de LATAM).
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Esta carpeta contiene las traducciones al español de los principales modos de Jobber para candidatos que apuntan al mercado hispanohablante (España, México, Argentina, Colombia, Chile y otros países de LATAM).
 
 ## ¿Cuándo usar estos modos?
 

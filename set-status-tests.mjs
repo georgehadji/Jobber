@@ -9,8 +9,8 @@
  * templates/states.yml, idempotent note appends, dry-run, JSON output, exit
  * codes, and layout tolerance (9-col and 10-col Location trackers).
  *
- * Tests provision a throwaway tracker via the CAREER_OPS_TRACKER /
- * CAREER_OPS_TRACKER_LOCK env overrides (same sandbox pattern as
+ * Tests provision a throwaway tracker via the JOBBER_TRACKER /
+ * JOBBER_TRACKER_LOCK env overrides (same sandbox pattern as
  * tracker-columns-tests.mjs).
  *
  * Exit-code contract under test:
@@ -40,8 +40,8 @@ function fail(m) { console.error(`FAIL ${m}`); failed++; }
 function runSetStatus(args, sandbox, extraEnv = {}) {
   const env = {
     ...process.env,
-    CAREER_OPS_TRACKER: sandbox.tracker,
-    CAREER_OPS_TRACKER_LOCK: sandbox.lock,
+    JOBBER_TRACKER: sandbox.tracker,
+    JOBBER_TRACKER_LOCK: sandbox.lock,
     ...extraEnv,
   };
   try {
@@ -59,10 +59,10 @@ function makeSandbox(trackerContent) {
   const dir = mkdtempSync(join(tmpdir(), 'co-setstatus-'));
   const tracker = join(dir, 'applications.md');
   writeFileSync(tracker, trackerContent);
-  // The lock env value must live under tmpdir and use the career-ops prefix
+  // The lock env value must live under tmpdir and use the Jobber prefix
   // (see trackerLockDirFor) or it is ignored — which would still be safe,
   // just contending on the real default lock.
-  const lock = join(dir, 'career-ops-merge-tracker-test.lock');
+  const lock = join(dir, 'jobber-merge-tracker-test.lock');
   return { dir, tracker, lock };
 }
 
@@ -83,7 +83,7 @@ const TRACKER_10 = `# Applications Tracker
 
 | # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |
 |---|------|---------|------|----------|-------|--------|-----|--------|-------|
-| 1 | 2026-06-01 | Initech | AI Engineer | Remote | 4.5/5 | Evaluated | ✅ | [1](../reports/001-initech-2026-06-01.md) | — |
+| 1 | 2026-06-01 | Initech | AI Engineer | Remote | 4.5/5 | Applied | ✅ | [1](../reports/001-initech-2026-06-01.md) | — |
 `;
 
 // Two unrelated rows share tracker number 5 (the #1704 bug: merge-tracker.mjs
@@ -510,6 +510,91 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
   rmSync(sb.dir, { recursive: true, force: true });
 }
 
+// ── 12b. State machine: terminal escapes are refused, --force overrides
+// (#improvement-plan A4(a)). A state with no forward edges in states.yml is
+// terminal (rejected/discarded/hired): it may never move again without --force,
+// so Rejected → Interview and Hired → Evaluated fail closed. Live states stay
+// free-form in both directions (a backward move is a normal ledger correction).
+{
+  const sb = makeSandbox(TRACKER_9);
+
+  // Evaluated → Applied → Interview → Hired: live-state forward path, unblocked.
+  const fwd = runSetStatus(['1', 'Applied'], sb) && runSetStatus(['1', 'Interview'], sb) && runSetStatus(['1', 'Hired'], sb);
+  if (fwd && /\| Hired \|/.test(readTracker(sb))) {
+    pass('state-machine: live-state forward path (Evaluated→…→Hired) proceeds');
+  } else {
+    fail(`state-machine: forward path blocked code=${fwd}\n${runSetStatus.stdout}`);
+  }
+
+  // Now Hired is terminal: Hired → Evaluated must be refused.
+  const before = readTracker(sb);
+  const r1 = runSetStatus(['1', 'Evaluated', '--json'], sb);
+  let p1 = null;
+  try { p1 = JSON.parse(r1.stdout); } catch {}
+  if (r1.code === 1 && p1?.code === 'illegal-transition'
+      && p1.from === 'Hired' && p1.to === 'Evaluated' && p1.terminal === true
+      && readTracker(sb) === before) {
+    pass('state-machine: terminal Hired→Evaluated refused, tracker untouched');
+  } else {
+    fail(`state-machine: Hired→Evaluated code=${r1.code} json=${JSON.stringify(p1)}\n${r1.stdout}${r1.stderr}`);
+  }
+
+  // --force records an explicit override for a real correction.
+  const forced = runSetStatus(['1', 'Evaluated', '--force'], sb);
+  if (forced.code === 0 && /\| Evaluated \|/.test(readTracker(sb))) {
+    pass('state-machine: --force records an explicit override of a terminal escape');
+  } else {
+    fail(`state-machine: --force did not override terminal state code=${forced.code}\n${forced.stdout}${forced.stderr}`);
+  }
+
+  // A live-state backward correction (Evaluated --Applied--> --Evaluated--) needs no --force.
+  const rBack = runSetStatus(['1', 'Applied'], sb) && runSetStatus(['1', 'Evaluated'], sb);
+  if (rBack && /\| Evaluated \|/.test(readTracker(sb))) {
+    pass('state-machine: live-state backward correction does not require --force');
+  } else {
+    fail(`state-machine: live backward correction blocked code=${rBack}\n${runSetStatus.stdout}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 12c. Terminal states have no forward edges (Rejected→Interview fails) ─
+{
+  const sb = makeSandbox(TRACKER_9);
+  // First set row 2 to a terminal state, then attempt an illegal escape.
+  const r0 = runSetStatus(['2', 'Rejected'], sb);
+  const before = readTracker(sb);
+  const r = runSetStatus(['2', 'Interview', '--json'], sb);
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r0.code === 0 && r.code === 1 && parsed?.code === 'illegal-transition'
+      && parsed.from === 'Rejected' && parsed.to === 'Interview'
+      && readTracker(sb) === before) {
+    pass('state-machine: terminal Rejected→Interview refused (the plan\'s headline case)');
+  } else {
+    fail(`state-machine: Rejected→Interview code=${r.code} json=${JSON.stringify(parsed)}\n${r0.stdout}${r.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
+// ── 12c. Terminal states have no forward edges (Rejected→Interview fails) ─
+{
+  const sb = makeSandbox(TRACKER_9);
+  // First set row 2 to a terminal state, then attempt an illegal escape.
+  const r0 = runSetStatus(['2', 'Rejected'], sb);
+  const before = readTracker(sb);
+  const r = runSetStatus(['2', 'Interview', '--json'], sb);
+  let parsed = null;
+  try { parsed = JSON.parse(r.stdout); } catch {}
+  if (r0.code === 0 && r.code === 1 && parsed?.code === 'illegal-transition'
+      && parsed.from === 'Rejected' && parsed.to === 'Interview'
+      && readTracker(sb) === before) {
+    pass('state-machine: terminal Rejected→Interview refused (the plan\'s headline case)');
+  } else {
+    fail(`state-machine: Rejected→Interview code=${r.code} json=${JSON.stringify(parsed)}\n${r0.stdout}${r.stderr}`);
+  }
+  rmSync(sb.dir, { recursive: true, force: true });
+}
+
 // ── 13. Usage errors ────────────────────────────────────────────
 {
   const sb = makeSandbox(TRACKER_9);
@@ -577,7 +662,7 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
   // time out and fail through the structured error path instead of throwing.
   mkdirSync(sb.lock, { recursive: true });
   writeFileSync(join(sb.lock, 'owner.json'), JSON.stringify({ pid: process.pid, token: 'test', tracker: sb.tracker }));
-  const r = runSetStatus(['2', 'Applied', '--json'], sb, { CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS: '300' });
+  const r = runSetStatus(['2', 'Applied', '--json'], sb, { JOBBER_TRACKER_LOCK_TIMEOUT_MS: '300' });
   let parsed = null;
   try { parsed = JSON.parse(r.stdout); } catch {}
   if (r.code === 4 && parsed && parsed.code === 'lock-timeout' && readTracker(sb) === before) {
@@ -596,9 +681,9 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
   // then fails with ENOTDIR/ENOENT — a config error, not a busy lock — and
   // must map to exit 1 / lock-error, keeping exit 4 reserved for retryable
   // timeouts.
-  const blocker = join(sb.dir, 'career-ops-merge-tracker-blocker');
+  const blocker = join(sb.dir, 'jobber-merge-tracker-blocker');
   writeFileSync(blocker, 'not a directory');
-  const badLock = join(blocker, 'career-ops-merge-tracker-bad.lock');
+  const badLock = join(blocker, 'jobber-merge-tracker-bad.lock');
   const r = runSetStatus(['2', 'Applied', '--json'], { ...sb, lock: badLock });
   let parsed = null;
   try { parsed = JSON.parse(r.stdout); } catch {}
@@ -613,7 +698,7 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
 // ── 15. Orphaned recovery guard does not block stale-lock recovery ─
 {
   const dir = mkdtempSync(join(tmpdir(), 'co-setstatus-guard-'));
-  const lockDir = join(dir, 'career-ops-merge-tracker-guardtest.lock');
+  const lockDir = join(dir, 'jobber-merge-tracker-guardtest.lock');
   // Stale lock: dead owner PID → recoverable.
   mkdirSync(lockDir, { recursive: true });
   writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({ pid: 999999999, token: 'dead', tracker: 'x' }));
@@ -650,7 +735,7 @@ const TRACKER_REPORT_MISMATCH = `# Applications Tracker
     mkdirSync(roDir);
     const tracker = join(roDir, 'applications.md');
     writeFileSync(tracker, TRACKER_9);
-    const lock = join(dir, 'career-ops-merge-tracker-wf.lock');
+    const lock = join(dir, 'jobber-merge-tracker-wf.lock');
     // Make the tracker's directory readable but unwritable, so the atomic
     // temp-file write fails after a successful read. On Windows, directory
     // read-only bits don't block file creation — deny write-data/append-data

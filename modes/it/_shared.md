@@ -1,10 +1,12 @@
-# Contesto condiviso -- career-ops (Italiano)
+# Contesto condiviso -- Jobber (Italiano)
+
+<!-- jobber-source-sha: 5d80485de48a2b88d16c105c52e99d45fef521fb -->
 
 <!-- ============================================================
      PERSONALIZZAZIONE DI QUESTO FILE
      ============================================================
      Questo file contiene il contesto condiviso per tutte le modalità
-     career-ops in versione italiana. Prima di usare career-ops, DEVI:
+     Jobber in versione italiana. Prima di usare Jobber, DEVI:
      1. Compilare config/profile.yml con le tue informazioni personali
      2. Creare cv.md nella cartella principale del progetto (CV in Markdown)
      3. (Opzionale) Creare article-digest.md con i tuoi proof point misurabili

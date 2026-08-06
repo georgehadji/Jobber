@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Sistema Multi-Agente de Búsqueda de Empleo" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Sistema Multi-Agente de Búsqueda de Empleo" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>APARECE EN</sub></p>
@@ -33,7 +35,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops Demo" width="800">
+  <img src="docs/demo.gif" alt="Jobber Demo" width="800">
 </p>
 
 <p align="center"><strong>740+ ofertas evaluadas · 100+ CVs personalizados · 1 trabajo soñado conseguido</strong></p>
@@ -42,7 +44,7 @@
   <a href="https://warpchart.dev/hq">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
-      <img alt="Live star telemetry of santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
+      <img alt="Live star telemetry of santifer/jobber" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
     </picture>
   </a>
 </p>
@@ -50,7 +52,7 @@
 <p align="center">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Unete_a_la_comunidad-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   &nbsp;
-  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
+  <a href="https://www.npmjs.com/package/@santifer/jobber"><img src="https://img.shields.io/npm/dt/@santifer/jobber?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
 </p>
 
 <p align="center">
@@ -76,7 +78,7 @@
 
 ## Qué es esto
 
-career-ops convierte cualquier CLI de IA en un centro de mando de búsqueda de empleo. En vez de trackear aplicaciones en un spreadsheet, tienes un pipeline AI que:
+Jobber convierte cualquier CLI de IA en un centro de mando de búsqueda de empleo. En vez de trackear aplicaciones en un spreadsheet, tienes un pipeline AI que:
 
 - **Evalúa ofertas** con una evaluación estructurada A-F (cinco dimensiones que alimentan una puntuación de 1.0-5.0)
 - **Genera PDFs personalizados** -- CVs ATS-optimizados por oferta
@@ -84,11 +86,11 @@ career-ops convierte cualquier CLI de IA en un centro de mando de búsqueda de e
 - **Procesa en batch** -- evalúa 10+ ofertas en paralelo con sub-agentes
 - **Trackea todo** en una fuente de verdad única con checks de integridad
 
-> **Importante: Esto NO es para spamear empresas.** career-ops es un filtro -- te ayuda a encontrar las pocas ofertas que merecen tu tiempo entre cientos. El sistema recomienda encarecidamente no aplicar a nada por debajo de 4.0/5. Tu tiempo es valioso, y el del recruiter también. Siempre revisa antes de enviar.
+> **Importante: Esto NO es para spamear empresas.** Jobber es un filtro -- te ayuda a encontrar las pocas ofertas que merecen tu tiempo entre cientos. El sistema recomienda encarecidamente no aplicar a nada por debajo de 4.0/5. Tu tiempo es valioso, y el del recruiter también. Siempre revisa antes de enviar.
 
 > **Aviso: las primeras evaluaciones no serán buenas.** El sistema no te conoce todavía. Dale contexto -- tu CV, tu historia profesional, tus proof points, tus preferencias, en qué eres bueno, qué quieres evitar. Cuanto más lo nutras, mejor filtra. Piensa en ello como hacer onboarding a un recruiter nuevo: la primera semana necesita conocerte, luego se vuelve invaluable.
 
-Construido por alguien que lo usó para evaluar 740+ ofertas, generar 100+ CVs personalizados, y conseguir un rol de Head of Applied AI. [Lee el case study completo](https://santifer.io/career-ops).
+Construido por alguien que lo usó para evaluar 740+ ofertas, generar 100+ CVs personalizados, y conseguir un rol de Head of Applied AI. [Lee el case study completo](https://santifer.io/jobber).
 
 ## Features
 
@@ -110,26 +112,26 @@ Construido por alguien que lo usó para evaluar 740+ ofertas, generar 100+ CVs p
 **La forma más rápida — un solo comando:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` viene incluido con [Node.js](https://nodejs.org) — ejecuta el instalador una vez, sin instalar nada de forma global. ¿No tienes Node? Instálalo primero. (¿Ya usas un CLI como Claude Code / Gemini / Codex? Entonces ya lo tienes.)
 
-Esto clona la última release en `./career-ops` e instala las dependencias. Después:
+Esto clona la última release en `./jobber` e instala las dependencias. Después:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # o gemini / codex / qwen / opencode — abre tu CLI de IA aquí
 ```
 
-**En el primer arranque, career-ops te guía en la configuración — tu CV, tu perfil y los roles que buscas — simplemente conversando. No hay nada qué editar a mano.**
+**En el primer arranque, Jobber te guía en la configuración — tu CV, tu perfil y los roles que buscas — simplemente conversando. No hay nada qué editar a mano.**
 
 <details>
 <summary><b>¿Prefieres instalarlo manualmente? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # solo para generar PDFs
 claude   # abre tu CLI de IA — te guiará en el primer arranque
 ```
@@ -139,14 +141,14 @@ claude   # abre tu CLI de IA — te guiará en el primer arranque
 ### Instalación global
 
 ```bash
-npm i -g @santifer/career-ops
+npm i -g @santifer/jobber
 ```
 
-Esto instala el binario `career-ops` de forma global para que puedas ejecutarlo directamente en lugar de usar `npx`. A diferencia de `npx @santifer/career-ops init` (que prepara un directorio de proyecto), la instalación global te da un comando `career-ops` persistente disponible en cualquier terminal.
+Esto instala el binario `jobber` de forma global para que puedas ejecutarlo directamente en lugar de usar `npx`. A diferencia de `npx @santifer/jobber init` (que prepara un directorio de proyecto), la instalación global te da un comando `jobber` persistente disponible en cualquier terminal.
 
 **¿Cuál deberías usar?**
-- `npx @santifer/career-ops init` — mejor para el primer uso; crea una carpeta de proyecto dedicada.
-- `npm i -g @santifer/career-ops` — mejor una vez que tienes una carpeta de proyecto y quieres ejecutar comandos de career-ops directamente.
+- `npx @santifer/jobber init` — mejor para el primer uso; crea una carpeta de proyecto dedicada.
+- `npm i -g @santifer/jobber` — mejor una vez que tienes una carpeta de proyecto y quieres ejecutar comandos de Jobber directamente.
 
 > **El sistema está diseñado para que Claude lo personalice.** Modes, arquetipos, scoring, scripts de negociación -- solo pídelo. Claude lee los mismos archivos que usa, así que sabe exactamente qué editar.
 
@@ -154,22 +156,22 @@ Guía completa en [docs/SETUP.md](docs/SETUP.md).
 
 ## Uso
 
-career-ops es un único slash command con multiples modos:
+Jobber es un único slash command con multiples modos:
 
 ```
-/career-ops                → Mostrar todos los comandos
-/career-ops {pega un JD}   → Pipeline completo (evaluar + PDF + tracker)
-/career-ops scan           → Escanear portales
-/career-ops pdf            → Generar CV ATS-optimizado
-/career-ops batch          → Evaluar ofertas en batch
-/career-ops tracker        → Ver estado de aplicaciones
-/career-ops apply          → Rellenar formularios con IA
-/career-ops pipeline       → Procesar URLs pendientes
-/career-ops contacto       → Mensaje LinkedIn outreach
-/career-ops deep           → Research profundo de empresa
+/jobber                → Mostrar todos los comandos
+/jobber {pega un JD}   → Pipeline completo (evaluar + PDF + tracker)
+/jobber scan           → Escanear portales
+/jobber pdf            → Generar CV ATS-optimizado
+/jobber batch          → Evaluar ofertas en batch
+/jobber tracker        → Ver estado de aplicaciones
+/jobber apply          → Rellenar formularios con IA
+/jobber pipeline       → Procesar URLs pendientes
+/jobber contacto       → Mensaje LinkedIn outreach
+/jobber deep           → Research profundo de empresa
 ```
 
-O simplemente pega una URL o descripción de oferta -- career-ops la detecta y ejecuta el pipeline completo.
+O simplemente pega una URL o descripción de oferta -- Jobber la detecta y ejecuta el pipeline completo.
 
 ## Cómo funciona
 
@@ -222,7 +224,7 @@ Features: 6 pestañas de filtro, 4 modos de ordenación, vista agrupada/plana, p
 ## Estructura del proyecto
 
 ```
-career-ops/
+jobber/
 ├── AGENTS.md                    # Instrucciones canónicas del agente (todos los CLIs)
 ├── CLAUDE.md                    # Wrapper Claude Code (importa AGENTS.md)
 ├── cv.md                        # Tu CV (crealo tu)
@@ -268,33 +270,33 @@ career-ops/
 
 ## Preguntas frecuentes (FAQ)
 
-**¿Qué es career-ops?**
-career-ops es un centro de mando de búsqueda de empleo, open source e independiente del CLI. Convierte cualquier CLI de IA en un pipeline que evalúa ofertas contra tu CV, genera PDFs optimizados para ATS, encuentra a la persona adecuada a la que escribir y lo registra todo en un solo sitio — y la decisión final siempre es tuya. Es la primera implementación de referencia del CareerOps Manifesto. Más en [career-ops.org](https://career-ops.org).
+**¿Qué es Jobber?**
+Jobber es un centro de mando de búsqueda de empleo, open source e independiente del CLI. Convierte cualquier CLI de IA en un pipeline que evalúa ofertas contra tu CV, genera PDFs optimizados para ATS, encuentra a la persona adecuada a la que escribir y lo registra todo en un solo sitio — y la decisión final siempre es tuya. Es la primera implementación de referencia del Jobber Manifesto. Más en [jobber.org](https://jobber.org).
 
-**¿Puedo usar career-ops gratis, o con un modelo más barato o local?**
-Sí. career-ops es independiente del CLI y funciona con modelos gratuitos y locales — mediante modelos gratuitos de OpenRouter, Ollama o cualquier endpoint compatible con OpenAI — así no dependes de ninguna suscripción de pago. Consulta [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) para la configuración completa.
+**¿Puedo usar Jobber gratis, o con un modelo más barato o local?**
+Sí. Jobber es independiente del CLI y funciona con modelos gratuitos y locales — mediante modelos gratuitos de OpenRouter, Ollama o cualquier endpoint compatible con OpenAI — así no dependes de ninguna suscripción de pago. Consulta [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) para la configuración completa.
 
-**¿Con qué CLIs de IA funciona career-ops?**
-career-ops funciona con cualquier CLI de IA importante — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen y más — a través del estándar abierto Agent Skill Standard, así que nunca queda atado a un solo proveedor. Usa el CLI que ya tengas.
+**¿Con qué CLIs de IA funciona Jobber?**
+Jobber funciona con cualquier CLI de IA importante — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen y más — a través del estándar abierto Agent Skill Standard, así que nunca queda atado a un solo proveedor. Usa el CLI que ya tengas.
 
-**¿Cómo instalo career-ops en Windows?**
-career-ops funciona en Windows. Si las skills no cargan por un error de symlink durante la instalación, la solución está en [docs/FAQ.md](docs/FAQ.md). Los pasos completos están en [docs/SETUP.md](docs/SETUP.md).
+**¿Cómo instalo Jobber en Windows?**
+Jobber funciona en Windows. Si las skills no cargan por un error de symlink durante la instalación, la solución está en [docs/FAQ.md](docs/FAQ.md). Los pasos completos están en [docs/SETUP.md](docs/SETUP.md).
 
-**¿career-ops aplica a las ofertas por mí automáticamente?**
-No. career-ops es un filtro, no un aplicador masivo a ciegas. La IA evalúa, ordena y redacta; tú revisas y decides. Nunca envía, manda ni hace clic en nada — la última palabra siempre es tuya. Ese diseño con supervisión humana es justo el punto.
+**¿Jobber aplica a las ofertas por mí automáticamente?**
+No. Jobber es un filtro, no un aplicador masivo a ciegas. La IA evalúa, ordena y redacta; tú revisas y decides. Nunca envía, manda ni hace clic en nada — la última palabra siempre es tuya. Ese diseño con supervisión humana es justo el punto.
 
-**¿career-ops es gratis y open source?**
-Sí. career-ops es gratis y open source, y para el candidato siempre lo será — es la primera implementación de referencia del [CareerOps Manifesto](https://career-ops.org/manifesto). Léelo y, si dice lo que piensas, fírmalo.
+**¿Jobber es gratis y open source?**
+Sí. Jobber es gratis y open source, y para el candidato siempre lo será — es la primera implementación de referencia del [Jobber Manifesto](https://jobber.org/manifesto). Léelo y, si dice lo que piensas, fírmalo.
 
 ## Sobre el autor
 
-Soy [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ex-fundador (monté y vendí un negocio que sigue funcionando con mi nombre). Construí career-ops para gestionar mi propia búsqueda de empleo. Funcionó: lo usé para conseguir mi puesto actual.
+Soy [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, ex-fundador (monté y vendí un negocio que sigue funcionando con mi nombre). Construí Jobber para gestionar mi propia búsqueda de empleo. Funcionó: lo usé para conseguir mi puesto actual.
 
-¿Curiosidad por cómo se mantiene este repo en ~4 horas a la semana? Lee [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
+¿Curiosidad por cómo se mantiene este repo en ~4 horas a la semana? Lee [Agentic maintenance: how Jobber is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
 
 Mi portfolio y otros proyectos open source → [santifer.io](https://santifer.io)
 
-Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [Jobber](https://www.wikidata.org/wiki/Q139007988).
 
 ## Documentación
 
@@ -309,7 +311,7 @@ Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/
 
 ## Aviso legal
 
-**career-ops es una herramienta local y open source — NO un servicio alojado.** Al usar este software, aceptas que:
+**Jobber es una herramienta local y open source — NO un servicio alojado.** Al usar este software, aceptas que:
 
 1. **Tu controlas tus datos.** Tu CV, datos de contacto e información personal se quedan en tu máquina y se envian directamente al proveedor de IA que elijas (Anthropic, OpenAI, etc.). No recopilamos, almacenamos ni tenemos acceso a tus datos.
 2. **Tu controlas la IA.** Los prompts por defecto instruyen a la IA a no enviar aplicaciones automaticamente, pero los modelos pueden comportarse de forma impredecible. Si modificas los prompts o usas otros modelos, lo haces bajo tu responsabilidad. **Revisa siempre el contenido generado antes de enviarlo.**

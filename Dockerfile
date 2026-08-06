@@ -1,4 +1,4 @@
-# career-ops container
+# Jobber container
 # Base: Playwright image with Chromium preinstalled (matches playwright@1.62.0 in package.json).
 # Host kernels that block Playwright's chromium installer (e.g. Ubuntu 26.04) work fine here
 # because the browser ships in the image and runs under the image's userland.

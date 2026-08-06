@@ -1,6 +1,6 @@
 # Maintainers
 
-This file lists who maintains career-ops and how contributors grow into review and maintenance roles. It exists so the project doesn't depend on any single person and so the path forward is legible to everyone.
+This file lists who maintains Jobber and how contributors grow into review and maintenance roles. It exists so the project doesn't depend on any single person and so the path forward is legible to everyone.
 
 ## Current maintainers
 
@@ -13,10 +13,10 @@ Reviewers and additional maintainers are added as the contributor ladder below p
 
 ## The contributor ladder
 
-Career-ops grows its team in the open. There are three rungs:
+Jobber grows its team in the open. There are three rungs:
 
 ### 1. Contributor
-Anyone who opens a PR or a helpful issue. No permissions needed — just contribute. Good first contributions: a new open-API scanner provider (`providers/`), a translation, a docs fix, or a [good first issue](https://github.com/santifer/career-ops/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). See [CONTRIBUTING.md](CONTRIBUTING.md).
+Anyone who opens a PR or a helpful issue. No permissions needed — just contribute. Good first contributions: a new open-API scanner provider (`providers/`), a translation, a docs fix, or a [good first issue](https://github.com/santifer/jobber/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### 2. Reviewer
 Trusted contributors who help triage and review incoming PRs. A reviewer is invited after a track record of **several merged, high-quality PRs** across more than one area, plus consistently helpful review comments on others' PRs. Reviewers help label, reproduce, and give first-pass feedback; merges still go through a maintainer.
@@ -38,7 +38,7 @@ Reviewers who have shown sustained judgment aligned with the project's direction
 
 ## Trust & access
 
-Because career-ops handles people's personal career data, access is granted carefully:
+Because Jobber handles people's personal career data, access is granted carefully:
 
 - **Generous with credit, careful with access.** Praise and shout-outs are public and frequent; merge/admin rights are earned and verified.
 - **Identity is verified** before granting review/maintainer access (real-identity footprint, account history). This protects the candidate side of the project.
@@ -47,7 +47,7 @@ Because career-ops handles people's personal career data, access is granted care
 ## Decision-making
 
 - Day-to-day: lowest-friction path — a maintainer reviews and merges.
-- Significant or breaking changes: an [RFC](https://github.com/santifer/career-ops/discussions/categories/rfc) first (see [CONTRIBUTING.md](CONTRIBUTING.md) → "Proposing big changes").
+- Significant or breaking changes: an [RFC](https://github.com/santifer/jobber/discussions/categories/rfc) first (see [CONTRIBUTING.md](CONTRIBUTING.md) → "Proposing big changes").
 - Architecture, scoring rules, and the data contract: lead maintainer has final say, informed by RFC discussion.
 
 ## Want to help maintain?

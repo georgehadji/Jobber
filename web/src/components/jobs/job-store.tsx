@@ -39,8 +39,8 @@ export function useJobs() {
   return c;
 }
 
-const CONFIG_KEY = "career-ops:config";
-const JOBS_KEY = "career-ops:jobs";
+const CONFIG_KEY = "jobber:config";
+const JOBS_KEY = "jobber:jobs";
 
 function parseVerdict(text: string): JobResult {
   const m = text.match(/VERDICT:\s*([\d.]+)\s*\/\s*5\s*[—:|-]+\s*(.+)/i);

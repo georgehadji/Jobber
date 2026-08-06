@@ -1,6 +1,8 @@
-# career-ops -- Modos em Português BR (`modes/pt/`)
+# Jobber -- Modos em Português BR (`modes/pt/`)
 
-Esta pasta contém as traduções em português brasileiro dos principais modos do career-ops para candidatos que buscam vagas no mercado brasileiro ou em empresas que operam em português.
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Esta pasta contém as traduções em português brasileiro dos principais modos do Jobber para candidatos que buscam vagas no mercado brasileiro ou em empresas que operam em português.
 
 ## Quando usar estes modos?
 
@@ -15,7 +17,7 @@ Se a maioria das suas vagas é em inglês, fique com os modos padrão em `modes/
 
 ## Como ativar?
 
-O career-ops não tem um "switch de idioma" como flag de código. Em vez disso, existem dois caminhos:
+O Jobber não tem um "switch de idioma" como flag de código. Em vez disso, existem dois caminhos:
 
 ### Caminho 1 -- Por sessão, via comando
 

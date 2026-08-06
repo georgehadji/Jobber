@@ -35,6 +35,7 @@ function sha256(buf) {
  * @returns {{ files: Record<string,string>, integrity: string }}
  */
 export function hashPluginTree(dir) {
+  /** @type {Record<string,string>} */
   const files = {};
   const walk = (abs, rel) => {
     let entries;

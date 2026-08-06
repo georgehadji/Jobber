@@ -1,5 +1,5 @@
-# Career-Ops — Canonical States
-# Source of truth for career-ops (writer) and dashboard (reader).
+# Jobber — Canonical States
+# Source of truth for Jobber (writer) and dashboard (reader).
 # Both systems MUST use these exact states.
 #
 # Rule: The status field in applications.md must contain EXACTLY
@@ -60,3 +60,26 @@ states:
     aliases: [contratado, contratada, hired, accepted, accept]
     description: Offer accepted, job landed!
     dashboard_group: hired
+
+# Legal forward status transitions, keyed by the source state id → list of
+# allowed target state ids (#improvement-plan A4(a)). The lifecycle is a DAG:
+# an application moves forward through evaluated → applied → responded →
+# interview → offer → hired, and any live state can fail (rejected/discarded)
+# or be shelved (skip). A state with an EMPTY transition list is TERMINAL
+# (rejected, discarded, hired): it is the funnel's end, and set-status.mjs
+# refuses any change out of it unless --force records an explicit override —
+# that is what prevents Rejected → Interview and Hired → Evaluated from
+# validating. Live states stay free-form in both directions: a backward move
+# such as Applied → Evaluated is a normal ledger CORRECTION (status-log.tsv
+# records it, funnel-velocity.mjs treats it as a correction, not a fresh event)
+# and is not gated. The dashboard reads this table too.
+transitions:
+  evaluated: [applied, responded, rejected, discarded, skip]
+  applied:   [responded, interview, rejected, discarded, skip]
+  responded: [interview, rejected, discarded, skip]
+  interview: [offer, rejected, discarded, hired]
+  offer:     [hired, rejected, discarded]
+  rejected:  []
+  discarded: []
+  skip:      [evaluated, discarded]
+  hired:     []

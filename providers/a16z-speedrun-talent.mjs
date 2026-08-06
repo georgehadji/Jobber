@@ -14,7 +14,7 @@
 // raise `max_pages` on the entry or narrow server-side with `q:` (the feed
 // runs full-text search with synonym expansion, e.g. "ml", "swe", "nyc").
 //
-// Every request carries `source=career-ops` — the feed's documented optional
+// Every request carries `source=jobber` — the feed's documented optional
 // attribution param, echoed in the response; it does not change results.
 //
 // Wire in via a `job_boards:` entry with `provider: a16z-speedrun-talent`, or point
@@ -147,11 +147,11 @@ export default {
     const out = [];
 
     for (let page = 0; page < maxPages; page++) {
-      const params = new URLSearchParams({ page: String(page), source: 'career-ops' });
+      const params = new URLSearchParams({ page: String(page), source: 'jobber' });
       if (q) params.set('q', q);
       const url = `${FEED_BASE}?${params}`;
       // redirect:'error' prevents SSRF via server-side redirects
-      const json = await ctx.fetchJson(url, { redirect: 'error' });
+      const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error' }));
       if (!json || !Array.isArray(json.jobs)) {
         throw new Error(
           `a16z-speedrun-talent: unexpected API response on page ${page} — expected { jobs: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`,

@@ -34,7 +34,7 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const MAX_SENTINEL_AGE_MS = 4 * 60 * 60 * 1000;
 const MAX_RETRIES = 50;
 const MAX_COUNT = 50;
-const RESERVATION_TOKEN = Symbol('career-ops-report-reservation-token');
+const RESERVATION_TOKEN = Symbol('jobber-report-reservation-token');
 
 /** Format a report ID with a minimum width of three digits. */
 export function formatReportNumber(num) {
@@ -46,7 +46,7 @@ export function formatReportNumber(num) {
 
 function reportsDirFor(options = {}) {
   return resolve(options.reportsDir
-    || process.env.CAREER_OPS_REPORTS_DIR
+    || process.env.JOBBER_REPORTS_DIR
     || join(options.rootDir || ROOT, 'reports'));
 }
 
@@ -163,9 +163,9 @@ export async function reserveReportNumbers(count = 1, options = {}) {
   mkdirSync(reportsDir, { recursive: true });
 
   const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
     tracker: trackerPath,
     ...options.lockOptions,
   });
@@ -226,9 +226,9 @@ export async function releaseReportNumbers(numbers, options = {}) {
 
   const trackerPath = trackerPathFor(options);
   const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
     tracker: trackerPath,
     ...options.lockOptions,
   });
@@ -249,9 +249,9 @@ export async function gcStaleReportReservations(options = {}) {
 
   const trackerPath = trackerPathFor(options);
   const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
-    timeoutMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.CAREER_OPS_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
+    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
+    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
+    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
     tracker: trackerPath,
     ...options.lockOptions,
   });
@@ -286,6 +286,36 @@ export async function gcStaleReportReservations(options = {}) {
 async function runCli() {
   const [,, cmd, arg] = process.argv;
   const options = {};
+
+  if (cmd === '--help' || cmd === '-h') {
+    process.stdout.write(
+`Usage: node reserve-report-num.mjs [options]
+
+Reserve the next report number atomically (shared lock + O_EXCL sentinel).
+
+Options:
+  --count <N>       Reserve N consecutive numbers (prints e.g. 042-049)
+  --release <NNN>   Release a reservation (single number or range 042-049)
+  --release <NNN>-<MMM>
+                    Release a range of reservations
+  --gc              Garbage-collect stale reservation sentinels (> 4h old)
+  -h, --help        Show this help
+
+Run with no arguments to reserve the next single number.
+`);
+    return 0;
+  }
+
+  if (cmd === '--capabilities') {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — exits 0 with JSON, no lock, no writes.
+    process.stdout.write(JSON.stringify({
+      script: 'reserve-report-num.mjs', version: 1,
+      flags: ['--count', '--release', '--gc', '--help'],
+      description: 'Atomic report-number allocator',
+    }));
+    return 0;
+  }
 
   if (cmd === '--release') {
     const match = (arg || '').match(/^(\d+)(?:-(\d+))?$/);

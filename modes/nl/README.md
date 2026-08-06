@@ -1,4 +1,6 @@
-# career-ops -- Nederlandstalige modi (`modes/nl/`)
+# Jobber -- Nederlandstalige modi (`modes/nl/`)
+
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
 
 Dit bestand bevat Nederlandse vertalingen van de belangrijkste carrièremodi voor kandidaten die zich richten op de Nederlandstalige arbeidsmarkt (Nederland en Vlaanderen).
 

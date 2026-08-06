@@ -4,7 +4,7 @@
  * generate-pdf.mjs — HTML → PDF via Playwright
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--max-pages=N] [--strict-pages]
+ *   node jobber/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--report=NNN] [--allow-reorder] [--max-pages=N] [--strict-pages]
  *
  * --report links the generated PDF to its tracker/report number and records
  * the linkage in data/pdf-index.tsv so downstream tools (e.g. the TUI
@@ -26,7 +26,6 @@
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
-import { chromium } from 'playwright';
 import { resolve, dirname, relative, sep, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
@@ -330,7 +329,7 @@ function countRenderedPdfPages(pdfBuffer) {
 
 /**
  * Convert a path to a repo-relative manifest entry, or blank if it is unknown
- * or outside the career-ops repository.
+ * or outside the Jobber repository.
  *
  * @param {string} pathValue - Absolute or cwd-relative filesystem path.
  * @returns {string} Repo-relative path using forward slashes, or an empty string.
@@ -351,7 +350,7 @@ export function injectPrintPageCss(html, format = 'a4') {
   // hardcoded value would silently win the cascade and make style.margin
   // ineffective (#1837 review). PDF_PAGE_MARGIN is only the fallback for a
   // template that never declares --page-margin at all.
-  const pageStyle = `<style id="career-ops-page-setup">\n@page { size: ${pageSize}; margin: var(--page-margin, ${PDF_PAGE_MARGIN}); }\n</style>`;
+  const pageStyle = `<style id="jobber-page-setup">\n@page { size: ${pageSize}; margin: var(--page-margin, ${PDF_PAGE_MARGIN}); }\n</style>`;
 
   if (/<\/head>/i.test(html)) {
     return html.replace(/<\/head>/i, `${pageStyle}\n</head>`);
@@ -369,7 +368,7 @@ export function injectPrintPageCss(html, format = 'a4') {
  * report number to the exact PDF (and its source HTML for regeneration).
  *
  * Columns: report \t pdf \t html \t format \t date — paths relative to the
- * career-ops root with forward slashes. One row per PDF path; when a report
+ * Jobber root with forward slashes. One row per PDF path; when a report
  * number is given, older rows for that report are dropped too (regenerated
  * CVs supersede stale entries). The file is gitignored: it references
  * gitignored output/ artifacts and is meaningless on another machine.
@@ -415,6 +414,32 @@ function updatePDFManifest(reportNum, pdfPath, htmlPath, format) {
 async function generatePDF() {
   const args = process.argv.slice(2);
 
+  if (args.includes('--capabilities')) {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — before playwright import, exits 0.
+    console.log(JSON.stringify({
+      script: 'generate-pdf.mjs', version: 1,
+      flags: ['--format', '--report', '--max-pages', '--allow-reorder', '--strict-pages', '--help'],
+      description: 'Render an HTML file (ATS-safe) to PDF via Playwright',
+    }));
+    process.exit(0);
+  }
+
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node generate-pdf.mjs <input.html> <output.pdf> [options]');
+    console.log('');
+    console.log('Render an already-built HTML file (ATS-safe) to PDF via Playwright.');
+    console.log('');
+    console.log('Options:');
+    console.log('  --format=letter|a4   Page format (default a4)');
+    console.log('  --report=NNN         Tracker/report number for the pdf-index manifest');
+    console.log('  --max-pages=N        Cap output at N pages (default 2)');
+    console.log('  --allow-reorder      Allow section reordering during normalization');
+    console.log('  --strict-pages       Fail if the page cap is exceeded');
+    console.log('  -h, --help           Show this help');
+    process.exit(0);
+  }
+
   // Parse arguments
   let inputPath, outputPath, format = 'a4', reportNum = '', allowReorder = false;
   let maxPages = 2, maxPagesInput = '2', strictPages = false;
@@ -444,7 +469,7 @@ async function generatePDF() {
     console.error('This script only converts an already-built HTML file to PDF.');
     console.error('The input HTML is produced by the pdf mode: the agent fills cv-template.html');
     console.error('with content tailored to the specific job (see modes/pdf.md) — there is no');
-    console.error('mechanical markdown-to-HTML step by design. Run `/career-ops pdf` in your AI');
+    console.error('mechanical markdown-to-HTML step by design. Run `/jobber pdf` in your AI');
     console.error('CLI to drive the full flow end to end.');
     process.exit(1);
   }
@@ -597,11 +622,18 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
 
   // Write HTML to a temp file in baseDir so page.goto() gives a file://
   // origin that can load local images, fonts, and other resources.
-  const tmpHtmlPath = resolve(baseDir, `.career-ops-render-${randomUUID()}.html`);
+  const tmpHtmlPath = resolve(baseDir, `.jobber-render-${randomUUID()}.html`);
   const { writeFile, unlink } = await import('fs/promises');
   await writeFile(tmpHtmlPath, html, 'utf-8');
 
-  const launchBrowser = opts.launchBrowser || ((options) => chromium.launch(options));
+  const launchBrowser = opts.launchBrowser || (async (options) => {
+    // Lazy playwright: importing 'playwright' at module top costs ~15s
+    // (Chromium resolves its browser path at import time). PDF generation
+    // always needs the browser, but --help / --capabilities / validation
+    // paths must not pay that cost.
+    const { chromium } = await import('playwright');
+    return chromium.launch(options);
+  });
   let browser = null;
   try {
     browser = await launchBrowser({ headless: true });

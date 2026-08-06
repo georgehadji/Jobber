@@ -11,10 +11,10 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/santifer/career-ops/dashboard/internal/data"
-	"github.com/santifer/career-ops/dashboard/internal/i18n"
-	"github.com/santifer/career-ops/dashboard/internal/model"
-	"github.com/santifer/career-ops/dashboard/internal/theme"
+	"github.com/santifer/jobber/dashboard/internal/data"
+	"github.com/santifer/jobber/dashboard/internal/i18n"
+	"github.com/santifer/jobber/dashboard/internal/model"
+	"github.com/santifer/jobber/dashboard/internal/theme"
 )
 
 // ViewerClosedMsg is emitted when the viewer is dismissed.
@@ -39,14 +39,14 @@ type ViewerModel struct {
 	height          int
 	theme           theme.Theme
 	app             model.CareerApplication
-	careerOpsPath   string
+	jobberPath   string
 	coverLetterPath string
 	statusPicker    bool
 	statusCursor    int
 }
 
 // NewViewerModel creates a new file viewer for the given path.
-func NewViewerModel(t theme.Theme, careerOpsPath, path, title string, width, height int, app model.CareerApplication) ViewerModel {
+func NewViewerModel(t theme.Theme, jobberPath, path, title string, width, height int, app model.CareerApplication) ViewerModel {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		content = []byte("Error reading file: " + err.Error())
@@ -64,8 +64,8 @@ func NewViewerModel(t theme.Theme, careerOpsPath, path, title string, width, hei
 		height:          height,
 		theme:           t,
 		app:             app,
-		careerOpsPath:   careerOpsPath,
-		coverLetterPath: parseCoverLetterPath(lines, careerOpsPath),
+		jobberPath:   jobberPath,
+		coverLetterPath: parseCoverLetterPath(lines, jobberPath),
 	}
 	m.rebuildRender()
 	return m
@@ -73,7 +73,7 @@ func NewViewerModel(t theme.Theme, careerOpsPath, path, title string, width, hei
 
 // parseCoverLetterPath scans the report lines for a "PDF generated: output/..." line
 // inside a "## Cover Letter Draft" section and returns the relative path if the file exists.
-func parseCoverLetterPath(lines []string, careerOpsPath string) string {
+func parseCoverLetterPath(lines []string, jobberPath string) string {
 	inCoverSection := false
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
@@ -87,7 +87,7 @@ func parseCoverLetterPath(lines []string, careerOpsPath string) string {
 		if inCoverSection {
 			if m := reCoverLetterPDF.FindStringSubmatch(line); m != nil {
 				relPath := m[1]
-				abs := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+				abs := filepath.Join(jobberPath, filepath.FromSlash(relPath))
 				if _, err := os.Stat(abs); err == nil {
 					return relPath
 				}
@@ -188,7 +188,7 @@ func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 
 		case "L":
 			if m.coverLetterPath != "" {
-				fullPath := filepath.Join(m.careerOpsPath, filepath.FromSlash(m.coverLetterPath))
+				fullPath := filepath.Join(m.jobberPath, filepath.FromSlash(m.coverLetterPath))
 				return m, func() tea.Msg { return ViewerOpenCoverLetterMsg{Path: fullPath} }
 			}
 		}
@@ -542,7 +542,7 @@ func (m ViewerModel) renderInlineElementsAs(line string, baseColor lipgloss.Colo
 	var b strings.Builder
 	rest := line
 	for rest != "" {
-		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle, m.careerOpsPath)
+		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle, m.jobberPath)
 		if match == nil {
 			b.WriteString(baseStyle.Render(rest))
 			break
@@ -561,7 +561,7 @@ type inlineMatch struct {
 	rendered   string
 }
 
-func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style, careerOpsPath string) *inlineMatch {
+func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style, jobberPath string) *inlineMatch {
 	var best *inlineMatch
 	consider := func(loc []int, rendered func() string) {
 		if loc == nil || (best != nil && loc[0] >= best.start) {
@@ -592,10 +592,10 @@ func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style, c
 		consider(loc, func() string {
 			relPath := s[loc[0]:loc[1]]
 			styled := linkStyle.Render(relPath)
-			if careerOpsPath == "" {
+			if jobberPath == "" {
 				return styled
 			}
-			joined := filepath.Join(careerOpsPath, filepath.FromSlash(relPath))
+			joined := filepath.Join(jobberPath, filepath.FromSlash(relPath))
 			absPath, err := filepath.Abs(joined)
 			if err != nil {
 				return styled

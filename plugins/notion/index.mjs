@@ -14,7 +14,7 @@
 // to the user's own Notion DB. The core never writes to Notion as primary, and
 // modes are not edited — this lives entirely behind `node plugins.mjs run notion`.
 //
-// Setup: a "Career Ops" parent page in Notion containing an "Applications" DB
+// Setup: a "Jobber" parent page in Notion containing an "Applications" DB
 // with Company / Role / Status / Score / URL properties, shared with your
 // internal integration. Enable in config/plugins.yml; keys in .env.
 //
@@ -34,7 +34,7 @@ function clientFromCtx(ctx) {
 async function applicationsDb(client) {
   const dbs = await client.resolveDBs();
   const apps = dbs['Applications'];
-  if (!apps) throw new Error('No "Applications" database found under the Career Ops page — create it and share the integration with it.');
+  if (!apps) throw new Error('No "Applications" database found under the Jobber page — create it and share the integration with it.');
   return apps;
 }
 

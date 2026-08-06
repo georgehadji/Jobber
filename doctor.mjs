@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * doctor.mjs — Setup validation for career-ops
+ * doctor.mjs — Setup validation for Jobber
  * Checks all prerequisites and prints a pass/fail checklist.
  */
 
@@ -135,7 +135,7 @@ function isPlaywrightMcpConfigured(root, activeCli) {
   });
 }
 
-// CLI resolution: --cli flag > $CAREER_OPS_CLI > .env (CAREER_OPS_CLI=...) >
+// CLI resolution: --cli flag > $JOBBER_CLI > .env (JOBBER_CLI=...) >
 // default ('claude'). An unknown value at ANY level returns the sentinel
 // 'unknown' and produces no output — CLI-dependent checks are silently
 // skipped. .env parsing is best-effort: missing file is normal, malformed
@@ -147,20 +147,20 @@ function resolveActiveCli() {
     }
     return { cli: cliFlag, source: 'flag' };
   }
-  if (process.env.CAREER_OPS_CLI) {
-    if (!VALID_CLIS.includes(process.env.CAREER_OPS_CLI)) {
-      return { cli: 'unknown', source: 'env', warning: `CAREER_OPS_CLI="${process.env.CAREER_OPS_CLI}" is not a recognized CLI. Valid: ${VALID_CLIS.join(', ')}.` };
+  if (process.env.JOBBER_CLI) {
+    if (!VALID_CLIS.includes(process.env.JOBBER_CLI)) {
+      return { cli: 'unknown', source: 'env', warning: `JOBBER_CLI="${process.env.JOBBER_CLI}" is not a recognized CLI. Valid: ${VALID_CLIS.join(', ')}.` };
     }
-    return { cli: process.env.CAREER_OPS_CLI, source: 'env' };
+    return { cli: process.env.JOBBER_CLI, source: 'env' };
   }
   // .env is best-effort: missing file → fall through to default. dotenv does
   // not throw on a missing path when `quiet: true`, so no try/catch is needed.
   dotenv.config({ path: join(projectRoot, '.env'), quiet: true });
-  if (process.env.CAREER_OPS_CLI) {
-    if (!VALID_CLIS.includes(process.env.CAREER_OPS_CLI)) {
-      return { cli: 'unknown', source: '.env', warning: `CAREER_OPS_CLI in .env is not a recognized CLI. Valid: ${VALID_CLIS.join(', ')}.` };
+  if (process.env.JOBBER_CLI) {
+    if (!VALID_CLIS.includes(process.env.JOBBER_CLI)) {
+      return { cli: 'unknown', source: '.env', warning: `JOBBER_CLI in .env is not a recognized CLI. Valid: ${VALID_CLIS.join(', ')}.` };
     }
-    return { cli: process.env.CAREER_OPS_CLI, source: '.env' };
+    return { cli: process.env.JOBBER_CLI, source: '.env' };
   }
   return { cli: 'claude', source: 'default' };
 }
@@ -214,6 +214,72 @@ function checkScanExtractor(root) {
     };
   }
   return { pass: true, label: 'Scan extractor: mcp (default)' };
+}
+
+// Profile shape validation (#improvement-plan A6). doctor.mjs already checks
+// that config/profile.yml *exists*; nothing checked what's *in it*. A typo here
+// — spend_tier outside its three values, language.modes_dir pointing nowhere,
+// culture_screen.require the wrong shape — degrades every evaluation silently,
+// which is the worst failure mode in the system. These are explicit `if` checks
+// (no schema language for one file): each failure names the key and the fix.
+// WARN-not-FAIL: a half-valid profile should surface clearly but never block
+// the onboarding readiness that existence alone gates.
+function checkProfile(root) {
+  const profilePath = join(root, 'config', 'profile.yml');
+  if (!existsSync(profilePath)) {
+    return { pass: true, label: 'Profile shape: no profile.yml yet (skipped, setup first)' };
+  }
+  let doc;
+  try {
+    doc = yaml.load(readFileSync(profilePath, 'utf8')) ?? {};
+  } catch (err) {
+    return { warn: true, label: `Profile YAML failed to parse`, fix: [`config/profile.yml is not valid YAML: ${err.message}`] };
+  }
+
+  const problems = [];
+
+  // spend_tier must be one of the three documented tiers (modes/_shared.md).
+  const SPEND_TIERS = ['economy', 'standard', 'premium'];
+  if (doc.spend_tier !== undefined && doc.spend_tier !== null) {
+    if (!SPEND_TIERS.includes(String(doc.spend_tier).toLowerCase())) {
+      problems.push(`spend_tier "${doc.spend_tier}" is not one of ${SPEND_TIERS.join(' | ')}`);
+    }
+  }
+
+  // language.output is the authoritative prose language; must be a non-empty string.
+  const lang = doc.language ?? {};
+  if (lang.output !== undefined && lang.output !== null && typeof lang.output !== 'string') {
+    problems.push('language.output must be a language code string (e.g. "en", "de", "zh-CN")');
+  }
+
+  // language.modes_dir, when set, must point at an existing market-mode directory.
+  if (typeof lang.modes_dir === 'string' && lang.modes_dir.trim() !== '') {
+    if (!existsSync(join(root, ...lang.modes_dir.split('/')))) {
+      problems.push(`language.modes_dir "…/${lang.modes_dir}" points at a directory that does not exist`);
+    }
+  }
+
+  // culture_screen.require must be a list of criteria strings (modes/_shared.md § Cultural).
+  if (doc.culture_screen !== undefined && doc.culture_screen !== null) {
+    if (doc.culture_screen.require !== undefined) {
+      if (!Array.isArray(doc.culture_screen.require) || doc.culture_screen.require.some(c => typeof c !== 'string' || c.trim() === '')) {
+        problems.push('culture_screen.require must be a list of non-empty criteria strings (e.g. ["Small flat teams", "Async-first"])');
+      }
+    }
+    if (doc.culture_screen.deprioritize_if_absent !== undefined
+        && typeof doc.culture_screen.deprioritize_if_absent !== 'boolean') {
+      problems.push('culture_screen.deprioritize_if_absent must be boolean (true or false)');
+    }
+  }
+
+  if (problems.length === 0) {
+    return { pass: true, label: 'Profile shape: valid (spend_tier, language, culture_screen)' };
+  }
+  return {
+    warn: true,
+    label: `Profile shape: ${problems.length} issue${problems.length === 1 ? '' : 's'} in config/profile.yml`,
+    fix: problems.map(p => `${p} (config/profile.yml)`),
+  };
 }
 
 // Single source of truth for the four user-layer prerequisites (the list
@@ -342,7 +408,7 @@ async function checkPortalSlugs(root) {
 
 const PIPELINE_SKELETON = `# Pipeline — Pending URLs
 
-Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
+Paste job URLs below as \`- [ ] {url}\` then run \`/jobber pipeline\`.
 
 ## Pending
 
@@ -393,7 +459,7 @@ function checkPlugins(root) {
 }
 
 async function main() {
-  console.log('\ncareer-ops doctor');
+  console.log('\nJobber doctor');
   console.log('================\n');
 
   const { cli: activeCli, source: cliSource, warning: cliWarning } = resolveActiveCli();
@@ -404,6 +470,7 @@ async function main() {
     await checkPlaywright(),
     checkPlaywrightMcp(projectRoot, activeCli),
     checkScanExtractor(projectRoot),
+    checkProfile(projectRoot),
     ...USER_LAYER_PREREQS.map(checkPrereq),
     checkFonts(),
     checkAutoDir('data'),

@@ -1,5 +1,5 @@
 {
-  "name": "career-ops",
+  "name": "jobber",
   "version": "1.24.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, Codex, OpenCode, Antigravity, Grok, Qwen, Kimi, Copilot)",
   "private": true,
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "doctor": "node doctor.mjs",
+    "test": "node test-runner.mjs",
     "or": "node openrouter-runner.mjs",
     "or:scan": "node openrouter-runner.mjs scan",
     "or:pipeline": "node openrouter-runner.mjs pipeline",
@@ -58,7 +59,10 @@
     "build:dashboard": "node build-dashboard.mjs",
     "serve:dashboard": "cd dashboard && go run . --path ..",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium --with-deps",
-    "manifesto": "node manifesto.mjs"
+    "manifesto": "node manifesto.mjs",
+    "check:types": "tsc --noEmit",
+    "knip": "knip",
+    "lint": "biome lint ."
   },
   "keywords": [
     "ai",
@@ -66,8 +70,7 @@
     "claude-code",
     "opencode",
     "career",
-    "career-ops",
-    "careerops",
+    "jobber",
     "automation",
     "codex",
     "antigravity",
@@ -81,13 +84,19 @@
   "homepage": "https://santifer.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/santifer/career-ops"
+    "url": "https://github.com/santifer/jobber"
   },
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "dotenv": "^17.0.0",
-    "js-yaml": "^4.1.1",
+    "@google/generative-ai": "0.24.1",
+    "dotenv": "17.0.0",
+    "js-yaml": "4.1.1",
     "playwright": "1.62.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "~2.0.0",
+    "@types/node": "^22.0.0",
+    "knip": "^5.0.0",
+    "typescript": "~5.9.0"
   }
 }

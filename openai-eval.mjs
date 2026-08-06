@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * openai-eval.mjs — OpenAI-compatible Job Offer Evaluator for career-ops
+ * openai-eval.mjs — OpenAI-compatible Job Offer Evaluator for Jobber
  *
  * Evaluate job offers with ANY OpenAI-compatible chat endpoint instead of Claude.
  * Works with OpenAI, OpenRouter, Together, Groq, DeepSeek, Zhipu GLM, MiniMax,
@@ -29,13 +29,23 @@
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { outputLanguageInstruction, parseOutputLanguage } from './profile-language.mjs';
 import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
-import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './utils/token-tracker.mjs';
+import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './lib/token-tracker.mjs';
 import { buildBudgetedPrompt } from './lib/context-budget.mjs';
+import {
+  PROVIDERS,
+  defaultModelFor,
+  baseUrlFor,
+  apiKeyFor,
+  contextTokensFor,
+  requestTimeoutMsFor,
+} from './lib/llm-providers.mjs';
+import { readContextFile, parseScoreSummary, slugifyCompany } from './eval-runner.mjs';
 
 const tracker = new TokenAccumulator();
 tracker.recordZeroToken('scan');
@@ -57,7 +67,18 @@ const PATHS = {
   cv:        join(ROOT, 'cv.md'),
   profileYml: join(ROOT, 'config', 'profile.yml'),
   reports:    join(ROOT, 'reports'),
+  trackerAdditions: join(ROOT, 'batch', 'tracker-additions'),
 };
+
+// ── D-04: tracker-cell helpers (consistent with gemini-eval.mjs) ─
+function tsvSafe(value) {
+  return String(value ?? '').replace(/[\t\r\n]+/g, ' ').trim();
+}
+function normalizedTrackerScore(value) {
+  const clean = tsvSafe(value);
+  if (!clean || clean === '?') return 'N/A';
+  return /\/5$/i.test(clean) ? clean : `${clean}/5`;
+}
 
 // ---------------------------------------------------------------------------
 // CLI argument parsing
@@ -67,7 +88,7 @@ const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
-║       career-ops — OpenAI-compatible Evaluator (any endpoint)     ║
+║       Jobber — OpenAI-compatible Evaluator (any endpoint)     ║
 ╚══════════════════════════════════════════════════════════════════╝
 
   Evaluate a job offer with any OpenAI-compatible chat API instead of Claude.
@@ -79,9 +100,9 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <id>     Model id            (env OPENAI_MODEL, default gpt-4o-mini)
+    --model <id>     Model id            (env ${PROVIDERS.openai.modelEnv}, default ${PROVIDERS.openai.defaultModel})
     --url <base>     OpenAI-compatible base URL, including any /v1
-                     (env OPENAI_BASE_URL, default https://api.openai.com/v1)
+                     (env ${PROVIDERS.openai.baseUrlEnv}, default ${PROVIDERS.openai.baseUrl})
     --key <key>      API key             (env OPENAI_API_KEY)
     --no-save        Do not save report to reports/ directory
     --no-compress    Skip token budget compression (full context injection)
@@ -107,9 +128,9 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText     = '';
-let modelName  = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-let baseUrl    = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
-let apiKey     = process.env.OPENAI_API_KEY || '';
+let modelName  = defaultModelFor('openai');
+let baseUrl    = baseUrlFor('openai');
+let apiKey     = apiKeyFor('openai');
 let saveReport = true;
 let noCompress = false;
 
@@ -201,23 +222,18 @@ const endpoint = `${baseUrl}/chat/completions`;
  * @param {string} label - Human-readable label used in the warning and placeholder.
  * @returns {string} File contents or a "[label not found]" placeholder.
  */
-function readFile(path, label) {
-  if (!existsSync(path)) {
-    console.warn(`⚠️   ${label} not found at: ${path}`);
-    return `[${label} not found — skipping]`;
-  }
-  return readFileSync(path, 'utf-8').trim();
-}
+// readContextFile (below) lives in eval-runner.mjs — shared across the three
+// evaluators; the doc comment moved with it.
 
 // ---------------------------------------------------------------------------
 // Load context files
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext = readFile(PATHS.shared,     'modes/_shared.md');
-const ofertaLogic   = readFile(PATHS.oferta,     'modes/oferta.md');
-const cvContent     = readFile(PATHS.cv,         'cv.md');
-const profileYml    = readFile(PATHS.profileYml, 'config/profile.yml');
+const sharedContext = readContextFile(PATHS.shared,     'modes/_shared.md');
+const ofertaLogic   = readContextFile(PATHS.oferta,     'modes/oferta.md');
+const cvContent     = readContextFile(PATHS.cv,         'cv.md');
+const profileYml    = readContextFile(PATHS.profileYml, 'config/profile.yml');
 const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
 // ---------------------------------------------------------------------------
@@ -230,7 +246,7 @@ const { contextBody, budgetReport } = buildBudgetedPrompt({
   profileYml,
   jdText,
   noCompress,
-  maxTokens: 128_000, // gpt-4o-mini context window
+  maxTokens: contextTokensFor('openai'),
 });
 
 // Log token budget info
@@ -246,7 +262,7 @@ if (budgetReport.compressed) {
   console.log(`📊  Token budget: ${budgetReport.totalTokens} tokens (within ${budgetReport.budget} limit)`);
 }
 
-const systemPrompt = `You are career-ops, an AI-powered job search assistant.
+const systemPrompt = `You are Jobber, an AI-powered job search assistant.
 You evaluate job offers against the user's CV using a structured A-G scoring system.
 
 Your evaluation methodology is defined below. Follow it exactly.
@@ -294,9 +310,11 @@ export function buildSystemMessage(prompt, host) {
 // ---------------------------------------------------------------------------
 // Call the OpenAI-compatible endpoint
 // ---------------------------------------------------------------------------
-const timeoutMs = parseInt(process.env.OPENAI_TIMEOUT_MS || '300000', 10);
-if (Number.isNaN(timeoutMs) || timeoutMs <= 0) {
-  console.error(`❌  Invalid OPENAI_TIMEOUT_MS: "${process.env.OPENAI_TIMEOUT_MS}" — must be a positive integer (milliseconds).`);
+let timeoutMs;
+try {
+  timeoutMs = requestTimeoutMsFor('openai');
+} catch (err) {
+  console.error(`❌  ${err.message}`);
   process.exit(1);
 }
 
@@ -357,32 +375,17 @@ try {
 // Display evaluation
 // ---------------------------------------------------------------------------
 console.log('\n' + '═'.repeat(66));
-console.log('  CAREER-OPS EVALUATION — powered by ' + modelName + ' (' + endpointHost + ')');
+console.log('  JOBBER EVALUATION — powered by ' + modelName + ' (' + endpointHost + ')');
 console.log('═'.repeat(66) + '\n');
 console.log(evaluationText);
 
 // ---------------------------------------------------------------------------
 // Parse score summary
 // ---------------------------------------------------------------------------
-const summaryMatch = evaluationText.match(/---SCORE_SUMMARY---\s*([\s\S]*?)---END_SUMMARY---/);
-
-let company    = 'unknown';
-let role       = 'unknown';
-let score      = '?';
-let archetype  = 'unknown';
-let legitimacy = 'unknown';
-
-if (summaryMatch) {
-  const extract = (key) => {
-    const m = summaryMatch[1].match(new RegExp(`${key}:\\s*(.+)`));
-    return m ? m[1].trim() : 'unknown';
-  };
-  company    = extract('COMPANY');
-  role       = extract('ROLE');
-  score      = extract('SCORE');
-  archetype  = extract('ARCHETYPE');
-  legitimacy = extract('LEGITIMACY');
-}
+// ---------------------------------------------------------------------------
+// Parse score summary (shared parser — eval-runner.mjs)
+// ---------------------------------------------------------------------------
+const { company, role, score, archetype, legitimacy } = parseScoreSummary(evaluationText);
 
 // ---------------------------------------------------------------------------
 // Save report
@@ -418,8 +421,34 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
     writeFileSync(reportPath, reportContent, 'utf-8');
     console.log(`\n✅  Report saved: reports/${filename}`);
 
-    console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score}/5 | Evaluated | ❌ | [${num}](reports/${filename}) |`);
+    // D-04: write tracker TSV + merge, consistent with gemini-eval.mjs.
+    try {
+      mkdirSync(PATHS.trackerAdditions, { recursive: true });
+      const trackerFields = [
+        String(parseInt(num, 10)),
+        today,
+        tsvSafe(company),
+        tsvSafe(role),
+        'Evaluated',
+        normalizedTrackerScore(score),
+        '❌',
+        `[${num}](reports/${filename})`,
+        `OpenAI evaluation (${modelName})`,
+      ];
+      writeFileSync(`${PATHS.trackerAdditions}/${num}-${companySlug}.tsv`, `${trackerFields.join('\t')}\n`, 'utf-8');
+      console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
+
+      try {
+        execFileSync(process.execPath, [join(ROOT, 'merge-tracker.mjs')], {
+          cwd: ROOT, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        console.log('📊  Tracker merged into data/applications.md.');
+      } catch (mergeErr) {
+        console.warn(`⚠️   Could not merge tracker addition: ${mergeErr.message}`);
+      }
+    } catch (tsvErr) {
+      console.warn(`⚠️   Could not save tracker addition: ${tsvErr.message}`);
+    }
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   } finally {

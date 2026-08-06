@@ -22,7 +22,7 @@ const ICIMS_MAX_PAGES = 30;
 const INTER_PAGE_DELAY_MS = 150;
 
 // iCIMS serves 200 directly to a browser-like UA (verified live); the default
-// career-ops UA risks WAF interstitials, same as workday/glints.
+// Jobber UA risks WAF interstitials, same as workday/glints.
 const HEADERS = {
   'user-agent': BROWSER_LIKE_USER_AGENT,
   'accept-language': 'en-US,en;q=0.9',
@@ -130,7 +130,7 @@ export default {
       prevFirstUrl = pageJobs[0].url;
       all.push(...pageJobs);
     }
-    if (!reachedEnd) all.icimsTruncated = true;
+    if (!reachedEnd) /** @type {any} */ (all).icimsTruncated = true;
     return all;
   },
 

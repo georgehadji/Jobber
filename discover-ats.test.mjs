@@ -14,7 +14,7 @@
  *
  * Run: node discover-ats.test.mjs
  *
- * Issue #1864 — github.com/santifer/career-ops
+ * Issue #1864 — github.com/santifer/jobber
  */
 
 import {
@@ -331,7 +331,7 @@ try {
   // path writes nothing and reports previewOnly.
   const previewOut = execFileSync('node', [scriptPath], {
     encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath),
-    env: { ...process.env, CAREER_OPS_PORTALS: scratchPortals },
+    env: { ...process.env, JOBBER_PORTALS: scratchPortals },
   });
   const previewJson = JSON.parse(previewOut);
   ok('default run → previewOnly true', previewJson.metadata.previewOnly === true);
@@ -342,7 +342,7 @@ try {
   // no write, file unchanged). Proves the flag parses and the guard holds.
   const writeOut = execFileSync('node', [scriptPath, '--write'], {
     encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath),
-    env: { ...process.env, CAREER_OPS_PORTALS: scratchPortals },
+    env: { ...process.env, JOBBER_PORTALS: scratchPortals },
   });
   const writeJson = JSON.parse(writeOut);
   ok('--write accepted (valid JSON, exit 0)', typeof writeJson === 'object' && 'metadata' in writeJson);
@@ -351,7 +351,7 @@ try {
   // --dry-run is accepted as a harmless alias for the default (no write).
   const aliasOut = execFileSync('node', [scriptPath, '--dry-run'], {
     encoding: 'utf-8', timeout: 15000, cwd: dirname(scriptPath),
-    env: { ...process.env, CAREER_OPS_PORTALS: scratchPortals },
+    env: { ...process.env, JOBBER_PORTALS: scratchPortals },
   });
   ok('--dry-run still accepted (no-op alias)', JSON.parse(aliasOut).metadata.written === false);
 } finally {

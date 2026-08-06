@@ -39,13 +39,13 @@
  *   4 lock timeout
  *
  * Env overrides (mirroring merge-tracker.mjs / followup-cadence.mjs):
- *   CAREER_OPS_TRACKER                     tracker path
- *   CAREER_OPS_FOLLOWUPS                   follow-ups path
- *   CAREER_OPS_PROFILE                     profile.yml path (cadence overrides)
- *   CAREER_OPS_FOLLOWUPS_LOCK              lock directory override
- *   CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS   lock acquire timeout
- *   CAREER_OPS_FOLLOWUPS_LOCK_RETRY_MS     lock retry interval
- *   CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS     stale-lock recovery threshold
+ *   JOBBER_TRACKER                     tracker path
+ *   JOBBER_FOLLOWUPS                   follow-ups path
+ *   JOBBER_PROFILE                     profile.yml path (cadence overrides)
+ *   JOBBER_FOLLOWUPS_LOCK              lock directory override
+ *   JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS   lock acquire timeout
+ *   JOBBER_FOLLOWUPS_LOCK_RETRY_MS     lock retry interval
+ *   JOBBER_FOLLOWUPS_LOCK_STALE_MS     stale-lock recovery threshold
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync, rmSync, statSync, realpathSync } from 'fs';
@@ -63,7 +63,7 @@ import {
   addDays,
 } from './followup-cadence.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 
 /** Canonical header written when data/follow-ups.md doesn't exist yet. */
 export const FOLLOWUPS_HEADER = [
@@ -73,7 +73,7 @@ export const FOLLOWUPS_HEADER = [
   '|---|---|---|---|---|---|---|---|',
 ].join('\n');
 
-const FOLLOWUPS_LOCK_PREFIX = 'career-ops-followups-';
+const FOLLOWUPS_LOCK_PREFIX = 'jobber-followups-';
 
 /**
  * Minimum age before directory age alone may condemn an ownerless lock.
@@ -156,16 +156,16 @@ export function formatPinLine(appNum, nextDate, setDate) {
 
 function resolveTrackerPath(override) {
   if (override) return override;
-  if (process.env.CAREER_OPS_TRACKER) return process.env.CAREER_OPS_TRACKER;
-  return existsSync(join(CAREER_OPS, 'data/applications.md'))
-    ? join(CAREER_OPS, 'data/applications.md')
-    : join(CAREER_OPS, 'applications.md');
+  if (process.env.JOBBER_TRACKER) return process.env.JOBBER_TRACKER;
+  return existsSync(join(JOBBER, 'data/applications.md'))
+    ? join(JOBBER, 'data/applications.md')
+    : join(JOBBER, 'applications.md');
 }
 
 function resolveFollowupsPath(override) {
   if (override) return override;
-  if (process.env.CAREER_OPS_FOLLOWUPS) return process.env.CAREER_OPS_FOLLOWUPS;
-  return join(CAREER_OPS, 'data/follow-ups.md');
+  if (process.env.JOBBER_FOLLOWUPS) return process.env.JOBBER_FOLLOWUPS;
+  return join(JOBBER, 'data/follow-ups.md');
 }
 
 function envInt(name, fallback) {
@@ -234,7 +234,7 @@ function resolveFollowupsLockDir(envValue, lockKey) {
 function resolveLockDir(explicitLockDir, followupsPath) {
   if (explicitLockDir) return explicitLockDir;
   const lockKey = createHash('sha256').update(followupsPath).digest('hex').slice(0, 16);
-  return resolveFollowupsLockDir(process.env.CAREER_OPS_FOLLOWUPS_LOCK, lockKey);
+  return resolveFollowupsLockDir(process.env.JOBBER_FOLLOWUPS_LOCK, lockKey);
 }
 
 function sleep(ms) {
@@ -276,11 +276,27 @@ function readLockOwner(lockDir) {
  * @param {number} staleMs - Age threshold for metadata-free lock recovery, floored at OWNERLESS_GRACE_MS.
  * @returns {boolean} True when the caller may remove and recreate the lock.
  */
+/**
+ * Resolve the ownerless-lock grace floor.
+ *
+ * Overridable because the floor is a *wall-clock* window, and a test that
+ * stamps a lock N ms old then asserts it is still respected only holds if the
+ * child process boots and checks within the remaining budget. Node startup on
+ * a loaded machine can exceed the 1s default on its own, which made that
+ * assertion track machine load rather than lock semantics. Tests widen the
+ * floor instead of racing it; the production default is unchanged.
+ *
+ * @returns {number} Grace floor in milliseconds.
+ */
+function ownerlessGraceMs() {
+  return envInt('JOBBER_FOLLOWUPS_LOCK_GRACE_MS', OWNERLESS_GRACE_MS);
+}
+
 function lockCanRecover(lockDir, staleMs) {
   const owner = readLockOwner(lockDir);
   if (owner?.pid) return !processIsAlive(owner.pid);
   try {
-    return Date.now() - statSync(lockDir).mtimeMs > Math.max(staleMs, OWNERLESS_GRACE_MS);
+    return Date.now() - statSync(lockDir).mtimeMs > Math.max(staleMs, ownerlessGraceMs());
   } catch {
     return true;
   }
@@ -451,9 +467,9 @@ export async function seedFollowup(appNum, options = {}) {
 
   const lockDir = resolveLockDir(options.lockDir, followupsPath);
   const lock = await acquireFollowupsLock(lockDir, followupsPath, {
-    timeoutMs: options.lockTimeoutMs ?? envInt('CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS', 60_000),
-    retryMs: options.lockRetryMs ?? envInt('CAREER_OPS_FOLLOWUPS_LOCK_RETRY_MS', 75),
-    staleMs: options.lockStaleMs ?? envInt('CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS', 10 * 60_000),
+    timeoutMs: options.lockTimeoutMs ?? envInt('JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS', 60_000),
+    retryMs: options.lockRetryMs ?? envInt('JOBBER_FOLLOWUPS_LOCK_RETRY_MS', 75),
+    staleMs: options.lockStaleMs ?? envInt('JOBBER_FOLLOWUPS_LOCK_STALE_MS', 10 * 60_000),
   });
 
   try {
@@ -522,9 +538,9 @@ export async function seedBackfill(options = {}) {
 
   const lockDir = resolveLockDir(options.lockDir, followupsPath);
   const lock = await acquireFollowupsLock(lockDir, followupsPath, {
-    timeoutMs: options.lockTimeoutMs ?? envInt('CAREER_OPS_FOLLOWUPS_LOCK_TIMEOUT_MS', 60_000),
-    retryMs: options.lockRetryMs ?? envInt('CAREER_OPS_FOLLOWUPS_LOCK_RETRY_MS', 75),
-    staleMs: options.lockStaleMs ?? envInt('CAREER_OPS_FOLLOWUPS_LOCK_STALE_MS', 10 * 60_000),
+    timeoutMs: options.lockTimeoutMs ?? envInt('JOBBER_FOLLOWUPS_LOCK_TIMEOUT_MS', 60_000),
+    retryMs: options.lockRetryMs ?? envInt('JOBBER_FOLLOWUPS_LOCK_RETRY_MS', 75),
+    staleMs: options.lockStaleMs ?? envInt('JOBBER_FOLLOWUPS_LOCK_STALE_MS', 10 * 60_000),
   });
 
   try {

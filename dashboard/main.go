@@ -10,11 +10,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/santifer/career-ops/dashboard/internal/data"
-	"github.com/santifer/career-ops/dashboard/internal/i18n"
-	"github.com/santifer/career-ops/dashboard/internal/model"
-	"github.com/santifer/career-ops/dashboard/internal/theme"
-	"github.com/santifer/career-ops/dashboard/internal/ui/screens"
+	"github.com/santifer/jobber/dashboard/internal/data"
+	"github.com/santifer/jobber/dashboard/internal/i18n"
+	"github.com/santifer/jobber/dashboard/internal/model"
+	"github.com/santifer/jobber/dashboard/internal/theme"
+	"github.com/santifer/jobber/dashboard/internal/ui/screens"
 )
 
 type viewState int
@@ -30,13 +30,13 @@ type appModel struct {
 	viewer          screens.ViewerModel
 	progress        screens.ProgressModel
 	state           viewState
-	careerOpsPath   string
+	jobberPath   string
 	theme           theme.Theme
 	progressMetrics model.ProgressMetrics
 }
 
 func (m *appModel) reloadPipelineData() {
-	apps := data.ParseApplications(m.careerOpsPath)
+	apps := data.ParseApplications(m.jobberPath)
 	metrics := data.ComputeMetrics(apps)
 	m.progressMetrics = data.ComputeProgressMetrics(apps)
 	m.pipeline = m.pipeline.WithReloadedData(apps, metrics)
@@ -75,12 +75,12 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case screens.PipelineLoadReportMsg:
-		archetype, tldr, remote, comp := data.LoadReportSummary(msg.CareerOpsPath, msg.ReportPath)
+		archetype, tldr, remote, comp := data.LoadReportSummary(msg.JobberPath, msg.ReportPath)
 		m.pipeline.EnrichReport(msg.ReportPath, archetype, tldr, remote, comp)
 		return m, nil
 
 	case screens.PipelineUpdateStatusMsg:
-		err := data.UpdateApplicationStatus(msg.CareerOpsPath, msg.App, msg.NewStatus)
+		err := data.UpdateApplicationStatus(msg.JobberPath, msg.App, msg.NewStatus)
 		if err != nil {
 			// Log the error but still reload data to keep UI consistent
 			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
@@ -90,7 +90,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case screens.PipelineUpdateStatusAndNotesMsg:
 		// Issue 1380: atomic status + notes write from the discard reason picker.
-		err := data.UpdateApplicationStatusAndNotes(msg.CareerOpsPath, msg.App, msg.NewStatus, msg.NotesAppend)
+		err := data.UpdateApplicationStatusAndNotes(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: status+notes update failed: %v\n", err)
 		}
@@ -104,7 +104,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineOpenReportMsg:
 		m.viewer = screens.NewViewerModel(
 			m.theme,
-			m.careerOpsPath,
+			m.jobberPath,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
 			msg.App,
@@ -128,7 +128,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.ViewerUpdateStatusMsg:
 		normalized := data.NormalizeStatus(msg.NewStatus)
 		if normalized == "hired" {
-			err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
+			err := data.UpdateApplicationStatus(m.jobberPath, msg.App, msg.NewStatus)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
 				m.reloadPipelineData()
@@ -146,7 +146,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		err := data.UpdateApplicationStatus(m.careerOpsPath, msg.App, msg.NewStatus)
+		err := data.UpdateApplicationStatus(m.jobberPath, msg.App, msg.NewStatus)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
 		}
@@ -204,7 +204,7 @@ func openCmd(target string) tea.Cmd {
 	}
 }
 
-// runGeneratePDF shells out to node generate-pdf.mjs in the career-ops root,
+// runGeneratePDF shells out to node generate-pdf.mjs in the Jobber root,
 // opens the resulting PDF on success, and reports the outcome back to the
 // pipeline screen as a PipelinePDFGeneratedMsg. Runs in a tea.Cmd goroutine,
 // so the UI stays responsive while Chromium renders.
@@ -218,12 +218,12 @@ func runGeneratePDF(msg screens.PipelineGeneratePDFMsg) tea.Cmd {
 			args = append(args, "--report="+msg.ReportNumber)
 		}
 		cmd := exec.Command("node", args...)
-		cmd.Dir = msg.CareerOpsPath
+		cmd.Dir = msg.JobberPath
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			return screens.PipelinePDFGeneratedMsg{Err: summarizeCmdError(err, out)}
 		}
-		pdfAbs := filepath.Join(msg.CareerOpsPath, filepath.FromSlash(msg.PDFPath))
+		pdfAbs := filepath.Join(msg.JobberPath, filepath.FromSlash(msg.PDFPath))
 		if err := openWithDefaultApp(pdfAbs); err != nil {
 			return screens.PipelinePDFGeneratedMsg{Err: fmt.Sprintf("PDF generated but could not open: %v", err)}
 		}
@@ -256,7 +256,7 @@ func (m appModel) View() string {
 }
 
 func main() {
-	pathFlag := flag.String("path", ".", "Path to career-ops directory")
+	pathFlag := flag.String("path", ".", "Path to Jobber directory")
 	langFlag := flag.String("lang", "", "Language for UI (en, tr). Defaults to auto-detect/en.")
 	flag.Parse()
 
@@ -266,12 +266,12 @@ func main() {
 		i18n.SetLang(os.Getenv("LANG"))
 	}
 
-	careerOpsPath := *pathFlag
+	jobberPath := *pathFlag
 
 	// Load applications
-	apps := data.ParseApplications(careerOpsPath)
+	apps := data.ParseApplications(jobberPath)
 	if apps == nil {
-		fmt.Fprintf(os.Stderr, "Error: could not find applications.md in %s or %s/data/\n", careerOpsPath, careerOpsPath)
+		fmt.Fprintf(os.Stderr, "Error: could not find applications.md in %s or %s/data/\n", jobberPath, jobberPath)
 		os.Exit(1)
 	}
 
@@ -281,13 +281,13 @@ func main() {
 
 	// Batch-load all report summaries
 	t := theme.NewTheme("auto")
-	pm := screens.NewPipelineModel(t, apps, metrics, careerOpsPath, 120, 40)
+	pm := screens.NewPipelineModel(t, apps, metrics, jobberPath, 120, 40)
 
 	for _, app := range apps {
 		if app.ReportPath == "" {
 			continue
 		}
-		archetype, tldr, remote, comp := data.LoadReportSummary(careerOpsPath, app.ReportPath)
+		archetype, tldr, remote, comp := data.LoadReportSummary(jobberPath, app.ReportPath)
 		if archetype != "" || tldr != "" || remote != "" || comp != "" {
 			pm.EnrichReport(app.ReportPath, archetype, tldr, remote, comp)
 		}
@@ -295,7 +295,7 @@ func main() {
 
 	m := appModel{
 		pipeline:        pm,
-		careerOpsPath:   careerOpsPath,
+		jobberPath:   jobberPath,
 		theme:           t,
 		progressMetrics: progressMetrics,
 	}

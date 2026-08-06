@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * gemini-eval.mjs — Gemini-powered Job Offer Evaluator for career-ops
+ * gemini-eval.mjs — Gemini-powered Job Offer Evaluator for Jobber
  *
  * A free-tier alternative to the Claude-based pipeline.
  * Reads evaluation logic from modes/oferta.md + modes/_shared.md,
@@ -14,7 +14,8 @@
  * Requires:
  *   GEMINI_API_KEY in .env (or environment variable)
  *
- * Default model: gemini-3.6-flash (GA July 2026)
+ * Default model: see PROVIDERS.gemini.defaultModel in lib/llm-providers.mjs
+ * (the single source of truth for every model id, key name and base URL).
  *
  * Model deprecation reference (per Google AI for Developers, May 2026):
  *   - gemini-2.0-flash       deprecated 2026-03-31  (do not use — generateContent 404)
@@ -27,13 +28,14 @@
  * Source: https://ai.google.dev/gemini-api/docs/models
  *
  * When the current default approaches its deprecation date, bump
- * `modelName` below and the `--model` examples accordingly.
+ * `PROVIDERS.gemini.defaultModel` in lib/llm-providers.mjs — nothing here.
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { TokenAccumulator, formatBreakdown } from './utils/token-tracker.mjs';
+import { TokenAccumulator, formatBreakdown } from './lib/token-tracker.mjs';
+import { readContextFile, parseScoreSummary, slugifyCompany } from './eval-runner.mjs';
 
 const tracker = new TokenAccumulator();
 tracker.recordZeroToken('scan');
@@ -44,6 +46,13 @@ import {
   formatReportNumber, releaseReportNumbers, reserveReportNumbers,
 } from './reserve-report-num.mjs';
 import { buildBudgetedPrompt } from './lib/context-budget.mjs';
+import {
+  PROVIDERS,
+  defaultModelFor,
+  contextTokensFor,
+  apiKeyFor,
+  MAX_OUTPUT_TOKENS,
+} from './lib/llm-providers.mjs';
 
 // ---------------------------------------------------------------------------
 // Bootstrap: load .env before anything else
@@ -67,7 +76,7 @@ const PATHS = {
   shared:      join(ROOT, 'modes', '_shared.md'),
   oferta:      join(ROOT, 'modes', 'oferta.md'),
   // Canonical skill path referenced in Issue #344
-  evaluate:    join(ROOT, '.claude', 'skills', 'career-ops', 'SKILL.md'),
+  evaluate:    join(ROOT, '.claude', 'skills', 'jobber', 'SKILL.md'),
   cv:          join(ROOT, 'cv.md'),
   profile:     join(ROOT, 'modes', '_profile.md'),
   profileYml:  join(ROOT, 'config', 'profile.yml'),
@@ -84,7 +93,7 @@ const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
-║           career-ops — Gemini Evaluator (free-tier)             ║
+║           Jobber — Gemini Evaluator (free-tier)             ║
 ╚══════════════════════════════════════════════════════════════════╝
 
   Evaluate a job offer using Google Gemini instead of Claude.
@@ -92,11 +101,11 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   USAGE
     node gemini-eval.mjs "<JD text>"
     node gemini-eval.mjs --file ./jds/my-job.txt
-    node gemini-eval.mjs --model gemini-3.6-flash "<JD text>"
+    node gemini-eval.mjs --model ${PROVIDERS.gemini.defaultModel} "<JD text>"
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <name>   Gemini model to use (default: gemini-3.6-flash)
+    --model <name>   Gemini model to use (default: ${PROVIDERS.gemini.defaultModel})
     --no-save        Do not save report to reports/ directory
     --no-compress    Skip token budget compression (full context injection)
     --help           Show this help
@@ -115,7 +124,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText = '';
-let modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+let modelName = defaultModelFor('gemini');
 let saveReport = true;
 let noCompress = false;
 
@@ -146,7 +155,7 @@ if (!jdText) {
 // ---------------------------------------------------------------------------
 // Validate environment
 // ---------------------------------------------------------------------------
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = apiKeyFor('gemini');
 if (!apiKey) {
   console.error(`
 ❌  GEMINI_API_KEY not found.
@@ -161,13 +170,9 @@ if (!apiKey) {
 // ---------------------------------------------------------------------------
 // File helpers
 // ---------------------------------------------------------------------------
-function readFile(path, label) {
-  if (!existsSync(path)) {
-    console.warn(`⚠️   ${label} not found at: ${path}`);
-    return `[${label} not found — skipping]`;
-  }
-  return readFileSync(path, 'utf-8').trim();
-}
+// readContextFile and slugifyCompany live in eval-runner.mjs (shared across
+// the three evaluators). tsvSafe/normalizedTrackerScore stay local here —
+// gemini's tracker-row contract differs from the shared normalization.
 
 function validateEvaluationShape(text) {
   const issues = [];
@@ -206,15 +211,8 @@ function validateEvaluationShape(text) {
   }
 
   if (issues.length > 0) {
-    throw new Error(`Gemini returned an invalid career-ops report: ${issues.join('; ')}`);
+    throw new Error(`Gemini returned an invalid Jobber report: ${issues.join('; ')}`);
   }
-}
-
-function slugifyCompany(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'unknown';
 }
 
 function tsvSafe(value) {
@@ -232,11 +230,11 @@ function normalizedTrackerScore(value) {
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
-const sharedContext  = readFile(PATHS.shared,      'modes/_shared.md');
-const ofertaLogic    = readFile(PATHS.oferta,      'modes/oferta.md');
-const cvContent      = readFile(PATHS.cv,          'cv.md');
-const profileContent = readFile(PATHS.profile,     'modes/_profile.md');
-const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
+const sharedContext  = readContextFile(PATHS.shared,      'modes/_shared.md');
+const ofertaLogic    = readContextFile(PATHS.oferta,      'modes/oferta.md');
+const cvContent      = readContextFile(PATHS.cv,          'cv.md');
+const profileContent = readContextFile(PATHS.profile,     'modes/_profile.md');
+const profileYml     = readContextFile(PATHS.profileYml,  'config/profile.yml');
 const languageInstruction = outputLanguageInstruction(parseOutputLanguage(profileYml));
 
 // ---------------------------------------------------------------------------
@@ -250,7 +248,7 @@ const { contextBody, budgetReport } = buildBudgetedPrompt({
   profileContent,
   jdText,
   noCompress,
-  maxTokens: 1_048_576, // gemini-2.5-flash context window
+  maxTokens: contextTokensFor('gemini'),
 });
 
 // Log token budget info
@@ -266,7 +264,7 @@ if (budgetReport.compressed) {
   console.log(`📊  Token budget: ${budgetReport.totalTokens} tokens (within ${budgetReport.budget} limit)`);
 }
 
-const systemPrompt = `You are career-ops, an AI-powered job search assistant.
+const systemPrompt = `You are Jobber, an AI-powered job search assistant.
 You evaluate job offers against the user's CV using a structured A-G scoring system.
 
 Your evaluation methodology is defined below. Follow it exactly.
@@ -311,7 +309,7 @@ const model = genAI.getGenerativeModel({
   systemInstruction: systemPrompt,
   generationConfig: {
     temperature: 0.4,      // deterministic enough for structured evaluation
-    maxOutputTokens: 8192, // full 7-block evaluation
+    maxOutputTokens: MAX_OUTPUT_TOKENS, // full 7-block evaluation
   },
 });
 
@@ -349,42 +347,16 @@ try {
 // Display evaluation
 // ---------------------------------------------------------------------------
 console.log('\n' + '═'.repeat(66));
-console.log('  CAREER-OPS EVALUATION — powered by Google Gemini');
+console.log('  JOBBER EVALUATION — powered by Google Gemini');
 console.log('═'.repeat(66) + '\n');
 console.log(evaluationText);
 
 // ---------------------------------------------------------------------------
-// Parse score summary
+// Parse score summary (shared parser — eval-runner.mjs)
 // ---------------------------------------------------------------------------
-const summaryMatch = evaluationText.match(
-  /---SCORE_SUMMARY---\s*([\s\S]*?)---END_SUMMARY---/
-);
-
-let company    = 'unknown';
-let role       = 'unknown';
-let score      = '?';
-let archetype  = 'unknown';
-let legitimacy = 'unknown';
-
-if (summaryMatch) {
-  const block = summaryMatch[1];
-  const extract = (key) => {
-    const prefix = `${key}:`;
-    const lines = block.split('\n');
-    for (const line of lines) {
-      const trimmed = line.trimStart();
-      if (trimmed.startsWith(prefix)) {
-        return trimmed.slice(prefix.length).trim();
-      }
-    }
-    return 'unknown';
-  };
-  company    = extract('COMPANY');
-  role       = extract('ROLE');
-  score      = extract('SCORE');
-  archetype  = extract('ARCHETYPE');
-  legitimacy = extract('LEGITIMACY');
-}
+const {
+  company, role, score, archetype, legitimacy,
+} = parseScoreSummary(evaluationText);
 
 // ---------------------------------------------------------------------------
 // Save report

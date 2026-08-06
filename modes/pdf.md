@@ -197,7 +197,7 @@ The `{{PHOTO}}` slot is **off by default** and intentionally market-specific:
 
 When set, the photo floats into the top corner (mirrored for RTL/Arabic) and the header/summary text wraps beside it; `.cv-photo` in `cv-template.html` controls its size and framing.
 
-Local photo paths may be absolute or relative to the career-ops project root.
+Local photo paths may be absolute or relative to the Jobber project root.
 The builder validates PNG, JPEG, WebP, and GIF inputs and inlines them as data
 URLs so the saved HTML remains portable. To inspect the result before PDF
 generation, run:
@@ -300,7 +300,7 @@ CV PDF generated: output/{path}
 
 Want a cover letter for this role too?
 - Say "yes" or "cover letter" to generate one now
-- Or run `/career-ops cover {slug}` later
+- Or run `/jobber cover {slug}` later
 ```
 
 Apply `voice-dna.md` (if present) to the cover letter — full guardrail, conversational voice included (Tier 1 + Tier 2). The CV PDF itself stays Tier 1 only (formal ATS register). See `_writing.md` → Voice DNA.

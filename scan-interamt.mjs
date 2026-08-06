@@ -357,7 +357,7 @@ async function main() {
     }
   }
 
-  console.log('\n→ Run /career-ops pipeline to evaluate new offers.');
+  console.log('\n→ Run /jobber pipeline to evaluate new offers.');
 }
 
 main().catch(err => {

@@ -21,7 +21,7 @@
  * vCard output is VERSION:3.0 (iOS/Android import compat; 4.0 support is
  * still patchy): CRLF line endings, 75-octet line folding counted in BYTES
  * that never splits a multibyte UTF-8 sequence, and a stable deterministic
- * UID (careerops-{uidPart(name)}--{uidPart(company)}, where each part is
+ * UID (jobber-{uidPart(name)}--{uidPart(company)}, where each part is
  * {slug}-{8-hex sha1 of the normalized value}, or just the bare 8-hex hash when
  * the slug is empty — e.g. a fully CJK name; the normalized-value hash folds
  * case/whitespace/NFC noise yet keeps values that slug identically, like
@@ -45,9 +45,9 @@ import { join, dirname, resolve, relative, isAbsolute, basename, sep } from 'pat
 import { fileURLToPath, pathToFileURL } from 'url';
 import { createHash } from 'crypto';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const CONTACTS_PATH = join(CAREER_OPS, 'data/contacts.tsv');
-const DEFAULT_VCF = join(CAREER_OPS, 'output/contacts.vcf');
+const JOBBER = dirname(fileURLToPath(import.meta.url));
+const CONTACTS_PATH = join(JOBBER, 'data/contacts.tsv');
+const DEFAULT_VCF = join(JOBBER, 'output/contacts.vcf');
 
 const args = process.argv.slice(2);
 const summaryMode = args.includes('--summary');
@@ -183,7 +183,7 @@ export function uidPart(raw) {
 // The per-part raw-value hash (see uidPart) is the collision guard; the `--`
 // join keeps the boundary readable and unambiguous on top of that.
 export function contactUid(c) {
-  return `careerops-${uidPart(c.name)}--${uidPart(c.company)}`;
+  return `jobber-${uidPart(c.name)}--${uidPart(c.company)}`;
 }
 
 // One contact -> one folded, CRLF-joined VCARD block (no trailing CRLF).
@@ -213,7 +213,7 @@ export function contactToVcard(contact, { callerId = false, rev = null } = {}) {
   if (c.email) lines.push(`EMAIL;TYPE=INTERNET:${escapeVcard(c.email)}`);
   if (c.linkedin) lines.push(`URL:${escapeVcard(c.linkedin)}`);
   if (noteParts.length) lines.push(`NOTE:${escapeVcard(noteParts.join(' — '))}`);
-  lines.push('CATEGORIES:career-ops');
+  lines.push('CATEGORIES:jobber');
   lines.push(`REV:${rev ?? new Date().toISOString()}`);
   lines.push('END:VCARD');
   return lines.map(foldLine).join('\r\n');
@@ -259,7 +259,7 @@ function selfTest() {
   assert(quality.invalidTypes.length === 1 && quality.invalidTypes[0].type === 'recruter', 'off-enum type reported');
   assert(contacts.some(c => c.name === 'Typo Type'), 'off-enum type contact kept, not dropped');
   assert(contacts.find(c => c.name === 'Tab Note').notes === 'part one part two', 'tab inside notes folds back (tab -> space), tail cells never dropped');
-  assert(quality.duplicates.length === 1 && /^careerops-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}$/.test(quality.duplicates[0].uid) && quality.duplicates[0].count === 2,
+  assert(quality.duplicates.length === 1 && /^jobber-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}$/.test(quality.duplicates[0].uid) && quality.duplicates[0].count === 2,
     'duplicate name+company reported in quality.duplicates');
 
   // escaping — backslash first, then ; , then newline
@@ -309,9 +309,9 @@ function selfTest() {
     'NFC vs NFD composition folds to one normalized hash input');
   assert(normalizeForHash('José') !== normalizeForHash('Josè'), 'normalizeForHash keeps é vs è distinct');
   const cjkCard = contactToVcard(contacts[1], { rev: '2026-07-09T00:00:00.000Z' });
-  assert(/UID:careerops-[0-9a-f]{8}--globex-[0-9a-f]{8}\r\n/.test(cjkCard), 'CJK contact UID: bare hash name part, slug+hash company part');
+  assert(/UID:jobber-[0-9a-f]{8}--globex-[0-9a-f]{8}\r\n/.test(cjkCard), 'CJK contact UID: bare hash name part, slug+hash company part');
   const card = contactToVcard(contacts[0], { rev: '2026-07-09T00:00:00.000Z' });
-  assert(/UID:careerops-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}\r\n/.test(card), 'UID = careerops-{uidPart(name)}--{uidPart(company)}');
+  assert(/UID:jobber-jane-doe-[0-9a-f]{8}--acme-[0-9a-f]{8}\r\n/.test(card), 'UID = jobber-{uidPart(name)}--{uidPart(company)}');
   assert(card === contactToVcard(contacts[0], { rev: '2026-07-09T00:00:00.000Z' }), 'card deterministic under pinned REV');
   assert(card.includes('FN:Jane Doe\r\n'), 'default FN is the plain name');
   assert(card.includes('N:Doe;Jane;;;'), 'N best-effort Last;First split');
@@ -414,9 +414,9 @@ function writeVcf(contacts, quality) {
   const outPath = resolve(vcfPathArg ?? DEFAULT_VCF);
   // Path-traversal guard: keep the vCard write inside the project directory so
   // a crafted output argument (e.g. "../../etc/cron.d/x") can't escape the
-  // repo. Anchored to the repo root (CAREER_OPS), not process.cwd() — see the
+  // repo. Anchored to the repo root (JOBBER), not process.cwd() — see the
   // generate-pdf.mjs precedent. Cheap lexical gate first…
-  const relOut = relative(CAREER_OPS, outPath);
+  const relOut = relative(JOBBER, outPath);
   if (relOut === '' || relOut.startsWith('..') || isAbsolute(relOut)) {
     console.error(`Refusing to write the vCard outside the project directory: ${outPath}`);
     process.exit(1);
@@ -436,7 +436,7 @@ function writeVcf(contacts, quality) {
     console.error(`Refusing to write the vCard outside the project directory: ${outPath}`);
     process.exit(1);
   }
-  const repoReal = realpathSync(CAREER_OPS);
+  const repoReal = realpathSync(JOBBER);
   const canonicalTarget = existsSync(outPath)
     ? realpathSync(outPath)
     : join(realpathSync(dirname(outPath)), basename(outPath));

@@ -1,10 +1,12 @@
-# Geteilter Kontext -- career-ops (Deutsch)
+# Geteilter Kontext -- Jobber (Deutsch)
+
+<!-- jobber-source-sha: 5d80485de48a2b88d16c105c52e99d45fef521fb -->
 
 <!-- ============================================================
      ANPASSEN DIESER DATEI
      ============================================================
-     Diese Datei enthält den geteilten Kontext für alle career-ops-Modi
-     in der deutschen Variante. Bevor du career-ops verwendest, MUSST du:
+     Diese Datei enthält den geteilten Kontext für alle jobber-Modi
+     in der deutschen Variante. Bevor du Jobber verwendest, MUSST du:
      1. config/profile.yml mit deinen persönlichen Daten ausfüllen
      2. cv.md im Projekt-Root anlegen (Lebenslauf in Markdown)
      3. (Optional) article-digest.md mit deinen Proof Points anlegen

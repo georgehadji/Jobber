@@ -6,7 +6,7 @@
  * batch-runner.sh records every evaluated offer in batch/batch-state.tsv, but
  * it never writes back to data/pipeline.md. Offers processed via batch mode
  * therefore stay in the "Pendientes" section forever — the next scan and the
- * next `/career-ops pipeline` run both re-surface them, and they get evaluated
+ * next `/jobber pipeline` run both re-surface them, and they get evaluated
  * again (duplicate reports, duplicate tracker rows).
  *
  * WHAT THIS DOES
@@ -26,7 +26,7 @@ import { join, dirname, resolve, relative, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { normalizeReportLink } from './tracker-links.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 const DRY_RUN = process.argv.includes('--dry-run');
 
 if (process.argv.includes('-h') || process.argv.includes('--help')) {
@@ -48,7 +48,7 @@ function resolveInsideRepo(inputPath, fallbackPath, flag) {
   const abs = resolve(inputPath || fallbackPath);
   let repoReal, targetReal;
   try {
-    repoReal = realpathSync(CAREER_OPS);
+    repoReal = realpathSync(JOBBER);
     // The target may not exist yet (e.g. a fresh --pipeline path); fall back to
     // its parent directory so the symlink-resolved boundary check still applies.
     targetReal = existsSync(abs) ? realpathSync(abs) : realpathSync(dirname(abs));
@@ -70,12 +70,12 @@ function resolveInsideRepo(inputPath, fallbackPath, flag) {
   return abs;
 }
 
-const defaultPipeline = existsSync(join(CAREER_OPS, 'data/pipeline.md'))
-  ? join(CAREER_OPS, 'data/pipeline.md')
-  : join(CAREER_OPS, 'pipeline.md');
+const defaultPipeline = existsSync(join(JOBBER, 'data/pipeline.md'))
+  ? join(JOBBER, 'data/pipeline.md')
+  : join(JOBBER, 'pipeline.md');
 const PIPELINE_FILE = resolveInsideRepo(argValue('--pipeline'), defaultPipeline, '--pipeline');
-const STATE_FILE = resolveInsideRepo(argValue('--state'), join(CAREER_OPS, 'batch/batch-state.tsv'), '--state');
-const REPORTS_DIR = join(CAREER_OPS, 'reports');
+const STATE_FILE = resolveInsideRepo(argValue('--state'), join(JOBBER, 'batch/batch-state.tsv'), '--state');
+const REPORTS_DIR = join(JOBBER, 'reports');
 
 // ---- guards ----
 if (!existsSync(STATE_FILE)) {
@@ -227,7 +227,7 @@ for (let i = pendStart + 1; i < pendEnd; i++) {
   const pdf = resolvePdf(reportFile);
   const num = parseInt(done.reportNum, 10);
 
-  const reportLink = normalizeReportLink(`[${num}](reports/${reportFile})`, dirname(PIPELINE_FILE), CAREER_OPS);
+  const reportLink = normalizeReportLink(`[${num}](reports/${reportFile})`, dirname(PIPELINE_FILE), JOBBER);
   movedProcLines.push(`- [x] ${reportLink} | ${url} | ${company} | ${role} | ${score} | PDF ${pdf}`);
   moved.push({ url, company, role, num, score });
   procUrls.add(url);

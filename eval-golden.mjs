@@ -28,6 +28,7 @@ import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+import { parse } from './lib/score-summary.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = join(ROOT, 'evals', 'golden');
@@ -102,23 +103,10 @@ function fixtureModelId(m) {
 // Shared SCORE_SUMMARY parser — same contract every *-eval.mjs already emits.
 // ---------------------------------------------------------------------------
 
-/**
- * Parse the machine-readable summary block produced by the eval scripts.
- *
- * @param {string} text - Raw model output containing a SCORE_SUMMARY block.
- * @returns {{score: number, archetype: string}} Parsed score/archetype; score
- *   is NaN and archetype is "unknown" when the block is missing or malformed.
- */
+// Shared SCORE_SUMMARY parser — one contract, living in lib/ so gemini/ollama/
+// openai eval + eval-golden cannot drift apart. #improvement-plan M2.
 function parseSummary(text) {
-  const block = text.match(/---SCORE_SUMMARY---\s*([\s\S]*?)---END_SUMMARY---/);
-  const field = (key) => {
-    const m = block && block[1].match(new RegExp(`${key}:\\s*(.+)`));
-    return m ? m[1].trim() : '';
-  };
-  return {
-    score:     parseFloat(field('SCORE')),
-    archetype: (field('ARCHETYPE') || 'unknown').toLowerCase(),
-  };
+  return parse(text);
 }
 
 // ---------------------------------------------------------------------------
@@ -178,6 +166,39 @@ function median(xs) {
 }
 
 // ---------------------------------------------------------------------------
+// Fabrication-bait guard (#improvement-plan M4)
+// ---------------------------------------------------------------------------
+// A golden case may carry an optional `bait` object: `{ tool: string }`. When
+// present, the JD deliberately names a tool/concept the candidate never worked
+// on in a context inviting tool-of-trade conflation ("the candidate uses X" →
+// "the candidate built X") — the project's central ethical claim. The guard
+// makes that mechanically checkable on the *full candidate output*: if the
+// output asserts authorship of the baited tool, the case fails outright
+// (regardless of archetype/score agreement), because a fabricated claim in one
+// row invalidates the whole run. Absent `bait`, the guard is a no-op so the
+// other golden cases are unaffected.
+const FABRICATION_CLAIMS = /(^|\b)(built|created|authored|developed|designed|wrote|maintain(?:er|ed|s)? of|co-author(?:ed)?)\b[^.!?\n]{0,60}\b/gi;
+
+function fabricationViolation(tc, output) {
+  if (!tc || typeof tc.bait?.tool !== 'string') return null;
+  const tool = tc.bait.tool;
+  const lower = String(output ?? '');
+  // Normalize so hyphen/case variants of the tool still match the claim.
+  const folded = lower.replace(/[^a-z0-9 +]+/gi, ' ');
+  const toolFolded = tool.toLowerCase();
+  const matches = folded.match(FABRICATION_CLAIMS) || [];
+  for (const raw of matches) {
+    const claim = raw.replace(/[^a-z0-9 +]+/gi, ' ').toLowerCase().trim();
+    // Only a claim that names the baited tool itself is fabrication; claiming
+    // to have used a tool is fine, claiming to have *authored* it is not.
+    if (claim.includes(toolFolded)) {
+      return `candidate output asserts authorship of "${tool}" ("${raw.trim()}") — fabricated claim in a fabrication-bait case`;
+    }
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 if (!existsSync(goldenDir)) {
@@ -219,8 +240,18 @@ const latencies = [];
 for (const tc of cases) {
   const t0 = Date.now();
   let parsed;
+  let outputText = '';
   try {
-    parsed = parseSummary(getCompletion(tc));
+    outputText = getCompletion(tc);
+    // Fabrication-bait guard first: a fabricated authorship claim fails the
+    // case outright, before any archetype/score scoring (#improvement-plan M4).
+    const fab = fabricationViolation(tc, outputText);
+    if (fab) {
+      console.log(`  ❌ ${tc.id}: ${fab}`);
+      deltas.push(NaN);
+      continue;
+    }
+    parsed = parseSummary(outputText);
   } catch (err) {
     console.log(`  ❌ ${tc.id}: ${err.message}`);
     deltas.push(NaN);

@@ -32,11 +32,21 @@ import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
-const OBS_PATH = join(CAREER_OPS, 'data/salary-observations.tsv');
-const REPORTS_DIR = join(CAREER_OPS, 'reports');
+const JOBBER = dirname(fileURLToPath(import.meta.url));
+const OBS_PATH = join(JOBBER, 'data/salary-observations.tsv');
+const REPORTS_DIR = join(JOBBER, 'reports');
 
 const args = process.argv.slice(2);
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no analysis runs.
+if (args.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'salary-gap.mjs', version: 1,
+    flags: ['--summary', '--self-test', '--stated-for', '--help'],
+    description: 'Desired/advertised/actual comp gap analyzer',
+  }));
+  process.exit(0);
+}
 const summaryMode = args.includes('--summary');
 const selfTestMode = args.includes('--self-test');
 const statedForFlagIdx = args.indexOf('--stated-for');
@@ -570,7 +580,7 @@ function collectSources() {
 }
 
 function loadProfileDesired() {
-  const profilePath = join(CAREER_OPS, 'config/profile.yml');
+  const profilePath = join(JOBBER, 'config/profile.yml');
   if (!existsSync(profilePath)) return null;
   try {
     const profile = yaml.load(readFileSync(profilePath, 'utf-8'));

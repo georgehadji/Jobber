@@ -117,7 +117,7 @@ export default {
     for (let page = 1; page <= maxPages; page++) {
       const url = `${FEED_BASE}?per_page=${PER_PAGE}&expand[]=company&page=${page}`;
       // redirect:'error' prevents SSRF via server-side redirects
-      const json = await ctx.fetchJson(url, { redirect: 'error' });
+      const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error' }));
       if (!json || !Array.isArray(json.data)) {
         throw new Error(
           `getonbrd: unexpected API response on page ${page} — expected { data: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`,

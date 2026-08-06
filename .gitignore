@@ -114,7 +114,7 @@ package-lock.json
 plan/
 
 # Web — runtime cache/history the dashboard writes locally; nothing here is tracked.
-.career-ops-web/
+.jobber-web/
 
 # Upgrade-test fixtures are fictional system-layer data, never user data
 # (see DATA_CONTRACT.md). Re-include them past the unanchored user-layer
@@ -123,3 +123,24 @@ plan/
 
 # Local reference clones — third-party repos, not part of this project
 Github Projects/
+
+# Batch run artifacts + personal search data. The batch/ rules above cover
+# state/input/logs; these cover what a real run actually leaves behind — job
+# URLs, scores and result sets are the user's search history, and the repo is
+# public. Without these, a single `git add -A` publishes it.
+batch/*.pid
+batch/*.paused
+batch/runner-session.log
+batch/passing-urls.txt
+batch/sample-evaluation-batch.txt
+batch/pending-batches/
+batch_*.json
+batch_*.txt
+vmi.json
+
+# Ephemeral test scratch (test-all.mjs fixtures, coverage probes)
+.tmp-script-test-*/
+.tmp-coverage-guard-probe/
+
+# Local MCP server config — per-machine tooling, not project config
+.mcp.json

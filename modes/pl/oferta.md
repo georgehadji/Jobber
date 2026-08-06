@@ -1,5 +1,7 @@
 # Tryb: oferta -- Pełna ocena A-F
 
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
 Gdy kandydat wkleja ofertę (tekst lub URL), ZAWSZE dostarcz wszystkie 6 bloków.
 
 ## Krok 0 -- Wykrycie archetypu

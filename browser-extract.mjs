@@ -37,7 +37,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { LIVENESS_CONTEXT_OPTIONS, rejectPrivateOrInvalid } from './liveness-browser.mjs';
 
-const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const JOBBER = dirname(fileURLToPath(import.meta.url));
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const HYDRATION_WAIT_MS = 2_000;
@@ -61,7 +61,7 @@ const NAV_LABEL_STOPWORDS = new Set([
  * @param {string} [profilePath]
  * @returns {'cli'|'mcp'}
  */
-export function resolveExtractorMode(profilePath = join(CAREER_OPS, 'config/profile.yml')) {
+export function resolveExtractorMode(profilePath = join(JOBBER, 'config/profile.yml')) {
   try {
     if (!existsSync(profilePath)) return 'mcp';
     const raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
@@ -182,7 +182,22 @@ async function readDom(page) {
 }
 
 async function main() {
-  const { url, mode, max, maxChars, timeout } = parseArgs(process.argv.slice(2));
+  const args = process.argv.slice(2);
+  if (args.includes('--capabilities')) {
+    // --capabilities contract (T4): machine-readable flag list for
+    // validate-mode-invocations.mjs — before playwright import, exits 0.
+    console.log(JSON.stringify({
+      script: 'browser-extract.mjs', version: 1,
+      flags: ['--mode', '--max', '--max-chars', '--timeout', '--help'],
+      description: 'Extract distilled JD/listing text from a page via Playwright',
+    }));
+    process.exit(0);
+  }
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node browser-extract.mjs <url> [--mode jd|listing] [--max N] [--max-chars N] [--timeout MS]\n\nExtract the distilled main text of a job posting (or listing) page for evaluation.\n\nOptions:\n  --mode jd|listing   What to extract (default jd)\n  --max N             Max results for listing mode\n  --max-chars N       Truncate extracted text to N chars\n  --timeout MS        Navigation timeout in ms\n  -h, --help          Show this help');
+    process.exit(0);
+  }
+  const { url, mode, max, maxChars, timeout } = parseArgs(args);
 
   if (!url) {
     console.error(JSON.stringify({ error: 'usage: browser-extract.mjs <url> [--mode jd|listing] [--max N] [--max-chars N]', code: 'no_url' }));

@@ -10,7 +10,7 @@ import (
 )
 
 func TestAcquireTrackerLockRecoversDeadOwner(t *testing.T) {
-	t.Setenv("CAREER_OPS_TRACKER_LOCK", "")
+	t.Setenv("JOBBER_TRACKER_LOCK", "")
 	_, trackerPath := writeTracker(t, insertedColumnTracker)
 	lockDir, err := trackerLockDirFor(trackerPath)
 	if err != nil {
@@ -47,7 +47,7 @@ func TestAcquireTrackerLockRecoversDeadOwner(t *testing.T) {
 }
 
 func TestTrackerLockReleaseDoesNotRemoveReplacementOwner(t *testing.T) {
-	t.Setenv("CAREER_OPS_TRACKER_LOCK", "")
+	t.Setenv("JOBBER_TRACKER_LOCK", "")
 	_, trackerPath := writeTracker(t, insertedColumnTracker)
 	lock, err := acquireTrackerLock(trackerPath, trackerLockOptions{
 		timeout: time.Second,

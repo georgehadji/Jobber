@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "*.mjs",
+    "providers/*.mjs",
+    "plugins/**/index.mjs",
+    "tests/**/*.test.mjs"
+  ],
+  "project": ["**/*.mjs", "**/*.js"],
+  "ignore": ["web/**", "dashboard/**", "batch/**", "output/**", "test-fixtures/**", "scaffolder/**"],
+  "ignoreDependencies": ["playwright"],
+  "ignoreExportsUsedInFile": true
+}

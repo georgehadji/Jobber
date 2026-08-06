@@ -1,11 +1,11 @@
-# System Context -- career-ops
+# System Context -- Jobber
 
 <!-- ============================================================
      THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
      
      Your customizations go in modes/_profile.md (never auto-updated).
      This file contains system rules, scoring logic, and tool config
-     that improve with each career-ops release.
+     that improve with each Jobber release.
      ============================================================ -->
 
 ## Sources of Truth (EXCLUSIVE)
@@ -42,13 +42,15 @@ The files below are the **ONLY** sources for user-facing content (CV, cover lett
 
 | CLI | economy | standard | premium | Extended thinking |
 |-----|---------|----------|---------|--------------------|
-| Claude Code | Haiku 4.5 | Sonnet 5 | Opus 5 | off / off / adaptive |
+| Claude Code | Haiku 4.5 (`claude-haiku-4-5`) | Sonnet 5 (`claude-sonnet-5`) | Opus 5 (`claude-opus-5`) | off / off / adaptive |
 | OpenCode | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Gemini CLI | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Copilot CLI | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Codex | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Qwen | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
 | Antigravity CLI | your CLI's cheapest/fastest available model | balanced model | most capable model | off / off / adaptive |
+
+The Claude Code row's model ids are the single source of truth's values (`SPEND_TIER_MODELS` in `lib/llm-providers.mjs`), which is what `batch/batch-runner.sh` passes to `claude -p --model`; a test asserts this row and that object agree, so changing one without the other fails CI.
 
 The Claude Code row uses concrete model names because that lineup is well-established. The other rows intentionally avoid naming specific models -- nobody on this project can verify current model lineups for those CLIs with confidence, and a wrong specific guess routes users to a model that doesn't exist. If you actively use one of these CLIs and know its current cheapest/balanced/most-capable models, a follow-up PR filling in concrete names for that row is welcome.
 
@@ -204,11 +206,11 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 ### Subagent delegation (cost guardrail)
 
-A mode may tell you to run work in a background subagent (e.g. `scan`, or parallel `pipeline` URLs) to spare the main agent's context. Any subagent you spawn for career-ops is a **single-pass worker**:
+A mode may tell you to run work in a background subagent (e.g. `scan`, or parallel `pipeline` URLs) to spare the main agent's context. Any subagent you spawn for Jobber is a **single-pass worker**:
 
 - It MUST NOT spawn further subagents, and MUST NOT invoke other skills — especially open-ended or recursive research skills (e.g. a `deep-research` skill). Those fan out into nested agents and can burn tens of millions of tokens on one run.
 - Company, role, and compensation research is ALWAYS done **inline**, with the small explicit set of WebSearch/WebFetch queries the mode names (e.g. `oferta` Blocks C/D) — never delegated to a recursive research harness.
-- One `/career-ops <JD>` evaluates one role; it must never explode into a self-replicating swarm of agents. If you are about to delegate research or nest agents, stop and do it inline, bounded.
+- One `/jobber <JD>` evaluates one role; it must never explode into a self-replicating swarm of agents. If you are about to delegate research or nest agents, stop and do it inline, bounded.
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection

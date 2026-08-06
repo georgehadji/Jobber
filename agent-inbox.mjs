@@ -4,7 +4,7 @@
  * agent-inbox.mjs — a tiny bridge between *looking at* the pipeline and
  * *acting on* it.
  *
- * career-ops is driven from an AI session, but there's no durable place to drop
+ * Jobber is driven from an AI session, but there's no durable place to drop
  * a request when you're not in one — e.g. while glancing at the tracker (or a
  * dashboard) you think "evaluate this URL" or "draft a follow-up for #7". This
  * is that place: an append-only queue the agent drains at the start of a
@@ -29,12 +29,23 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
-const PATH = process.env.CAREER_OPS_INBOX || 'data/agent-inbox.md';
+const PATH = process.env.JOBBER_INBOX || 'data/agent-inbox.md';
+
+// --capabilities contract (T4): machine-readable flag list for
+// validate-mode-invocations.mjs — exits 0 with JSON, no inbox operations.
+if (process.argv.includes('--capabilities')) {
+  console.log(JSON.stringify({
+    script: 'agent-inbox.mjs', version: 1,
+    flags: ['list', 'resolve', '--all', '--result', '--help'],
+    description: 'Append-only agent request queue',
+  }));
+  process.exit(0);
+}
 
 const HEADER = [
   '# Agent Inbox',
   '',
-  '> **Agent protocol:** at the start of a career-ops session, read this file.',
+  '> **Agent protocol:** at the start of a Jobber session, read this file.',
   '> Run each unchecked item top-to-bottom. After each, mark it `[x]` and append',
   '> `→ result: <one line>`. Items that need live user input (a mock, a paste, a',
   '> decision) → ask the user to start them instead of running them.',
@@ -52,7 +63,7 @@ function ensureGitignored() {
   // The inbox is personal data. On installs whose .gitignore predates this
   // feature, make sure the default path is ignored so a first `add` can't
   // accidentally commit it. Only manages the default, non-overridden path.
-  if (process.env.CAREER_OPS_INBOX || PATH !== 'data/agent-inbox.md') return;
+  if (process.env.JOBBER_INBOX || PATH !== 'data/agent-inbox.md') return;
   try {
     if (!existsSync('.gitignore')) return; // not a git checkout we should touch
     const text = readFileSync('.gitignore', 'utf8');

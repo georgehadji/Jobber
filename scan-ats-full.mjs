@@ -49,7 +49,7 @@ import { normalizeCompany } from './tracker-utils.mjs';
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const PORTALS_PATH = process.env.CAREER_OPS_PORTALS || 'portals.yml';
+const PORTALS_PATH = process.env.JOBBER_PORTALS || 'portals.yml';
 const PIPELINE_PATH = 'data/pipeline.md';
 const CACHE_DIR = 'data/cache/ats-companies';
 const CACHE_TTL_HOURS = 24;
@@ -834,7 +834,7 @@ async function main() {
       log(`\n  ⛔ stopped ${name}: ${RESOLVER_FAILURE_LIMIT} consecutive DNS failures.`);
       log(`     Your resolver is refusing queries — it may be rate-limiting this host.`);
       log(`     Lower CONCURRENCY, raise the resolver's per-client limit, or set`);
-      log(`     CAREER_OPS_NO_DNS_CACHE=1 only if you know the cache is at fault.`);
+      log(`     JOBBER_NO_DNS_CACHE=1 only if you know the cache is at fault.`);
       break;
     }
     completedSources.add(name);
@@ -872,7 +872,7 @@ async function main() {
   // wall-clock time as a hang (#2229).
   const pacing = dnsPacingStats();
   if (pacing.delayed > 0) {
-    log(`DNS pacing:         ${pacing.delayed} lookup${pacing.delayed === 1 ? '' : 's'} delayed, ${Math.round(pacing.waitedMs / 1000)}s total wait (CAREER_OPS_DNS_LOOKUPS_PER_MIN to tune, 0 disables)`);
+    log(`DNS pacing:         ${pacing.delayed} lookup${pacing.delayed === 1 ? '' : 's'} delayed, ${Math.round(pacing.waitedMs / 1000)}s total wait (JOBBER_DNS_LOOKUPS_PER_MIN to tune, 0 disables)`);
   }
   // noDateSkipJobs is a subset of droppedNoDate, not a separate pool: every
   // no-postedOn workday posting counted here also hits the per-job undated
@@ -985,7 +985,7 @@ async function main() {
     log('\n(dry run — run without --dry-run to save results)');
     return;
   }
-  log(`\n→ Run /career-ops pipeline to evaluate new offers.`);
+  log(`\n→ Run /jobber pipeline to evaluate new offers.`);
 }
 
 // Only run main() when invoked directly, not when imported by tests.

@@ -1,10 +1,12 @@
-# Konteks bersama -- career-ops (Bahasa Indonesia)
+# Konteks bersama -- Jobber (Bahasa Indonesia)
+
+<!-- jobber-source-sha: 5d80485de48a2b88d16c105c52e99d45fef521fb -->
 
 <!-- ============================================================
      PERSONALISASI FILE INI
      ============================================================
-     File ini berisi konteks bersama untuk semua mode career-ops
-     versi Bahasa Indonesia. Sebelum memakai career-ops, kamu HARUS:
+     File ini berisi konteks bersama untuk semua mode Jobber
+     versi Bahasa Indonesia. Sebelum memakai Jobber, kamu HARUS:
      1. Mengisi config/profile.yml dengan data pribadimu
      2. Membuat cv.md di root proyek (CV dalam format Markdown)
      3. (Opsional) Membuat article-digest.md berisi proof point-mu

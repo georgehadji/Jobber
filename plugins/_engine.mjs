@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * plugins/_engine.mjs — the career-ops plugin engine.
+ * plugins/_engine.mjs — the Jobber plugin engine.
  *
  * Generalizes the proven providers/ auto-loader (scan.mjs `loadProviders`) into
  * a sibling `plugins/` layer for integrations that need a KEY or talk to an
@@ -30,6 +30,7 @@ import { pathToFileURL } from 'url';
 import { resolveAndValidate } from './_net.mjs';
 import { readLock, writeLockEntry, diffPlugin, hashPluginTree, consentSurface } from './_lock.mjs';
 import { loadRegistry } from './_registry.mjs';
+import { PROVIDERS } from '../lib/llm-providers.mjs';
 
 /** The complete, closed set of hook kinds. Anything else (apply/submit/…) is rejected. */
 export const HOOK_KINDS = ['provider', 'ingest', 'search', 'notify', 'export'];
@@ -42,11 +43,12 @@ export const HOOK_KINDS = ['provider', 'ingest', 'search', 'notify', 'export'];
  * boundary (process.env stays globally reachable — see the trust note).
  */
 export const RESERVED_ENV = new Set([
-  'GEMINI_API_KEY', 'GEMINI_MODEL',
-  'OPENROUTER_API_KEY', 'CAREER_OPS_MODEL',
-  'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'OPENAI_MODEL',
-  'ANTHROPIC_API_KEY',
-  'CAREER_OPS_PORTALS', 'CAREER_OPS_PROFILE',
+  // Provider env vars are DERIVED from lib/llm-providers.mjs, not listed here —
+  // adding a provider there must reserve its key automatically, or the next one
+  // added is silently smuggle-able.
+  ...Object.values(PROVIDERS).flatMap(spec =>
+    [spec.keyEnv, spec.modelEnv, spec.baseUrlEnv, spec.timeoutEnv].filter(Boolean)),
+  'JOBBER_PORTALS', 'JOBBER_PROFILE',
   'PATH', 'HOME', 'NODE_OPTIONS', 'LD_PRELOAD', 'NODE_EXTRA_CA_CERTS',
 ]);
 
@@ -142,7 +144,11 @@ export async function loadPluginConfig(root) {
  * @property {string} [version]
  * @property {string} [homepage]
  * @property {string} dir
+ * @property {boolean} allowsLocalhost
+ * @property {string} [skill]
  */
+
+/** @typedef {import('./_types.js').PluginContext} PluginContext */
 export function validateManifest(m, dir, dirName) {
   const label = dirName;
   if (!m || typeof m !== 'object') { warnSkip(label, 'manifest.json is not an object'); return null; }
@@ -637,6 +643,17 @@ export async function runHook(kind, payload, { root, dryRun = false, timeoutMs =
   return results;
 }
 
+// A detect-exempt provider whose fetch throws an actionable message — used when
+// a known provider plugin is inactive (disabled / missing key / failed import)
+// so an explicit `provider: <id>` portals.yml entry stays self-explaining.
+function inactiveProviderStub(id, reason) {
+  return {
+    id,
+    detect: () => null,
+    fetch: async () => { throw new Error(`plugin "${id}" inactive: ${reason}. Run \`node doctor.mjs\` for setup.`); },
+  };
+}
+
 /**
  * Merge enabled provider-plugins into the core providers Map. THE one hot-path
  * hook (scan.mjs calls this right after loadProviders). Critical guarantees:
@@ -658,17 +675,6 @@ export async function runHook(kind, payload, { root, dryRun = false, timeoutMs =
  * @param {Map<string, any>} providersMap   The Map returned by scan.mjs loadProviders.
  * @param {{ root: string }} opts
  */
-// A detect-exempt provider whose fetch throws an actionable message — used when
-// a known provider plugin is inactive (disabled / missing key / failed import)
-// so an explicit `provider: <id>` portals.yml entry stays self-explaining.
-function inactiveProviderStub(id, reason) {
-  return {
-    id,
-    detect: () => null,
-    fetch: async () => { throw new Error(`plugin "${id}" inactive: ${reason}. Run \`node doctor.mjs\` for setup.`); },
-  };
-}
-
 export async function mergeProviderPlugins(providersMap, { root }) {
   if (!existsSync(pluginsConfigPath(root))) return; // (1) opted out → inert (no work, no env read)
 

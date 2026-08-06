@@ -1,6 +1,8 @@
-# career-ops — Türkçe Modlar (`modes/tr/`)
+# Jobber — Türkçe Modlar (`modes/tr/`)
 
-Bu klasör, Türkiye iş piyasasında iş arayanlar veya Türkçe ilanlarla çalışanlar için career-ops modlarının Türkçe çevirilerini içerir.
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Bu klasör, Türkiye iş piyasasında iş arayanlar veya Türkçe ilanlarla çalışanlar için Jobber modlarının Türkçe çevirilerini içerir.
 
 ## Ne Zaman Kullanılır?
 

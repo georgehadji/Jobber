@@ -87,7 +87,7 @@ export function createNotionClient({ token, parent, fetch: fetchFn = globalThis.
 
   /** Map of DB name → primary data source id for every DB under the parent page. */
   async function resolveDBs() {
-    if (!parent) throw new Error('Set NOTION_PARENT_PAGE_ID in .env (the "Career Ops" parent page id).');
+    if (!parent) throw new Error('Set NOTION_PARENT_PAGE_ID in .env (the "Jobber" parent page id).');
     const out = {};
     let cursor;
     do {

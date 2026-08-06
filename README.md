@@ -1,4 +1,4 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +7,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Multi-Agent Job Search System" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Multi-Agent Job Search System" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,11 +17,11 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 <p align="center">
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank" rel="noopener noreferrer"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>FEATURED IN</sub></p>
@@ -35,7 +35,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops Demo" width="800">
+  <img src="docs/demo.gif" alt="Jobber Demo" width="800">
 </p>
 
 <p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
@@ -44,7 +44,7 @@
   <a href="https://warpchart.dev/hq">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://warpchart.dev/api/chart?theme=dark&v=3">
-      <img alt="Live star telemetry of santifer/career-ops" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
+      <img alt="Live star telemetry of santifer/jobber" src="https://warpchart.dev/api/chart?theme=light&v=3" loading="lazy">
     </picture>
   </a>
 </p>
@@ -54,7 +54,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/santifer/career-ops/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2Fcareer-ops?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
+  <a href="https://github.com/santifer/jobber/releases/latest"><img src="https://img.shields.io/npm/v/%40santifer%2FJobber?style=for-the-badge&labelColor=2b3137&color=2ea44f&label=release" alt="Latest release"></a>
 </p>
 
 <p align="center">
@@ -82,7 +82,7 @@
 
 ## What Is This
 
-career-ops ([career-ops.org](https://career-ops.org), also known as **careerops**) turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+Jobber ([jobber.org](https://jobber.org), also known as **Jobber**) turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a structured evaluation -- blocks A-F scored across 5 weighted dimensions, plus block G, a separate posting-legitimacy assessment that never affects the 1-5 score
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
@@ -91,17 +91,17 @@ career-ops ([career-ops.org](https://career-ops.org), also known as **careerops*
 - **Tracks everything** in a single source of truth with integrity checks
 - **Researches companies and finds the right person to contact** -- applications get you in the queue; research gets you a conversation
 
-> **Important: This is NOT a spray-and-pray tool.** career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
+> **Important: This is NOT a spray-and-pray tool.** Jobber is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
 
-career-ops is agentic: whichever AI coding CLI you choose navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
+Jobber is agentic: whichever AI coding CLI you choose navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
 
 > **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
 
-Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
+Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/jobber-system).
 
-## The CareerOps Manifesto
+## The Jobber Manifesto
 
-career-ops is the first reference implementation of [the CareerOps Manifesto](https://career-ops.org/manifesto?utm_source=readme). read it. if it says what you believe, sign it. your signature becomes a commit.
+Jobber is the first reference implementation of [the Jobber Manifesto](https://jobber.org/manifesto?utm_source=readme). read it. if it says what you believe, sign it. your signature becomes a commit.
 
 ## Features
 
@@ -112,8 +112,8 @@ career-ops is the first reference implementation of [the CareerOps Manifesto](ht
 | **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question                        |
 | **Negotiation Scripts**  | Salary negotiation frameworks, geographic discount pushback, competing offer leverage                                                    |
 | **ATS PDF Generation**   | Keyword-injected CVs with Space Grotesk + DM Sans design                                                                                 |
-| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/career-ops cover` |
-| **Application Email Drafts** | Formal recruiter/referral/cold application emails from a report or pasted JD, with subject line, attachment checklist, source-backed fit points, and a profile-driven contact block. Draft-only -- career-ops never sends, submits, or clicks anything. |
+| **Cover Letter Generator** | Research-backed cover letters with keyword mirroring, four interactive angle prompts (why/problems/approach/tone), draft-in-chat approval gate, and A4 PDF via the same HTML + Playwright pipeline as CVs. Auto-drafts on every evaluation; complete and generate on demand via `/jobber cover` |
+| **Application Email Drafts** | Formal recruiter/referral/cold application emails from a report or pasted JD, with subject line, attachment checklist, source-backed fit points, and a profile-driven contact block. Draft-only -- Jobber never sends, submits, or clicks anything. |
 | **Portal Scanner**       | 100+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing**     | Parallel evaluation with headless CLI workers (`claude -p` / `opencode run`)                                                             |
 | **Dashboard TUI**        | Terminal UI to browse, filter, and sort your pipeline                                                                                    |
@@ -131,28 +131,28 @@ career-ops is the first reference implementation of [the CareerOps Manifesto](ht
 **Fastest way — one command:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` ships with [Node.js](https://nodejs.org) — it runs the installer once,
 > without installing anything globally. No Node yet? Install it first.
 > (Already using a Claude Code / Gemini / Codex CLI? Then you already have it.)
 
-This clones the latest release into `./career-ops` and installs dependencies. Then:
+This clones the latest release into `./jobber` and installs dependencies. Then:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # or codex / qwen / opencode / agy / grok — open your AI CLI here
 ```
 
-**On first launch, career-ops walks you through setup — your CV, profile and target roles — just by chatting. Nothing to edit by hand.**
+**On first launch, Jobber walks you through setup — your CV, profile and target roles — just by chatting. Nothing to edit by hand.**
 
 <details>
 <summary><b>Prefer to set it up manually? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # only needed for PDF generation
 
 # 2. Check setup
@@ -176,12 +176,12 @@ claude   # or codex / opencode / qwen / agy / grok
 
 # 6. Start using
 # Paste a job URL or JD text to trigger auto-pipeline
-# If your CLI supports slash commands, use /career-ops (or its CLI-specific alias)
+# If your CLI supports slash commands, use /jobber (or its CLI-specific alias)
 # In Codex, ask for the same mode in plain language, e.g.:
-# "Run the career-ops scan mode"
-# "Run the career-ops pipeline mode for data/pipeline.md"
-# "Run the career-ops pdf mode for the latest evaluated role"
-# "Run the career-ops tracker mode and summarize the current statuses"
+# "Run the Jobber scan mode"
+# "Run the Jobber pipeline mode for data/pipeline.md"
+# "Run the Jobber pdf mode for the latest evaluated role"
+# "Run the Jobber tracker mode and summarize the current statuses"
 ```
 
 </details>
@@ -189,90 +189,90 @@ claude   # or codex / opencode / qwen / agy / grok
 ### Global install
 
 ```bash
-npm i -g @santifer/career-ops
+npm i -g @santifer/jobber
 ```
 
-This installs the `career-ops` binary globally so you can run it directly instead of via `npx`. Unlike `npx @santifer/career-ops init` (which bootstraps a project directory), the global install gives you a persistent `career-ops` command available anywhere in your terminal.
+This installs the `jobber` binary globally so you can run it directly instead of via `npx`. Unlike `npx @santifer/jobber init` (which bootstraps a project directory), the global install gives you a persistent `jobber` command available anywhere in your terminal.
 
 **Which one should you use?**
-- `npx @santifer/career-ops init` — best for first use; creates a dedicated project folder.
-- `npm i -g @santifer/career-ops` — best once you have a project folder and want to run career-ops commands directly.
+- `npx @santifer/jobber init` — best for first use; creates a dedicated project folder.
+- `npm i -g @santifer/jobber` — best once you have a project folder and want to run Jobber commands directly.
 
 > **The system is designed to be customized by your AI coding CLI itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask it to change them. It reads the same files it uses, so it knows exactly what to edit.
 
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for instructions on running career-ops cheaply using custom or local models, [docs/AUTOMATION.md](docs/AUTOMATION.md) for scheduling recurring scans and a zero-token triage-to-shortlist recipe, [docs/APPLY_AUTOFILL.md](docs/APPLY_AUTOFILL.md) for details on the ATS auto-fill flow, and [docs/FAQ.md](docs/FAQ.md) for answers to common setup questions. Design principles live in [ARCHITECTURE.md](ARCHITECTURE.md); runtime flows in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for instructions on running Jobber cheaply using custom or local models, [docs/AUTOMATION.md](docs/AUTOMATION.md) for scheduling recurring scans and a zero-token triage-to-shortlist recipe, [docs/APPLY_AUTOFILL.md](docs/APPLY_AUTOFILL.md) for details on the ATS auto-fill flow, and [docs/FAQ.md](docs/FAQ.md) for answers to common setup questions. Design principles live in [ARCHITECTURE.md](ARCHITECTURE.md); runtime flows in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Antigravity CLI Integration
 
-career-ops supports Antigravity CLI natively, the same way it supports Claude Code and OpenCode. All slash commands are available through the shared skill entrypoint, using the same `modes/*.md` evaluation logic.
+Jobber supports Antigravity CLI natively, the same way it supports Claude Code and OpenCode. All slash commands are available through the shared skill entrypoint, using the same `modes/*.md` evaluation logic.
 
 Google has transitioned consumer Gemini CLI access to Antigravity CLI. `GEMINI.md` is now a no-op compatibility guard so Antigravity does not duplicate the full project instructions when it reads both `AGENTS.md` and `GEMINI.md`.
 
 ### Native Antigravity CLI
 
 ```bash
-# 1. Run in the career-ops directory
-cd career-ops
+# 1. Run in the Jobber directory
+cd Jobber
 agy
 
-# 2. Use the unified /career-ops command with subcommands:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Use the unified /jobber command with subcommands:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
-The skill is defined using the open standard in `.agents/skills/career-ops/SKILL.md` and symlinked/referenced for each supported CLI (e.g. `.claude/`, `.cursor/`, `.qwen/`, `.antigravitycli/`, `.grok/`).
+The skill is defined using the open standard in `.agents/skills/jobber/SKILL.md` and symlinked/referenced for each supported CLI (e.g. `.claude/`, `.cursor/`, `.qwen/`, `.antigravitycli/`, `.grok/`).
 
 ## Codex Integration
 
-career-ops supports Codex through the same shared router, but the invocation model is different from CLIs that auto-register slash commands. For the full guide, see [docs/CODEX.md](docs/CODEX.md).
+Jobber supports Codex through the same shared router, but the invocation model is different from CLIs that auto-register slash commands. For the full guide, see [docs/CODEX.md](docs/CODEX.md).
 
 ### Interactive Codex
 
 ```bash
-cd career-ops
+cd Jobber
 codex
 ```
 
-Slash commands are not guaranteed in Codex. If `/career-ops` is unavailable, ask Codex to run the mode directly in plain language:
+Slash commands are not guaranteed in Codex. If `/jobber` is unavailable, ask Codex to run the mode directly in plain language:
 
 ```text
-Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
-Run the career-ops scan mode and summarize new matches.
-Run the career-ops pipeline mode for data/pipeline.md.
-Run the career-ops pdf mode for the latest evaluated role.
-Run the career-ops tracker mode and summarize the current statuses.
+Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123
+Run the Jobber scan mode and summarize new matches.
+Run the Jobber pipeline mode for data/pipeline.md.
+Run the Jobber pdf mode for the latest evaluated role.
+Run the Jobber tracker mode and summarize the current statuses.
 ```
 
 ### One-shot Codex (`codex exec`)
 
 ```bash
-codex exec "Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123"
-codex exec "Run career-ops scan mode in this repo and summarize new matches."
-codex exec "Run career-ops pipeline mode for data/pipeline.md."
-codex exec "Run career-ops pdf mode for the latest evaluated role."
-codex exec "Run career-ops tracker mode and summarize the current statuses."
+codex exec "Evaluate this JD with Jobber auto-pipeline: https://company.com/jobs/123"
+codex exec "Run Jobber scan mode in this repo and summarize new matches."
+codex exec "Run Jobber pipeline mode for data/pipeline.md."
+codex exec "Run Jobber pdf mode for the latest evaluated role."
+codex exec "Run Jobber tracker mode and summarize the current statuses."
 ```
 
 ## Grok Build CLI Integration
 
-career-ops supports Grok Build CLI natively, the same way it supports Claude Code and OpenCode. `AGENTS.md` is auto-loaded as project rules, and all slash commands are available through the shared skill entrypoint.
+Jobber supports Grok Build CLI natively, the same way it supports Claude Code and OpenCode. `AGENTS.md` is auto-loaded as project rules, and all slash commands are available through the shared skill entrypoint.
 
 ### Native Grok Build CLI
 
 ```bash
-# 1. Run in the career-ops directory
-cd career-ops
+# 1. Run in the Jobber directory
+cd Jobber
 grok
 
-# 2. Use the unified /career-ops command with subcommands:
-/career-ops "Senior AI Engineer at Anthropic..."
-/career-ops pipeline
-/career-ops scan
-/career-ops pdf
-/career-ops tracker
+# 2. Use the unified /jobber command with subcommands:
+/jobber "Senior AI Engineer at Anthropic..."
+/jobber pipeline
+/jobber scan
+/jobber pdf
+/jobber tracker
 ```
 
 For headless batch workers, use `grok -p "prompt"` (add `--yolo` to auto-approve tool executions).
@@ -298,27 +298,27 @@ npm run gemini:eval -- "JD text here"
 
 ## Usage
 
-career-ops uses a shared command router. In CLIs that register slash commands, it looks like this:
+Jobber uses a shared command router. In CLIs that register slash commands, it looks like this:
 
 ```
-/career-ops                → Show all available commands
-/career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
-/career-ops scan           → Scan portals for new offers
-/career-ops pdf            → Generate ATS-optimized CV
-/career-ops cover          → Cover letter generator (paste JD or /career-ops cover {slug})
-/career-ops email          → Formal application email draft (draft-only; never sends, submits, or clicks)
-/career-ops batch          → Batch evaluate multiple offers
-/career-ops tracker        → View application status
-/career-ops apply          → Fill application forms with AI
-/career-ops outcome        → Record application outcome & archive artifacts
-/career-ops pipeline       → Process pending URLs
-/career-ops contacto       → Find hiring manager / recruiter / peer + draft a ≤300-char LinkedIn message per contact type
-/career-ops deep           → Generate a structured 6-axis research prompt (AI strategy, recent moves, culture, challenges, competitors, candidate angle)
-/career-ops training       → Evaluate a course/cert
-/career-ops project        → Evaluate a portfolio project
+/jobber                → Show all available commands
+/jobber {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
+/jobber scan           → Scan portals for new offers
+/jobber pdf            → Generate ATS-optimized CV
+/jobber cover          → Cover letter generator (paste JD or /jobber cover {slug})
+/jobber email          → Formal application email draft (draft-only; never sends, submits, or clicks)
+/jobber batch          → Batch evaluate multiple offers
+/jobber tracker        → View application status
+/jobber apply          → Fill application forms with AI
+/jobber outcome        → Record application outcome & archive artifacts
+/jobber pipeline       → Process pending URLs
+/jobber contacto       → Find hiring manager / recruiter / peer + draft a ≤300-char LinkedIn message per contact type
+/jobber deep           → Generate a structured 6-axis research prompt (AI strategy, recent moves, culture, challenges, competitors, candidate angle)
+/jobber training       → Evaluate a course/cert
+/jobber project        → Evaluate a portfolio project
 ```
 
-Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+Or just paste a job URL or description directly -- Jobber auto-detects it and runs the full pipeline.
 
 In Codex, slash commands are not guaranteed. Use the same mode names in a prompt instead, or call them from `codex exec`.
 
@@ -383,7 +383,7 @@ There is also an **experimental web UI** (alpha, opt-in — nothing runs unless 
 ## Project Structure
 
 ```
-career-ops/
+jobber/
 ├── AGENTS.md                    # Canonical agent instructions (all CLIs)
 ├── CLAUDE.md                    # Claude Code wrapper (imports AGENTS.md)
 ├── CODEX.md                     # Codex wrapper (imports AGENTS.md)
@@ -439,37 +439,37 @@ career-ops/
 
 ## FAQ
 
-**What is career-ops?**
-career-ops is an open-source, CLI-agnostic job-search command center. It turns any AI coding CLI into a pipeline that evaluates job offers against your CV, generates ATS-tailored PDFs, finds the right person to contact, and tracks everything in one place — while you keep the final decision. It is the first reference implementation of the CareerOps Manifesto. More at [career-ops.org](https://career-ops.org).
+**What is Jobber?**
+Jobber is an open-source, CLI-agnostic job-search command center. It turns any AI coding CLI into a pipeline that evaluates job offers against your CV, generates ATS-tailored PDFs, finds the right person to contact, and tracks everything in one place — while you keep the final decision. It is the first reference implementation of the Jobber Manifesto. More at [jobber.org](https://jobber.org).
 
-**Can I run career-ops for free, or on a cheaper / local model?**
-Yes. career-ops is CLI-agnostic and runs on free and local models — via OpenRouter free models, Ollama, or any OpenAI-compatible endpoint — so you are not tied to a paid subscription. See [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for the full setup.
+**Can I run Jobber for free, or on a cheaper / local model?**
+Yes. Jobber is CLI-agnostic and runs on free and local models — via OpenRouter free models, Ollama, or any OpenAI-compatible endpoint — so you are not tied to a paid subscription. See [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md) for the full setup.
 
-**Which AI CLIs does career-ops work with?**
-career-ops runs on any major AI coding CLI — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen and more — through the open Agent Skill Standard, so it is never locked to a single vendor. Use the CLI you already have.
+**Which AI CLIs does Jobber work with?**
+Jobber runs on any major AI coding CLI — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen and more — through the open Agent Skill Standard, so it is never locked to a single vendor. Use the CLI you already have.
 
-**How do I install career-ops on Windows?**
-career-ops runs on Windows. If skills fail to load with a symlink error during install, the fix is in [docs/FAQ.md](docs/FAQ.md). Full steps are in [docs/SETUP.md](docs/SETUP.md).
+**How do I install Jobber on Windows?**
+Jobber runs on Windows. If skills fail to load with a symlink error during install, the fix is in [docs/FAQ.md](docs/FAQ.md). Full steps are in [docs/SETUP.md](docs/SETUP.md).
 
-**Does career-ops auto-apply to jobs for me?**
-No. career-ops is a filter, not a spray-and-pray auto-applier. The AI evaluates, ranks and drafts; you review and decide. It never submits, sends, or clicks anything — you always have the final call. That human-in-the-loop design is the whole point.
+**Does Jobber auto-apply to jobs for me?**
+No. Jobber is a filter, not a spray-and-pray auto-applier. The AI evaluates, ranks and drafts; you review and decide. It never submits, sends, or clicks anything — you always have the final call. That human-in-the-loop design is the whole point.
 
-**Is career-ops free and open source?**
-Yes. career-ops is free and open source, and for the candidate it always will be — it is the first reference implementation of the [CareerOps Manifesto](https://career-ops.org/manifesto). Read it, and if it says what you believe, sign it.
+**Is Jobber free and open source?**
+Yes. Jobber is free and open source, and for the candidate it always will be — it is the first reference implementation of the [Jobber Manifesto](https://jobber.org/manifesto). Read it, and if it says what you believe, sign it.
 
 ## About the Author
 
-I'm [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.
+I'm [Santiago Fernández de Valderrama Aparicio](https://santifer.io/about) (santifer) -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built Jobber to manage my own job search. It worked: I used it to land my current role.
 
-Curious how this repo is maintained in ~4 hours a week? Read [Agentic maintenance: how career-ops is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
+Curious how this repo is maintained in ~4 hours a week? Read [Agentic maintenance: how Jobber is run by a fleet of AI agents](https://santifer.io/ai-agent-fleet).
 
 My portfolio and other open source projects → [santifer.io](https://santifer.io)
 
-Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [career-ops](https://www.wikidata.org/wiki/Q139007988).
+Wikidata: [Santiago Fernández de Valderrama Aparicio](https://www.wikidata.org/wiki/Q138710224) · [Jobber](https://www.wikidata.org/wiki/Q139007988).
 
 ## Disclaimer
 
-**career-ops is a local, open-source tool, NOT a hosted service.** By using this software, you acknowledge:
+**Jobber is a local, open-source tool, NOT a hosted service.** By using this software, you acknowledge:
 
 1. **You control your data.** Your CV, contact info, and personal data stay on your machine and are sent directly to the AI provider you choose (Anthropic, OpenAI, etc.). We do not collect, store, or have access to any of your data.
 2. **You control the AI.** The default prompts instruct the AI not to auto-submit applications, but AI models can behave unpredictably. If you modify the prompts or use different models, you do so at your own risk. **Always review AI-generated content for accuracy before submitting.**
@@ -480,19 +480,19 @@ See [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for full details. This software i
 
 ## Contributors
 
-<a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+<a href="https://github.com/santifer/jobber/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/jobber" />
 </a>
 
 Every person who has shipped code, docs, translations or tests is listed in
 [CONTRIBUTORS.md](CONTRIBUTORS.md) — including non-code contributions, which
 the graph above cannot show.
 
-Got hired using career-ops? [Share your story!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+Got hired using Jobber? [Share your story!](https://github.com/santifer/jobber/issues/new?template=i-got-hired.yml)
 
 ## License & Trademark
 
-The code is licensed under [MIT](LICENSE). The "career-ops" name and
+The code is licensed under [MIT](LICENSE). The "jobber" name and
 brand are governed by the [Trademark Policy](TRADEMARK.md), permissive
 for community use, reserved for commercial product naming and
 endorsement.

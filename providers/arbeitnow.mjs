@@ -110,7 +110,7 @@ export default {
       // featured `?search=` term that would narrow the board).
       const url = `${FEED_BASE}?page=${page}`;
       // redirect:'error' prevents SSRF via server-side redirects
-      const json = await ctx.fetchJson(url, { redirect: 'error' });
+      const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error' }));
       if (!json || !Array.isArray(json.data)) {
         throw new Error(
           `arbeitnow: unexpected API response on page ${page} — expected { data: [...] }, got keys: [${json ? Object.keys(json).join(', ') : 'null'}]`,

@@ -8,21 +8,21 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/santifer/career-ops/dashboard/internal/model"
-	"github.com/santifer/career-ops/dashboard/internal/theme"
+	"github.com/santifer/jobber/dashboard/internal/model"
+	"github.com/santifer/jobber/dashboard/internal/theme"
 )
 
 func keyMsg(s string) tea.KeyMsg {
 	return tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(s)}
 }
 
-func newPDFTestModel(t *testing.T, careerOpsPath string, apps []model.CareerApplication) PipelineModel {
+func newPDFTestModel(t *testing.T, jobberPath string, apps []model.CareerApplication) PipelineModel {
 	t.Helper()
 	pm := NewPipelineModel(
 		theme.NewTheme("catppuccin-mocha"),
 		apps,
 		model.PipelineMetrics{Total: len(apps)},
-		careerOpsPath,
+		jobberPath,
 		120,
 		40,
 	)

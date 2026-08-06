@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops Мультиагентная система поиска работы" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber Мультиагентная система поиска работы" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>УПОМИНАНИЯ В СМИ</sub></p>
@@ -33,7 +35,7 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops Демо" width="800">
+  <img src="docs/demo.gif" alt="Jobber Демо" width="800">
 </p>
 
 <p align="center"><strong>740+ вакансий оценено · 100+ персонализированных резюме · 1 позиция мечты получена</strong></p>
@@ -41,7 +43,7 @@
 <p align="center">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Присоединиться_к_сообществу-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   &nbsp;
-  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
+  <a href="https://www.npmjs.com/package/@santifer/jobber"><img src="https://img.shields.io/npm/dt/@santifer/jobber?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a>
 </p>
 
 <p align="center">
@@ -67,7 +69,7 @@
 
 ## Что это
 
-career-ops превращает любой AI-CLI в полноценный командный центр для поиска работы. Вместо ручного ведения таблиц с откликами вы получаете ИИ-пайплайн, который:
+Jobber превращает любой AI-CLI в полноценный командный центр для поиска работы. Вместо ручного ведения таблиц с откликами вы получаете ИИ-пайплайн, который:
 
 - **Оценивает вакансии** по структурированной системе A–F (пять параметров, формирующих оценку 1.0–5.0)
 - **Генерирует персонализированные PDF-резюме** — оптимизированные под ATS, адаптированные под каждую вакансию
@@ -75,7 +77,7 @@ career-ops превращает любой AI-CLI в полноценный ко
 - **Пакетная обработка** — оценка 10+ вакансий параллельно через суб-агентов
 - **Трекает всё** в единой точке правды с проверками целостности
 
-> **Важно: это НЕ инструмент для массовой рассылки.** career-ops — это фильтр. Он помогает найти те немногие вакансии, которые стоят вашего времени, из сотен. Система настоятельно рекомендует не откликаться на вакансии с оценкой ниже 4.0/5. Ваше время ценно, как и время рекрутера. Всегда проверяйте перед отправкой.
+> **Важно: это НЕ инструмент для массовой рассылки.** Jobber — это фильтр. Он помогает найти те немногие вакансии, которые стоят вашего времени, из сотен. Система настоятельно рекомендует не откликаться на вакансии с оценкой ниже 4.0/5. Ваше время ценно, как и время рекрутера. Всегда проверяйте перед отправкой.
 
 ## Возможности
 
@@ -97,28 +99,28 @@ career-ops превращает любой AI-CLI в полноценный ко
 **Самый быстрый способ — одна команда:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx` поставляется вместе с [Node.js](https://nodejs.org) — он один раз запускает
 > установщик, ничего не устанавливая глобально. Ещё нет Node? Установи его сначала.
 > (Уже используешь Claude Code / Gemini / Codex CLI? Значит, он у тебя уже есть.)
 
-Это клонирует последний релиз в `./career-ops` и устанавливает зависимости. Затем:
+Это клонирует последний релиз в `./jobber` и устанавливает зависимости. Затем:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # или gemini / codex / qwen / opencode — открой здесь свой AI-CLI
 ```
 
-**При первом запуске career-ops проведёт тебя через настройку — твоё CV, профиль и целевые роли — просто через диалог. Ничего не нужно править вручную.**
+**При первом запуске Jobber проведёт тебя через настройку — твоё CV, профиль и целевые роли — просто через диалог. Ничего не нужно править вручную.**
 
 <details>
 <summary><b>Предпочитаешь настроить вручную? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # нужно только для генерации PDF
 claude   # открой свой AI-CLI — он проведёт онбординг при первом запуске
 ```
@@ -127,24 +129,24 @@ claude   # открой свой AI-CLI — он проведёт онборди
 
 ## Использование
 
-career-ops — одна slash-команда с множеством режимов:
+Jobber — одна slash-команда с множеством режимов:
 
 ```
-/career-ops                       → Показать все доступные команды
-/career-ops {вставь описание JD}  → Полный авто-пайплайн (оценка + PDF + трекер)
-/career-ops scan                  → Сканирование порталов
-/career-ops pdf                   → Генерация ATS-резюме
-/career-ops batch                 → Пакетная оценка вакансий
-/career-ops tracker               → Статус откликов
-/career-ops apply                 → Заполнение форм отклика с ИИ
-/career-ops pipeline              → Обработка очереди URL
-/career-ops contacto              → Сообщение в LinkedIn
-/career-ops deep                  → Глубокий анализ компании
-/career-ops training              → Оценка курса/сертификации
-/career-ops project               → Оценка портфолио-проекта
+/jobber                       → Показать все доступные команды
+/jobber {вставь описание JD}  → Полный авто-пайплайн (оценка + PDF + трекер)
+/jobber scan                  → Сканирование порталов
+/jobber pdf                   → Генерация ATS-резюме
+/jobber batch                 → Пакетная оценка вакансий
+/jobber tracker               → Статус откликов
+/jobber apply                 → Заполнение форм отклика с ИИ
+/jobber pipeline              → Обработка очереди URL
+/jobber contacto              → Сообщение в LinkedIn
+/jobber deep                  → Глубокий анализ компании
+/jobber training              → Оценка курса/сертификации
+/jobber project               → Оценка портфолио-проекта
 ```
 
-Или просто вставь URL вакансии — career-ops автоматически определит его и запустит полный пайплайн.
+Или просто вставь URL вакансии — Jobber автоматически определит его и запустит полный пайплайн.
 
 ## Как это работает
 
@@ -170,7 +172,7 @@ career-ops — одна slash-команда с множеством режим�
 
 ## 🇷🇺 Российские площадки
 
-career-ops поддерживает ключевые российские джоб-борды:
+Jobber поддерживает ключевые российские джоб-борды:
 
 | Площадка            | URL                                        | Тип       | Особенности                                                  |
 | ------------------- | ------------------------------------------ | --------- | ------------------------------------------------------------ |
@@ -219,7 +221,7 @@ npm run build:dashboard   # optional: build the standalone binary
 ## Структура проекта
 
 ```
-career-ops/
+jobber/
 ├── CLAUDE.md                    # Инструкции для агента
 ├── cv.md                        # Ваше CV (создайте)
 ├── config/
@@ -256,27 +258,27 @@ career-ops/
 
 ## FAQ
 
-**Для чего нужен career-ops?**
-career-ops — это приложение для поиска работы с открытым кодом, запускающийся через CLI. Данное приложение превращает CLI с встроенным AI-агентом в систему, которая будет оценивать, насколько вакансии соответствуют вашему резюме, генерировать файлы в формате PDF, адаптированные под каждый ATS, искать нужного человека для связи, и, конечно же, все будет отслеживаться в одном месте, оставляя окончательное решение за вами. Является первой реализацией CareerOps Manifesto. Подробнее: [career-ops.org](https://career-ops.org).
+**Для чего нужен Jobber?**
+Jobber — это приложение для поиска работы с открытым кодом, запускающийся через CLI. Данное приложение превращает CLI с встроенным AI-агентом в систему, которая будет оценивать, насколько вакансии соответствуют вашему резюме, генерировать файлы в формате PDF, адаптированные под каждый ATS, искать нужного человека для связи, и, конечно же, все будет отслеживаться в одном месте, оставляя окончательное решение за вами. Является первой реализацией Jobber Manifesto. Подробнее: [jobber.org](https://jobber.org).
 
-**Можно ли использовать career-ops бесплатно или на более дешёвой/локальной модели?**
-Да. career-ops не привязан к конкретному CLI и работает с бесплатными и локальными моделями — через OpenRouter, Ollama или любой другой OpenAI-совместимой точкой доступа — поэтому платная подписка необязательна. Ознакомиться с полной настройкой можно в [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md)
+**Можно ли использовать Jobber бесплатно или на более дешёвой/локальной модели?**
+Да. Jobber не привязан к конкретному CLI и работает с бесплатными и локальными моделями — через OpenRouter, Ollama или любой другой OpenAI-совместимой точкой доступа — поэтому платная подписка необязательна. Ознакомиться с полной настройкой можно в [docs/RUNNING_ON_A_BUDGET.md](docs/RUNNING_ON_A_BUDGET.md)
 
-**С каким AI CLI работает career-ops?**
-career-ops работает с любым крупным AI CLI — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen и другими — через открытый стандарт Agent Skill Standard, поэтому не привязан к одному поставщику. Используйте уже имеющийся CLI.
+**С каким AI CLI работает Jobber?**
+Jobber работает с любым крупным AI CLI — Claude Code, Codex, Gemini / Antigravity, OpenCode, Grok, Qwen и другими — через открытый стандарт Agent Skill Standard, поэтому не привязан к одному поставщику. Используйте уже имеющийся CLI.
 
-**Как установить career-ops на Windows?**
-career-ops работает на Windows. Если навыки не загружаются из-за ошибки с символическими ссылками (symlink error) во время установки, ознакомьтесь с решением в [docs/FAQ.md](docs/FAQ.md). Полная инструкция в [docs/SETUP.md](docs/SETUP.md).
+**Как установить Jobber на Windows?**
+Jobber работает на Windows. Если навыки не загружаются из-за ошибки с символическими ссылками (symlink error) во время установки, ознакомьтесь с решением в [docs/FAQ.md](docs/FAQ.md). Полная инструкция в [docs/SETUP.md](docs/SETUP.md).
 
-**career-ops отправляет заявки автоматически за меня?**
-Нет. career-ops — это фильтр, а не автоматический рассыльщик. AI оценивает, ранжирует и создаёт черновики. Вы же проверяете их и принимаете решения. Он никогда не отправляет, не посылает и не нажимает ничего за вас — окончательный выбор всегда за вами. Принцип «человек в цикле» является ключевым.
+**Jobber отправляет заявки автоматически за меня?**
+Нет. Jobber — это фильтр, а не автоматический рассыльщик. AI оценивает, ранжирует и создаёт черновики. Вы же проверяете их и принимаете решения. Он никогда не отправляет, не посылает и не нажимает ничего за вас — окончательный выбор всегда за вами. Принцип «человек в цикле» является ключевым.
 
-**career-ops бесплатный? с открытым исходным кодом?**
-Да. career-ops бесплатен и имеет открытый исходный код, и для соискателей всегда таким останется — это первая реализация [CareerOps Manifesto](https://career-ops.org/manifesto). Прочтите, и если он отражает ваши убеждения, пожалуйста, подпишите его.
+**Jobber бесплатный? с открытым исходным кодом?**
+Да. Jobber бесплатен и имеет открытый исходный код, и для соискателей всегда таким останется — это первая реализация [Jobber Manifesto](https://jobber.org/manifesto). Прочтите, и если он отражает ваши убеждения, пожалуйста, подпишите его.
 
 ## Дисклеймер
 
-**career-ops — локальный open-source инструмент, НЕ хостинг-сервис.** Используя это ПО, вы подтверждаете:
+**Jobber — локальный open-source инструмент, НЕ хостинг-сервис.** Используя это ПО, вы подтверждаете:
 
 1. **Вы контролируете свои данные.** CV, контакты и персональные данные остаются на вашей машине и отправляются напрямую выбранному AI-провайдеру (Anthropic, OpenAI и др.). Мы не собираем и не храним ваши данные.
 2. **Вы контролируете ИИ.** Промты по умолчанию запрещают ИИ автоматически отправлять отклики, но модели могут вести себя непредсказуемо. Модификация промтов — на ваш риск. **Всегда проверяйте сгенерированный контент перед отправкой.**

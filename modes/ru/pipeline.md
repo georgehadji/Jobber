@@ -1,6 +1,8 @@
 # Режим: pipeline — Очередь URL (Second Brain)
 
-Обрабатывает URL вакансий из `data/pipeline.md`. Пользователь добавляет URL когда угодно, затем запускает `/career-ops pipeline` для обработки.
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Обрабатывает URL вакансий из `data/pipeline.md`. Пользователь добавляет URL когда угодно, затем запускает `/jobber pipeline` для обработки.
 
 ## Workflow
 

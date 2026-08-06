@@ -43,6 +43,16 @@
  *                               user never sees the posting to notice. Omit the
  *                               field entirely when the source exposes no salary;
  *                               an absent value always passes the filter.
+ *                               KEY PRESENCE: when `salary` IS present, all three
+ *                               keys are present. An unknown bound is `null` — never
+ *                               0 (which reads as real comp data downstream) and
+ *                               never an omitted key. An unknown currency is `''`.
+ *                               A one-sided range may be handled either way and both
+ *                               are contract-valid, so consumers MUST tolerate null:
+ *                               ashby.mjs/wttj.mjs resolve the missing side to the
+ *                               known bound (min===max), while agentic-jobs.mjs
+ *                               leaves it null to preserve "no upper bound
+ *                               published" as distinct from "upper equals lower".
  * @property {number} [trustScore] 0-100 trust score from _trust-validator.mjs.
  * @property {string[]} [trustFlags] Flags raised by trust validation (e.g.
  *                                   'invalid_url', 'suspicious_domain').
@@ -60,14 +70,11 @@
  */
 
 /**
- * A single `tracked_companies` entry from `portals.yml`.
+ * Named/known fields of a `tracked_companies` entry. See {@link PortalEntry}
+ * for the actual contract type — this typedef exists only so the index
+ * signature can be layered on via intersection.
  *
- * Provider-specific fields are opaque to scan.mjs and validated by the
- * provider itself. Examples in current providers: `api`, `careers_url`.
- * Providers read these directly off the entry object — no schema enforcement
- * at the framework level.
- *
- * @typedef {object} PortalEntry
+ * @typedef {object} PortalEntryKnown
  * @property {string}             name             User-facing label; appears in logs and placeholders.
  * @property {boolean}            [enabled]        Default: true.
  * @property {string}             [careers_url]    Public listing URL; consumed by detect().
@@ -78,6 +85,19 @@
  * @property {string}             [offset_param]   avature only: pins the pagination query key and disables the
  *                                                 provider's jobOffset→offset self-heal. Rarely needed — an
  *                                                 escape hatch for a tenant the auto-switch can't resolve.
+ */
+
+/**
+ * A single `tracked_companies` entry from `portals.yml`.
+ *
+ * Provider-specific fields are opaque to scan.mjs and validated by the
+ * provider itself. Examples in current providers: `api`, `careers_url`,
+ * plus per-provider extras (e.g. `keywords`, `sfVariant`, `siteKey`).
+ * Providers read these directly off the entry object — no schema enforcement
+ * at the framework level. The index signature reflects that: known fields
+ * stay typed, anything else is `any` by design.
+ *
+ * @typedef {PortalEntryKnown & Object.<string, any>} PortalEntry
  */
 
 /**
@@ -129,6 +149,12 @@
  * @property {string} id                                                       Unique across all loaded providers.
  * @property {((entry: PortalEntry) => (DetectHit | null))} [detect]           Optional auto-detection.
  * @property {(entry: PortalEntry, ctx: Context) => Promise<Job[]>} fetch      Required.
+ * @property {((job: Job, ctx: Context) => Promise<void>)} [enrichDate]        Optional deferred-date
+ *           hook for sources whose list page carries no publish date (icims.mjs is the
+ *           reference implementation, fetching the detail page's JSON-LD). Called generically
+ *           by scan-ats-full.mjs when present and the job is otherwise undated; mutates `job`
+ *           in place by setting `postedAt`. Errors are swallowed by the caller — a provider
+ *           whose enrichDate throws leaves the job undated, never failing the scan.
  */
 
 export {};

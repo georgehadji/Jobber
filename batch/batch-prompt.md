@@ -1,4 +1,4 @@
-# career-ops Batch Worker — Complete Evaluation + PDF + Tracker Line
+# Jobber Batch Worker — Complete Evaluation + PDF + Tracker Line
 
 Canonical base language: English.
 
@@ -303,6 +303,18 @@ discard_reasons:
 via: {agency/recruiter firm as a quoted string, or null for direct applications}
 company_confidential: {true when the end employer is unknown (company is "?"), else false}
 advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
+dimensions:
+  cv_match:   { score: {0-5}, evidence: ["{source file:line anchors, e.g. cv.md:L41}"] }
+  north_star: { score: {0-5}, archetype: "{archetype this role matches}" }
+  comp:       { score: {0-5}, as_of: "{YYYY-MM-DD}", reliability: "{Low | Medium | High}" }
+  cultural:   { score: {0-5}, capped: {true|false} }
+  red_flags:  { score: {0-5}, items: ["{concrete red flag}"] }
+  growth:     { score: {0-5}, notes: ["{growth/personalization signal}"] }
+  # Each dimension re-scores the axis the global score collapses; `evidence`
+  # anchors make the anti-fabrication rule auditable (a claim with no anchor is
+  # challengeable). `confidence` separates "this is a 3.5" from "call it 3.5,
+  # I'm guessing" (#improvement-plan M1). Backward compatible: reports without
+  # `dimensions` are accepted and counted by validate-report.mjs, not failed.
 risk_summary:
   legitimacy: "{high_confidence | proceed_with_caution | suspicious}"
   classification: "{clear | flagged | not_evaluated}"
@@ -341,7 +353,7 @@ Report header:
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **Work Auth:** {✅ Sponsors | ➖ Not needed | ⚠️ Unstated | ⛔ No sponsorship}
 **URL:** {{URL}}
-**PDF:** {output/cv-candidate-{company-slug}-{{DATE}}.pdf if score >= resolved auto_pdf_score_threshold, otherwise a localized equivalent of `not generated — run /career-ops pdf {company-slug} to create on demand` in `language.output`}
+**PDF:** {output/cv-candidate-{company-slug}-{{DATE}}.pdf if score >= resolved auto_pdf_score_threshold, otherwise a localized equivalent of `not generated — run /jobber pdf {company-slug} to create on demand` in `language.output`}
 **Batch ID:** {{ID}}
 
 
@@ -371,6 +383,18 @@ discard_reasons:
 via: {agency/recruiter firm as a quoted string, or null for direct applications}
 company_confidential: {true when the end employer is unknown (company is "?"), else false}
 advertised_comp: {verbatim JD salary/range as a quoted string (e.g. "80-90k EUR"), or null when the JD states nothing}
+dimensions:
+  cv_match:   { score: {0-5}, evidence: ["{source file:line anchors, e.g. cv.md:L41}"] }
+  north_star: { score: {0-5}, archetype: "{archetype this role matches}" }
+  comp:       { score: {0-5}, as_of: "{YYYY-MM-DD}", reliability: "{Low | Medium | High}" }
+  cultural:   { score: {0-5}, capped: {true|false} }
+  red_flags:  { score: {0-5}, items: ["{concrete red flag}"] }
+  growth:     { score: {0-5}, notes: ["{growth/personalization signal}"] }
+  # Each dimension re-scores the axis the global score collapses; `evidence`
+  # anchors make the anti-fabrication rule auditable (a claim with no anchor is
+  # challengeable). `confidence` separates "this is a 3.5" from "call it 3.5,
+  # I'm guessing" (#improvement-plan M1). Backward compatible: reports without
+  # `dimensions` are accepted and counted by validate-report.mjs, not failed.
 risk_summary:
   legitimacy: "{high_confidence | proceed_with_caution | suspicious}"
   classification: "{clear | flagged | not_evaluated}"
@@ -402,7 +426,7 @@ Read `config/profile.yml` and resolve `auto_pdf_score_threshold`. If absent, def
 Only generate the PDF when the score from Step 2 is greater than or equal to the threshold. If the score is below the threshold:
 
 - Skip PDF generation.
-- In the report header, write a localized equivalent of `**PDF:** not generated — run /career-ops pdf {company-slug} to create on demand` in `language.output`.
+- In the report header, write a localized equivalent of `**PDF:** not generated — run /jobber pdf {company-slug} to create on demand` in `language.output`.
 - In Step 5, use `pdf_emoji` = `❌`.
 - In Step 6, set `"pdf": null`.
 

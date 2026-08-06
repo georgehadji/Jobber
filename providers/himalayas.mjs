@@ -104,10 +104,11 @@ export default {
  * @returns {Array<{title: string, url: string, company: string, location: string, postedAt?: number}>}
  */
 export function parseHimalayasResponse(json) {
-  if (!json || typeof json !== 'object' || !Array.isArray(json.jobs)) return [];
+  const body = /** @type {any} */ (json);
+  if (!body || typeof body !== 'object' || !Array.isArray(body.jobs)) return [];
 
   const jobs = [];
-  for (const item of json.jobs) {
+  for (const item of body.jobs) {
     if (!item || typeof item !== 'object') continue;
 
     const title = cleanText(item.title);

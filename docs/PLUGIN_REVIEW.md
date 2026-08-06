@@ -36,7 +36,7 @@ stop.
 - **Data direction:** reads PUBLIC data or the user's OWN account only. No
   centralized infrastructure, no auto-submit, no blind-apply.
 - **Wording (public-forever):** description / README / skill carry no commercial
-  / hosted-service / monetization language. career-ops is free and local-first;
+  / hosted-service / monetization language. Jobber is free and local-first;
   "approved" means "we reviewed this commit", nothing more.
 - **Skill (if any):** domain-scoped — it teaches how to drive the plugin, and
   does NOT instruct the agent to edit core files, change scoring, reveal secrets,

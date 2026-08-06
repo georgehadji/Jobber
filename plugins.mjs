@@ -162,7 +162,7 @@ async function cmdRun(args) {
     const jobs = found.filter(j => !known.has(j.url) && !seen.has(j.url) && seen.add(j.url));
     console.log(`${id} ${hook}: ${found.length} found, ${jobs.length} new.`);
     if (dryRun) { jobs.slice(0, 20).forEach(j => console.log(`  • ${j.title} — ${j.url}`)); console.log('(--dry-run: pipeline not written)'); return; }
-    if (jobs.length) { await appendToPipeline(jobs); console.log(`→ Appended ${jobs.length} to data/pipeline.md. Run /career-ops pipeline to evaluate.`); }
+    if (jobs.length) { await appendToPipeline(jobs); console.log(`→ Appended ${jobs.length} to data/pipeline.md. Run /jobber pipeline to evaluate.`); }
     return;
   }
 
@@ -177,7 +177,7 @@ async function cmdRun(args) {
   }
 
   if (hook === 'notify') {
-    const message = positional.slice(hookArgStart).join(' ') || '(career-ops notification)';
+    const message = positional.slice(hookArgStart).join(' ') || '(Jobber notification)';
     const results = await runHook('notify', { message }, { root: ROOT, dryRun });
     for (const r of results) console.log(r.ok ? `${r.id} notify: sent.` : `${r.id} notify: failed — ${r.error}`);
     return;
@@ -198,7 +198,7 @@ function setEnabled(id, on, settings) {
   const prev = (cfg.plugins[id] && typeof cfg.plugins[id] === 'object') ? cfg.plugins[id] : {};
   cfg.plugins[id] = { ...prev, ...(settings || {}), enabled: on };
   mkdirSync(path.join(ROOT, 'config'), { recursive: true });
-  writeFileSync(file, '# career-ops plugin activation — see config/plugins.example.yml\n' + yaml.dump(cfg), 'utf8');
+  writeFileSync(file, '# Jobber plugin activation — see config/plugins.example.yml\n' + yaml.dump(cfg), 'utf8');
 }
 
 // The capability card a user must consent to before a plugin runs.
@@ -222,7 +222,7 @@ async function cmdAvailable() {
     const tag = succ ? `  🔁 maintained version: ${succ.name} (install to use it instead)` : '';
     console.log(`  ${m.id}  [${m.hooks.join(', ')}]  — ${m.description}${tag}`);
   }
-  console.log('\n✓ Community plugins approved by career-ops:\n');
+  console.log('\n✓ Community plugins approved by jobber:\n');
   if (reg.plugins.length === 0) {
     console.log('  (none yet — publish yours as `career-ops-plugin-<name>` and open a registry PR; see docs/PLUGINS.md)');
   } else {
@@ -261,7 +261,7 @@ function cmdEnable(args) {
   const source = classifySource(m, ROOT, entry);
   if (!confirm) {
     console.log(capabilityCard(m, source));
-    if (source === 'unverified') console.log('\n  ⚠️  UNVERIFIED — not reviewed by career-ops; you are trusting this author.');
+    if (source === 'unverified') console.log('\n  ⚠️  UNVERIFIED — not reviewed by Jobber; you are trusting this author.');
     console.log(`\n  This grants the capabilities above. To confirm, run:\n    node plugins.mjs enable ${id} --confirm\n`);
     return;
   }
@@ -323,7 +323,7 @@ async function cmdAdd(args) {
     try { parseRepoArg(target); } catch (e) { console.error(`✗ ${e.message}`); process.exit(1); }
     if (!sha) { console.error('✗ a repo not in the registry requires --sha <40-hex-commit> (we never clone a moving branch).'); process.exit(1); }
     url = target; useSha = sha; approved = false;
-    console.log("⚠️  Not in the career-ops registry — you are installing this author's code with your privileges.");
+    console.log("⚠️  Not in the Jobber registry — you are installing this author's code with your privileges.");
   }
 
   console.log(`Cloning ${url} @ ${String(useSha).slice(0, 10)} …`);

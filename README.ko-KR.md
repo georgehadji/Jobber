@@ -1,4 +1,6 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="career-ops" width="250" height="56"></picture></p>
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.svg"><img src="docs/wordmark-light.svg" alt="jobber" width="250" height="56"></picture></p>
 
 <div align="center">
 
@@ -7,7 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="career-ops 멀티 에이전트 취업 시스템" width="800"></a>
+  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Jobber 멀티 에이전트 취업 시스템" width="800"></a>
 </p>
 
 <p align="center">
@@ -17,9 +19,9 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2Fcareer-ops | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
+  <a href="https://trendshift.io/repositories/25195" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25195" alt="santifer%2FJobber | Trendshift" style="width: 245px; height: 54px; vertical-align: middle;" width="245" height="54"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="career-ops on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
+  <a href="https://www.producthunt.com/products/santifer-io?utm_source=badge-featured&utm_medium=badge" target="_blank"><img src="docs/press/producthunt.svg" alt="Jobber on Claude | Product Hunt" style="width: 206px; height: 54px; vertical-align: middle;" width="206" height="54"/></a>
 </p>
 
 <p align="center"><sub>소개된 매체</sub></p>
@@ -33,14 +35,14 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="career-ops 데모" width="800">
+  <img src="docs/demo.gif" alt="Jobber 데모" width="800">
 </p>
 
 <p align="center"><strong>740개 이상의 채용 공고 평가 · 100개 이상의 맞춤형 이력서 생성 · 꿈의 직장 1곳 합격</strong></p>
 
 <p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/커뮤니티_참여하기-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   &nbsp;
-  <a href="https://www.npmjs.com/package/@santifer/career-ops"><img src="https://img.shields.io/npm/dt/@santifer/career-ops?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
+  <a href="https://www.npmjs.com/package/@santifer/jobber"><img src="https://img.shields.io/npm/dt/@santifer/jobber?style=for-the-badge&logo=npm&color=CB3837&label=npx%20installs" alt="npm installs"></a></p>
 
 <p align="center">
   <a href="https://claude.com/claude-code"><img src="https://img.shields.io/badge/Built_with-Claude_Code-000?style=for-the-badge&logo=anthropic&logoColor=white" alt="Built with Claude Code"></a>
@@ -65,7 +67,7 @@
 
 ## 이게 뭔가요
 
-career-ops는 AI 코딩 CLI를 취업 활동 전체를 관리하는 커맨드 센터로 바꿔줍니다. 스프레드시트에서 수동으로 지원 현황을 관리하는 대신, AI 파이프라인이 알아서 처리합니다:
+Jobber는 AI 코딩 CLI를 취업 활동 전체를 관리하는 커맨드 센터로 바꿔줍니다. 스프레드시트에서 수동으로 지원 현황을 관리하는 대신, AI 파이프라인이 알아서 처리합니다:
 
 - **공고 평가** -- 구조화된 A-F 평가 (다섯 개 항목이 1.0-5.0점으로 산출됨)
 - **맞춤형 PDF 생성** -- JD별로 최적화된 ATS 이력서
@@ -73,13 +75,13 @@ career-ops는 AI 코딩 CLI를 취업 활동 전체를 관리하는 커맨드 �
 - **일괄 처리** -- 서브 에이전트로 10개 이상의 공고를 병렬 평가
 - **통합 추적** -- 무결성 검사가 포함된 단일 데이터 소스
 
-> **중요: 이 도구는 무차별 지원 도구가 아닙니다.** career-ops는 필터입니다 -- 수백 개의 공고 중 당신의 시간을 투자할 가치가 있는 소수의 공고를 찾아줍니다. 4.0/5 미만의 공고에는 지원하지 않는 것을 강력히 권장합니다. 당신의 시간도, 채용 담당자의 시간도 소중합니다. 제출 전에 항상 직접 검토하세요.
+> **중요: 이 도구는 무차별 지원 도구가 아닙니다.** Jobber는 필터입니다 -- 수백 개의 공고 중 당신의 시간을 투자할 가치가 있는 소수의 공고를 찾아줍니다. 4.0/5 미만의 공고에는 지원하지 않는 것을 강력히 권장합니다. 당신의 시간도, 채용 담당자의 시간도 소중합니다. 제출 전에 항상 직접 검토하세요.
 
-career-ops는 에이전트 기반으로 작동합니다: Claude Code가 Playwright로 채용 페이지를 탐색하고, 키워드 매칭이 아닌 이력서와 JD를 비교 분석하여 적합도를 판단하고, 공고별로 이력서를 맞춤 생성합니다.
+Jobber는 에이전트 기반으로 작동합니다: Claude Code가 Playwright로 채용 페이지를 탐색하고, 키워드 매칭이 아닌 이력서와 JD를 비교 분석하여 적합도를 판단하고, 공고별로 이력서를 맞춤 생성합니다.
 
 > **참고: 처음 몇 번의 평가는 정확하지 않을 수 있습니다.** 시스템이 아직 당신을 모르기 때문입니다. 이력서, 커리어 스토리, 주요 성과, 선호도, 잘하는 것, 피하고 싶은 것 등 맥락을 알려주세요. 정보를 줄수록 더 정확해집니다. 새로운 리크루터를 온보딩한다고 생각하세요: 첫 주는 당신을 파악하는 시간이고, 그 이후부터 진가를 발휘합니다.
 
-740개 이상의 채용 공고를 평가하고, 100개 이상의 맞춤 이력서를 생성하여, Head of Applied AI 포지션에 합격한 사람이 직접 만들었습니다. [전체 케이스 스터디 읽기](https://santifer.io/career-ops-system).
+740개 이상의 채용 공고를 평가하고, 100개 이상의 맞춤 이력서를 생성하여, Head of Applied AI 포지션에 합격한 사람이 직접 만들었습니다. [전체 케이스 스터디 읽기](https://santifer.io/jobber-system).
 
 ## 주요 기능
 
@@ -101,28 +103,28 @@ career-ops는 에이전트 기반으로 작동합니다: Claude Code가 Playwrig
 **가장 빠른 방법 — 명령어 하나:**
 
 ```bash
-npx @santifer/career-ops init
+npx @santifer/jobber init
 ```
 
 > 💡 `npx`는 [Node.js](https://nodejs.org)에 함께 제공됩니다 — 전역으로 아무것도
 > 설치하지 않고 인스톨러를 한 번만 실행합니다. 아직 Node가 없다면 먼저 설치하세요.
 > (이미 Claude Code / Gemini / Codex CLI를 사용 중이라면 이미 가지고 있습니다.)
 
-이 명령어는 최신 릴리스를 `./career-ops`에 클론하고 의존성을 설치합니다. 그다음:
+이 명령어는 최신 릴리스를 `./jobber`에 클론하고 의존성을 설치합니다. 그다음:
 
 ```bash
-cd career-ops
+cd Jobber
 claude   # or gemini / codex / qwen / opencode — open your AI CLI here
 ```
 
-**처음 실행하면 career-ops가 대화만으로 설정 과정을 안내합니다 — 이력서, 프로필, 목표 직무까지. 손으로 편집할 것이 없습니다.**
+**처음 실행하면 Jobber가 대화만으로 설정 과정을 안내합니다 — 이력서, 프로필, 목표 직무까지. 손으로 편집할 것이 없습니다.**
 
 <details>
 <summary><b>수동으로 설정하고 싶으신가요? (git clone)</b></summary>
 
 ```bash
-git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+git clone https://github.com/santifer/jobber.git
+cd Jobber && npm install
 npx playwright install chromium   # only needed for PDF generation
 claude   # open your AI CLI — it onboards you on first launch
 ```
@@ -135,24 +137,24 @@ claude   # open your AI CLI — it onboards you on first launch
 
 ## 사용법
 
-career-ops는 다양한 모드를 가진 하나의 슬래시 커맨드입니다:
+Jobber는 다양한 모드를 가진 하나의 슬래시 커맨드입니다:
 
 ```
-/career-ops                → 사용 가능한 모든 명령어 표시
-/career-ops {JD 붙여넣기}  → 전체 자동 파이프라인 (평가 + PDF + 트래커)
-/career-ops scan           → 포털에서 새 공고 스캔
-/career-ops pdf            → ATS 최적화 이력서 생성
-/career-ops batch          → 여러 공고 일괄 평가
-/career-ops tracker        → 지원 현황 확인
-/career-ops apply          → AI로 지원서 양식 작성
-/career-ops pipeline       → 대기 중인 URL 처리
-/career-ops contacto       → LinkedIn 아웃리치 메시지
-/career-ops deep           → 기업 심층 리서치
-/career-ops training       → 교육 및 자격증 가치 평가
-/career-ops project        → 포트폴리오 프로젝트 평가
+/jobber                → 사용 가능한 모든 명령어 표시
+/jobber {JD 붙여넣기}  → 전체 자동 파이프라인 (평가 + PDF + 트래커)
+/jobber scan           → 포털에서 새 공고 스캔
+/jobber pdf            → ATS 최적화 이력서 생성
+/jobber batch          → 여러 공고 일괄 평가
+/jobber tracker        → 지원 현황 확인
+/jobber apply          → AI로 지원서 양식 작성
+/jobber pipeline       → 대기 중인 URL 처리
+/jobber contacto       → LinkedIn 아웃리치 메시지
+/jobber deep           → 기업 심층 리서치
+/jobber training       → 교육 및 자격증 가치 평가
+/jobber project        → 포트폴리오 프로젝트 평가
 ```
 
-채용 공고 URL이나 설명을 바로 붙여넣어도 됩니다 -- career-ops가 자동으로 감지하여 전체 파이프라인을 실행합니다.
+채용 공고 URL이나 설명을 바로 붙여넣어도 됩니다 -- Jobber가 자동으로 감지하여 전체 파이프라인을 실행합니다.
 
 ## 작동 원리
 
@@ -204,7 +206,7 @@ npm run build:dashboard   # optional: build the standalone binary
 ## 프로젝트 구조
 
 ```
-career-ops/
+jobber/
 ├── CLAUDE.md                    # 에이전트 지시사항
 ├── cv.md                        # 내 이력서 (직접 생성)
 ├── article-digest.md            # 주요 성과 정리 (선택)
@@ -253,23 +255,23 @@ career-ops/
 
 ## 저자 소개
 
-Santiago입니다 -- Head of Applied AI, 전직 창업자 (직접 사업을 만들고 매각했으며, 아직도 제 이름으로 운영되고 있습니다). 제 취업 활동을 관리하기 위해 career-ops를 만들었습니다. 효과가 있었습니다: 이 시스템으로 현재 포지션에 합격했습니다.
+Santiago입니다 -- Head of Applied AI, 전직 창업자 (직접 사업을 만들고 매각했으며, 아직도 제 이름으로 운영되고 있습니다). 제 취업 활동을 관리하기 위해 Jobber를 만들었습니다. 효과가 있었습니다: 이 시스템으로 현재 포지션에 합격했습니다.
 
 포트폴리오 및 기타 오픈소스 프로젝트 → [santifer.io](https://santifer.io)
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
+<a href="https://www.star-history.com/?repos=santifer%2FJobber&type=timeline&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
-   <img alt="Star History 차트" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
+   <img alt="Star History 차트" src="https://api.star-history.com/chart?repos=santifer/jobber&type=timeline&legend=top-left" />
  </picture>
 </a>
 
 ## 면책 조항
 
-**career-ops는 로컬 오픈소스 도구이며, 별도의 호스팅 서비스가 아닙니다.** 이 소프트웨어를 사용함으로써 다음 사항에 동의하는 것으로 간주됩니다:
+**Jobber는 로컬 오픈소스 도구이며, 별도의 호스팅 서비스가 아닙니다.** 이 소프트웨어를 사용함으로써 다음 사항에 동의하는 것으로 간주됩니다:
 
 1. **데이터 주권:** 모든 데이터는 사용자의 로컬 머신에 머물며, 선택한 AI 프로바이더와 직접 통신합니다. 이력서, 연락처, 개인정보는 사용자의 컴퓨터에 저장되며, 선택한 AI 제공사 (Anthropic, OpenAI 등)에게만 직접 전송됩니다. 저희는 어떤 데이터도 수집, 저장, 접근하지 않습니다.
 2. **AI 제어는 사용자 책임입니다.** 기본 프롬프트는 AI가 지원서를 자동 제출하지 않도록 설정되어 있으나, AI 모델은 예측 불가능하게 동작할 수 있습니다. 프롬프트를 수정하거나 다른 모델을 사용하는 경우 사용자의 책임입니다. **제출 전에 항상 AI가 생성한 콘텐츠의 정확성을 확인하세요.**

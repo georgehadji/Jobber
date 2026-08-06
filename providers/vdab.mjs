@@ -178,7 +178,7 @@ export default {
   /**
    * Fetches and normalizes postings from VDAB's vacatureLight search API.
    * @param {{ name?: string, vdab?: any }} entry
-   * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, fetchText: (url: string, opts?: object) => Promise<string> }} ctx
+   * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, fetchText: (url: string, opts?: object) => Promise<string>, maxPages?: number }} ctx
    * @returns {Promise<Array<{title: string, url: string, company: string, location: string, postedAt?: number}>>}
    */
   async fetch(entry, ctx) {

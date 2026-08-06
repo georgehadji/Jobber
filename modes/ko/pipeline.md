@@ -1,6 +1,8 @@
 # 모드: pipeline -- URL Inbox (Second Brain)
 
-`data/pipeline.md`에 쌓인 채용 공고 URL을 처리합니다. 후보자는 원할 때 URL을 추가하고, 이후 `/career-ops pipeline`을 실행해 한 번에 처리합니다.
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+`data/pipeline.md`에 쌓인 채용 공고 URL을 처리합니다. 후보자는 원할 때 URL을 추가하고, 이후 `/jobber pipeline`을 실행해 한 번에 처리합니다.
 
 ## Workflow
 

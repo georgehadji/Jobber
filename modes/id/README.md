@@ -1,6 +1,8 @@
-# career-ops -- Mode Bahasa Indonesia (`modes/id/`)
+# Jobber -- Mode Bahasa Indonesia (`modes/id/`)
 
-Folder ini berisi terjemahan Bahasa Indonesia dari mode-mode utama career-ops untuk kandidat yang membidik pasar kerja Indonesia (startup tech, perusahaan, dan portal seperti Glints, Jobstreet, Kalibrr, LinkedIn ID).
+<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+
+Folder ini berisi terjemahan Bahasa Indonesia dari mode-mode utama Jobber untuk kandidat yang membidik pasar kerja Indonesia (startup tech, perusahaan, dan portal seperti Glints, Jobstreet, Kalibrr, LinkedIn ID).
 
 ## Kapan memakai mode ini?
 

@@ -9,7 +9,7 @@ import { buildHtml } from '../generate-cover-letter.mjs';
 
 console.log('\nCover letter fact gate');
 
-const tmp = mkdtempSync(join(tmpdir(), 'career-ops-cover-facts-'));
+const tmp = mkdtempSync(join(tmpdir(), 'jobber-cover-facts-'));
 try {
   const source = join(tmp, 'cv.md');
   const config = join(tmp, 'cv-facts.json');

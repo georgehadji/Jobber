@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs";
-import { careerOpsRoot, rootScript } from "@/lib/career-ops";
+import { jobberRoot, rootScript } from "@/lib/jobber";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // source of truth the CLI uses to decide onboarding. We never reimplement the
 // prerequisite list; we read the core's verdict.
 export async function GET() {
-  const root = careerOpsRoot();
+  const root = jobberRoot();
   const doctor = rootScript("doctor");
   if (!fs.existsSync(doctor)) {
     return Response.json({ available: false, onboardingNeeded: false, missing: [], warnings: [] });

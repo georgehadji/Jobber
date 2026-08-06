@@ -17,6 +17,14 @@ const CONCURRENT_ROW = '| 99 | 2026-01-03 | ConcurrentCo | Keeper | 4.3/5 | Appl
 let passed = 0;
 let failed = 0;
 
+// Hang-guard for waiting on a spawned writer to exit. This is a deadlock
+// backstop, NOT an assertion: what each test asserts is the child's own lock
+// timeout and its exit code. The previous 2-5s budgets had to cover node
+// startup as well, and startup alone can exceed them on a loaded machine —
+// the guard then SIGKILLed a child that was about to exit correctly and the
+// test failed with timedOut=true. Generous here costs nothing when tests pass.
+const SPAWN_GUARD_MS = 30_000;
+
 function pass(message) { console.log(`PASS ${message}`); passed++; }
 function fail(message) { console.error(`FAIL ${message}`); failed++; }
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -44,9 +52,9 @@ async function runWhileLocked({
   completion = 'completes the intended update after lock release',
   beforeMutationOutput = null,
 }) {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-writer-lock-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-writer-lock-'));
   const tracker = join(dir, 'applications.md');
-  const lockDir = join(dir, `career-ops-merge-tracker-${name}.lock`);
+  const lockDir = join(dir, `jobber-merge-tracker-${name}.lock`);
   const db = join(dir, 'applications.db');
   writeFileSync(tracker, content);
 
@@ -64,10 +72,10 @@ async function runWhileLocked({
 
   const childEnv = {
     ...process.env,
-    CAREER_OPS_TRACKER: tracker,
-    CAREER_OPS_TRACKER_DB: db,
-    CAREER_OPS_TRACKER_LOCK: lockDir,
-    CAREER_OPS_TRACKER_LOCK_RETRY_MS: '20',
+    JOBBER_TRACKER: tracker,
+    JOBBER_TRACKER_DB: db,
+    JOBBER_TRACKER_LOCK: lockDir,
+    JOBBER_TRACKER_LOCK_RETRY_MS: '20',
   };
   const launchWriter = (timeoutMs) => {
     let stdout = '';
@@ -77,7 +85,7 @@ async function runWhileLocked({
       cwd: ROOT,
       env: {
         ...childEnv,
-        CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS: String(timeoutMs),
+        JOBBER_TRACKER_LOCK_TIMEOUT_MS: String(timeoutMs),
       },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -112,10 +120,16 @@ async function runWhileLocked({
   });
 
   const probe = launchWriter(200);
-  const probeResult = await waitForWriter(probe, 2_000);
+  const probeResult = await waitForWriter(probe, SPAWN_GUARD_MS);
   const probeOutput = probe.output();
+  // LockTimeoutError's message moved from "Timed out waiting for tracker
+  // lock at X" to "tracker lock timeout: X held > Yms" when the tracker lock
+  // was extracted into lib/file-lock.mjs (#improvement-plan A2) as a shared
+  // primitive serving multiple lock kinds. `err.code = 'LOCK_TIMEOUT'` is the
+  // stable contract callers branch on (see acquireTrackerLock's catch); the
+  // prose is not. Match the current wording, not the pre-extraction one.
   if (!probeResult.timedOut && probeResult.code !== 0
-      && `${probeOutput.stdout}${probeOutput.stderr}`.includes('Timed out waiting for tracker lock')
+      && `${probeOutput.stdout}${probeOutput.stderr}`.includes('lock timeout')
       && readFileSync(tracker, 'utf-8') === content) {
     pass(`${name}: contends on the shared lock before reading or writing`);
   } else {
@@ -145,7 +159,7 @@ async function runWhileLocked({
     lock.release();
   }
 
-  const result = await waitForWriter(run, 5_000);
+  const result = await waitForWriter(run, SPAWN_GUARD_MS);
   const { stdout, stderr } = run.output();
 
   const after = existsSync(tracker) ? readFileSync(tracker, 'utf-8') : '';
@@ -262,7 +276,7 @@ await runWhileLocked({
 });
 
 async function testTrackerLockReleaseRetriesPartialCleanup() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-lock-release-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-lock-release-'));
   const lockDir = join(dir, 'tracker.lock');
   let removeAttempts = 0;
   try {
@@ -306,7 +320,7 @@ async function testTrackerLockReleaseRetriesPartialCleanup() {
 await testTrackerLockReleaseRetriesPartialCleanup();
 
 async function testTrackerLockReleasePreservesReplacementAfterPartialCleanup() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-lock-replacement-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-lock-replacement-'));
   const lockDir = join(dir, 'tracker.lock');
   let removeAttempts = 0;
   try {
@@ -347,7 +361,7 @@ async function testTrackerLockReleasePreservesReplacementAfterPartialCleanup() {
 await testTrackerLockReleasePreservesReplacementAfterPartialCleanup();
 
 async function testTrackerTransactionCloseReportsCleanupFailure() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-transaction-close-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-transaction-close-'));
   const tracker = join(dir, 'applications.md');
   const lockDir = join(dir, 'tracker.lock');
   const originalConsoleError = console.error;
@@ -385,7 +399,7 @@ async function testTrackerTransactionCloseReportsCleanupFailure() {
 await testTrackerTransactionCloseReportsCleanupFailure();
 
 async function testReplyWatchConflictingRecommendations() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-reply-conflict-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-reply-conflict-'));
   const tracker = join(dir, 'applications.md');
   const candidatesPath = join(dir, 'candidates.json');
   const db = join(dir, 'applications.db');
@@ -417,11 +431,11 @@ async function testReplyWatchConflictingRecommendations() {
       cwd: ROOT,
       env: {
         ...process.env,
-        CAREER_OPS_TRACKER: tracker,
-        CAREER_OPS_TRACKER_DB: db,
-        CAREER_OPS_TRACKER_LOCK: join(dir, 'career-ops-merge-tracker-conflict.lock'),
-        CAREER_OPS_TRACKER_LOCK_TIMEOUT_MS: '1000',
-        CAREER_OPS_TRACKER_LOCK_RETRY_MS: '20',
+        JOBBER_TRACKER: tracker,
+        JOBBER_TRACKER_DB: db,
+        JOBBER_TRACKER_LOCK: join(dir, 'jobber-merge-tracker-conflict.lock'),
+        JOBBER_TRACKER_LOCK_TIMEOUT_MS: '1000',
+        JOBBER_TRACKER_LOCK_RETRY_MS: '20',
       },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -429,7 +443,7 @@ async function testReplyWatchConflictingRecommendations() {
     child.stderr.on('data', chunk => { stderr += chunk; });
     child.stdin.end();
     const closePromise = new Promise(resolve => child.once('close', code => resolve({ code })));
-    let result = await Promise.race([closePromise, sleep(3_000).then(() => null)]);
+    let result = await Promise.race([closePromise, sleep(SPAWN_GUARD_MS).then(() => null)]);
     if (result === null) {
       child.kill('SIGKILL');
       result = await closePromise;
@@ -484,7 +498,7 @@ const INSIDE_GRACE_MS = 100;   // ownerless for 100ms: past staleMs, well inside
 const SMALL_STALE_MS = 10;
 
 async function testFreshOwnerlessLockIsNotStolen() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-ownerless-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-ownerless-'));
   const lockDir = join(dir, 'tracker.lock');
   try {
     // Stands in for a winner that has run mkdirSync but not yet written
@@ -512,7 +526,7 @@ async function testFreshOwnerlessLockIsNotStolen() {
 }
 
 async function testAgedOwnerlessLockStillRecovers() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-ownerless-aged-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-ownerless-aged-'));
   const lockDir = join(dir, 'tracker.lock');
   try {
     // A real orphan: ownerless *and* older than any grace period.
@@ -535,7 +549,7 @@ async function testAgedOwnerlessLockStillRecovers() {
 }
 
 async function testLiveRecoverGuardIsNotEvicted() {
-  const dir = mkdtempSync(join(tmpdir(), 'career-ops-guard-live-'));
+  const dir = mkdtempSync(join(tmpdir(), 'jobber-guard-live-'));
   const lockDir = join(dir, 'tracker.lock');
   const guardDir = `${lockDir}.recover`;
   try {
