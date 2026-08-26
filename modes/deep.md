@@ -1,5 +1,7 @@
 # Mode: deep — Deep Research Prompt
 
+Before generating the prompt, run `node company-intel.mjs --company "{company}"` (optional, read-only, no network) — it surfaces your own tracker responsiveness/posting-churn history, `data/active-interviews.md` friction signals, and any employer-review notes you've pasted into `data/company-intel/{slug}.md`. Facts only, never a verdict. If it returns anything relevant, fold it into axis 3 or 4 below instead of re-asking the external research for what you already know locally; an empty/no-data card just means proceed as normal.
+
 Generate a structured prompt for Perplexity/Claude/ChatGPT with 6 axes:
 
 ```text

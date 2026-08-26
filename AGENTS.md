@@ -96,7 +96,9 @@ AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluat
 | `detect-reposts.mjs` | Flags roles re-listed 2+ times in 90 days from `scan-history.tsv` (JSON or `--summary`) |
 | `check-table-freshness.mjs` | Staleness validator for jurisdiction data tables — flags `expired` rows (past `next_effective` without re-verification, exit 1) and `review-due` rows (`as_of` older than 12 months, soft); discovers any `templates/*.yml` with `as_of` rows automatically (JSON or `--summary` table output) |
 | `process-quality.mjs` | Per-company recruiting-friction rate from `[process-friction]` tags in `data/active-interviews.md` Notes (JSON or `--summary`) |
+| `company-intel.mjs` | Read-only research card joining company-history's evidence, process-quality's friction rate, and optional pasted employer-review notes (`data/company-intel/{slug}.md`, gitignored) — facts only, never a score or verdict; research context for `interview-redflag`/`deep`, never a content-generation source (JSON or `--summary`) |
 | `salary-gap.mjs` | Desired/advertised/actual comp gap analyzer — folds report `advertised_comp` + `data/salary-observations.tsv` (JSON or `--summary`) |
+| `salary-import.mjs` | Normalizes a local salary-benchmark export (JSON) into `data/salary-observations.tsv` — zero network, zero keys; writes `advertised`/`source: benchmark` (bottom trust tier), never `actual` |
 | `assessment-log.mjs` | Skills-assessment logger — `add` appends platform/subject/threshold/score + staleness note to `data/assessments.tsv` (JSON or `--summary`) |
 | `jd-skill-gap.mjs` | Zero-LLM JD skill classifier vs `cv.md`: existing / supportedByResume / gap; never auto-adds claims to `cv.md` (JSON or `--summary`) |
 | `contacts.mjs` | Job-search phonebook → vCard 3.0 exporter — stable UIDs so re-imports update instead of duplicating on platforms that honor vCard UID (JSON, `--summary`, `--vcf`, `--caller-id`) |

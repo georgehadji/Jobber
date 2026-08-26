@@ -998,6 +998,96 @@ search_queries:
 # company_aliases:
 #   Fin: [Intercom]
 
+# -- Keyed provider examples: LinkedIn / Indeed / Glassdoor (optional, opt-in) --
+# Core providers (above) are zero-auth against public endpoints by design —
+# LinkedIn, Indeed, and Glassdoor cannot be one (login walls, anti-bot). They
+# go through the bundled `plugins/apify` KEYED provider instead: it runs an
+# Apify actor and maps its output into the same Job shape every other
+# provider returns. Nothing here is enabled by default.
+#
+# Setup (both required, or the entry silently does nothing):
+#   1. cp config/plugins.example.yml config/plugins.yml, set apify.enabled: true
+#   2. Put APIFY_TOKEN in .env (an Apify account + billing — these are paid runs)
+# `node doctor.mjs` confirms both gates are satisfied.
+#
+# Each stanza below was verified against its actor's own published Store /
+# input-schema page (not vendor marketing copy) — see
+# templates/job-data-sources.yml for the full provenance record, cost notes,
+# and re-verification dates. Re-check pricing before enabling: actor pricing
+# changes without notice.
+#
+# KNOWN GAP — read before relying on filters: the bundled apify plugin maps
+# only {title, url, company, location, description}. It does NOT read salary
+# or postedAt, even though these actors return them. `salary_filter` and
+# posting-age filtering silently DO NOT APPLY to any provider: apify entry —
+# every job the actor returns reaches your pipeline regardless of comp or
+# recency. This is a limitation of the bundled reference plugin
+# (docs/PLUGINS.md — bundled plugins take no feature PRs), not something you
+# can fix by editing this file.
+#
+# ToS note: scraping these three boards is adverse to their own terms of
+# service, and the legal exposure varies by jurisdiction. That tradeoff is
+# yours to make, in your jurisdiction — this cookbook makes the tradeoff
+# visible; it does not make it for you.
+#
+# - name: "LinkedIn — <your search>"
+#   provider: apify
+#   actor: valig/linkedin-jobs-scraper
+#   input:
+#     keywords: "Staff Engineer"
+#     location: "Remote"
+#     limit: 25                        # REQUIRED: unbounded = unbounded spend
+#   field_map:
+#     title:    title
+#     url:      url
+#     company:  companyName
+#     location: location
+#     description: description
+#   enabled: false
+#
+# - name: "Indeed — <your search>"
+#   provider: apify
+#   actor: misceres/indeed-scraper
+#   input:
+#     position: "Staff Engineer"
+#     location: "Remote"
+#     maxItemsPerSearch: 25            # NOT maxItems — Apify silently ignores
+#                                       # unknown input keys, so maxItems here
+#                                       # would leave the run unbounded
+#   field_map:
+#     title:    [positionName, title]
+#     url:      url
+#     company:  company
+#     location: location
+#     description: description
+#   enabled: false
+#
+# - name: "Glassdoor — <your search>"
+#   provider: apify
+#   actor: burbn/glassdoor-job-search
+#   input:
+#     query: "Staff Engineer"
+#     location: "Remote"
+#     limit: 25                        # per-request page size (1-100)
+#     maxResults: 25                   # REQUIRED total cap — separate from limit
+#   field_map:
+#     title:    jobTitle
+#     url:      jobLink
+#     company:  companyName
+#     location: locationName
+#   enabled: false
+#
+# Out of scope, on purpose: the upstream vendor catalog this cookbook was
+# drawn from also lists candidate/lead scrapers — bulk LinkedIn profile
+# export, "300M verified emails", phone lookup by profile URL, Apollo/
+# ZoomInfo-style clones. These are recruiter-side sourcing tools, they
+# harvest third-party PII from people who never consented to sit in your
+# repo, and they run against the grain of this project's own scope (quality
+# over quantity, no mass outreach, no automated blind contact — see
+# AGENTS.md § Ethical Use). Don't wire one in as a "provider" here; if you
+# want a personal contact list, `data/contacts.tsv` (via the `contacto`
+# mode) is the user-curated, consent-based equivalent.
+
 tracked_companies:
 
   # -- AI Labs & LLM providers --

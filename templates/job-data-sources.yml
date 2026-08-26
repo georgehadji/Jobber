@@ -1,0 +1,109 @@
+# Jobber — Keyed Job-Data Source Registry (reference)
+#
+# Provenance table for third-party, KEYED (paid, API-key-gated) job-data
+# sources usable through the bundled `plugins/apify/` provider. This file is
+# DATA, not instruction logic and not executable config: portals.yml is what
+# scan.mjs actually reads (see the copy-pasteable cookbook block in
+# templates/portals.example.yml, right before `tracked_companies:`). This
+# table exists so an actor's identity, coverage, and last verification date
+# live in ONE place instead of being re-discovered by hand each time.
+#
+# WHY THIS EXISTS: the upstream vendor catalog this was sourced from
+# (github.com/cporter202/job-data-apis-and-scrapers) is an unmoderated,
+# affiliate-monetized link directory of 1,149+ actors — vendor marketing
+# copy, not verified fact, and actors get renamed, delisted, or re-priced
+# with no notice. One entry considered for this table
+# (nexgendata/salary-data-search) 404'd between being listed in the catalog
+# and being checked here — proof this rot is real, not hypothetical. Every
+# row below carries `as_of`, so `node check-table-freshness.mjs` (schema-
+# agnostic discovery — any templates/*.yml row with `as_of` qualifies
+# automatically) flags a row `review-due` after 12 months with zero new code.
+#
+# CONTRIBUTION RULE (mandatory): no row lands here without
+#   1. the BARE actor id, with every referral/affiliate query parameter
+#      (`?fpr=...` and equivalents) stripped — Jobber ships publicly, and
+#      carrying a third party's affiliate tracking into a user's config
+#      without their knowledge is a consent problem, not a convenience,
+#   2. a direct check of the actor's published input/output schema (its
+#      Apify Store page or API docs) — not the vendor's own marketing
+#      blurb, which is unverified copy, AND
+#   3. an `as_of` date and a `sources` link recording where it was checked.
+# A row that only repeats the catalog's marketing description is rejected in
+# review — see the CONTRIBUTING.md discipline this mirrors.
+#
+# KNOWN GAP (do not "fix" without reading plugins/apify/index.mjs first):
+# the bundled Apify plugin's `normalizeItem()` only ever populates
+# {title, url, company, location, description} — `ALLOWED_DEFAULT_KEYS` is
+# the same four. The Job contract also carries `salary` and `postedAt`, and
+# scan.mjs filters on both. A `provider: apify` entry therefore ALWAYS
+# bypasses `salary_filter` and posting-age filtering, silently — the filter
+# looks configured and looks like it works. Every row below that would
+# otherwise carry salary/date fields notes this explicitly instead of
+# mapping fields the plugin would just drop.
+#
+# Per docs/PLUGINS.md, bundled plugins are reference seeds and take no
+# feature PRs — closing this gap is registry-successor work
+# (career-ops-plugin-apify, `"supersedesBundled": true`), not a change to
+# plugins/apify/ in this repo.
+#
+# Schema per entry (list under `sources`):
+#   id: string                — stable slug, this-repo-local
+#   vendor: string             — apify | coreclaw | mcp (transport family)
+#   actor: string               — bare "owner/actor" id, NO query string
+#   covers: list                — job board(s) this source scrapes
+#   hook: string                 — which plugin hook consumes it (provider)
+#   field_map_ref: string         — where the copy-pasteable field_map lives
+#   input_fields: list (optional)  — key input params this actor accepts,
+#                                    for writing an `input:` block by hand
+#   cost_note: string              — vendor-stated pricing, UNVERIFIED, always
+#                                    re-check before enabling (catalogs go stale)
+#   limitations: list (optional)    — known gaps (e.g. the salary/postedAt one above)
+#   verified_method: string          — how field names were confirmed (never
+#                                      "vendor description" alone)
+#   sources: list                    — where this was checked
+#   as_of: YYYY-MM-DD                — quoted string, date of the check above
+
+sources:
+  - id: apify-linkedin-jobs-valig
+    vendor: apify
+    actor: valig/linkedin-jobs-scraper
+    covers: [LinkedIn]
+    hook: provider
+    field_map_ref: templates/portals.example.yml (Keyed provider examples)
+    input_fields: [keywords, location, datePosted, limit]
+    cost_note: "vendor-listed ~$0.4 per 1,000 results — reconfirm on the actor's pricing tab before enabling"
+    limitations:
+      - "output includes a salary field but the bundled apify plugin does not map it — salary_filter never applies to this entry"
+    verified_method: "actor Store page output-schema review (no live run — no APIFY_TOKEN in this environment)"
+    sources: ["https://apify.com/valig/linkedin-jobs-scraper"]
+    as_of: "2026-08-26"
+
+  - id: apify-indeed-scraper-misceres
+    vendor: apify
+    actor: misceres/indeed-scraper
+    covers: [Indeed]
+    hook: provider
+    field_map_ref: templates/portals.example.yml (Keyed provider examples) · plugins/apify/skill.md
+    input_fields: [position, location, maxItemsPerSearch, country]
+    cost_note: "vendor pricing varies by run — reconfirm on the actor's pricing tab before enabling"
+    limitations:
+      - "output includes salary/postedAt fields but the bundled apify plugin does not map them — salary_filter and recency filtering never apply to this entry"
+      - "the actor's cost-bound input key is maxItemsPerSearch, NOT maxItems — an entry using maxItems is silently unbounded (Apify ignores unknown input keys); confirmed against this actor's own input schema, corrects the previous plugins/apify/skill.md example"
+    verified_method: "actor Store page + input-schema review (no live run — no APIFY_TOKEN in this environment)"
+    sources: ["https://apify.com/misceres/indeed-scraper", "https://apify.com/misceres/indeed-scraper/input-schema"]
+    as_of: "2026-08-26"
+
+  - id: apify-glassdoor-job-search-burbn
+    vendor: apify
+    actor: burbn/glassdoor-job-search
+    covers: [Glassdoor]
+    hook: provider
+    field_map_ref: templates/portals.example.yml (Keyed provider examples)
+    input_fields: [query, location, maxResults, remote_only, min_company_rating]
+    cost_note: "vendor pricing per result — reconfirm on the actor's pricing tab before enabling"
+    limitations:
+      - "output includes salaryMin/salaryMedian/salaryMax/rating fields but the bundled apify plugin does not map them — salary_filter never applies to this entry, and company rating is not surfaced in the scanner at all"
+      - "the cost-bound input key is maxResults (total cap), separate from limit (per-request page size, 1-100) — set both"
+    verified_method: "actor Store page output-schema review (no live run — no APIFY_TOKEN in this environment)"
+    sources: ["https://apify.com/burbn/glassdoor-job-search"]
+    as_of: "2026-08-26"

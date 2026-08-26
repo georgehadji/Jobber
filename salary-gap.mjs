@@ -55,7 +55,12 @@ const statedForNum = statedForFlagIdx !== -1 ? args[statedForFlagIdx + 1] : null
 const TRUST = {
   actual: { contract: 3, 'offer-letter': 2, 'recruiter-verbal': 1, user: 0 },
   desired: { user: 1, profile: 0 },
-  advertised: { user: 2, 'recruiter-verbal': 1, jd: 0 },
+  // `benchmark` (salary-import.mjs) sits at the bottom on purpose: a market
+  // benchmark is real signal only in the ABSENCE of a JD figure or a user
+  // observation for this tracker#, never a substitute for either. pickEffective
+  // takes the single highest-trust row per (num, type), so a benchmark row
+  // surfaces exactly when nothing better exists — and never outranks one.
+  advertised: { user: 3, 'recruiter-verbal': 2, jd: 1, benchmark: 0 },
 };
 
 // --- Amount parsing ---
