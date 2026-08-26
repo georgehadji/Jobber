@@ -20,8 +20,8 @@
 # automatically) flags a row `review-due` after 12 months with zero new code.
 #
 # CONTRIBUTION RULE (mandatory): no row lands here without
-#   1. the BARE actor id, with every referral/affiliate query parameter
-#      (`?fpr=...` and equivalents) stripped — Jobber ships publicly, and
+#   1. the BARE actor id, with every referral/affiliate tracking query
+#      parameter stripped — Jobber ships publicly, and
 #      carrying a third party's affiliate tracking into a user's config
 #      without their knowledge is a consent problem, not a convenience,
 #   2. a direct check of the actor's published input/output schema (its

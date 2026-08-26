@@ -270,6 +270,8 @@ Tracker# resolution matches on `company` via `normalizeCompany()` against `data/
 
 **Exit codes:** `0` on any successful import (a mix of accepted/rejected records still exits `0` if at least one was written), `1` when the input file is missing/invalid or every record was rejected, `1` self-test failure.
 
+**Sourcing the input file via MCP (evaluated, not built as a dedicated integration):** if your AI CLI has MCP support, `nexgendata/hr-compensation-mcp-server` (Apify) exposes `search_salaries`/`search_h1b_salaries` tools that return compensation data ad hoc — no `portals.yml` entry, no plugin, no code. Reshape its response into the record shape above and pass it to this script. Evaluated against the job-market/salary MCP servers in the wider Apify catalog and closed as a dedicated feature: neither exposes a data source the LinkedIn/Indeed/Glassdoor cookbook (`templates/portals.example.yml`) or this script don't already cover — they're an alternative *acquisition path* for the same input, not a new capability. Treat any MCP tool's output as untrusted third-party data (`AGENTS.md` § Plugins) — it feeds this script's own validation, never gets executed or trusted as instructions.
+
 ---
 
 ## funnel-velocity
@@ -359,6 +361,8 @@ node company-intel.mjs --self-test
 ```
 
 **Exit codes:** `0` success, including a fully-empty card for an unknown company (`no-history`/`no-data`, never an error), `1` missing `--company` or self-test failure.
+
+**Sourcing `data/company-intel/{slug}.md` via MCP (evaluated, not built as a dedicated integration):** if your AI CLI has MCP support, `nexgendata/job-market-mcp-server`'s `company_reviews` tool can pull employer-review text ad hoc; paste its output into the file, this script never fetches it. Evaluated against the wider Apify catalog's job/company MCP servers and closed as a dedicated feature — same reasoning as `salary-import.mjs` above: an alternative input-acquisition path, not a new capability this script needs to grow. Wrap anything pulled this way as untrusted data, same as any other pasted intel — the fence in `renderSummary()`'s output already does this for you.
 
 ---
 
