@@ -38,7 +38,11 @@ Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previ
     - The rendered PDF has a two-page warning threshold by default. `--max-pages=N` accepts a positive integer; pass `--max-pages=1` when the user or market prefers a one-page CV.
     - If the rendered PDF exceeds its threshold, generation warns loudly with the actual and allowed page counts plus trimming guidance, then reports and indexes the unchanged PDF so existing longer-CV flows keep working.
     - Pass `--strict-pages` only when the user or market requires a hard limit. Strict overflow leaves the draft available for inspection but does not report or index it as successful; trim lower-priority content and rerun.
-21. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
+21. Emit the ATS-safe plaintext twin from the same payload: `node build-cv-plaintext.mjs /tmp/cv-{candidate}-{company}.json {txt-path}`, where `{txt-path}` is the active bundle's `cv/tailored/vNNN/cv.txt` or `output/cv-{candidate}-{company}-{YYYY-MM-DD}.txt` for a one-off CV.
+    - Plain text is the one format every ATS reads byte-faithfully: no columns to mis-order, no font substitution to corrupt ligatures, no PDF text-layer extraction to go wrong.
+    - Use it when a portal offers a plaintext paste box (many Workday and Taleo flows do), when a recruiter asks for "text only", or when the posting warns against attachments.
+    - It renders from the *same* JSON payload as the HTML, so it carries the same tailoring and the same fact-gated content — it is not a separate CV to keep in sync.
+22. Report: PDF path, plaintext path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
 
 ## ATS Rules (clean parsing)
 

@@ -216,7 +216,36 @@ try {
   if (allEvidenceValid) pass('every dimension\'s evidence spans are valid SourceSpans');
   else fail('some evidence spans were malformed');
 
-  // 22. Determinism: scoring the same document twice gives byte-identical
+  // 22. REGRESSION (ReDoS): scoring a large document must stay linear.
+  //     contact.mjs's EMAIL_RE and LINK_RE were both quadratic on input with
+  //     no '@' and no '.' — the leading unbounded quantifier matched to the end
+  //     of the string, failed, and backtracked once per starting position.
+  //     Measured on a run of 'x': EMAIL 139ms at 10k rising to 8678ms at 80k
+  //     (4x per doubling); LINK 219ms rising to 11186ms. At the ingest
+  //     adapter's 256KB ceiling that was a ~2-minute hang, and it is how the
+  //     bug surfaced — as a 120s test timeout, visible only in the parallel
+  //     runner. Bounding every quantifier to its real RFC/DNS limit made both
+  //     linear. This asserts the shape of the curve, not a wall-clock budget:
+  //     an 8x input increase must not produce a superlinear time increase.
+  const scaleFor = (n) => {
+    const header = '# T\n\n## S\n';
+    const doc = parseCvMarkdown(header + 'x'.repeat(n));
+    if (!doc.ok) throw new Error('perf fixture failed to parse');
+    const t = Date.now();
+    scoreCv(doc.value);
+    return Date.now() - t;
+  };
+  const small = Math.max(1, scaleFor(10_000));
+  const large = Math.max(1, scaleFor(80_000));
+  // Quadratic would be ~64x for an 8x input growth; linear ~8x. A generous 20x
+  // ceiling separates the two decisively without being flaky on a loaded runner.
+  if (large / small < 20) {
+    pass(`scoring scales sub-quadratically with input size (8x input -> ${(large / small).toFixed(1)}x time)`);
+  } else {
+    fail(`scoring looks superlinear: 10k=${small}ms, 80k=${large}ms (${(large / small).toFixed(1)}x for 8x input)`);
+  }
+
+  // 23. Determinism: scoring the same document twice gives byte-identical
   //     JSON output — the reproducibility property the whole rubric depends on.
   const run1 = JSON.stringify(scoreCv(canonical));
   const run2 = JSON.stringify(scoreCv(canonical));

@@ -22,7 +22,18 @@
 // scoring a CV's completeness, not validating a login form. It will pass
 // "name@example.com" and reject "not an email", which is the bar that matters
 // here.
-const EMAIL_RE = /[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/;
+//
+// Every quantifier is BOUNDED, and that is load-bearing rather than tidiness.
+// The original `[\w.+-]+@...` was quadratic on input containing no '@': the
+// leading `+` matches greedily to the end of the string, fails to find '@',
+// backtracks one character, fails again — once per starting position, so
+// O(n^2) overall. Measured on a run of 'x': 139ms at 10k, 559ms at 20k,
+// 2132ms at 40k, 8678ms at 80k — a clean 4x per doubling. At this module's
+// 256KB ingest ceiling that is a ~2-minute hang, which is exactly how it was
+// found: it timed out a test at 120s. Bounding the local part to 64 characters
+// and each domain label to 63 matches RFC 5321's real limits, so the pattern
+// is simultaneously more correct and linear (7ms at 10k, 37ms at 80k).
+const EMAIL_RE = /[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){0,8}\.[a-zA-Z]{2,24}/;
 
 // Loosely matches a run of digit groups joined by common phone punctuation
 // (+, spaces, dashes, parens) — deliberately permissive across international
@@ -40,7 +51,15 @@ const PHONE_RE = /(?:\+\d{1,3}[\s.-]?)?\(?\d{2,4}\)?(?:[\s.-]\d{2,4}){2,4}/;
 // A bare domain-like token (linkedin.com/in/x, alexchen.dev) or a scheme'd URL.
 // Global (/g): findLink() below needs every link-shaped substring in a claim,
 // not just the first — see its own comment for why.
-const LINK_RE = /(?:https?:\/\/)?(?:[\w-]+\.)+[a-z]{2,}(?:\/[\w./-]*)?/gi;
+//
+// Bounded for the same reason EMAIL_RE is, and it was worse: the original
+// `(?:[\w-]+\.)+` nests one unbounded quantifier inside another, so on a long
+// run of word characters with no '.' the engine explores repeatedly-split
+// partitions of the same text. Measured on a run of 'x': 219ms at 10k, 11186ms
+// at 80k. Anchoring each repetition on a literal '.' and bounding every
+// quantifier (63 per DNS label, 8 labels, 512 for the path) makes it linear —
+// 5ms at 10k, 35ms at 80k — while still matching every real CV URL shape.
+const LINK_RE = /(?:https?:\/\/)?[\w-]{1,63}(?:\.[\w-]{1,63}){1,8}(?:\/[\w./-]{0,512})?/gi;
 
 /**
  * Find the first claim (in candidate order) whose text contains a
