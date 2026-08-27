@@ -3,8 +3,9 @@
 //
 // Ported from the `providers/_apify.mjs` contributed by @ageem23 in #693 (with
 // thanks). The only change for the plugin layer: runActor() takes the token as
-// an argument (supplied from the plugin's scoped ctx.env) instead of reading
-// process.env directly. Files prefixed with _ are never discovered as plugins.
+// a required argument (supplied from the plugin's scoped ctx.env) instead of
+// reading process.env directly. Files prefixed with _ are never discovered as
+// plugins.
 //
 // Uses the async pattern (start → poll → fetch dataset) rather than the
 // long-polling /run-sync-get-dataset-items endpoint, which holds one HTTP
@@ -24,7 +25,7 @@ const PER_REQUEST_TIMEOUT_MS = 15_000;
 const CONNECT_RETRY_ATTEMPTS = 3;
 const TERMINAL_STATUSES = new Set(['SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT']);
 
-export function hasToken(token = process.env.APIFY_TOKEN) {
+export function hasToken(token) {
   return Boolean(token);
 }
 
@@ -184,7 +185,19 @@ async function fetchDatasetItems(runId, token, deadline = null) {
   return items;
 }
 
-export async function runActor(actorId, input, { timeoutMs = DEFAULT_RUN_TIMEOUT_MS, token = process.env.APIFY_TOKEN } = {}) {
+/**
+ * Run an Apify actor and return its dataset items.
+ *
+ * `token` is required and has no process.env fallback: the plugin boundary is
+ * the only thing that may read ambient env (see plugins/_engine.mjs buildCtx),
+ * so callers must pass the token from their scoped ctx.env.
+ *
+ * @param {string} actorId
+ * @param {object} input
+ * @param {{timeoutMs?: number, token?: string}} [opts]
+ * @returns {Promise<object[]>}
+ */
+export async function runActor(actorId, input, { timeoutMs = DEFAULT_RUN_TIMEOUT_MS, token } = {}) {
   if (!token) throw new Error('APIFY_TOKEN not set');
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     throw new Error(`apify: invalid timeoutMs ${JSON.stringify(timeoutMs)} (must be a positive finite number of milliseconds)`);

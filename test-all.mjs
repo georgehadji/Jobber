@@ -35,6 +35,8 @@ import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
+import { classifyFetchError } from './lib/http-errors.mjs';
+import { discoverTests, callsProcessExit } from './lib/test-discovery.mjs';
 
 /**
  * Read a repo-relative text file as UTF-8.
@@ -78,22 +80,10 @@ const normalizeEol = (text) => text.replace(/\r\n/g, '\n');
 const readTextLF = (path) => normalizeEol(readFile(path));
 
 // ── Auto-discovered test files (issue #1440) ─────────────────────────────
-// Deterministic: recursive readdirSync with default lexicographic sort of
-// entry names — same order on every run and OS. No glob library, no
-// registration list. Discovery is limited to tests/ so root-level
-// standalone *.test.mjs files are never picked up.
+// Discovery is limited to tests/ so root-level standalone *.test.mjs files
+// are never picked up. Walk + safety-guard logic lives in lib/test-discovery.mjs,
+// shared with test-runner.mjs so the two can never silently drift.
 const TESTS_DIR = join(ROOT, 'tests');
-
-function discoverTests(dir) {
-  const out = [];
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...discoverTests(full));
-    else if (entry.name.endsWith('.test.mjs')) out.push(full);
-  }
-  return out;
-}
 
 async function runDiscovered(filter = null) {
   let files = discoverTests(TESTS_DIR);
@@ -111,7 +101,7 @@ async function runDiscovered(filter = null) {
     // process.exit() inside one would terminate test-all mid-run with a forged
     // exit code — every later section (and finish()) would silently never run.
     // Refuse to import such a suite and fail loudly instead (#1916 regression).
-    if (/\bprocess\.exit\s*\(/.test(readFileSync(f, 'utf-8'))) {
+    if (callsProcessExit(readFileSync(f, 'utf-8'))) {
       fail(`${f.slice(ROOT.length + 1)} calls process.exit() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
       continue;
     }
@@ -3912,7 +3902,7 @@ tracked_companies:
 console.log('\n10b. Portal slug validator');
 
 try {
-  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies, classifyFetchError } =
+  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies } =
     await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
 
   const slugs = deriveSlugCandidates('Acme Corp!');

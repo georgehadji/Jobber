@@ -37,11 +37,12 @@
  * only; files printing their own markers are counted as best-effort.
  */
 
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { spawnSync } from 'child_process';
 import { cpus } from 'os';
+import { discoverTests, callsProcessExit } from './lib/test-discovery.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)));
 const TESTS_DIR = join(ROOT, 'tests');
@@ -58,19 +59,6 @@ const PARALLEL = parallelIdx !== -1
 const onlyIdx = args.indexOf('--only');
 const ONLY = onlyIdx !== -1 ? (args[onlyIdx + 1] ?? null) : null;
 
-/** Recursive discovery — identical order to test-all.mjs (lexicographic). */
-function discoverTests(dir) {
-  const out = [];
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-    a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...discoverTests(full));
-    else if (entry.name.endsWith('.test.mjs')) out.push(full);
-  }
-  return out;
-}
-
 /**
  * The process.exit() guard — a discovered suite that exits itself would
  * terminate the runner mid-run. Same refusal as test-all (#1916).
@@ -79,7 +67,7 @@ function discoverTests(dir) {
  * @returns {boolean} True when the file is safe to run.
  */
 function isSafeToRun(file) {
-  if (!/\bprocess\.exit\s*\(/.test(readFileSync(file, 'utf-8'))) return true;
+  if (!callsProcessExit(readFileSync(file, 'utf-8'))) return true;
   console.log(`  ❌ ${file.slice(ROOT.length + 1)} calls process.exit() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
   return false;
 }

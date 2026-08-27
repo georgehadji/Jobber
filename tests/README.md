@@ -13,8 +13,11 @@ Node.js (`tests/helpers.mjs`).
 ## Layout
 
 - `helpers.mjs` — shared assertion helpers and counters. Exports `pass`,
-  `fail`, `warn`, plus `ROOT` (repo root), `QUICK` (`--quick` flag), and
-  `NODE` (current Node binary).
+  `fail`, `warn`, `results`, `finish`, `run`, `fileExists`, `getBash`,
+  `toBashPath`, `captureConsoleErrors`, plus `ROOT` (repo root), `QUICK`
+  (`--quick` flag), and `NODE` (current Node binary). `finish()` is reserved
+  for the top-level runner — a discovered test file must never call it (or
+  `process.exit()` directly), see the process.exit guard below.
 - `providers/{name}.test.mjs` — one file per scanner provider (see
   [providers/README.md](../providers/README.md) for the test pattern), plus
   shared cross-provider tests such as `ats-ssrf-hardening.test.mjs`.
