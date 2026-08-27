@@ -188,10 +188,6 @@
   }
 
   .job-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
     margin-bottom: 4px;
   }
 
@@ -202,7 +198,14 @@
     color: hsl(270, 70%, 45%);
   }
 
+  /* Block (own line below job-company), not a flex/grid row: Chromium's PDF
+     text export reorders same-row right-aligned columns (flex AND grid both
+     reproduce it, verified) relative to the rest of the document, dumping
+     every job's date at the end of the Experience section when a linear ATS
+     text parser reads the PDF back. Normal block flow preserves DOM order. */
   .job-period {
+    display: block;
+    margin-top: 2px;
     font-size: 10.5px;
     color: #777;
     white-space: nowrap;
@@ -276,13 +279,6 @@
     margin-bottom: 8px;
   }
 
-  .edu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-  }
-
   .edu-title {
     font-weight: 600;
     font-size: var(--font-size);
@@ -294,7 +290,10 @@
     font-weight: 500;
   }
 
+  /* Own line below edu-title, same reasoning as .job-period above. */
   .edu-year {
+    display: block;
+    margin-top: 2px;
     font-size: 10px;
     color: #777;
     white-space: nowrap;
@@ -307,19 +306,14 @@
     line-height: 1.5;
   }
 
-  /* === CERTIFICATIONS === */
-  .cert-table {
-    display: table;
-    width: 100%;
-  }
-
+  /* === CERTIFICATIONS ===
+     Was a CSS `display: table` row (title/org/year as table-cells). Same
+     PDF-text-reordering issue as .job-period/.edu-year (verified), PLUS a
+     table layout is exactly what the ATS Rules in modes/pdf.md say to
+     avoid ("No nested tables") even though it's not a literal <table>
+     element. Block flow: title + org inline together, year on its own
+     line below. */
   .cert-item {
-    display: table-row;
-  }
-
-  .cert-item > * {
-    display: table-cell;
-    vertical-align: baseline;
     padding-bottom: 6px;
   }
 
@@ -335,11 +329,11 @@
   }
 
   .cert-year {
+    display: block;
+    margin-top: 2px;
     font-size: 10px;
     color: #777;
     white-space: nowrap;
-    text-align: right;
-    width: 44px;
   }
 
   /* === SKILLS === */
