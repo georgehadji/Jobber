@@ -79,14 +79,33 @@ for (let i = 0; i < toProcess.length; i++) {
   
   const prompt = `Tailor the CV for this role and generate the HTML and PDF CVs. \nURL: ${job.url}\nReport number: ${job.reportNum}${reportContext}`;
   
+  // Tool scope, mirroring the reviewed convention web/src/app/api/run/route.ts
+  // already applies to the identical 'pdf' workload: an explicit allow list plus
+  // a hard disallow guardrail, under `--permission-mode acceptEdits`.
+  //
+  // This replaces `--dangerously-skip-permissions`, which disabled the
+  // permission system wholesale. That mattered here more than almost anywhere
+  // else in the tree: this script pulls a job description from a URL — content
+  // the user did not write and nobody reviewed — and feeds it to an agent, in a
+  // LOOP, once per matching role. An unrestricted agent acting on attacker-
+  // influenced text is the prompt-injection scenario at its widest blast
+  // radius, and a batch loop multiplies it by the number of jobs queued.
+  //
+  // Task stays blocked for the same reason the web route blocks it (runaway
+  // sub-agent cost), which a loop likewise multiplies.
+  const ALLOWED_TOOLS = 'Read,WebFetch,WebSearch,Write,Edit,Bash,Glob,Grep';
+  const DISALLOWED_TOOLS = 'Task,NotebookEdit';
+
   const claudeArgs = [
     '-p',
-    '--dangerously-skip-permissions',
+    '--permission-mode', 'acceptEdits',
+    '--allowedTools', ALLOWED_TOOLS,
+    '--disallowedTools', DISALLOWED_TOOLS,
     '--append-system-prompt-file',
     'modes/pdf.md',
     prompt
   ];
-  
+
   const res = spawnSync('claude', claudeArgs, { stdio: 'inherit' });
   if (res.error) {
     console.error(`Error running claude: ${res.error.message}`);

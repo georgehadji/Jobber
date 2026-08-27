@@ -38,7 +38,17 @@ Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previ
     - The rendered PDF has a two-page warning threshold by default. `--max-pages=N` accepts a positive integer; pass `--max-pages=1` when the user or market prefers a one-page CV.
     - If the rendered PDF exceeds its threshold, generation warns loudly with the actual and allowed page counts plus trimming guidance, then reports and indexes the unchanged PDF so existing longer-CV flows keep working.
     - Pass `--strict-pages` only when the user or market requires a hard limit. Strict overflow leaves the draft available for inspection but does not report or index it as successful; trim lower-priority content and rerun.
-21. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
+21. Emit the ATS-safe plaintext twin from the same payload: `node build-cv-plaintext.mjs /tmp/cv-{candidate}-{company}.json {txt-path}`, where `{txt-path}` is the active bundle's `cv/tailored/vNNN/cv.txt` or `output/cv-{candidate}-{company}-{YYYY-MM-DD}.txt` for a one-off CV.
+    - Plain text is the one format every ATS reads byte-faithfully: no columns to mis-order, no font substitution to corrupt ligatures, no PDF text-layer extraction to go wrong.
+    - Use it when a portal offers a plaintext paste box (many Workday and Taleo flows do), when a recruiter asks for "text only", or when the posting warns against attachments.
+    - It renders from the *same* JSON payload as the HTML, so it carries the same tailoring and the same fact-gated content — it is not a separate CV to keep in sync.
+22. Measure keyword coverage — do not estimate it: `node cv-coverage.mjs /tmp/cv-{candidate}-{company}.json --keywords "{the keywords from Step 3}" --summary`
+    - Reports two numbers. `coverage` is how many JD keywords appear anywhere in the CV; `evidenceCoverage` is how many appear in Work Experience, Projects, Education, or Certifications — attached to a role, project, or credential rather than asserted in a skills list.
+    - **Report both.** A single coverage number is maximized by pasting the JD's keywords into the competency grid, so quoting it alone rewards keyword stuffing. The gap between the two is the set of keywords this CV asserts but does not back up — exactly what an interviewer probes.
+    - Every hit cites the line it matched, so a surprising number can be checked against the actual sentence rather than trusted.
+    - **A miss is not a defect to paper over.** If the CV genuinely shows the skill in different words, reword to the JD's term (Step 14 — reformulation, which is allowed). If it does not, leave it out and treat it as a gap from Step 4. Never add a keyword to raise this number.
+    - Coverage measures text, not truth: a keyword being present is not evidence the candidate has the skill.
+23. Report: PDF path, plaintext path, number of pages, measured keyword coverage % and evidence coverage % from Step 22, and any skill gaps from Step 4 still unaddressed
 
 ## ATS Rules (clean parsing)
 

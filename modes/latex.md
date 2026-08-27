@@ -18,7 +18,10 @@ Export a tailored, ATS-optimized CV as a `.tex` file and compile it to PDF via `
 12. Run: `node build-cv-latex.mjs /tmp/cv-{candidate}-{company}.json output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex`
 13. Run: `node generate-latex.mjs output/cv-{candidate}-{company}-{YYYY-MM-DD}.tex output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf`
     *(Replace `{candidate}`, `{company}`, `{YYYY-MM-DD}` with actual values.)*
-14. Report: .tex path, .pdf path, file sizes, section count, keyword coverage %
+14. Measure keyword coverage — do not estimate it: `node cv-coverage.mjs /tmp/cv-{candidate}-{company}.json --keywords "{the keywords from Step 4}" --summary`
+    - Reports `coverage` (keyword appears anywhere) and `evidenceCoverage` (keyword appears in Experience/Projects/Education/Certifications). Report both: a single number is maximized by keyword stuffing, so quoting it alone rewards exactly what should be discouraged.
+    - Each hit cites the line it matched. A miss is never resolved by adding the keyword — reword to the JD's term only if the CV already shows the skill (Step 10), otherwise leave it out.
+15. Report: .tex path, .pdf path, file sizes, section count, measured keyword coverage % and evidence coverage % from Step 14
 
 **Requires:** `tectonic` (preferred — `brew install tectonic`, auto-downloads packages) or `pdflatex` (MiKTeX / TeX Live) on PATH.
 

@@ -79,6 +79,7 @@ export const DISPLAY = Object.fromEntries(
 // AWS/GCP/Azure — a generous map silently suppresses real gaps, and the
 // "cv skill never appears as gap" acceptance test rewards exactly that
 // failure mode. Every entry here maps spellings of the SAME skill.
+/** @type {Record<string, string>} */
 export const CANONICAL = {
   'k8s': 'Kubernetes',
   'golang': 'Go',

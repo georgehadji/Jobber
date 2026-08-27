@@ -1,7 +1,7 @@
 {
   "name": "jobber",
   "version": "1.24.0",
-  "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, Codex, OpenCode, Antigravity, Grok, Qwen, Kimi, Copilot)",
+  "description": "AI-powered job search pipeline \u2014 works with any AI coding CLI (Claude Code, Codex, OpenCode, Antigravity, Grok, Qwen, Kimi, Copilot)",
   "private": true,
   "engines": {
     "node": ">=18"
@@ -62,7 +62,10 @@
     "manifesto": "node manifesto.mjs",
     "check:types": "tsc --noEmit",
     "knip": "knip",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "typecheck:strict": "tsc --noEmit -p tsconfig.strict.json",
+    "purity": "node validate-core-purity.mjs"
   },
   "keywords": [
     "ai",
@@ -80,7 +83,7 @@
     "grok",
     "ai-agent-skill"
   ],
-  "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
+  "author": "Santiago Fern\u00e1ndez de Valderrama <hi@santifer.io> (https://santifer.io)",
   "homepage": "https://santifer.io",
   "repository": {
     "type": "git",
