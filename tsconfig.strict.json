@@ -1,0 +1,38 @@
+{
+  // Stricter typechecking for the pure domain core AND anything built on it
+  // (POLYTONIC-PLAN §2.1: core/ and adapters/).
+  //
+  // The root tsconfig.json runs `strict: false` for the legacy tree, where
+  // turning on strictNullChecks today surfaces 64 pre-existing errors. That
+  // migration is worth doing and is not this change.
+  //
+  // But core/ cannot wait for it: discriminated-union narrowing — the thing
+  // that makes `Result<T, E>` safe to use rather than merely documented —
+  // only works when strictNullChecks is on. Without it TypeScript never
+  // narrows `if (result.ok)`, so every consumer of a Result would need a cast
+  // and the type would be decorative.
+  //
+  // adapters/ belongs in this same project, not the root one, for a concrete
+  // reason found while wiring up adapters/ingest/markdown.mjs: TypeScript
+  // typechecks a file's full import graph, not just what an `include` glob
+  // matches. The moment an adapter imports core/shared/result.mjs, the root
+  // (non-strict) project pulls that core file in transitively and fails on
+  // it — the same narrowing gap this file exists to fix, now showing up one
+  // layer removed. Since every adapter exists specifically to consume core/'s
+  // Result-typed contracts, adapters/ needs the same strict settings core/
+  // does; splitting them into two configs would just reproduce this failure
+  // for the next adapter that imports anything from core/.
+  //
+  // So the core AND its adapters opt into the stricter regime from day one,
+  // and the legacy tree migrates on its own schedule. New code is held to the
+  // higher bar; old code is not blocked on it.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "checkJs": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["core/**/*.mjs", "adapters/**/*.mjs"],
+  "exclude": ["node_modules", "core/**/*.test.mjs", "adapters/**/*.test.mjs"]
+}

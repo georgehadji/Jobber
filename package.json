@@ -64,7 +64,7 @@
     "knip": "knip",
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
-    "typecheck:core": "tsc --noEmit -p tsconfig.core.json",
+    "typecheck:strict": "tsc --noEmit -p tsconfig.strict.json",
     "purity": "node validate-core-purity.mjs"
   },
   "keywords": [
