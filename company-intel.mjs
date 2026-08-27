@@ -99,7 +99,12 @@ export function buildCard(company, { historyResult, frictionSignals = [], pasted
     processFriction: friction
       ? { totalInterviews: friction.totalInterviews, frictionCount: friction.frictionCount, frictionRate: friction.frictionRate, reasons: friction.reasons }
       : { label: 'no-data' },
-    pastedIntel: pastedIntel ? { present: true, text: pastedIntel } : { present: false },
+    // Fenced here (not just in renderSummary) so EVERY output mode — JSON
+    // included, which is what modes/deep.md and modes/interview-redflag.md
+    // actually invoke (no --summary) — carries the untrusted-data boundary.
+    // A fence only in the human-readable renderer would leave the JSON path
+    // (the one real callers use) emitting pasted text raw.
+    pastedIntel: pastedIntel ? { present: true, text: `${UNTRUSTED_OPEN}\n${pastedIntel}\n${UNTRUSTED_CLOSE}` } : { present: false },
     dataSources: {
       tracker: history.responsiveness.label !== 'no-history',
       activeInterviews: friction !== null,
@@ -165,9 +170,7 @@ export function renderSummary(card) {
   lines.push('');
   if (card.pastedIntel.present) {
     lines.push('  Pasted intel:');
-    lines.push(`  ${UNTRUSTED_OPEN}`);
     lines.push(card.pastedIntel.text);
-    lines.push(`  ${UNTRUSTED_CLOSE}`);
   } else {
     lines.push(`  Pasted intel: none. Add data/company-intel/${slugifyCompany(card.company)}.md to include employer-review notes.`);
   }
@@ -201,6 +204,12 @@ function selfTest() {
   assert(cardWithData.processFriction.frictionCount === 1 && cardWithData.processFriction.totalInterviews === 4, 'friction row matched by normalized company name');
   assert(cardWithData.pastedIntel.present === true && cardWithData.pastedIntel.text.includes('Glassdoor'), 'pasted intel surfaced verbatim');
   assert(cardWithData.dataSources.activeInterviews === true && cardWithData.dataSources.pastedIntel === true, 'dataSources reflect what was actually joined');
+
+  // The untrusted-data fence must be baked into the card itself (not just
+  // renderSummary's formatting) — modes/deep.md and modes/interview-redflag.md
+  // invoke this script WITHOUT --summary, so the JSON path is the one that
+  // actually matters for the prompt-injection boundary.
+  assert(cardWithData.pastedIntel.text.startsWith(UNTRUSTED_OPEN) && cardWithData.pastedIntel.text.endsWith(UNTRUSTED_CLOSE), 'pasted intel is fenced at the card level, not just in --summary rendering');
 
   // Friction lookup is case/whitespace tolerant, matching company-history's own normalization posture
   const cardCase = buildCard('  acme corp  ', { historyResult: emptyHistory, frictionSignals, pastedIntel: null });
