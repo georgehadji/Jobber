@@ -50,6 +50,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { slugifyCompany } from './eval-runner.mjs';
+import { normalizeCompany } from './tracker-utils.mjs';
 import {
   loadTrackerRows, loadFollowupRows, loadRepostClusters,
   buildCompanyCards, getCompanyCard,
@@ -80,11 +81,13 @@ export function loadPastedIntel(company, rootDir = JOBBER) {
 }
 
 // --- Friction lookup by company (process-quality.mjs returns an array,
-// not a keyed map — match the same normalized-key convention getCompanyCard
-// uses so "Acme Corp." and "acme corp" resolve to the same row) ---
+// not a keyed map — uses the SAME normalizeCompany() as getCompanyCard so
+// "Acme Corp." and "acme corp" resolve to the same row; a plain
+// trim+lowercase would still miss a punctuation-only difference between
+// the tracker's spelling and active-interviews.md's) ---
 function findFriction(signals, company) {
-  const target = String(company || '').trim().toLowerCase();
-  return signals.find(s => String(s.company || '').trim().toLowerCase() === target) || null;
+  const target = normalizeCompany(String(company || ''));
+  return signals.find(s => normalizeCompany(String(s.company || '')) === target) || null;
 }
 
 // --- Card assembly (pure — takes already-loaded sources, no I/O) ---
@@ -214,6 +217,12 @@ function selfTest() {
   // Friction lookup is case/whitespace tolerant, matching company-history's own normalization posture
   const cardCase = buildCard('  acme corp  ', { historyResult: emptyHistory, frictionSignals, pastedIntel: null });
   assert(cardCase.processFriction.frictionCount === 1, 'friction lookup tolerates case/whitespace differences');
+
+  // Punctuation-only difference must ALSO join — a plain trim+lowercase (no
+  // punctuation stripping) would miss this even though getCompanyCard's own
+  // normalizeCompany() treats "Acme Corp." and "Acme Corp" as identical.
+  const cardPunct = buildCard('Acme Corp.', { historyResult: emptyHistory, frictionSignals, pastedIntel: null });
+  assert(cardPunct.processFriction.frictionCount === 1, 'friction lookup uses normalizeCompany(), so a trailing period does not break the join');
 
   // renderSummary never leaks a forbidden word from the FIXED prose it authors itself
   // (fixed structural text only — the check intentionally does not scan pastedIntel.text,

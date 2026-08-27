@@ -305,7 +305,23 @@ function selfTest() {
   // produce anything but 'advertised'/'benchmark', by construction
   assert(ok1.row.split('\t')[2] === 'advertised' && ok1.row.split('\t')[5] === 'benchmark', 'always writes advertised/benchmark, never actual');
 
-  console.log('salary-import self-test OK (tracker# resolution + record validation + TSV injection guards)');
+  // resolveFilePathArg — CLI positional-arg detection
+  assert(resolveFilePathArg(['data.json'], -1) === 'data.json', 'plain filename resolved when --num absent');
+  assert(resolveFilePathArg(['data.json', '--num', '5'], 1) === 'data.json', '--num value excluded by position');
+  assert(resolveFilePathArg(['--num', '5', 'data.json'], 0) === 'data.json', 'file after --num value still resolved');
+  assert(resolveFilePathArg(['null'], -1) === 'null', 'a file literally named "null" is NOT excluded when --num is absent (regression: used to compare by String(forceNum), forceNum=null -> "null")');
+  assert(resolveFilePathArg(['--dry-run'], -1) === null, 'no positional file -> null, not a false match');
+
+  console.log('salary-import self-test OK (tracker# resolution + record validation + TSV injection guards + CLI arg parsing)');
+}
+
+// --- CLI arg parsing (pure — exported for self-test coverage) ---
+// Finds the positional file argument, excluding the --num value BY POSITION
+// (numIdx + 1), not by string equality — comparing `a !== String(forceNum)`
+// breaks when forceNum is null (String(null) === 'null'), silently excluding
+// a file legitimately named "null".
+export function resolveFilePathArg(args, numIdx) {
+  return args.find((a, i) => !a.startsWith('--') && !(numIdx !== -1 && i === numIdx + 1)) || null;
 }
 
 // --- CLI ---
@@ -320,7 +336,7 @@ function main() {
     process.exit(1);
   }
   const dryRun = args.includes('--dry-run');
-  const filePath = args.find(a => !a.startsWith('--') && a !== String(forceNum));
+  const filePath = resolveFilePathArg(args, numIdx);
 
   if (!filePath) {
     console.error('Usage: node salary-import.mjs <file.json> [--num <n>] [--dry-run]');
