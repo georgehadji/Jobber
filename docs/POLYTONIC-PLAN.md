@@ -576,22 +576,22 @@ W0–W3 is the critical path and delivers a coherent product on its own: **uploa
 
 Defects found during the audit, each assigned to a workstream:
 
-| # | Issue | Where | Fix |
-|---|---|---|---|
-| 1 | `modes/cv-ingest.md` referenced but absent; CLI and web parse differently despite a comment claiming otherwise | `web/src/app/api/cv/ingest/route.ts` | W2.6 |
-| 2 | Keyword coverage instructed but never computed | `modes/pdf.md:41`, `modes/latex.md:21` | W5.2 |
-| 3 | `renderPlaintextCv()` is dead code — tests, zero callers | `build-cv-plaintext.mjs` | W3.3 |
-| 4 | Fact gate called from one place only; web worker omits it | `generate-cover-letter.mjs:231` | W3.4 |
-| 5 | Raw-HTML path bypasses every gate | `openai-tailor.mjs` | W3.4 (delete) |
-| 6 | `--dangerously-skip-permissions`, hardcoded binary, serial, no result capture | `batch-tailor.mjs` | W5.5 (delete) |
-| 7 | URL mode returns unescaped text into `\href{}` | `lib/latex-escape.mjs:13` | W3.6 |
-| 8 | `seniority_boost` parsed by nothing | `portals.yml` schema | W4.6 |
-| 9 | Body-text filters inert on ~75 of 76 providers | `scan.mjs` filter cascade | W4.1 |
-| 10 | `skip_tiers` trap: unknown titles default to `mid` | `classify-tier.mjs` | W4.6 |
-| 11 | `changes.md` specified in the bundle layout, never written | `application-artifacts.mjs` | W5.3 |
-| 12 | Web PDF worker prompt diverges from `modes/pdf.md` | `web/src/app/api/run/route.ts` | W5.6 |
-| 13 | Tailored-CV retrieval by fuzzy filename match over `output/` | `web/src/lib/apply/cv.ts` | W1.6 |
-| 14 | Cost is estimated, never metered | `lib/token-tracker.mjs` | W7.3 |
+| # | Issue | Where | Fix | Status |
+|---|---|---|---|---|
+| 1 | `modes/cv-ingest.md` referenced but absent; CLI and web parse differently despite a comment claiming otherwise | `web/src/app/api/cv/ingest/route.ts` | W2.6 | open |
+| 2 | Keyword coverage instructed but never computed | `modes/pdf.md:41`, `modes/latex.md:21` | W5.2 | closed — `cv-coverage.mjs` + `core/tailoring/coverage.mjs` |
+| 3 | `renderPlaintextCv()` is dead code — tests, zero callers | `build-cv-plaintext.mjs` | W3.3 | closed — wired into `modes/pdf.md` |
+| 4 | Fact gate called from one place only; web worker omits it | `generate-cover-letter.mjs:231` | W3.4 | open |
+| 5 | Raw-HTML path bypasses every gate | `openai-tailor.mjs` | W3.4 (delete) | open |
+| 6 | `--dangerously-skip-permissions`, hardcoded binary, serial, no result capture | `batch-tailor.mjs` | W5.5 (delete) | closed — scoped tool allow list |
+| 7 | URL mode returns unescaped text into `\href{}` | `lib/latex-escape.mjs:13` | W3.6 | closed — delegates to `sanitizeUrl` |
+| 8 | `seniority_boost` parsed by nothing | `portals.yml` schema | W4.6 | open |
+| 9 | Body-text filters inert on ~75 of 76 providers | `scan.mjs` filter cascade | W4.1 | open |
+| 10 | `skip_tiers` trap: unknown titles default to `mid` | `classify-tier.mjs` | W4.6 | open |
+| 11 | `changes.md` specified in the bundle layout, never written | `application-artifacts.mjs` | W5.3 | open |
+| 12 | Web PDF worker prompt diverges from `modes/pdf.md` | `web/src/app/api/run/route.ts` | W5.6 | open |
+| 13 | Tailored-CV retrieval by fuzzy filename match over `output/` | `web/src/lib/apply/cv.ts` | W1.6 | open |
+| 14 | Cost is estimated, never metered | `lib/token-tracker.mjs` | W7.3 | open |
 
 ## Appendix B — Open questions
 

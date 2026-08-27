@@ -21,5 +21,13 @@
     "lib/**/*.mjs",
     "utils/**/*.mjs"
   ],
-  "exclude": ["node_modules", "web", "dashboard", "batch", "output", "test-fixtures"]
+  "exclude": [
+    "node_modules",
+    "web",
+    "dashboard",
+    "batch",
+    "output",
+    "test-fixtures",
+    "cv-coverage.mjs"
+  ]
 }

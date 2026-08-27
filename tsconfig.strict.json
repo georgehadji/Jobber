@@ -33,6 +33,15 @@
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": false
   },
-  "include": ["core/**/*.mjs", "adapters/**/*.mjs"],
+  // The same rule extends to FLAT-ROOT FAÇADE scripts that consume core/.
+  // Path stability (#1386) keeps entry points at the repo root, so a script
+  // like cv-coverage.mjs lives beside the legacy tree while importing core/ —
+  // and the root project's `"*.mjs"` glob would otherwise pull core/ in
+  // transitively and fail on exactly the narrowing gap described above.
+  //
+  // Each such file is listed here AND excluded from tsconfig.json's include.
+  // The rule for anything added later: if a root-level script imports from
+  // core/ or adapters/, it belongs in this list, not the root project.
+  "include": ["core/**/*.mjs", "adapters/**/*.mjs", "cv-coverage.mjs"],
   "exclude": ["node_modules", "core/**/*.test.mjs", "adapters/**/*.test.mjs"]
 }

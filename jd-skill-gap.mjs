@@ -279,6 +279,7 @@ const jdPathArg = args.find(a => !a.startsWith('--'));
 
 function runSelfTest() {
   let passed = 0, failed = 0;
+  /** @param {string} label @param {unknown} actual @param {unknown} expected */
   const eq = (label, actual, expected) => {
     const a = JSON.stringify(actual), e = JSON.stringify(expected);
     if (a === e) {
