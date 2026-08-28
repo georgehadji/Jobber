@@ -42,7 +42,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { spawnSync } from 'child_process';
 import { cpus } from 'os';
-import { discoverTests, callsProcessExit } from './lib/test-discovery.mjs';
+import { discoverTests, endsProcess } from './lib/test-discovery.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)));
 const TESTS_DIR = join(ROOT, 'tests');
@@ -60,15 +60,16 @@ const onlyIdx = args.indexOf('--only');
 const ONLY = onlyIdx !== -1 ? (args[onlyIdx + 1] ?? null) : null;
 
 /**
- * The process.exit() guard — a discovered suite that exits itself would
- * terminate the runner mid-run. Same refusal as test-all (#1916).
+ * The end-the-process guard — a discovered suite that exits itself would
+ * terminate the runner mid-run. Covers finish() as well as process.exit(),
+ * since finish() calls it internally. Same refusal as test-all (#1916).
  *
  * @param {string} file - Absolute path to a discovered test file.
  * @returns {boolean} True when the file is safe to run.
  */
 function isSafeToRun(file) {
-  if (!callsProcessExit(readFileSync(file, 'utf-8'))) return true;
-  console.log(`  ❌ ${file.slice(ROOT.length + 1)} calls process.exit() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
+  if (!endsProcess(readFileSync(file, 'utf-8'))) return true;
+  console.log(`  ❌ ${file.slice(ROOT.length + 1)} calls process.exit()/finish() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
   return false;
 }
 

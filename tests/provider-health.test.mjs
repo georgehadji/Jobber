@@ -11,7 +11,7 @@
 //   - --json emits valid JSON with a `results` array of {provider, status}
 //   - a second run within the cache window says cached: true
 //   - --ci with the cache from a healthy run exits 0
-import { pass, fail, warn, NODE, ROOT, finish } from './helpers.mjs';
+import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
 import { execFileSync } from 'child_process';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
@@ -87,5 +87,3 @@ try {
 } finally {
   rmSync(TMP, { recursive: true, force: true });
 }
-
-finish();

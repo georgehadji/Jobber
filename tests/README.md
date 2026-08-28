@@ -54,4 +54,19 @@ import { pass, fail, ROOT } from './helpers.mjs';    // tests/*.test.mjs
 import { pass, fail, ROOT } from '../helpers.mjs';   // tests/providers/*.test.mjs
 ```
 
+### The process.exit guard
+
+A discovered test file must **never** call `process.exit()` — directly or via
+`finish()`. Both runners refuse such a file instead of running it (#1916):
+
+- `test-all.mjs` imports discovered suites **in-process**, sharing one counter
+  set. A `process.exit()` inside one would end the whole suite mid-run with a
+  forged exit code — every later section, and `finish()` itself, would silently
+  never run.
+- `test-runner.mjs` would lose the worker process and its per-file attribution.
+
+The check is `callsProcessExit()` in `lib/test-discovery.mjs`, shared by both
+runners so they cannot drift. Signal results with `pass()`/`fail()`/`warn()`
+and simply let the module finish; the top-level runner owns the exit code.
+
 See `CONTRIBUTING.md` for the full contribution flow.

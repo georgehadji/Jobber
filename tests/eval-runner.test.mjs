@@ -1,7 +1,7 @@
 // tests/eval-runner.test.mjs — regression coverage for the shared evaluation
 // pipeline helpers in eval-runner.mjs. Pure functions, no LLM calls, no
 // network, no file writes to user-layer paths.
-import { pass, fail, finish } from './helpers.mjs';
+import { pass, fail } from './helpers.mjs';
 import {
   readContextFile, parseScoreSummary, stripScoreSummary, buildReportContent,
   slugifyCompany, tsvSafe, normalizedTrackerScore,
@@ -141,5 +141,3 @@ try {
 } catch (e) {
   fail(`eval-runner tests crashed: ${e.message}`);
 }
-
-finish();

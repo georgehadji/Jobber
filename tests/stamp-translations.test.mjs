@@ -6,7 +6,7 @@
 // Human review required: NO (P3 utility)
 // Regenerate with: node test-runner.mjs --only stamp-translations
 
-import { pass, fail, warn, finish, NODE, ROOT } from './helpers.mjs';
+import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
 import { execFileSync } from 'child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
@@ -120,5 +120,3 @@ try {
 } catch (e) {
   fail(`stamp-translations healing tests crashed: ${e.message}`);
 }
-
-finish();
