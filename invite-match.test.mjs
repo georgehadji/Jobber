@@ -6,7 +6,8 @@
  * Run: node invite-match.test.mjs
  */
 
-import { matchInvite, normalizeCompanyName, extractPlatform } from './invite-match.mjs';
+import { matchInvite, extractPlatform } from './invite-match.mjs';
+import { normalizeCompanyName } from './lib/company-name.mjs';
 
 let passed = 0;
 let failed = 0;

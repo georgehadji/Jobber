@@ -27,6 +27,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { normalizeCompanyName } from './lib/company-name.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(JOBBER, 'data/applications.md'))
@@ -67,75 +68,6 @@ function normalizeStatusKey(status) {
     .replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '')
     .trim()
     .toLowerCase();
-}
-
-// True legal-entity suffixes, stripped repeatedly (chained) since a name can
-// legitimately carry more than one ("Acme Holdings Inc." → "acme holdings").
-// These are unambiguous enough that removing several in a row is safe.
-const LEGAL_SUFFIXES = [
-  'incorporated', 'inc', 'corporation', 'corp', 'company', 'co',
-  'limited', 'ltd', 'llc', 'llp', 'lp', 'plc',
-];
-
-// Generic business-descriptor words that vary between how a recruiter signs
-// an email and how the tracker recorded the company, but are common enough
-// as substantive parts of a name (e.g. "Data Solutions" vs "Data Corp") that
-// chaining their removal risks collapsing two different companies to the
-// same key. Stripped at most once, and only after legal suffixes are gone —
-// never chained with each other or with LEGAL_SUFFIXES.
-const GENERIC_DESCRIPTORS = [
-  'group', 'holdings', 'technologies', 'technology', 'solutions',
-  'canada', 'international',
-];
-
-/**
- * Normalize a company name for matching: lowercase, strip punctuation and
- * parentheticals, collapse whitespace, chain-strip trailing legal-entity
- * suffixes (so "Acme Technologies Inc." reduces to "acme technologies"),
- * then strip at most one trailing generic descriptor word. Deliberately
- * stricter than dedup-tracker.mjs's normalizeCompany (which only lowercases
- * and strips punctuation): invite emails quote company names more loosely
- * than tracker rows quote each other, so matching across the two sources
- * needs the extra suffix-stripping that same-source dedup does not.
- *
- * Generic descriptors are deliberately stripped only once (not chained) and
- * only after legal suffixes, so two distinct companies that happen to both
- * end in a generic word (e.g. "Data Solutions" vs "Data Corp") don't
- * collapse to the same "data" key — see issue discussion on PR #1497.
- *
- * @param {string} name
- * @returns {string}
- */
-export function normalizeCompanyName(name) {
-  let key = String(name ?? '')
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const suffix of LEGAL_SUFFIXES) {
-      const re = new RegExp(`\\s${suffix}$`);
-      if (re.test(key)) {
-        key = key.replace(re, '').trim();
-        changed = true;
-      }
-    }
-  }
-
-  for (const word of GENERIC_DESCRIPTORS) {
-    const re = new RegExp(`\\s${word}$`);
-    if (re.test(key)) {
-      key = key.replace(re, '').trim();
-      break;
-    }
-  }
-
-  return key;
 }
 
 /**

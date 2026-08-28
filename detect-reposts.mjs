@@ -26,7 +26,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 import { roleFuzzyMatch } from './role-matcher.mjs';
-import { normalizeCompanyName } from './invite-match.mjs';
+import { normalizeCompanyName } from './lib/company-name.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const SCAN_HISTORY_PATH = join(JOBBER, 'data/scan-history.tsv');

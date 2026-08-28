@@ -177,7 +177,7 @@ export default {
     detect() { return null; },
 
     async fetch(entry, ctx) {
-      const token = ctx?.env?.APIFY_TOKEN || process.env.APIFY_TOKEN;
+      const token = ctx?.env?.APIFY_TOKEN;
       if (!hasToken(token)) {
         throw new Error('APIFY_TOKEN not set — enable apify in config/plugins.yml and add the token to .env');
       }

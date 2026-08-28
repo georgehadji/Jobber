@@ -35,6 +35,8 @@ import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
+import { classifyFetchError } from './lib/http-errors.mjs';
+import { discoverTests, callsProcessExit } from './lib/test-discovery.mjs';
 
 /**
  * Read a repo-relative text file as UTF-8.
@@ -78,22 +80,10 @@ const normalizeEol = (text) => text.replace(/\r\n/g, '\n');
 const readTextLF = (path) => normalizeEol(readFile(path));
 
 // ── Auto-discovered test files (issue #1440) ─────────────────────────────
-// Deterministic: recursive readdirSync with default lexicographic sort of
-// entry names — same order on every run and OS. No glob library, no
-// registration list. Discovery is limited to tests/ so root-level
-// standalone *.test.mjs files are never picked up.
+// Discovery is limited to tests/ so root-level standalone *.test.mjs files
+// are never picked up. Walk + safety-guard logic lives in lib/test-discovery.mjs,
+// shared with test-runner.mjs so the two can never silently drift.
 const TESTS_DIR = join(ROOT, 'tests');
-
-function discoverTests(dir) {
-  const out = [];
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...discoverTests(full));
-    else if (entry.name.endsWith('.test.mjs')) out.push(full);
-  }
-  return out;
-}
 
 async function runDiscovered(filter = null) {
   let files = discoverTests(TESTS_DIR);
@@ -111,7 +101,7 @@ async function runDiscovered(filter = null) {
     // process.exit() inside one would terminate test-all mid-run with a forged
     // exit code — every later section (and finish()) would silently never run.
     // Refuse to import such a suite and fail loudly instead (#1916 regression).
-    if (/\bprocess\.exit\s*\(/.test(readFileSync(f, 'utf-8'))) {
+    if (callsProcessExit(readFileSync(f, 'utf-8'))) {
       fail(`${f.slice(ROOT.length + 1)} calls process.exit() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
       continue;
     }
@@ -190,7 +180,9 @@ const scripts = [
   { name: 'discover-ats.mjs --self-test', expectExit: 0 },
   { name: 'process-quality.mjs --self-test', expectExit: 0 },
   { name: 'company-history.mjs --self-test', expectExit: 0 },
+  { name: 'company-intel.mjs --self-test', expectExit: 0 },
   { name: 'salary-gap.mjs --self-test', expectExit: 0 },
+  { name: 'salary-import.mjs --self-test', expectExit: 0 },
   { name: 'funnel-velocity.mjs --self-test', expectExit: 0 },
   { name: 'img-to-pdf.mjs --self-test', expectExit: 0 },
   { name: 'assessment-log.mjs --self-test', expectExit: 0 },
@@ -3910,7 +3902,7 @@ tracked_companies:
 console.log('\n10b. Portal slug validator');
 
 try {
-  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies, classifyFetchError } =
+  const { deriveSlugCandidates, parseAtsSlug, verifyCompanies } =
     await import(pathToFileURL(join(ROOT, 'verify-portals.mjs')).href);
 
   const slugs = deriveSlugCandidates('Acme Corp!');
@@ -12486,6 +12478,96 @@ try {
   }
 } catch (e) {
   fail(`table-freshness wiring check: ${e.message}`);
+}
+
+console.log('\n71. Vendor referral-link leak check (job-data-sources)');
+
+// templates/job-data-sources.yml + the keyed-provider cookbook in
+// templates/portals.example.yml document third-party Apify/CoreClaw actors.
+// The upstream catalog they were sourced from ships every link with a
+// tracked referral parameter (?fpr=<id>) — Jobber ships publicly, so
+// carrying a vendor's affiliate tracking into a shipped file (and from
+// there into every user's config) is a consent problem, not a convenience.
+// No shipped file should ever contain one; the contribution rule in
+// templates/job-data-sources.yml requires bare actor ids only.
+try {
+  const fprResult = run(
+    'git',
+    ['grep', '-n', '-i', 'fpr=', '--', '.', ':!test-all.mjs'],
+    { stdio: ['pipe', 'pipe', 'ignore'] }
+  );
+  if (fprResult) {
+    fail(`Vendor referral parameter ("fpr=") found in tracked files:\n${fprResult}`);
+  } else {
+    pass('No vendor referral parameters ("fpr=") in any tracked file');
+  }
+} catch (e) {
+  fail(`referral-link leak check: ${e.message}`);
+}
+
+console.log('\n72. Keyed provider cookbook (apify) — field_map validity');
+
+// The commented `provider: apify` stanzas in templates/portals.example.yml
+// (LinkedIn / Indeed / Glassdoor) are prose-until-uncommented, so nothing
+// exercises them at parse time. Extract each stanza, load it as real YAML,
+// and run it through the bundled plugin's OWN field_map validator
+// (isFieldSpec, already exported by plugins/apify/index.mjs) — the same
+// check scan.mjs performs before ever running the actor. A cookbook entry
+// that would throw once uncommented is worse than no entry at all.
+try {
+  const yaml = (await import('js-yaml')).default;
+  const { isFieldSpec } = await import('./plugins/apify/index.mjs');
+  const raw = readFile('templates/portals.example.yml');
+  const blockStart = raw.indexOf('# -- Keyed provider examples');
+  const blockEnd = raw.indexOf('\ntracked_companies:', blockStart);
+  if (blockStart === -1 || blockEnd === -1) {
+    fail('Keyed provider examples block not found in templates/portals.example.yml');
+  } else {
+    const block = raw.slice(blockStart, blockEnd);
+    const stanzas = block.match(/# - name:[\s\S]*?\n#   enabled: false/g) || [];
+    if (stanzas.length === 0) {
+      fail('No commented provider: apify cookbook stanzas found to validate');
+    } else {
+      pass(`Found ${stanzas.length} apify cookbook stanzas to validate`);
+    }
+    for (const stanza of stanzas) {
+      const yamlText = stanza.split('\n').map(l => l.replace(/^#/, '')).join('\n');
+      let entry;
+      try {
+        const doc = yaml.load(`tracked_companies:\n${yamlText}`);
+        entry = doc.tracked_companies[0];
+      } catch (e) {
+        fail(`Cookbook stanza is not valid YAML once uncommented: ${e.message}`);
+        continue;
+      }
+      const label = entry?.name || '(unnamed)';
+      if (entry?.enabled !== false) {
+        fail(`${label}: cookbook entries must ship as enabled: false`);
+      } else {
+        pass(`${label}: ships disabled`);
+      }
+      if (entry?.provider !== 'apify') {
+        fail(`${label}: expected provider: apify`);
+      }
+      const fm = entry?.field_map || {};
+      const fieldsOk = isFieldSpec(fm.title) && isFieldSpec(fm.url)
+        && (fm.company == null || isFieldSpec(fm.company))
+        && (fm.location == null || isFieldSpec(fm.location))
+        && (fm.description == null || isFieldSpec(fm.description));
+      if (fieldsOk) {
+        pass(`${label}: field_map passes plugins/apify's own isFieldSpec validator`);
+      } else {
+        fail(`${label}: field_map would be rejected by plugins/apify/index.mjs at scan time`);
+      }
+      if (JSON.stringify(entry).toLowerCase().includes('fpr=')) {
+        fail(`${label}: cookbook entry carries a vendor referral parameter`);
+      } else {
+        pass(`${label}: no vendor referral parameter`);
+      }
+    }
+  }
+} catch (e) {
+  fail(`apify cookbook validation: ${e.message}`);
 }
 
 await runDiscovered();

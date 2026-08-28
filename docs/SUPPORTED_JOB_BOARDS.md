@@ -70,3 +70,27 @@ are shared helpers and are not loaded as providers.
 
 When adding a new provider, add a new non-helper module under `providers/` and
 update this table in the same PR.
+
+## Login-gated boards, via plugin (keyed, opt-in)
+
+LinkedIn, Indeed, and Glassdoor cannot be zero-key providers — they sit
+behind logins or anti-bot walls, and core providers must stay zero-auth
+against public endpoints (see `providers/README.md` § Adding a provider).
+Coverage for these three exists instead through the bundled
+`plugins/apify/` KEYED provider, off by default and requiring your own
+Apify account/token:
+
+| Board | Actor | Notes |
+| --- | --- | --- |
+| LinkedIn | `valig/linkedin-jobs-scraper` | Ready-to-use `field_map` in `templates/portals.example.yml`. |
+| Indeed | `misceres/indeed-scraper` | Same actor the bundled plugin's own `skill.md` example uses. |
+| Glassdoor | `burbn/glassdoor-job-search` | Also exposes company rating and salary fields the plugin does not currently map — see the caveat below. |
+
+**These entries do not honor `salary_filter` or posting-age filtering** —
+the bundled plugin's field mapping doesn't carry `salary`/`postedAt`
+through, so every job the actor returns reaches your pipeline unfiltered by
+comp or recency. See `plugins/apify/skill.md` § Known gap and
+`templates/job-data-sources.yml` for the full provenance and re-verification
+record. Scraping these boards is adverse to their own terms of service and
+the legal exposure varies by jurisdiction — this is opt-in and not part of
+onboarding for that reason.

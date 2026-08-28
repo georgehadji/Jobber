@@ -41,11 +41,11 @@ import { makeHttpCtx } from './providers/_http.mjs';
 import { buildTrustValidator } from './providers/_trust-validator.mjs';
 import { loadProviders, resolveProvider } from './providers/_registry.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
-import { classifyFetchError } from './verify-portals.mjs';
+import { classifyFetchError } from './lib/http-errors.mjs';
 import { fingerprintText, findCrossListings } from './fingerprint-core.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
-import { normalizeCompanyName } from './invite-match.mjs';
+import { normalizeCompanyName } from './lib/company-name.mjs';
 import { withPipelineLock } from './pipeline-lock.mjs';
 import { withPortalHealthLock } from './portal-health-lock.mjs';
 
