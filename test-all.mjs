@@ -36,7 +36,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
-import { discoverTests, callsProcessExit } from './lib/test-discovery.mjs';
+import { discoverTests, endsProcess } from './lib/test-discovery.mjs';
 
 /**
  * Read a repo-relative text file as UTF-8.
@@ -98,11 +98,13 @@ async function runDiscovered(filter = null) {
   }
   for (const f of files) {
     // Discovered suites run IN-PROCESS and share this suite's counters. A
-    // process.exit() inside one would terminate test-all mid-run with a forged
-    // exit code — every later section (and finish()) would silently never run.
-    // Refuse to import such a suite and fail loudly instead (#1916 regression).
-    if (callsProcessExit(readFileSync(f, 'utf-8'))) {
-      fail(`${f.slice(ROOT.length + 1)} calls process.exit() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
+    // process.exit() — or a finish(), which calls it — inside one would
+    // terminate test-all mid-run with a forged exit code, and every later
+    // file would silently never run. That is not hypothetical: eval-runner
+    // sorted 8th of 112 and truncated the suite there while still printing a
+    // green summary. Refuse such a suite and fail loudly (#1916 regression).
+    if (endsProcess(readFileSync(f, 'utf-8'))) {
+      fail(`${f.slice(ROOT.length + 1)} calls process.exit()/finish() — discovered suites must use pass/fail from tests/helpers.mjs and never exit`);
       continue;
     }
     await import(pathToFileURL(f).href);
@@ -6945,150 +6947,9 @@ try {
   fail(`reserve-report-num tests crashed: ${e.message}`);
 }
 
-// ── VERIFY-PIPELINE REPORT CHECKS (#1425) ───────────────────────
-// Parallel evaluators can write two reports for the same company+role, and
-// tracker dedup can leave a report file with no tracker row. verify-pipeline
-// must surface both as warnings (not errors — re-evaluations are legitimate).
-console.log('\n🧪 Testing verify-pipeline duplicate/orphan report checks...');
-try {
-  const vpTmp = mkdtempSync(join(tmpdir(), 'jobber-verify-reports-'));
-  try {
-    const vpReports = join(vpTmp, 'reports');
-    mkdirSync(vpReports, { recursive: true });
-    const vpTracker = join(vpTmp, 'applications.md');
-    const vpEnv = { ...process.env, JOBBER_TRACKER: vpTracker, JOBBER_REPORTS: vpReports };
-
-    const report = (company, role) =>
-      `# Evaluación: ${company} — ${role}\n\n## Machine Summary\n\n\`\`\`yaml\ncompany: "${company}"\nrole: "${role}"\nscore: 4.2\n\`\`\`\n`;
-
-    // #1 and #3 are the same role at Acme written by two concurrent workers;
-    // #2 is a different Acme role (must NOT be flagged as duplicate);
-    // #3 also has no tracker row (orphan — tracker dedup kept #1).
-    writeFileSync(join(vpReports, '001-acme-2026-01-04.md'), report('Acme', 'Staff AI Engineer'));
-    writeFileSync(join(vpReports, '002-acme-2026-01-05.md'), report('Acme', 'Platform Engineer'));
-    writeFileSync(join(vpReports, '003-acme-2026-01-05.md'), report('Acme', 'Staff AI Engineer'));
-
-    writeFileSync(vpTracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 1 | 2026-01-04 | Acme | Staff AI Engineer | 4.2/5 | Evaluated | ❌ | [1](reports/001-acme-2026-01-04.md) | ok |\n' +
-      '| 2 | 2026-01-05 | Acme | Platform Engineer | 4.0/5 | Evaluated | ❌ | [2](reports/002-acme-2026-01-05.md) | ok |\n');
-
-    const vpOut = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
-    if (vpOut === null) {
-      fail('verify-pipeline crashed on duplicate/orphan report fixture');
-    } else {
-      if (vpOut.includes('Duplicate reports for same company+role') &&
-          vpOut.includes('001-acme-2026-01-04.md') && vpOut.includes('003-acme-2026-01-05.md')) {
-        pass('duplicate reports for the same company+role are flagged (#1425)');
-      } else {
-        fail('duplicate company+role reports not flagged');
-      }
-      if (vpOut.includes('002-acme-2026-01-05.md') && /Duplicate reports[^\n]*002-acme/.test(vpOut)) {
-        fail('different role at the same company falsely flagged as duplicate report');
-      } else {
-        pass('different role at the same company is not flagged as duplicate');
-      }
-      if (/Orphan report[^\n]*#3[^\n]*003-acme-2026-01-05\.md/.test(vpOut)) {
-        pass('orphan report with no tracker row is flagged (#1425)');
-      } else {
-        fail('orphan report not flagged');
-      }
-      if (/Orphan report[^\n]*(001|002)-acme/.test(vpOut)) {
-        fail('referenced report falsely flagged as orphan');
-      } else {
-        pass('referenced reports are not flagged as orphans');
-      }
-      // run() returns non-null only on exit 0 — warnings must not fail the check.
-      pass('duplicate/orphan report findings stay warning-level (exit 0)');
-    }
-
-    // Clean fixture: one row, one report — both checks must pass green.
-    rmSync(join(vpReports, '003-acme-2026-01-05.md'));
-    const vpClean = run(NODE, ['verify-pipeline.mjs'], { env: vpEnv, stdio: ['pipe', 'pipe', 'pipe'] });
-    if (vpClean !== null &&
-        vpClean.includes('No duplicate reports for the same company+role') &&
-        vpClean.includes('No orphan reports')) {
-      pass('clean tracker+reports fixture passes both report checks');
-    } else {
-      fail('clean fixture did not pass duplicate/orphan report checks');
-    }
-  } finally {
-    rmSync(vpTmp, { recursive: true, force: true });
-  }
-} catch (e) {
-  fail(`verify-pipeline report checks crashed: ${e.message}`);
-}
-
-// ── VERIFY-PIPELINE DUPLICATE TRACKER NUMBER (#1704) ────────────
-// A tracker # must be a unique row id. Two rows sharing a # is never
-// legitimate (unlike Check 2's company+role dedup, which can false-positive
-// on a genuine re-application) — verify-pipeline must flag it as an error.
-console.log('\n🧪 Testing verify-pipeline duplicate tracker # check (#1704)...');
-try {
-  const dupNumTmp = mkdtempSync(join(tmpdir(), 'jobber-verify-dupnum-'));
-  try {
-    const dupNumTracker = join(dupNumTmp, 'applications.md');
-    const dupNumEnv = { ...process.env, JOBBER_TRACKER: dupNumTracker };
-
-    writeFileSync(dupNumTracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 698 | 2026-05-29 | University of Alberta | Curriculum Coordinator | 3.8/5 | Evaluated | ❌ | — | — |\n' +
-      '| 698 | 2026-06-03 | Esri Canada | Manager Talent and Organizational Development | 4.1/5 | Evaluated | ❌ | — | — |\n' +
-      '| 700 | 2026-06-10 | Shopify | Staff Engineer | 4.5/5 | Evaluated | ❌ | — | — |\n');
-
-    let dupNumOut;
-    try {
-      dupNumOut = execFileSync(NODE, ['verify-pipeline.mjs'], { cwd: ROOT, env: dupNumEnv, encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] });
-      fail('verify-pipeline should exit non-zero on a duplicate tracker number');
-    } catch (e) {
-      dupNumOut = (e.stdout || '').toString();
-      if (e.status === 1) {
-        pass('verify-pipeline exits 1 on a duplicate tracker number');
-      } else {
-        fail(`verify-pipeline: expected exit 1, got ${e.status}`);
-      }
-    }
-    if (dupNumOut.includes('Duplicate tracker number #698')
-        && dupNumOut.includes('University of Alberta') && dupNumOut.includes('Esri Canada')) {
-      pass('duplicate tracker number #698 flagged with both colliding rows named');
-    } else {
-      fail(`duplicate tracker number not flagged with both rows\n${dupNumOut}`);
-    }
-    if (/Duplicate tracker number #700/.test(dupNumOut)) {
-      fail('unique #700 row falsely flagged as a duplicate tracker number');
-    } else {
-      pass('unique tracker number not falsely flagged');
-    }
-  } finally {
-    rmSync(dupNumTmp, { recursive: true, force: true });
-  }
-
-  // Clean fixture: no duplicate numbers — must pass green.
-  const cleanTmp = mkdtempSync(join(tmpdir(), 'jobber-verify-dupnum-clean-'));
-  try {
-    const cleanTracker = join(cleanTmp, 'applications.md');
-    writeFileSync(cleanTracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 1 | 2026-01-01 | Acme | Engineer | 4.0/5 | Evaluated | ❌ | — | — |\n' +
-      '| 2 | 2026-01-02 | Globex | Analyst | 3.9/5 | Evaluated | ❌ | — | — |\n');
-    const cleanOut = run(NODE, ['verify-pipeline.mjs'], { env: { ...process.env, JOBBER_TRACKER: cleanTracker }, stdio: ['pipe', 'pipe', 'pipe'] });
-    if (cleanOut !== null && cleanOut.includes('No duplicate tracker numbers')) {
-      pass('clean tracker with unique numbers passes the duplicate-number check');
-    } else {
-      fail('clean fixture did not pass the duplicate tracker number check');
-    }
-  } finally {
-    rmSync(cleanTmp, { recursive: true, force: true });
-  }
-} catch (e) {
-  fail(`verify-pipeline duplicate tracker number test crashed: ${e.message}`);
-}
+// Moved to tests/verify-pipeline-reports.test.mjs (auto-discovered): the
+// verify-pipeline duplicate/orphan report checks (#1425) and the
+// duplicate tracker number check (#1704).
 
 // ── SHARED ROLE MATCHER + DEDUP-TRACKER SAFETY (#947) ───────────
 // dedup-tracker.mjs used to ship an older fuzzy role matcher than
@@ -7464,123 +7325,9 @@ try {
 // cell. A valid row written WITHOUT a trailing pipe keeps its real last cell
 // (the notes) at the end, so the old reconstruction silently dropped the notes
 // when promoting a keeper's status during dedup. rebuildRow() now preserves it.
-console.log('\n🧪 Testing dedup row rebuild preserves notes on no-trailing-pipe rows...');
-try {
-  const rebuildTmp = mkdtempSync(join(tmpdir(), 'jobber-rebuild-'));
-  try {
-    mkdirSync(join(rebuildTmp, 'data'));
-    const tracker = join(rebuildTmp, 'data', 'applications.md');
-    // Keeper row #50 has the higher score AND no trailing pipe; dup #51 carries a
-    // more-advanced status (both below Applied, so the advanced-status safety
-    // guard doesn't block the collapse), so dedup promotes #50's status and
-    // rewrites the row — exercising rebuildRow() on a no-trailing-pipe row.
-    writeFileSync(tracker,
-      '# Applications Tracker\n\n' +
-      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
-      '|---|------|---------|------|-------|--------|-----|--------|-------|\n' +
-      '| 50 | 2026-02-01 | Globex | Widget Engineer | 4.5/5 | Rejected | ❌ | [50](../reports/050-widget.md) | KEEPER_NOTE_SENTINEL\n' +
-      '| 51 | 2026-02-02 | Globex | Widget Engineer | 3.0/5 | Evaluated | ❌ | [51](../reports/051-widget.md) | dup row |\n');
-
-    const r = run(NODE, ['dedup-tracker.mjs'], { env: { ...process.env, JOBBER_TRACKER: tracker } });
-    if (r === null) {
-      fail('dedup-tracker.mjs crashed during notes-preservation test');
-    } else {
-      const out = readFileSync(tracker, 'utf-8');
-      const keeperRow = out.split('\n').find(l => l.includes('| 50 |'));
-      if (keeperRow && keeperRow.includes('KEEPER_NOTE_SENTINEL') && keeperRow.includes('Evaluated')) {
-        pass('dedup row rebuild preserves the notes column on rows without a trailing pipe');
-      } else {
-        fail(`dedup row rebuild dropped notes / status on no-trailing-pipe row: "${keeperRow}"`);
-      }
-    }
-  } finally {
-    rmSync(rebuildTmp, { recursive: true, force: true });
-  }
-} catch (e) {
-  fail(`dedup row-rebuild notes test crashed: ${e.message}`);
-}
-
-// rebuildRow() is now shared from tracker-utils.mjs (extracted from the two
-// copies introduced in #1004). Unit-test the helper contract directly.
-console.log('\n🧪 Testing shared tracker-utils rebuildRow()...');
-try {
-  const { rebuildRow } = await import(pathToFileURL(join(ROOT, 'tracker-utils.mjs')).href);
-  const cellsOf = (line) => line.split('|').map(s => s.trim());
-
-  // Trailing-pipe row → unchanged round-trip.
-  const withPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
-  if (rebuildRow(cellsOf(withPipe)) === withPipe) {
-    pass('rebuildRow round-trips a row that already has a trailing pipe');
-  } else {
-    fail(`rebuildRow changed a trailing-pipe row: "${rebuildRow(cellsOf(withPipe))}"`);
-  }
-
-  // No-trailing-pipe row → last cell (notes) preserved, trailing pipe added.
-  const noPipe = '| 5 | 2026-02-01 | Acme | Eng | 4.0/5 | Applied | ❌ | [5](r.md) | keepme';
-  const rebuilt = rebuildRow(cellsOf(noPipe));
-  if (rebuilt.includes('keepme') && rebuilt.endsWith('|')) {
-    pass('rebuildRow preserves the notes cell on a row without a trailing pipe');
-  } else {
-    fail(`rebuildRow dropped notes on no-trailing-pipe row: "${rebuilt}"`);
-  }
-
-  // Extra column (e.g. a custom Location) → every cell preserved.
-  const extra = '| 5 | 2026-02-01 | Acme | Eng | Berlin | 4.0/5 | Applied | ❌ | [5](r.md) | note |';
-  const rebuiltExtra = rebuildRow(cellsOf(extra));
-  if (rebuiltExtra === extra && rebuiltExtra.includes('Berlin')) {
-    pass('rebuildRow preserves extra columns (custom Location)');
-  } else {
-    fail(`rebuildRow mangled an extra-column row: "${rebuiltExtra}"`);
-  }
-} catch (e) {
-  fail(`tracker-utils rebuildRow unit test crashed: ${e.message}`);
-}
-
-// #946/#954 header-name column mapping lived only in merge-tracker; followup-cadence,
-// analyze-patterns and dedup-tracker still parsed by fixed index, so an inserted
-// Location column mis-parsed (Location read as Score, etc.). The logic is now shared
-// in tracker-parse.mjs and all four readers use it.
-console.log('\n🧪 Testing shared tracker-parse column mapping...');
-try {
-  const { resolveColumns, parseTrackerRow, LEGACY_COLMAP } = await import(pathToFileURL(join(ROOT, 'tracker-parse.mjs')).href);
-
-  const withLocation = [
-    '| # | Date | Company | Role | Location | Score | Status | PDF | Report | Notes |',
-    '|---|------|---------|------|----------|-------|--------|-----|--------|-------|',
-    '| 7 | 2026-06-28 | Acme | Eng | Berlin | 4.5/5 | Applied | ✅ | [7](r.md) | keep |',
-  ];
-  const cmLoc = resolveColumns(withLocation);
-  const rowLoc = parseTrackerRow(withLocation[2], cmLoc);
-  if (rowLoc && rowLoc.score === '4.5/5' && rowLoc.status === 'Applied' && rowLoc.location === 'Berlin') {
-    pass('tracker-parse maps columns by header — inserted Location column does not shift Score/Status');
-  } else {
-    fail(`tracker-parse mis-parsed a Location-column row: ${JSON.stringify(rowLoc)}`);
-  }
-
-  const legacy = [
-    '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |',
-    '|---|------|---------|------|-------|--------|-----|--------|-------|',
-    '| 8 | 2026-06-28 | Beta | PM | 3.0/5 | Evaluated | ❌ | [8](r.md) | n |',
-  ];
-  const rowLeg = parseTrackerRow(legacy[2], resolveColumns(legacy));
-  if (rowLeg && rowLeg.score === '3.0/5' && rowLeg.status === 'Evaluated' && rowLeg.location === undefined) {
-    pass('tracker-parse still parses the legacy fixed layout correctly');
-  } else {
-    fail(`tracker-parse broke the legacy layout: ${JSON.stringify(rowLeg)}`);
-  }
-
-  // No header row → falls back to legacy map; header/separator/stray rows → null.
-  if (resolveColumns(['| 9 | … |']) === LEGACY_COLMAP &&
-      parseTrackerRow(legacy[0], LEGACY_COLMAP) === null &&
-      parseTrackerRow(legacy[1], LEGACY_COLMAP) === null &&
-      parseTrackerRow('not a table row', LEGACY_COLMAP) === null) {
-    pass('tracker-parse falls back to legacy map and rejects header/separator/non-rows');
-  } else {
-    fail('tracker-parse fallback / non-row rejection wrong');
-  }
-} catch (e) {
-  fail(`tracker-parse unit test crashed: ${e.message}`);
-}
+// Moved to tests/tracker-rebuild-parse.test.mjs (auto-discovered): the
+// dedup row rebuild, tracker-utils rebuildRow() and tracker-parse column
+// mapping checks.
 
 // #1431 "Apply to #13" is ambiguous: report numbers and tracker row numbers
 // diverge, and mapping company ↔ report# ↔ tracker# ↔ PDF used to require

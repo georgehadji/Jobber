@@ -4,7 +4,7 @@
 // The validator is import-safe (main guard), so these tests exercise the
 // exported validateInvocations() directly with synthetic invocation lists.
 // No network, no real modes/ scan — deterministic.
-import { pass, fail, finish } from './helpers.mjs';
+import { pass, fail } from './helpers.mjs';
 import { validateInvocations, collectInvocations, INVOCATION_RE, FLAG_RE } from '../validate-mode-invocations.mjs';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
@@ -193,5 +193,3 @@ try {
 } catch (e) {
   fail(`validate-mode-invocations tests crashed: ${e.message}`);
 }
-
-finish();
