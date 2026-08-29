@@ -97,6 +97,7 @@ data/model-blacklist.json
 
 # CLI-specific local config
 .claude/settings.local.json
+.claude/launch.json
 .claude/memory/
 .opencode/settings.local.json
 .opencode/memory/
