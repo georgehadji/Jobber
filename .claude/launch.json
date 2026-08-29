@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "porphyra-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "E:/Documents/Vibe-Coding/Porphyra", "--filter", "@porphyra/web", "run", "dev"],
+      "port": 4321
+    },
+    {
+      "name": "porphyra-app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "E:/Documents/Vibe-Coding/Porphyra", "--filter", "@porphyra/app", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}
