@@ -88,6 +88,17 @@ eq(
   false
 );
 
+// A generic descriptor must not be stripped unless a legal suffix was
+// stripped first — otherwise "Data Corp" (suffix-stripped) and "Data
+// Solutions" (descriptor-only, no suffix) both erode to "data" and look
+// like an exact match. See docstring above; this is the collision it claims
+// to prevent but the code didn't actually enforce.
+eq(
+  '"Data Corp" and "Data Solutions" do not collapse to the same key',
+  normalizeCompanyName('Data Corp') === normalizeCompanyName('Data Solutions'),
+  false
+);
+
 // extractPlatform — deterministic call-platform detection (issue #2126).
 // A meeting-platform URL always wins over a phone-number pattern that might
 // also be present in the same text (e.g. a dial-in fallback line under a
