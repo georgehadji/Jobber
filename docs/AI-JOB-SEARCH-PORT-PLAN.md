@@ -1,6 +1,6 @@
 # Port Plan — Capabilities Adapted from `MadsLorentzen/ai-job-search`
 
-**Status:** Phases 6, 1, and 2 implemented · **Drafted:** 2026-09-01 · **Scope:** `lib/`, `providers/`, `modes/`, `config/`, `docs/`, `tests/`
+**Status:** Phases 1, 2, 3, 4, 5, 6, 8 implemented · Phase 7 remaining (gated on live board probes) · **Drafted:** 2026-09-01 · **Scope:** `lib/`, `providers/`, `modes/`, `config/`, `docs/`, `tests/`, `documents/`
 
 **Implementation notes:**
 - **Phase 6** (relevance-weighted trim guidance): landed in `generate-pdf.mjs`
@@ -80,7 +80,52 @@
   `.gitignore` with zero suspicious entries, and a synthetic injected leak
   (`!config/profile.yml`) confirmed still caught.
 
-Phases 4, 5, 7 remain as drafted below.
+- **Phase 4** (`ingest-documents.mjs`, `documents/` scaffold): landed as
+  drafted, with one deliberate scope cut made explicit rather than silently
+  dropped — **DOCX is unsupported**. The plan proposed reusing `node:zlib`
+  for ZIP-container parsing plus a minimal XML sweep; on reflection this
+  matches roughly the same complexity class as `lib/pdf-text.mjs` for a
+  format the reference implementation itself does not support either (its
+  own `documents/README.md`: `.docx` → "No, convert to PDF before placing
+  here"). Shipping `.pdf`/`.md`/`.txt`/`.tex` first, with `.docx` reported
+  in `skipped[]` with a clear reason rather than silently ignored, delivers
+  the overwhelmingly common case (CV PDF, LinkedIn PDF export, diploma PDF)
+  without the added parser surface; DOCX can be added later as its own
+  follow-up if real demand shows up.
+
+  The containment guard resolves symlinks on BOTH the file and its parent
+  subdirectory (the plan only specified the file) — necessary because
+  `documents/cv/` itself could in principle be a symlink/junction, and
+  resolving only the file while comparing against the subdirectory's
+  UNresolved path would miss that case. Verified for real on this Windows
+  machine, not just reasoned about: a symlink was created inside
+  `documents/cv/` pointing at `config/profile.example.yml`, and confirmed
+  refused (`ingest()` never reads the target) both via manual smoke test and
+  via `tests/ingest-documents.test.mjs`'s own symlink case, which degrades
+  to a skipped-with-explanation assertion rather than a false failure on a
+  CI runner that can't create symlinks without elevation.
+
+  `documents/` needed the same two-level negate-then-reignore `.gitignore`
+  idiom `interview-prep/sessions/` already established (a bare `!writing-
+  samples/README.md`-style single negation isn't enough once there are
+  nested subdirectories) — verified with a real synthetic "personal data"
+  file placed in `documents/cv/` and confirmed excluded by `git add`, while
+  the four `.gitkeep` scaffolds and `documents/README.md` were confirmed
+  included. `tests/ingest-documents.test.mjs` runs against a fully isolated
+  sandbox (never the repo's own `documents/`), and includes a structural
+  read-only check: snapshot every file's size+mtime before and after a run,
+  assert byte-for-byte and mtime-for-mtime identical — the "writes nothing"
+  guarantee AGENTS.md's confirm-before-write rule depends on, checked
+  directly rather than only reasoned about.
+
+  Wired into `docs/ONBOARDING.md` Step 1: `ingest-documents.mjs` runs before
+  the paste/narrate fallback prompt, findings are summarized and confirmed
+  before any write to `cv.md`, and `documents/` was deliberately NOT added
+  to `AGENTS.md`'s Source-of-Truth Boundary list — it is an input that
+  funnels into `cv.md`/`config/profile.yml` through the existing confirm
+  gate, never a parallel source of truth alongside them.
+
+Phase 7 remains as drafted below.
 
 Trigger: review of [`MadsLorentzen/ai-job-search`](https://github.com/MadsLorentzen/ai-job-search)
 (MIT, Python + TypeScript, Claude Code framework) for capabilities Jobber does

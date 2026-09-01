@@ -276,6 +276,15 @@ const allowedSystemUserOverlap = new Set([
   // the updater ships these two, but never the real session files alongside them.
   'interview-prep/sessions/.gitkeep',
   'interview-prep/sessions/README.md',
+  // System-owned scaffold inside the user-layer documents/ dir (Phase 4,
+  // docs/AI-JOB-SEARCH-PORT-PLAN.md): the updater ships the README and each
+  // subdirectory's .gitkeep, but never the real CV/LinkedIn/diploma/
+  // reference files a candidate drops alongside them.
+  'documents/README.md',
+  'documents/cv/.gitkeep',
+  'documents/linkedin/.gitkeep',
+  'documents/diplomas/.gitkeep',
+  'documents/references/.gitkeep',
 ]);
 let hasSystemUserCollision = false;
 for (const systemPath of systemPaths) {
