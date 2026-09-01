@@ -57,7 +57,30 @@
   Block A — nothing slips through, it just costs one triage pass instead of
   zero.
 
-Phases 4, 5, 7, 8 remain as drafted below.
+- **Phase 8** (supply-chain guard parity): `plugin-audit.mjs` gained
+  `auditManifest` — flags any `package.json` under a plugin directory
+  (including nested, e.g. `cli/package.json`, the shape ai-job-search's
+  portal skills use) that defines a `preinstall`/`install`/`postinstall`/
+  `prepare`/`prepack` lifecycle script or sets `trustedDependencies`. No test
+  existed for `plugin-audit.mjs` before this — `tests/plugin-audit.test.mjs`
+  is new and scoped to the manifest check specifically, with the mandatory
+  negative case (every lifecycle-script name, individually) verified to fail
+  red without the fix. `test-all.mjs` gained a `.gitignore` negation guard:
+  reuses `USER_PATHS` from `update-system.mjs` (via the same
+  `extractArrayFromSource` helper `validate-system-paths-coverage.mjs`
+  already relies on, rather than a second hand-maintained list) and flags any
+  `!`-prefixed line that would re-include a non-`.gitkeep`, non-`README.md`
+  file under a user-data prefix. Two real false positives surfaced and were
+  excluded during implementation, not anticipated in the plan as drafted:
+  `!data/offers/` / `!interview-prep/sessions/` (the standard "negate the
+  directory, re-ignore its contents" idiom for keeping an empty dir in git)
+  and `!interview-prep/sessions/README.md` / `!writing-samples/README.md`
+  (system-authored documentation re-included inside an otherwise-ignored
+  directory) — both legitimate, confirmed clean against the real
+  `.gitignore` with zero suspicious entries, and a synthetic injected leak
+  (`!config/profile.yml`) confirmed still caught.
+
+Phases 4, 5, 7 remain as drafted below.
 
 Trigger: review of [`MadsLorentzen/ai-job-search`](https://github.com/MadsLorentzen/ai-job-search)
 (MIT, Python + TypeScript, Claude Code framework) for capabilities Jobber does

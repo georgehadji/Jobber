@@ -329,6 +329,36 @@ Report the output path and file size.
 
 ---
 
+## Optional: Adversarial Review Pass
+
+After the PDF is confirmed, offer a second-opinion critique:
+
+```text
+Cover letter PDF generated: {pdf-path}
+
+Want a second pass? I can spawn a fresh-context reviewer to research
+{company} and critique the letter — generic opening, missed keywords, a
+"problems I will solve" paragraph that reads as boilerplate rather than
+specific to this company. Costs extra tokens; skip it if it already reads
+strong.
+```
+
+If the candidate says yes, execute as a worker/subagent if your CLI supports it, to avoid consuming the main interactive context:
+
+```python
+Agent(
+    subagent_type="general-purpose",
+    prompt="[the drafted letter + the target JD + {company}] — critique for a generic/interchangeable opening, missed JD keywords, whether the 'problems I will solve' paragraph is specific to this company's actual situation (Step 3 research) or could apply to any employer, and evidence ordering (strongest achievement first).",
+    run_in_background=False
+)
+```
+
+The spawned reviewer is a **single-pass worker**: it critiques, it does not draft. It must **not** spawn further subagents or invoke other skills (see `modes/_shared.md` → Subagent delegation).
+
+**Hard constraint — the reviewer may reframe, it may never fabricate.** The critique may recommend cutting a bullet, reordering evidence, tightening a phrase, or sharpening the company-specific paragraph using facts already surfaced in Step 3's research. It may **never** recommend adding an achievement, metric, or claim about the candidate that is not already in `cv.md` (Step 7's own grounding rule: exact wording and metrics from `cv.md` only, never paraphrased or invented). Any revision made from the critique is a new draft — it goes back through Step 8's mandatory chat approval before a new PDF is generated. **Do NOT regenerate the PDF from a reviewer-revised draft without that approval** — the reviewer is a second opinion for the candidate to weigh, not a bypass of the candidate's own sign-off.
+
+---
+
 ## Step 10 — Post-generation note
 
 After the PDF is confirmed, add a brief note:

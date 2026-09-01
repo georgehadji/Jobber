@@ -293,6 +293,32 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 - If `find_and_replace_text` finds no matches → try broader substring matching
 - Always provide the Canva design URL so the user can edit manually if auto-edit fails
 
+## Optional: Adversarial Review Pass
+
+After Step 21's report, offer a second-opinion critique of the CV that just passed the fact gate:
+
+```text
+CV PDF generated: {pdf-path}
+
+Want a second pass? I can spawn a fresh-context reviewer to research {company}
+and critique the draft — missed keywords, generic framing, weak evidence
+ordering. Costs extra tokens; skip it if the draft already looks strong.
+```
+
+If the candidate says yes, execute as a worker/subagent if your CLI supports it, to avoid consuming the main interactive context:
+
+```python
+Agent(
+    subagent_type="general-purpose",
+    prompt="[the tailored CV content + the target JD + {company}] — critique for missed JD keywords, generic/boilerplate phrasing, weak evidence ordering (does the strongest proof come first?), and anything a hiring manager at this specific company would find unconvincing.",
+    run_in_background=False
+)
+```
+
+The spawned reviewer is a **single-pass worker**: it critiques, it does not draft. It must **not** spawn further subagents or invoke other skills (see `modes/_shared.md` → Subagent delegation), and its research follows the same bounded-query discipline as `modes/oferta.md`'s Bounded Research Budget — this is a generation-stage check, never a substitute for `oferta.md`'s own evaluation, which forbids subagents entirely.
+
+**Hard constraint — the reviewer may reframe, it may never fabricate.** The critique may recommend cutting a bullet, reordering evidence, tightening a phrase, or swapping which keyword gets emphasized. It may **never** recommend adding a claim, metric, or achievement that is not already in `cv.md`, `article-digest.md`, or `config/cv-facts.json` — a critique that says "mention the time you led a team of 12" when no such fact exists in those files is fabrication wearing a reviewer's voice, and the drafter must reject it. Any revision made from the critique goes back through the same gate the first draft did: rerun `node verify-cv-facts.mjs {html-path}` (Step 19) before regenerating the PDF. If the fact gate fails on the revision, the critique's suggestion was wrong — fix by adjusting the framing, not by weakening the gate.
+
 ## Cover Letter Sub-flow
 
 After generating the CV PDF, offer to generate a cover letter:
