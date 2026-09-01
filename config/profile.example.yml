@@ -95,6 +95,28 @@ language:
   output: en
   # modes_dir: modes/de  # optional: use DACH market vocabulary while still writing in English
 
+# Languages YOU work in (not to be confused with `language:` above, which
+# controls Jobber's own output language). Feeds the Language Gate in
+# modes/oferta.md: a posting that requires a language absent from this table
+# is a hard fail before scoring; a posting that requires a listed language at
+# a bar that reads higher than your declared level is flagged for your own
+# judgment, never silently passed or silently dropped.
+#
+# `level` is free text on purpose — CEFR letters, "native", "professional
+# working proficiency", whatever your CV/LinkedIn already use. No forced
+# scale: the gate reads it the way a human would, not against a rigid table.
+#
+# Optional block. Omit entirely (or leave the list empty) to turn the gate
+# off — no `languages:` table means nothing to compare a posting against, so
+# every posting passes this gate silently, same as an absent
+# `data/blacklist.md`.
+languages: []
+#   - language: Spanish
+#     level: native
+#   - language: English
+#     level: C2
+#     note: "Cambridge CPE"  # optional — free text, shown to you on a FLAG
+
 # Optional follow-up cadence preferences for `node followup-cadence.mjs`.
 # CLI flags still win for one-off runs (for example `--applied-days 10`).
 # followup_cadence:

@@ -23,10 +23,13 @@ writeFileSync(manifest, '', 'utf-8');
 const playwrightStub = join(sandbox, 'node_modules', 'playwright');
 
 copyFileSync(join(ROOT, 'generate-pdf.mjs'), script);
-// generate-pdf.mjs imports its local sibling ./theme-style.mjs (dynamic PDF
-// theming, #1837); copy it into the sandbox too or the isolated script fails
-// to load with ERR_MODULE_NOT_FOUND before it can parse any --max-pages arg.
+// generate-pdf.mjs imports its local siblings ./theme-style.mjs (dynamic PDF
+// theming, #1837) and ./lib/pdf-text.mjs (text-layer verification); copy
+// both into the sandbox too or the isolated script fails to load with
+// ERR_MODULE_NOT_FOUND before it can parse any --max-pages arg.
 copyFileSync(join(ROOT, 'theme-style.mjs'), join(sandbox, 'theme-style.mjs'));
+mkdirSync(join(sandbox, 'lib'), { recursive: true });
+copyFileSync(join(ROOT, 'lib', 'pdf-text.mjs'), join(sandbox, 'lib', 'pdf-text.mjs'));
 mkdirSync(playwrightStub, { recursive: true });
 writeFileSync(join(playwrightStub, 'package.json'), JSON.stringify({
   name: 'playwright',

@@ -144,6 +144,8 @@ const SYSTEM_PATHS = [
   'patch-latex-content.mjs',
   'lib/latex-escape.mjs',
   'lib/latex-content.mjs',
+  'lib/robots.mjs',
+  'lib/pdf-text.mjs',
   'lib/context-budget.mjs',
   'lib/context-budget.test.mjs',
   'lib/golden-budget-analysis.mjs',

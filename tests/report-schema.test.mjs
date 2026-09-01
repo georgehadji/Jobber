@@ -2,6 +2,7 @@
 import { pass, fail } from './helpers.mjs';
 import {
   parseReportSummary, validateReportSummary, validateDimensions, DIMENSION_KEYS,
+  validateLanguageGate, LANGUAGE_GATE_VALUES,
 } from '../lib/report-schema.mjs';
 
 console.log('\nlib/report-schema.mjs — Machine Summary parser + dimensions contract');
@@ -93,6 +94,51 @@ try {
     pass('validateDimensions rejects non-map dimensions input');
   } else {
     fail('validateDimensions accepted a non-map value');
+  }
+
+  // 6. Language Gate: absent is legal (a pre-M-language-gate report, or a
+  //    report where the user has no `languages:` table declared).
+  if (validateLanguageGate(undefined).length === 0 && validateLanguageGate(null).length === 0) {
+    pass('validateLanguageGate accepts an absent language_gate (backward compat)');
+  } else {
+    fail('validateLanguageGate rejected an absent language_gate');
+  }
+
+  // 7. Language Gate: every legal value is accepted, an illegal one is not.
+  if (LANGUAGE_GATE_VALUES.every((v) => validateLanguageGate(v).length === 0)) {
+    pass('validateLanguageGate accepts every legal verdict (pass/flag/fail)');
+  } else {
+    fail(`validateLanguageGate rejected a legal value: ${JSON.stringify(LANGUAGE_GATE_VALUES.map((v) => [v, validateLanguageGate(v)]))}`);
+  }
+  if (validateLanguageGate('maybe').length > 0 && validateLanguageGate(3).length > 0) {
+    pass('validateLanguageGate rejects an unrecognized verdict');
+  } else {
+    fail('validateLanguageGate accepted an illegal verdict');
+  }
+
+  // 8. parseReportSummary preserves language_gate/language_note, and
+  //    validateReportSummary flows the check end to end.
+  const withLanguageGate = GOOD_REPORT.replace(
+    'archetype: "AI Platform / LLMOps"',
+    'archetype: "AI Platform / LLMOps"\nlanguage_gate: "flag"\nlanguage_note: "posting requires fluent English; candidate declares B1/B2"',
+  );
+  const parsedWithGate = parseReportSummary(withLanguageGate);
+  if (parsedWithGate?.language_gate === 'flag' && /B1\/B2/.test(parsedWithGate.language_note || '')) {
+    pass('parseReportSummary preserves language_gate and language_note');
+  } else {
+    fail(`language_gate/language_note not preserved: ${JSON.stringify(parsedWithGate)}`);
+  }
+  if (validateReportSummary(parsedWithGate).length === 0) {
+    pass('validateReportSummary accepts a report carrying a valid language_gate');
+  } else {
+    fail(`validateReportSummary rejected a valid language_gate: ${JSON.stringify(validateReportSummary(parsedWithGate))}`);
+  }
+  const brokenGate = { ...parsedWithGate, language_gate: 'nope' };
+  const gateProblems = validateReportSummary(brokenGate);
+  if (gateProblems.some((p) => p.includes('language_gate'))) {
+    pass('validateReportSummary flags an invalid language_gate value');
+  } else {
+    fail(`validateReportSummary missed an invalid language_gate: ${JSON.stringify(gateProblems)}`);
   }
 } catch (e) {
   fail(`report-schema tests crashed: ${e.message}`);

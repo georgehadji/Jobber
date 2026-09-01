@@ -397,6 +397,19 @@ if (
 }
 
 if (
+  ofertaMode.includes('## Language Gate — run before scoring') &&
+  ofertaMode.includes('`languages:` table') &&
+  ofertaMode.includes('FAIL — hard stop') &&
+  ofertaMode.includes('FLAG, then proceed') &&
+  ofertaMode.includes('language_gate: pass|flag') &&
+  ofertaMode.includes('Absent or empty table = no gate')
+) {
+  pass('oferta.md gates a required-but-undeclared language before scoring, and flags a stretch bar');
+} else {
+  fail('oferta.md missing the Language Gate (fail-on-undeclared-language, flag-on-stretch-bar)');
+}
+
+if (
   ofertaMode.includes('### Geo-mismatch check') &&
   ofertaMode.includes('binding attendance requirement') &&
   ofertaMode.includes('⚠️ **Geo-mismatch:** location field says remote, but JD body says') &&
