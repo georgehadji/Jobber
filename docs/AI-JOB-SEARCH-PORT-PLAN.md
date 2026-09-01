@@ -1,6 +1,6 @@
 # Port Plan — Capabilities Adapted from `MadsLorentzen/ai-job-search`
 
-**Status:** Phases 1, 2, 3, 4, 5, 6, 8 implemented · Phase 7 remaining (gated on live board probes) · **Drafted:** 2026-09-01 · **Scope:** `lib/`, `providers/`, `modes/`, `config/`, `docs/`, `tests/`, `documents/`
+**Status:** All 8 phases implemented · **Drafted:** 2026-09-01 · **Scope:** `lib/`, `providers/`, `modes/`, `config/`, `docs/`, `tests/`, `documents/`
 
 **Implementation notes:**
 - **Phase 6** (relevance-weighted trim guidance): landed in `generate-pdf.mjs`
@@ -125,7 +125,61 @@
   funnels into `cv.md`/`config/profile.yml` through the existing confirm
   gate, never a parallel source of truth alongside them.
 
-Phase 7 remains as drafted below.
+- **Phase 7** (`providers/freehire.mjs`): the plan's own gate — "no work
+  starts on any row until a live zero-auth probe returns 200 with a usable
+  payload" — was run for real, not assumed. `GET
+  https://freehire.me/api/v1/jobs` returns 200 with no key, `meta.total:
+  3199525`. Danish-market coverage confirmed directly:
+  `countries=dk&is_tech=tech` alone returns **2337** real tech postings
+  (Lunar, emagine — genuine Danish companies), closing the `modes/da/`
+  provider gap `docs/JOB-DATA-SOURCES-PLAN.md` already flagged, with zero
+  Danish-specific code.
+
+  One correction to the plan as drafted, found only by testing the live
+  API rather than trusting the aggregator's own skill description: `GET
+  /api/v1/jobs` (the bare list endpoint) takes **no filter params at all** —
+  `?q=kubernetes` against it silently returns the same 3.2M-job unfiltered
+  count every time. The actual keyword/facet-filterable endpoint is `GET
+  /api/v1/jobs/search`, confirmed by reading the backend's own source
+  (`strelov1/freehire`, MIT — `internal/api/handler/search.go`'s
+  `searchParams = []string{"q", "sort", "order", "limit", "offset"}` and
+  `internal/search/search/query_filter.go`'s `StringFacets` map), not by
+  guessing param names against the wrong route. That same source read
+  surfaced the full real facet vocabulary — `countries`, `regions`,
+  `work_mode`, `is_tech`, `seniority`, `category`, `posted_within_days`, and
+  more — none of which the freehire skill's own flag list
+  (`--region`/`--country`/`--remote`) documents by name.
+
+  `salary` is deliberately never emitted (see the provider's module header):
+  `enrichment.salary_min/max` carry a per-posting `salary_period`
+  (year/month/day/hour) with no normalized currency, and the Job contract's
+  own KEY PRESENCE rule (`_types.js`) means a wrong day/hour→annual guess
+  silently drops a well-paid role as "below minimum" with no visible error
+  — the same reasoning `eures.mjs` already established for omitting salary
+  rather than risk it.
+
+  Built to the existing `providers/README.md` contract exactly:
+  `providers/freehire.mjs` (config-block-driven, `resolveProfileKeywords()`
+  fallback, per-keyword pagination with dedup, matching `eures.mjs`'s
+  established shape for a config-driven multi-page provider) plus
+  `tests/providers/freehire.test.mjs` (21 assertions, auto-discovered by
+  `tests/providers/_contract.test.mjs` with zero registration). Two
+  mandatory negative cases verified to fail red without their fix: the
+  `FREEHIRE_API_URL` self-host override's scheme guard (a `file:` URL is
+  refused, not followed) and the total-outage throw. Live smoke-tested
+  against the real API during development (not just the mocked test suite)
+  — real Danish "Platform Engineer" postings at Terraform and Relesys came
+  back with full descriptions and correct `postedAt` epoch-ms values.
+
+  `docs/SUPPORTED_JOB_BOARDS.md` and `templates/portals.example.yml` gained
+  a `freehire` row/example block, added by reverting each file to its
+  clean, already-committed state first and editing that — both files
+  carried unrelated, not-yet-committed additions from the apec/
+  arbetsformedlingen/eures work already in this working tree before this
+  session started, and mixing an unrelated diff into this commit would have
+  wrongly attributed someone else's in-progress work.
+
+All eight phases are now implemented.
 
 Trigger: review of [`MadsLorentzen/ai-job-search`](https://github.com/MadsLorentzen/ai-job-search)
 (MIT, Python + TypeScript, Claude Code framework) for capabilities Jobber does

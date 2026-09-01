@@ -2023,3 +2023,20 @@ job_boards:
   # - name: CryptocurrencyJobs             # curated Web3/crypto board (RSS, all-remote)
   #   provider: cryptocurrencyjobs
   #   enabled: true
+
+  # ── freehire (multi-market tech aggregator, ~50 source ATS platforms) ─────
+  # No auth needed. keywords[] falls back to config/profile.yml target_roles
+  # when omitted. countries/regions use freehire's own facet codes (call
+  # GET https://freehire.me/api/v1/jobs/facets for live values before relying
+  # on a specific one — an unrecognized value matches nothing, not an error).
+  # FREEHIRE_API_URL env var points this at a self-hosted instance instead.
+
+  # - name: freehire — Platform Engineering (Denmark)
+  #   provider: freehire
+  #   freehire:
+  #     keywords: ["Platform Engineer", "SRE", "DevOps Engineer"]
+  #     countries: ["dk"]
+  #     is_tech: "tech"
+  #     posted_within_days: 14
+  #   enabled: true
+  #   notes: "freehire.me — Danish tech postings, ~50 source ATS platforms normalized"
