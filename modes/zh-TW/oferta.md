@@ -1,6 +1,6 @@
 # 模式: job — 完整的 A-G 維度評估
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: bfe0bd822c7a6d6e984302ba76b2ba20dd675132 -->
 
 當求職者輸入職缺描述（JD 文字或 URL 連結）時，**一律**輸出以下七個維度的深度評估結果（A–F 評估 ＋ G 真實性）：
 

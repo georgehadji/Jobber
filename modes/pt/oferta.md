@@ -1,6 +1,6 @@
 # Modo: oferta -- Avaliação Completa A-F
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: bfe0bd822c7a6d6e984302ba76b2ba20dd675132 -->
 
 Quando o candidato cola uma vaga (texto ou URL), entregar SEMPRE os 6 blocos:
 
