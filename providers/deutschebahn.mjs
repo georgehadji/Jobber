@@ -119,7 +119,8 @@ export default {
     for (let page = 0; page < maxPages; page++) {
       if (page > 0) await wait(PAGE_DELAY_MS);
       const url = `${cfg.searchBase}?qli=true&query=&sort=score&itemsPerPage=${ITEMS_PER_PAGE}&pageNum=${page}`;
-      const html = await ctx.fetchText(url, { headers: { accept: 'text/html' } });
+      // redirect:'error' prevents SSRF via a server-side redirect (B5-D1).
+      const html = await ctx.fetchText(url, { headers: { accept: 'text/html' }, redirect: 'error' });
       const rows = parseHits(html, cfg.origin);
       if (rows.length === 0) break; // past the last page
 

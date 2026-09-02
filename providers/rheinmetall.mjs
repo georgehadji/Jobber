@@ -109,8 +109,10 @@ export default {
 
     for (let page = 1; page <= maxPages; page++) {
       if (page > 1) await wait(PAGE_DELAY_MS);
+      // redirect:'error' prevents SSRF via a server-side redirect (B5-D1).
       const html = await ctx.fetchText(`${listUrl}?page=${page}`, {
         headers: { accept: 'text/html' },
+        redirect: 'error',
       });
       const rows = parseVacancies(html, origin);
       if (rows.length === 0) {
