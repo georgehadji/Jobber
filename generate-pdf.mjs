@@ -22,6 +22,13 @@
  * warns with trimming guidance by default. --strict-pages turns that warning
  * into a hard rejection without publishing the render as successful.
  *
+ * --dump-text=<path> writes the PDF's extracted text layer (what an ATS
+ * parser actually reads, not the rendered page — see lib/pdf-text.mjs) to a
+ * file for keyword-coverage review. The extraction is also audited for
+ * baseline ATS-readability problems (empty text layer, undecodable glyphs,
+ * replacement characters); findings warn by default, same as page overflow.
+ * --strict-text turns that warning into a hard rejection.
+ *
  * Requires: @playwright/test (or playwright) installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
@@ -30,6 +37,7 @@ import { resolve, dirname, relative, sep, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { extractPdfText, auditTextLayer } from './lib/pdf-text.mjs';
 import { randomUUID } from 'node:crypto';
 import { readStyleTokens, injectThemeStyle } from './theme-style.mjs';
 
@@ -284,7 +292,11 @@ export function enforcePageBudget(pageCount, { maxPages = 2, strictPages = false
   const allowedLabel = maxPages === 1 ? 'page' : 'pages';
   const message =
     `CV is ${pageCount} ${actualLabel}; the allowed maximum is ${maxPages} ${allowedLabel}. ` +
-    'Trim lower-priority bullets, older roles, secondary projects, or the competencies strip, then regenerate.';
+    'Trim by relevance, not chronology — score each candidate line by ' +
+    '(a) relevance to the target posting, (b) uniqueness elsewhere in the document, ' +
+    'and (c) whether the cover letter depends on it, then cut the lowest-total-score ' +
+    'line first. An older-role bullet that hits posting keywords should survive ahead ' +
+    'of a recent-role bullet that does not. Then regenerate.';
 
   if (strictPages) {
     throw new Error(`${message} (--strict-pages requested)`);
@@ -419,7 +431,7 @@ async function generatePDF() {
     // validate-mode-invocations.mjs — before playwright import, exits 0.
     console.log(JSON.stringify({
       script: 'generate-pdf.mjs', version: 1,
-      flags: ['--format', '--report', '--max-pages', '--allow-reorder', '--strict-pages', '--help'],
+      flags: ['--format', '--report', '--max-pages', '--allow-reorder', '--strict-pages', '--dump-text', '--strict-text', '--help'],
       description: 'Render an HTML file (ATS-safe) to PDF via Playwright',
     }));
     process.exit(0);
@@ -436,6 +448,8 @@ async function generatePDF() {
     console.log('  --max-pages=N        Cap output at N pages (default 2)');
     console.log('  --allow-reorder      Allow section reordering during normalization');
     console.log('  --strict-pages       Fail if the page cap is exceeded');
+    console.log('  --dump-text=PATH     Write the PDF\'s extracted text layer to PATH');
+    console.log('  --strict-text        Fail if the text layer has ATS-readability findings');
     console.log('  -h, --help           Show this help');
     process.exit(0);
   }
@@ -443,6 +457,7 @@ async function generatePDF() {
   // Parse arguments
   let inputPath, outputPath, format = 'a4', reportNum = '', allowReorder = false;
   let maxPages = 2, maxPagesInput = '2', strictPages = false;
+  let dumpTextPath = '', strictText = false;
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
@@ -456,6 +471,10 @@ async function generatePDF() {
       allowReorder = true;
     } else if (arg === '--strict-pages') {
       strictPages = true;
+    } else if (arg.startsWith('--dump-text=')) {
+      dumpTextPath = arg.slice('--dump-text='.length);
+    } else if (arg === '--strict-text') {
+      strictText = true;
     } else if (!inputPath) {
       inputPath = arg;
     } else if (!outputPath) {
@@ -498,6 +517,15 @@ async function generatePDF() {
     process.exit(1);
   }
 
+  if (dumpTextPath) {
+    dumpTextPath = resolve(dumpTextPath);
+    const relDump = relative(__dirname, dumpTextPath);
+    if (relDump === '' || relDump.startsWith('..') || isAbsolute(relDump)) {
+      console.error(`Refusing to write --dump-text outside the project directory: ${dumpTextPath}`);
+      process.exit(1);
+    }
+  }
+
   // Validate format
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
@@ -535,6 +563,8 @@ async function generatePDF() {
     inputPath,
     maxPages,
     strictPages,
+    dumpTextPath,
+    strictText,
   });
 }
 
@@ -598,6 +628,8 @@ export async function inlineLocalFonts(html) {
  *   inputPath?: string,
  *   maxPages?: number,
  *   strictPages?: boolean,
+ *   dumpTextPath?: string,
+ *   strictText?: boolean,
  *   launchBrowser?: (options: {headless: boolean}) => Promise<import('playwright').Browser>
  * }} [opts]
  * @returns {Promise<{outputPath: string, pageCount: number, size: number}>}
@@ -671,6 +703,28 @@ export async function renderHtmlToPdf(html, outputPath, opts = {}) {
       maxPages: opts.maxPages ?? 2,
       strictPages: opts.strictPages ?? false,
     });
+
+    // Text-layer verification: what an ATS parser actually reads, extracted
+    // from the PDF we just wrote (not the source HTML — see lib/pdf-text.mjs
+    // for why that distinction matters). Same warn-by-default /
+    // --strict-text-fails-hard shape as the page budget above.
+    const { text: extractedText, warnings: extractionWarnings } = extractPdfText(pdfBuffer);
+    if (extractionWarnings.length > 0) {
+      console.warn(`⚠️  Text-layer extraction warnings: ${extractionWarnings.join('; ')}`);
+    }
+    if (opts.dumpTextPath) {
+      mkdirSync(dirname(opts.dumpTextPath), { recursive: true });
+      writeFileSync(opts.dumpTextPath, extractedText.endsWith('\n') ? extractedText : `${extractedText}\n`);
+      console.log(`📝 Text layer dumped: ${opts.dumpTextPath}`);
+    }
+    const textAudit = auditTextLayer(extractedText);
+    if (!textAudit.ok) {
+      const findingsMsg = textAudit.findings.map((f) => `${f.code}: ${f.message}`).join('; ');
+      if (opts.strictText) {
+        throw new Error(`PDF text layer failed ATS-readability checks: ${findingsMsg} (--strict-text requested)`);
+      }
+      console.warn(`⚠️  PDF text layer has ATS-readability findings: ${findingsMsg} Continuing because this is warning-only by default; use --strict-text to reject it.`);
+    }
 
     console.log(`✅ PDF generated: ${outputPath}`);
     console.log(`📊 Pages: ${pageCount}`);

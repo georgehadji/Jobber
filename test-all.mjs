@@ -37,6 +37,7 @@ import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
 import { discoverTests, endsProcess } from './lib/test-discovery.mjs';
+import { extractArrayFromSource } from './update-system.mjs';
 
 /**
  * Read a repo-relative text file as UTF-8.
@@ -1135,6 +1136,43 @@ for (const f of userFiles) {
     pass(`User file gitignored: ${f}`);
   } else {
     fail(`User file IS tracked (should be gitignored): ${f}`);
+  }
+}
+
+// .gitignore negation guard (#improvement-plan Phase 8, ai-job-search port):
+// a `.gitignore` change like `!config/profile.yml` would silently re-include
+// personal data for every future user who adds and commits that file — the
+// check above only catches it AFTER something got committed. This catches
+// the weakening itself. USER_PATHS (update-system.mjs) is the same list the
+// updater already trusts to mean "never touch, never publish."
+//
+// Three legitimate negation idioms exist and must NOT be flagged: negating a
+// bare directory (`!data/offers/`) to let git see inside it; re-including a
+// `.gitkeep` placeholder (`!data/offers/.gitkeep`) so an otherwise-empty
+// ignored directory still exists in a fresh clone; and re-including a
+// system-authored `README.md` documenting an otherwise-ignored directory's
+// layout (`!writing-samples/README.md`) — a README is documentation, not
+// personal data. Only a negation that re-includes some OTHER file under a
+// USER_PATHS prefix is a real leak.
+{
+  const updateSystemSource = readFile('update-system.mjs');
+  const userPaths = extractArrayFromSource(updateSystemSource, 'USER_PATHS');
+  const gitignoreLines = readFile('.gitignore').split(/\r?\n/);
+  const suspiciousNegations = [];
+  for (const raw of gitignoreLines) {
+    const line = raw.trim();
+    if (!line.startsWith('!') || line.startsWith('!#')) continue;
+    const pattern = line.slice(1).trim();
+    if (/(?:\/|^)(?:\.gitkeep|README\.md)$/i.test(pattern) || pattern.endsWith('/')) continue; // legitimate idioms
+    const normalized = pattern.replace(/^\.?\//, '');
+    if (userPaths.some((p) => normalized === p || normalized.startsWith(p))) {
+      suspiciousNegations.push(line);
+    }
+  }
+  if (suspiciousNegations.length === 0) {
+    pass('.gitignore has no negation that would re-include personal data under USER_PATHS');
+  } else {
+    fail(`.gitignore negation(s) would re-include personal data: ${suspiciousNegations.join(', ')}`);
   }
 }
 

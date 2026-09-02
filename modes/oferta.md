@@ -24,6 +24,26 @@ If `data/blacklist.md` exists, check the posting's company against it before Blo
 2. Wait for an explicit answer — never silently refuse, never silently proceed. The candidate's call always wins (same HITL spirit as the score < 4.0 rule): an explicit yes runs the full A-G evaluation as normal (note the override in the report notes); anything else stops here with no evaluation, report, or CV.
 3. No match, or no `data/blacklist.md` → proceed. A blacklist entry never changes any score anywhere — it is a gate, not a signal.
 
+## Language Gate — run before scoring
+
+This gate checks a posting's language requirements against `config/profile.yml`'s `languages:` table (the candidate's own declared working languages — see the comment block there for the shape). Absent or empty table = no gate, same opt-in semantics as the blacklist gate above; nothing about this section applies until the candidate fills it in.
+
+**What triggers the gate — and what does not.** Read the posting's language requirements as stated for **the role itself**, never the language the ad happens to be written in. A posting written in German for a role whose actual working language is English passes fine; only an explicit job-condition requirement ("fluent German required," "must communicate with the Munich team in German") triggers this check. This is a different question from `offer-prep.md`'s unrelated "Language gate" (that one is about whether *the contract text itself* is in a language this tool can parse) — this gate is about the candidate's own fluency versus a job requirement.
+
+For each language the posting requires as a job condition, compare it against the candidate's `languages:` table:
+
+| Posting requirement vs. the `languages:` table | Verdict |
+|---|---|
+| Requires a language **not on the table at all** (e.g. "fluent Polish required," "must communicate with the Warsaw team in Russian," and no Polish/Russian row exists) | **FAIL — hard stop.** Do not score, do not draft a CV/cover letter. Quote the exact requirement line back to the candidate. |
+| Requires a language the candidate **does** list, but the posting's stated bar (as written — "fluent," "native," "C1+," "business-level") reads as plausibly **higher** than the declared level | **FLAG, then proceed.** Not a fail. Score and draft normally, but surface the gap explicitly in the report (quote both the posting's requirement and the declared level) so the candidate can judge it themselves — bars like "fluent" vary a lot by company and geography, and a recruiter may be flexible. Never silently drop the posting and never silently treat it as a clean pass. |
+| Requires a language the candidate lists, at or below the declared level (or the posting names the language with no level at all) | **PASS.** No note needed. |
+
+Judge the level comparison the way every other signal in this framework is judged: read both sides as written and reason about it, don't force either into a rigid scale — CEFR letters, LinkedIn-style buckets ("professional working proficiency"), and plain-English words ("conversational," "fluent," "native") all appear in the wild and don't map onto each other precisely. When genuinely unsure whether a stated bar exceeds the candidate's level, prefer FLAG over a silent PASS — the candidate is meant to be the tiebreaker, not the gate.
+
+**Worked example:** a candidate whose table lists Spanish (native) and English (C2, "Cambridge CPE"). A posting requiring "fluent Russian" → **FAIL**, Russian isn't declared at all — stop before Block A. A posting requiring "conversational English" or unspecified English → **PASS**, C2 clears that cleanly, proceed to Block A as normal. A posting demanding "native-level English, non-negotiable" → **FLAG**, English is declared but "native-level, non-negotiable" plausibly exceeds even a C2 self-assessment — score and draft the application, but tell the candidate this posting's bar may be a stretch and let them decide.
+
+**Record the verdict.** A `FAIL` stops before Block A the same way a posting-closed or blacklist stop does — no report, no CV, no cover letter; just tell the candidate why, quoting the requirement. A `PASS` or `FLAG` proceeds to a full evaluation, and that report's `## Machine Summary` block carries `language_gate: pass|flag` (see `lib/report-schema.mjs`) plus `language_note` with the quoted requirement whenever the verdict is `flag`.
+
 ## Bounded Research Budget
 
 Company, compensation, and hiring-signal research must be a single-pass lookup, not an open-ended investigation. This mode is an evaluation workflow, not deep company research.

@@ -26,7 +26,18 @@ jobs:
       - name: Force LF checkout on Windows
         if: runner.os == 'Windows'
         run: git config --global core.autocrlf false
+      # fetch-depth: 0 (full history) — stamp-translations.mjs and
+      # check-translation-freshness.mjs derive each translated file's
+      # freshness from `git log -1 --format=%H -- modes/<file>.md`; the
+      # default shallow (depth-1) checkout only sees the merge commit
+      # itself, so every translated file reads as stale regardless of its
+      # real staleness. The dedicated translation-freshness job below never
+      # fails on this by design ("script contract: exit always 0"), which
+      # is why only the strict unit-test assertion in this matrix surfaced
+      # it.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -50,7 +61,10 @@ jobs:
   test-runner:
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 — see the comment on the `test` job's checkout step.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -82,7 +96,13 @@ jobs:
   translation-freshness:
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 — see the comment on the `test` job's checkout step.
+      # Without full history this job's own annotations are meaningless: it
+      # would report every translated file stale on every PR regardless of
+      # actual staleness, defeating its stated purpose.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: '24'

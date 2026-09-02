@@ -50,6 +50,13 @@ TRIAGE: SKIP | {Company} | {Role or "Unknown"} | 0/5 | Posting inaccessible or e
 Scan JD text for the Hard DQ Criteria listed in `_brief.md`. If any hit, you
 already know the score is ≤ 2.5. Note the DQ reason and skip step 3.
 
+Triage does not read `config/profile.yml`, so `modes/oferta.md`'s Language
+Gate (required-but-undeclared language → hard fail) does not run here — a
+role that fails it still gets promoted to full evaluation, which then stops
+it before Block A. If the candidate wants triage itself to catch a language
+mismatch, that requirement belongs in `_brief.md`'s Hard DQ Criteria too (see
+the template's example bullet); triage never opens `profile.yml` to check it.
+
 ### 3. Quick score
 Assess five dimensions. 1–2 sentences per dimension — no prose, no headers.
 (Weights below are defaults; if `_brief.md` defines its own dimension weights,

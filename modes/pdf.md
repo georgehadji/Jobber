@@ -34,11 +34,13 @@ Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previ
 19. Run the fact gate against the generated HTML: `node verify-cv-facts.mjs {html-path}`
     - This is a hard gate before PDF rendering.
     - If it fails, stop and fix the generated HTML by removing invented metrics or adding verified evidence to `cv.md`, `article-digest.md`, or `config/cv-facts.json`.
-20. Execute: `node generate-pdf.mjs {html-path} {pdf-path} --format={letter|a4} --report={report number}`, where `{pdf-path}` is the active bundle's `cv/tailored/vNNN/cv.pdf` or `output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf` for a one-off CV. `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact nested or flat HTML/PDF pair. Omit it only for one-off CVs with no tracker entry.
+20. Execute: `node generate-pdf.mjs {html-path} {pdf-path} --format={letter|a4} --report={report number} --dump-text={text-path}`, where `{pdf-path}` is the active bundle's `cv/tailored/vNNN/cv.pdf` or `output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf` for a one-off CV, and `{text-path}` is the same path with a `.txt` extension. `{report number}` is the NNN from the report filename/link (e.g. `008` for `reports/008-acme-….md`), not the tracker `#` column. Pass it whenever the application has (or will have) a report; it records the PDF↔report linkage in `data/pdf-index.tsv` so the dashboard can open and regenerate the exact nested or flat HTML/PDF pair. Omit it only for one-off CVs with no tracker entry.
     - The rendered PDF has a two-page warning threshold by default. `--max-pages=N` accepts a positive integer; pass `--max-pages=1` when the user or market prefers a one-page CV.
-    - If the rendered PDF exceeds its threshold, generation warns loudly with the actual and allowed page counts plus trimming guidance, then reports and indexes the unchanged PDF so existing longer-CV flows keep working.
-    - Pass `--strict-pages` only when the user or market requires a hard limit. Strict overflow leaves the draft available for inspection but does not report or index it as successful; trim lower-priority content and rerun.
-21. Report: PDF path, number of pages, keyword coverage %, and any skill gaps from Step 4 still unaddressed
+    - If the rendered PDF exceeds its threshold, generation warns loudly with the actual and allowed page counts, then reports and indexes the unchanged PDF so existing longer-CV flows keep working.
+    - Pass `--strict-pages` only when the user or market requires a hard limit. Strict overflow leaves the draft available for inspection but does not report or index it as successful; trim and rerun.
+    - **Trimming rule (relevance-weighted, not chronological):** when cutting content to fit the page budget, do not cut oldest-first. Score each candidate line by (a) relevance to the target posting's keywords/requirements, (b) uniqueness — does it say something no other line already says, and (c) whether the cover letter's claims depend on it being present in the CV. Cut the lowest-total-score line first. An older-role bullet that hits posting keywords should survive ahead of a recent-role bullet that does not.
+    - `--dump-text={text-path}` writes the PDF's extracted text layer — what an ATS parser actually reads, not the source HTML — and the extraction is audited for baseline readability (empty text layer, undecodable glyphs, replacement characters). Findings warn by default; pass `--strict-text` only when the user or market requires a hard reject on a broken text layer.
+21. Read `{text-path}` and score the posting's keyword coverage against **that extraction, not the source HTML or JSON payload** — the text layer is what an ATS parser sees, and the two can diverge (an icon-only contact detail, a multi-column reading-order scramble). Report: PDF path, number of pages, keyword coverage % against `{text-path}`, and any skill gaps from Step 4 still unaddressed. If `generate-pdf.mjs` printed a text-layer warning (e.g. `CID_PLACEHOLDER`), surface it — it means a real parser would see less than the rendered page shows.
 
 ## ATS Rules (clean parsing)
 
@@ -290,6 +292,32 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 - If text elements can't be mapped → warn user, show what was found, ask for manual mapping
 - If `find_and_replace_text` finds no matches → try broader substring matching
 - Always provide the Canva design URL so the user can edit manually if auto-edit fails
+
+## Optional: Adversarial Review Pass
+
+After Step 21's report, offer a second-opinion critique of the CV that just passed the fact gate:
+
+```text
+CV PDF generated: {pdf-path}
+
+Want a second pass? I can spawn a fresh-context reviewer to research {company}
+and critique the draft — missed keywords, generic framing, weak evidence
+ordering. Costs extra tokens; skip it if the draft already looks strong.
+```
+
+If the candidate says yes, execute as a worker/subagent if your CLI supports it, to avoid consuming the main interactive context:
+
+```python
+Agent(
+    subagent_type="general-purpose",
+    prompt="[the tailored CV content + the target JD + {company}] — critique for missed JD keywords, generic/boilerplate phrasing, weak evidence ordering (does the strongest proof come first?), and anything a hiring manager at this specific company would find unconvincing.",
+    run_in_background=False
+)
+```
+
+The spawned reviewer is a **single-pass worker**: it critiques, it does not draft. It must **not** spawn further subagents or invoke other skills (see `modes/_shared.md` → Subagent delegation), and its research follows the same bounded-query discipline as `modes/oferta.md`'s Bounded Research Budget — this is a generation-stage check, never a substitute for `oferta.md`'s own evaluation, which forbids subagents entirely.
+
+**Hard constraint — the reviewer may reframe, it may never fabricate.** The critique may recommend cutting a bullet, reordering evidence, tightening a phrase, or swapping which keyword gets emphasized. It may **never** recommend adding a claim, metric, or achievement that is not already in `cv.md`, `article-digest.md`, or `config/cv-facts.json` — a critique that says "mention the time you led a team of 12" when no such fact exists in those files is fabrication wearing a reviewer's voice, and the drafter must reject it. Any revision made from the critique goes back through the same gate the first draft did: rerun `node verify-cv-facts.mjs {html-path}` (Step 19) before regenerating the PDF. If the fact gate fails on the revision, the critique's suggestion was wrong — fix by adjusting the framing, not by weakening the gate.
 
 ## Cover Letter Sub-flow
 

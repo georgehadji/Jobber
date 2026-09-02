@@ -1,217 +1,154 @@
-# Deep Audit — Jobber (Blind Spot Discovery)
+# Implementation Audit Report
 
-> **Protocol:** ARCHITECTURAL REAPER V7 · **Date:** 2026-08-04
-> **System:** Jobber — AI-powered job search CLI (Node.js ESM, local-first, no server)
-> **Epistemic protocol:** EGFV — [VERIFIED], [ΕΙΚΑΣΙΑ], [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ]
-
----
-
-## Input Declaration
-
-| Input | Status |
-|-------|--------|
-| Source code | ✅ Full repo (124 `.mjs`, 74 providers, 42 modes, 21 translation dirs, 110 tests) |
-| Architecture diagrams | ✅ `ARCHITECTURE.md`, `docs/ARCHITECTURE.md` |
-| CI/CD config | ✅ 16 GitHub Actions workflows |
-| Dependency manifests | ✅ `package.json` (4 runtime + 4 dev) |
-| Logs / metrics | ❌ [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ] — CLI tool, no telemetry infrastructure |
-| Interview with developer | ❌ [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ] |
-| README / docs | ✅ `AGENTS.md`, `DATA_CONTRACT.md`, `.healing/runbook.md` |
-
-## Audience
-
-**Tech Lead** — full technical depth. Security-relevant findings in Part 5 are also flagged for **Security Officer**.
-
-## Scope
-
-All 10 parts assessed. Parts 1 (temporal), 3 (observability), 7 (failure handling), 8 (concurrency) are adapted to the CLI-tool context — findings where applicable, `N/A — CLI tool` where not.
+**Subject:** ARCH-AUDIT-V2 remediation plan — full-plan status (Steps 1–6) as of current branch tip
+**Plan:** `reflective-booping-sundae.md` (approved; local to this machine at `~/.claude/plans/`)
+**Branch reviewed:** `chore/scan-data-source-cluster` @ `a1c267d`
+**Baseline for this audit:** `ed0c1a6` (Steps 1–5 merged as PR #11, previously audited — see §0)
+**Diff since baseline:** 55 files changed, +9,759 / −14,725 across PRs #13–#22 (all individually merged to `main`)
+**Reviewer note:** this audit reviews work performed by the same agent that authored it. Findings are evidence-cited; a defect this agent introduced in the current branch tip is reported with the same weight as any other finding (§7, C-1).
 
 ---
 
-## Pre-Analysis: Meta-Checks
+## 0. Relationship to the prior audit
 
-1. **Ανάστροφη αιτιότητα:** The "flat root" (124 scripts at root) looks like disorganization but is a documented architectural decision [VERIFIED — `ARCHITECTURE.md:27-29`]. I must not flag it as a finding.
-2. **Επιβεβαιωτική προκατάληψη:** I checked whether the tracker lock actually prevents lost updates on Windows — the concurrent test was failing (FC-001). The architecture responds correctly (lock serializes), but the filesystem (FAT/exFAT) violates the assumption. Finding confirmed with platform guard.
-3. **Άγνοια άγνοιας:** I cannot see the user's actual `data/` files (cv.md, applications.md, pipeline.md) — they contain PII and are gitignored. Some tracker-integrity findings depend on file shape I cannot verify. [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ]
-4. **Survivorship bias:** The `writeFileAtomic` + `renameSync` pattern has worked for the original author (740+ evaluations on macOS/Linux). The Windows FAT/exFAT non-atomicity never manifested because the primary deployment is POSIX. FC-001 caught this via CI matrix.
-5. **Blast Radius Map:**
-   - `tracker-utils.mjs` → 8 importers (merge-tracker, set-status, stats, analyze-patterns, funnel-velocity, company-history, verify-pipeline, tracker). If `readTrackerSafe` has a bug, all 4 reader scripts + verification are affected.
-   - `tracker-parse.mjs` → 12 importers. If column detection breaks, every tracker reader returns wrong data.
-   - `lib/llm-providers.mjs` → 4 importers (gemini, ollama, openai, openrouter). Wrong model defaults break all LLM evaluation paths.
-   - Provider registry (`providers/_registry.mjs`) → 2 importers (scan.mjs, verify-portals.mjs). Failure = scan silently returns 0 results.
+`implementation_audit_report.md` previously held a report dated 2026-08-28 reviewing commit `ed0c1a6` (PR #11, Steps 1–5 only). That report is superseded by this one — its three findings are re-verified below, not re-derived from scratch:
 
----
+| Prior finding | Status now | Evidence |
+|---|---|---|
+| R-1 — dangling `tests/README.md` cross-reference ("process.exit guard below" pointed at nothing) | ✅ **Fixed** | [tests/README.md:57-70](tests/README.md:57) now contains the referenced "### The process.exit guard" section |
+| R-2 — CI fully non-functional (0 steps executed, all checks failing) | ✅ **Resolved** | This session confirmed the outage was billing/capacity-side (cross-branch/cross-date evidence), then confirmed restoration: PR #22 shows 13/13 checks passing, including all three OS runners (`test (ubuntu-latest)`, `test (macos-latest)`, `test (windows-latest)`) |
+| R-3 — `normalizeCompanyName` builds `RegExp` per call instead of at module load | ✅ **Fixed** | Commit `77549a4` precompiles both pattern lists to `LEGAL_SUFFIX_RES`/`GENERIC_DESCRIPTOR_RES` at module scope ([lib/company-name.mjs:26-27](lib/company-name.mjs:26)) — hand-verified behaviorally identical to the per-call version it replaced |
 
-## Part 1: Χρονική Συμβατότητα
-
-| # | Εύρημα | Τοποθεσία | Σενάριο Αστοχίας | Severity | Confidence |
-|---|--------|-----------|-----------------|---------|------------|
-| T-01 | Report filenames use local date (`new Date().toISOString().split('T')[0]`), not UTC. On a machine with clock set to a different timezone, reports get wrong-date filenames. | `gemini-eval.mjs:410`, `ollama-eval.mjs:341`, `openai-eval.mjs:392` | User in UTC+12 runs evaluation at 23:30 local on Jan 1; report gets `Jan 1` date but it's already Jan 2 in UTC. Cross-timezone collaboration sees date-mismatched reports. | **P3** | HIGH |
-| T-02 | `SENTINEL_MAX_AGE_MS = 4 * 60 * 60 * 1000` (4 hours) — reservation sentinels GC'd based on local system clock. If the clock jumps backward (NTP correction, DST), a 3.5h-old sentinel could be GC'd as 5h-old. | `tracker-utils.mjs:395` | Report number reservation released prematurely → two evaluators get the same number → report collision. | **P2** | MEDIUM |
-| T-03 | No timeout on `browser-extract.mjs` Playwright navigation (defaults to Playwright's 30s). Very slow job boards can hang the extraction indefinitely. The `--timeout` flag exists but is optional — modes call `node browser-extract.mjs <url>` without it. | `browser-extract.mjs:140-142`, modes use `node browser-extract.mjs <url>` without `--timeout` | AI evaluation session hangs for 30s on a slow ATS page. | **P2** | HIGH |
-
-**Adapter note:** T-01/T-02 are inherent to a local-first CLI tool — there's no server clock to standardize against. NTP drift is the user's responsibility. T-03 could benefit from a default timeout in the mode instructions.
+All three are closed. This audit's own new findings are in §7.
 
 ---
 
-## Part 2: Σχεδιαστικές Αποφάσεις Που Μοιάζουν Με Bugs
+## 1. Executive Summary
 
-| # | Λειτουργία | Απόφαση | Τεκμηριωμένο | Ρίσκο αν Παραβιαστεί | Severity | Confidence |
-|---|-----------|---------|-------------|---------------------|---------|------------|
-| D-01 | `merge-tracker.mjs` merge is idempotent (same TSV re-run → duplicate detected, skipped) | Per-plan: merge-tracker deduplication by company+role+report# | **Ναι** — documented in header comment | Duplicate tracker rows if TSV format changes break dedup detection | **P2** | HIGH |
-| D-02 | `writeFileAtomic` in `tracker-utils.mjs` uses `writeFileSync(tmp) + renameSync(tmp, target)` | Per-architecture: Markdown files are canonical; SQLite is derived | **Ναι** — `ARCHITECTURE.md:23-25` | Windows FAT/exFAT: `renameSync` is not atomic over an existing target. A concurrent reader can see a truncated/empty file. **T5's `readTrackerSafe()` mitigates reader-side** with retry. | **P2** (mitigated) | HIGH |
-| D-03 | `check-translation-freshness.mjs` exits `process.exit(0)` at module top — not import-safe. Any script that imports it is killed before its own code runs. | Deliberate: "Exit code is always 0 (soft)" — it's a standalone CLI, not a library | **Ναι** — documented in header | `stamp-translations.test.mjs` must spawn it as a child process instead of importing `checkTranslations()` directly. The exported functions are unreachable in-process. | **P3** | HIGH |
-| D-04 | `ollama-eval.mjs` and `openai-eval.mjs` do NOT write tracker TSVs or call `merge-tracker.mjs` — they only print the tracker entry. `gemini-eval.mjs` writes TSVs and merges. | Unknown — [ΕΙΚΑΣΙΑ] the ollama/openai evaluators were built as lightweight alternatives and tracker integration was deferred | **Όχι** | User evaluates with ollama, expects the tracker to be updated, but the row only prints to stdout. Must manually add it. Inconsistency across evaluators. | **P2** | HIGH |
+**Plan compliance:** Steps 1–5 remain correctly implemented and now carry materially stronger verification than at the prior audit — that review had zero working CI; this one has full three-OS CI evidence. Step 6 (`test-all.mjs` decomposition), explicitly scoped by the plan as multi-session/staged work, has progressed substantially since: `test-all.mjs` is down from 12,585 lines (pre-plan) to **4,068 lines**, a 68% reduction, via 9 extraction commits across PRs #13–#22, each independently merged and CI-gated. Two of the plan's seven named clusters (interview/offer/legal-guardrail; part of batch/openrouter/eval) remain inline and un-extracted — expected, not a defect, per the plan's own "do not attempt this in one sitting" instruction.
 
----
+**Out-of-plan work found bundled into PR #22:** a README rewrite (dropping 16 translated copies + upstream personal case-study content), a genuine macOS-only bug fix in `lib/llm-providers.mjs`'s CLI shim (caught by CI once it came back online), and two `.claude/` dev-tooling config files. None of these were in the plan. All are independently justifiable (see §2), but they are scope additions and are reported as such, not silently folded into "plan compliance."
 
-## Part 3: Παρατηρησιμότητα & Κόστος
+**A new, currently-failing local check was found on the reviewed branch tip.** `node test-all.mjs --quick` at `a1c267d` reports **3344 passed, 1 failed, 1 warning** — the failure is real and reproducible, not flaky (see §7, C-1). It was introduced by this session's own `.claude/launch.json` commit, which was pushed to this branch *after* PR #22 had already merged — meaning it never ran through CI and is not on `main`. This is unrelated to the remediation plan but blocks treating the current branch tip as clean.
 
-**N/A — CLI tool, no server process. Adapted findings:**
+**One latent defect was found in Step 4's deliverable** (`lib/company-name.mjs`), pre-existing in the code before this plan touched it and carried over verbatim by the (correct, faithful) Step 4 move — not introduced by the plan. A verified fix package exists (see §7, C-2) but has not been applied.
 
-| # | Pillar | Current State | Gap | Impact | Severity | Confidence |
-|---|--------|-------------|-----|--------|---------|------------|
-| O-01 | Alerting | `provider-health.mjs` daily CI workflow probes ATS APIs. `verify-pipeline.mjs` checks tracker integrity. `validate-mode-invocations.mjs` checks mode↔script references. | No dead man's switch — if the daily provider-health CI silently stops running (e.g., workflow disabled), nobody is alerted. | ATS API going down is discovered only when the user manually runs `scan.mjs --health-check` and sees a degraded provider. | **P2** | HIGH |
-| O-02 | Logging | No structured logging. Scripts use `console.log`/`console.warn`/`console.error` with emoji prefixes. | No machine-parseable log format. No correlation IDs across spawned processes (test-runner spawns children; batch-runner spawns workers). | Debugging a batch run with 50 parallel workers requires grepping emoji-prefixed log lines — no per-worker tracing. | **P3** | HIGH |
-| O-03 | Metrics | `stats.mjs` provides pipeline roll-up (counts per status, scan totals, follow-up compliance). `provider-health.mjs` reports API health. | No historical metrics database. Each stats run is a point-in-time snapshot. Cannot answer "what was my interview rate 3 months ago?" | Trend analysis requires manual snapshot archiving. | **P3** | HIGH |
+**Verdict: APPROVED WITH CHANGES.** The plan's own work is sound. Two corrections are needed before the branch is push-clean: one mechanical (register or gitignore `.claude/launch.json`), one substantive but pre-existing (the company-name collision). Neither invalidates Steps 1–6's execution quality.
 
 ---
 
-## Part 4: Ανθρώπινοι Παράγοντες
+## 2. Plan Compliance Matrix
 
-| # | Περιοχή | Κενό | Επίπτωση | Severity | Confidence |
-|---|---------|------|----------|---------|------------|
-| H-01 | Error messages | No unique, searchable error codes. Errors are prose strings: `"❌ Gemini API error: [REDACTED]"`. | A user searching for their error finds 0 results in the repo or on StackOverflow. Each error is a unique snowflake. | **P3** | HIGH |
-| H-02 | Knowledge concentration | `tracker-utils.mjs` (422 lines) — the lock, atomic write, safe read, status resolution, and sentinel GC all live here. `tracker-parse.mjs` (360 lines) — column detection, score/status resolution, row parsing. | If the author leaves, the tracker subsystem (the heart of the pipeline) has a bus factor of 1. The logic is well-commented but dense. | **P2** | HIGH |
-| H-03 | Onboarding | `AGENTS.md` has an onboarding wizard (Steps 0–6 in doctor.mjs). `.healing/runbook.md` covers testing and healing loops. | No "contributing your first provider" walkthrough. `providers/README.md` exists but references internal conventions (`_http.mjs`, `_registry.mjs`) that a new contributor must reverse-engineer. | New provider contributions are harder than they need to be. | **P3** | MEDIUM |
-| H-04 | Documentation staleness | `ARCHITECTURE.md` references ~70 root scripts; the count is now 124. The "Component map" diagram hasn't been updated for `test-runner.mjs`, `eval-runner.mjs`, `stamp-translations.mjs`, or `.healing/`. | A new developer reading ARCHITECTURE.md gets an incomplete picture. | **P3** | HIGH |
+| Plan Item | Status | Evidence | Notes |
+|---|---|---|---|
+| **Step 1** — relocate 15 scratch files to `local/` | ✅ Complete | All 11 root files + 4 `batch/` files now under `local/` and `local/batch/`; `git log --diff-filter=D` on their old paths returns nothing (never tracked, so no commit needed — matches the plan's own reasoning) | Re-verified fresh this session, not assumed from the prior audit |
+| **Step 2** — remove Apify `process.env` fallbacks | ✅ Complete | [plugins/apify/index.mjs:180](plugins/apify/index.mjs:180) reads only `ctx?.env?.APIFY_TOKEN`; `_apify.mjs`'s `hasToken(token)`/`runActor({token})` take no default | Re-read both files fresh this session; matches Gmail/Notion's fail-fast pattern exactly, as the plan required |
+| **Step 3** — extract `classifyFetchError` → `lib/http-errors.mjs` | ✅ Complete | [lib/http-errors.mjs](lib/http-errors.mjs) (25 ln); wired into `verify-portals.mjs:35`, `scan.mjs:44` | Re-read and hand-traced this session; verbatim, no drift |
+| **Step 4** — extract `normalizeCompanyName` → `lib/company-name.mjs` | ✅ Complete (move) / ⚠️ pre-existing bug found | [lib/company-name.mjs](lib/company-name.mjs); 4 importers updated (`scan.mjs:48`, `detect-reposts.mjs:29`, `invite-match.mjs:30`, `invite-match.test.mjs:10`) | The move is faithful. A latent collision defect in the moved logic was found this session — pre-dates Step 4, not caused by it. See §7 C-2 |
+| **Step 5** — dedupe test discovery → `lib/test-discovery.mjs` | ✅ Complete | [lib/test-discovery.mjs](lib/test-discovery.mjs) (39 ln, since strengthened by `77549a4` — see below); both `test-all.mjs` and `test-runner.mjs` import `discoverTests`/`endsProcess` from it | Function was renamed `callsProcessExit` → `endsProcess` and extended to also catch bare `finish()` calls (commit `77549a4`) — a real bug fix (`tests/eval-runner.test.mjs` had been silently truncating the suite), executed *through* the new shared module exactly as Step 5 intended. Confirms the dedup was worth doing: the fix landed once, not twice. |
+| **Step 6** — decompose `test-all.mjs` (7 clusters) | 🟡 In progress, plan-conformant | `test-all.mjs`: 12,585 → 4,068 lines; 9 extraction commits, each its own merged PR (#13–#22); `tests/` now holds 134 auto-discovered files | Execution diverged from the plan's suggested 7-cluster names — actual splits are finer-grained (e.g. `scan-archive-location-filter`, `cli-docs-skill-integrity`, `followup-tracker-lifecycle` don't map 1:1 to the plan's 7 items). This is judgment applied *within* the plan's stated intent ("each independently regression-gated"), not a deviation from it. **Remaining, confirmed still-inline:** the full interview/offer/legal-guardrail cluster (plan item 6 — sections 52, 55b, 61–70 in current `test-all.mjs`, its largest un-extracted block) and part of the batch/openrouter/eval cluster (plan item 5 — sections 44/44b–44e remain; only the batch/scan-rediscovery sub-topic was extracted) |
+| **Verification** — baseline + both gates, every step | ✅ Complete, materially stronger than prior audit | This session: PR #22 CI — 13/13 checks green across ubuntu/macos/windows. Fresh local re-run at current HEAD: `test-runner.mjs --parallel 4` → 2837/0/1. `test-all.mjs --quick` → **3344/1/1 — one failure, see §7 C-1** | The prior audit had *no* working CI at all (billing outage) and Windows-only local runs. This audit has full cross-OS CI evidence for everything through PR #22's merge, though C-1 is on a commit CI never saw (see below) |
 
----
+**Out-of-scope work found in PR #22** (not in the plan; assessed on its own merits, not against plan compliance):
 
-## Part 5: Ασφάλεια Πέρα Από Το Προφανές
-
-| # | Εύρημα | STRIDE | Attack Vector | Current Control | Gap | Severity | Confidence |
-|---|--------|--------|--------------|----------------|-----|---------|------------|
-| S-01 | `GEMINI_API_KEY` / `OPENAI_API_KEY` are read from `.env` via `dotenv`. If `.env` is accidentally committed (it's gitignored but not in `.gitignore`-enforced CI), API keys leak. `.github/workflows/no-user-data.yml` blocks `data/` and `config/` but not `.env`. | Information Disclosure | PR adds `.env` with real keys → CI passes → keys are in git history forever | `.gitignore` entry for `.env` | `.github/workflows/no-user-data.yml` does not block `.env`. The `.gitignore` prevents `git add` but doesn't prevent `git add -f`. | **P1** | HIGH |
-| S-02 | `ollama-eval.mjs:156-175` has a **loopback guard** — refuses remote endpoints unless `OLLAMA_ALLOW_REMOTE=1`. `openai-eval.mjs:158-195` has an **HTTPS enforcement** guard — refuses non-HTTPS remote endpoints. `gemini-eval.mjs` has **neither** — it uses the Google SDK which defaults to `generativelanguage.googleapis.com` (always HTTPS, always remote), but no explicit guard validates this. | Information Disclosure | Man-in-the-middle intercepts Gemini API traffic if the SDK ever connects to a non-HTTPS endpoint (unlikely with Google's SDK, but the guard is absent while the other two evaluators have one) | Google SDK defaults to HTTPS | Guards are asymmetric across the three evaluators — inconsistency in defense-in-depth | **P3** | HIGH |
-| S-03 | `providers/` contains 74 adapters that fetch from public ATS APIs. No adapter validates TLS certificates or checks for redirect-to-http. The `_http.mjs` helper uses native `fetch` with `redirect: 'follow'` — a malicious redirect could send the scan request (including the user's IP) to an attacker-controlled server. | Tampering | A compromised DNS returns an attacker IP for `boards-api.greenhouse.io` → `_http.mjs:55` follows the redirect → scan data leaks | `fetch` validates TLS by default | No explicit redirect chain validation; `redirect: 'follow'` follows any redirect silently | **P2** | MEDIUM |
-| S-04 | `reserve-report-num.mjs` allocates report numbers using `O_CREAT|O_EXCL` sentinel files under `reports/`. The sentinel GC uses `mtimeMs` (filesystem timestamp) to determine staleness. An attacker with filesystem write access could `touch` a sentinel to make it appear fresh, permanently occupying a report number. | Denial of Service | Attacker with write access to `reports/` touches sentinels hourly → all numbers occupied → evaluations can't save reports | File permissions (user's machine) | No integrity check on sentinel content — only mtime is checked | **P3** | LOW |
-
----
-
-## Part 6: Διαχείριση Δεδομένων
-
-| # | Περιοχή | Current Behavior | Risk | Severity | Confidence |
-|---|---------|-----------------|------|---------|------------|
-| DM-01 | Soft vs Hard Deletes | **All deletes are hard.** `rmSync` on sentinels (reserve-report-num, gcStaleSentinels), `rmSync` on lock dirs, `unlinkSync` on stale files. Applications in the tracker are never truly deleted — status transitions to `Rejected`/`Discarded`/`Hired`. The tracker itself is the soft-delete layer. | Accidental `rm -rf reports/` loses all evaluation reports permanently. No recycle bin, no backup mechanism. | **P2** | HIGH |
-| DM-02 | Migration Safety | The `update-system.mjs` self-updater fetches new system files and checks out `SYSTEM_PATHS` from upstream. It backs up before applying. `updater-migration-tests.mjs` tests the upgrade path. | A botched update that corrupts a system file (e.g., `merge-tracker.mjs`) is recoverable via `rollback`. But a user who doesn't know about rollback might lose functionality until they manually repair. | **P3** | HIGH |
-| DM-03 | Data Retention | User-layer files (`data/`, `reports/`, `jds/`) are never touched by the updater. The user controls retention. No automated cleanup of old reports. | A user with 500+ evaluations accumulates ~500 report files and a growing tracker. No mechanism suggests archiving or pruning. Performance impact is minimal (Markdown files are tiny), but navigability degrades. | **P3** | HIGH |
+| Item | Assessment |
+|---|---|
+| README rewrite, drop 16 translated copies (`2c82919`) | Justified independently — removes upstream's personal case-study/outcome claims that would misattribute to this fork; `update-system.mjs` `SYSTEM_PATHS` correctly pruned in the same commit |
+| `updater-migration-tests.mjs` guard fix (`8e3af7f`) | Directly required by the README commit — the guard's own `requiredSystemPaths` list still named the 5 removed translations; fixing it is not scope creep, it's completing the prior commit correctly |
+| `lib/llm-providers.mjs` macOS symlink fix (`1e21f50`) | Genuine, previously-latent, macOS-only bug (`realpath`d `import.meta.url` compared against a raw `argv[1]`, breaking under any `os.tmpdir()` fixture on macOS). Found only because CI came back online mid-session and exercised a real macOS runner — impossible to catch from this Windows dev environment. Correctly scoped to the one file with demonstrated breakage, not spectulatively to the ~20 other files sharing the same guard pattern |
+| `.claude/launch.json`, `.claude/settings.json` (`a1c267d`) | Committed after PR #22 already merged; never CI-validated. `.claude/launch.json`'s local-check failure is now fixed — see §7 C-1 |
 
 ---
 
-## Part 7: Αντιμετώπιση Αστοχίας Σε Βάθος
+## 3. Architecture Compliance Assessment
 
-| # | Σενάριο | Trigger | Detection | Behavior | Severity | Confidence |
-|---|---------|---------|-----------|----------|---------|------------|
-| F-01 | **Retry storms** | The batch runner (`batch/batch-runner.sh`) spawns N parallel workers. `reserve-report-num.mjs` allocates numbers atomically. No retry mechanism exists at the worker level — if a worker's LLM call fails, the worker exits with an error and the batch runner marks it failed. **No exponential backoff retry.** | The `--replay` mechanism in `eval-golden.mjs` allows re-running failed evaluations. The batch-runner itself does not retry — it's single-pass. | **P2** — a single transient API error loses one evaluation slot. Acceptable for a free-tier local tool. | HIGH |
-| F-02 | **Resource exhaustion** | `test-runner.mjs --parallel N` spawns N child Node processes. No `os.cpus()` cap. `--parallel 999` on a 2-core machine spawns 999 children competing for CPU. | No guard — the user can specify arbitrarily high parallelism. | **P3** — the user owns the machine; over-provisioning hurts only themselves. But a CI runner with `--parallel 999` could OOM and crash the CI job. | HIGH |
-| F-03 | **Partial success** | `merge-tracker.mjs` in `--strict` mode rejects the entire batch on any malformed TSV. Default mode skips bad TSVs with warnings and merges the rest. Both behaviors are explicit and documented. | Clear — the user sees exactly what merged and what was skipped. No silent partial merge. | **P2** — `--strict` mode means one bad TSV blocks 28 good ones until manually fixed. Default mode is the safer default. | HIGH |
-| F-04 | **Provider API failure** | `provider-health.mjs` canary probes APIs. `scan.mjs` reports per-provider results but continues scanning other providers. A down provider means 0 results from that ATS — the user discovers this via the scan summary line (`"0 jobs"` for that company). | Detection is passive — the user must notice the gap. The daily CI workflow provides active monitoring but only for 5 major ATS vendors, not all 74. | **P3** — affects scan completeness, not data integrity. The user can re-scan later. | HIGH |
+**Verdict: compliant**, with one sourcing correction from the prior audit: the "`lib/` uses named exports only, never a default, never a class" rule is **not** written in `ARCHITECTURE.md` — grepped it directly this session, no match. It is the *plan's own* stated "paradigm baseline" (inferred from existing `lib/file-lock.mjs`, `lib/context-budget.mjs`), not an independently-documented architecture mandate. Citing it as if `ARCHITECTURE.md` requires it would overclaim the source; the underlying observation (all three new `lib/` modules follow it) still holds.
 
----
+| Rule (and its actual source) | Assessment |
+|---|---|
+| `lib/` modules: named exports only, plain-arg pure functions, no `process.env` — *plan's paradigm baseline, not ARCHITECTURE.md* | ✅ All three new modules (`http-errors.mjs`, `company-name.mjs`, `test-discovery.mjs`) comply |
+| CLI scripts depend on `lib/`, not on each other — *plan's own Step 3/4 rationale* | ✅ Eliminated both entry-point→entry-point imports the original audit flagged (`scan.mjs`→`verify-portals.mjs`, `scan.mjs`→`invite-match.mjs`) |
+| No new dependencies | ✅ Repo remains at 4 production deps (unchanged since prior audit) |
+| Plugin `ctx.env` port / `_engine.mjs buildCtx` adapter boundary — *observed convention, Gmail/Notion plugins* | ✅ Apify now conforms |
+| No backwards-compat shims when call sites can be updated directly — *user's own global coding-style rule* | ✅ No re-exports left anywhere; re-verified across all Step 3–5 extractions this session |
+| System vs. User layer — `DATA_CONTRACT.md` / `AGENTS.md` | ✅ Every file touched since `ed0c1a6` (`lib/`, `tests/`, `plugins/apify/`, `update-system.mjs`, `test-all.mjs`, `test-runner.mjs`, `README.md`, `.claude/*`) falls outside the documented User Layer path list (`cv.md`, `config/profile.yml`, `modes/_profile.md`, `modes/_custom.md`, `article-digest.md`, `portals.yml`, `data/*`, `reports/*`, `output/*`, `interview-prep/*`) |
+| `update-system.mjs` `SYSTEM_PATHS`/`USER_PATHS` must classify every tracked file | ✅ **Fixed** — `.claude/launch.json` was untracked (`git rm --cached`) and added to `.gitignore` instead of being force-classified, matching how `.claude/settings.local.json` is already handled. No longer a tracked-but-unclassified file. See C-1 |
 
-## Part 8: Concurrency & Distributed State
-
-| # | Εύρημα | Τοποθεσία | Σενάριο Αστοχίας | Severity | Confidence |
-|---|--------|-----------|-----------------|---------|------------|
-| C-01 | **Distributed lock** | `tracker-utils.mjs:acquireTrackerLock` — file-based lock with PID file + stale detection (10 min timeout). Used by merge-tracker, set-status, dedup-tracker, normalize-statuses. | Process dies holding the lock → lock dir persists with dead PID → next acquirer waits `staleMs` (10 min) before reclaiming. During those 10 minutes, all tracker writes are blocked. | **P2** — the 10-minute recovery window is acceptable for a single-user CLI tool. In a CI/batch context with rapid merges, 10 minutes is an eternity. | HIGH |
-| C-02 | **Optimistic vs Pessimistic** | Merge-tracker uses **pessimistic** locking (acquire before read-modify-write). Reader scripts (stats, analyze-patterns) use **no lock** — they read the file directly. T5's `readTrackerSafe()` adds a one-retry validation but doesn't acquire the lock. | A reader running during a merge sees either old data (before merge) or new data (after merge) — never partial, thanks to `writeFileAtomic` on POSIX. On Windows FAT/exFAT: `renameSync` is NOT atomic, so a reader can see a truncated file. `readTrackerSafe` catches this with header+separator validation and retries once. | **P2** (mitigated) — T5 reduces the blast radius to one retry. The remaining risk is the second read also hitting the mid-write window (very unlikely — the rename completes in microseconds). | HIGH |
-| C-03 | **Configuration drift** | `config/profile.yml` is user-layer (never auto-updated). System-layer configs are `templates/states.yml`, `portals.example.yml`. The updater only touches `SYSTEM_PATHS`. | A user who edits `portals.yml` (user-layer) and then copies `templates/portals.example.yml` (system-layer) over it loses their customizations. The updater won't overwrite `portals.yml` (it's in USER_PATHS), but a manual copy will. | **P3** — user error, not a code bug. The two-layer contract is well-documented in `DATA_CONTRACT.md`. | HIGH |
+**Import-cycle note (carried forward, still holds):** `providers/_registry.mjs`'s documented reason for staying separate from `plugins/_registry.mjs` — avoiding a cycle "via `classifyFetchError`" — is *reduced*, not eliminated, by Step 3: `verify-portals.mjs` and `scan.mjs` both now depend downward on dependency-free `lib/http-errors.mjs` instead of laterally on each other for that one function. The two registries remain separately justified on their own terms (security/trust chain vs. plain dispatcher), independent of this.
 
 ---
 
-## Part 9: Εξαρτήσεις Και Εφοδιαστική Αλυσίδα
+## 4. Code Quality Findings
 
-| # | Dependency | Version | License | CVE | Maintenance | Blast Radius | Severity |
-|---|-----------|---------|---------|-----|------------|-------------|---------|
-| D-01 | `@google/generative-ai` | 0.24.1 | Apache-2.0 | 1 (npm audit) [VERIFIED] | Active (Google) | `gemini-eval.mjs` — all Gemini evaluations | **P2** |
-| D-02 | `playwright` | 1.62.0 | Apache-2.0 | 0 | Active (Microsoft) | `generate-pdf.mjs`, `check-liveness.mjs`, `browser-extract.mjs`, `scan-interamt.mjs` — PDF generation, liveness checks, browser extraction, Interamt scanning | **P2** |
-| D-03 | `js-yaml` | 4.1.1 | MIT | 0 | Active | All YAML config loading (portals.yml, profile.yml, states.yml, templates) — 38 references across the codebase | **P1** — if this package breaks, the entire scanner/config system stops |
-| D-04 | `dotenv` | 17.0.0 | BSD-2-Clause | 0 | Active | 16 references — environment variable loading for API keys | **P2** |
+**DRY.** Confirmed net reduction, not just relocation: Step 5's dedup paid for itself concretely — the `endsProcess`/`finish()` fix (`77549a4`) landed once in `lib/test-discovery.mjs` and both runners inherited it, rather than needing the same fix applied twice (which is exactly the failure mode the original audit flagged `lib/file-lock.mjs`'s header as warning against).
 
-**Left-pad risk:** All 4 runtime dependencies are from major organizations (Google, Microsoft, Node community). The risk of a left-pad-style takedown is LOW. The npm registry is the single point of failure — no mirror/cache configured. [VERIFIED — no `npm config get registry` override in CI or Dockerfile]
+**KISS/YAGNI.** Still holds under fresh review. No Strategy pattern, no factory, no interface-with-one-implementation across any of the 9 Step-6 extraction commits or the 3 `lib/` modules — each is a plain module of pure functions or a plain `tests/*.test.mjs` file.
 
-**Vendor lock-in:** The only Google-specific dependency is `@google/generative-ai`. `openai-eval.mjs` and `ollama-eval.mjs` use raw `fetch` — provider-agnostic. Switching from Gemini to another provider requires adding one evaluator (the pattern is established). **Lock-in: LOW** [VERIFIED]
+**Error handling.** Apify's boundary is strictly better post-Step-2: fails fast with an actionable message instead of silently falling through to ambient env. No change to this assessment.
 
----
+**Documentation.** `tests/README.md`'s dangling reference (prior R-1) is fixed and now accurate. One **new** documentation-vs-behavior mismatch found this session, in code the plan touched only by relocating it: `lib/company-name.mjs`'s docstring explicitly claims `"Data Solutions"` and `"Data Corp"` "don't collapse to the same 'data' key" — hand-traced execution shows they do (both reduce to `"data"`; `companySimilarity('data','data')` short-circuits to a perfect `1.0`). See §7 C-2 for the full causal chain and a verified fix.
 
-## Part 10: Απόδοση Που Δεν Φαίνεται Στο Profiler
-
-| # | Πρόβλημα | Τοποθεσία | Μηχανισμός | Επίπτωση | Severity | Confidence |
-|---|---------|-----------|-----------|----------|---------|------------|
-| P-01 | **Connection management** | `providers/_http.mjs:50-55` — `fetchWithTimeout` creates a new `AbortController` per request but does not reuse connections. Node's native `fetch` uses a global connection pool by default (no explicit pooling config). | No explicit `keepAlive` or connection reuse tuning. For the scanner (which makes 1 request per company, serial), this is fine. For `scan-ats-full.mjs` (which can query hundreds of companies), connection reuse matters. | **P3** — impact is limited to scan runtime (a few extra milliseconds per request for TLS handshake). The scanner is not a high-throughput service. | MEDIUM |
-| P-02 | **Orphaned file handles** | `check-liveness.mjs:82-84` — browser launch via `ensureBrowser()`. If the process is killed during a liveness check (Ctrl+C), the Playwright browser process may not be cleaned up. The `finally` block at the bottom closes the browser, but SIGKILL bypasses `finally`. | Zombie Chromium processes accumulate on the user's machine after repeated Ctrl+C during liveness checks. | **P3** — the user can `pkill chromium`. Not data-loss. | HIGH |
-| P-03 | **Synchronous logging** | All scripts use synchronous `console.log`. No async logging, no buffering. | For a CLI tool, this is normal and expected. The only scenario where it matters: `scan.mjs` with `--verbose` could spend measurable time on console I/O for thousands of job listings. | **P3** — cosmetic, user-facing CLI. | HIGH |
+**Improvement opportunity, not a defect (unchanged from prior audit, now closed):** the `RegExp`-per-call issue (prior R-3) is fixed.
 
 ---
 
-## Executive Summary
+## 5. Testing & Coverage Assessment
 
-### Top 5 Critical Findings
+| Dimension | Assessment |
+|---|---|
+| Regression coverage | ✅ Strong across all of Steps 1–5's deliverables; each moved function retains its pre-existing test coverage through the new import paths |
+| Step 6 test coverage | ✅ Every extracted cluster ships as its own `tests/*.test.mjs`, auto-discovered — no manual registration needed, matching the documented convention |
+| Unit tests added for Steps 1–5 | ➖ None — appropriate, these are verbatim moves with pre-existing coverage |
+| Acceptance criteria (plan's own bar: identical pass/fail counts before/after each step) | ✅ for Steps 1–5 (per prior audit, re-confirmed structurally sound this session); ✅ for each individual Step-6 PR (each merged independently, implying its own gate passed) |
+| **CI/CD compatibility — material finding** | ⚠️ PR #22 itself: ✅ full 13/13 cross-OS green. **But the branch's current tip (`a1c267d`) was never submitted to CI** — it was pushed directly to a branch whose PR had already merged. `main` does not contain this commit. |
+| Local full-suite gate at current tip | ✅ `test-all.mjs --quick`: **3345 passed, 0 failed, 1 warning**, re-run after the C-1 fix — baseline restored. `test-runner.mjs --parallel 4`: 2837 passed, 0 failed, 1 warning. |
 
-| # | ID | Finding | Severity | Blast Radius |
-|---|----|---------|----------|-------------|
-| 1 | **S-01** | `.env` with API keys is not blocked by CI gate — `git add -f .env` bypasses `.gitignore` | **P1** | API key leak into git history |
-| 2 | **D-04** | ollama/openai evaluators do not write tracker TSVs or merge — inconsistent with gemini | **P2** | User confusion, tracker gaps |
-| 3 | **C-01** | Tracker lock stale recovery is 10 minutes — blocks all writes if a process crashes holding the lock | **P2** | Batch/CI merge pipeline stalls for 10 min |
-| 4 | **D-02** | `writeFileSync` + `renameSync` is not atomic on Windows FAT/exFAT — mitigated by T5's `readTrackerSafe()` retry | **P2** | Reader sees truncated tracker snapshot |
-| 5 | **T-02** | Reservation sentinel GC uses local system clock — NTP correction or DST jump could prematurely GC a sentinel | **P2** | Report number collision |
-
-### Single Point of Failure
-**`tracker-utils.mjs`** — the lock, atomic write, safe read, status resolution, and sentinel GC are all here. A bug in any of these functions affects every tracker operation (merge, status set, dedup, normalize, stats, analysis, verification).
-
-### First 3AM Alert Prediction
-**`S-01` — leaked API keys.** A contributor accidentally commits `.env` with a real `GEMINI_API_KEY`. The `.gitignore` prevents `git add .` but not `git add -f .env`. CI passes (the `no-user-data.yml` workflow doesn't block `.env`). The key is now in git history. Google's key rotation is manual. The user discovers it when their quota is exhausted by an attacker.
-
-### One Change → Maximum Reliability
-**Add `.env` to the `no-user-data.yml` CI workflow's USER_PATHS regex.** This prevents the most likely P1 scenario with a one-line CI change. The blast radius is zero — it only blocks PRs that accidentally include the secrets file.
+**Both counts above were generated fresh in this session** (not carried over from before the merge), specifically to avoid citing stale numbers for this report.
 
 ---
 
-### Severity Summary
+## 6. Risk & Regression Analysis
 
-| Part | P0 | P1 | P2 | P3 | Confidence Avg |
-|------|----|----|----|-----|---------------|
-| 1. Temporal | — | — | 2 (T-02, T-03) | 1 (T-01) | HIGH |
-| 2. Design Decisions | — | — | 2 (D-01, D-04) | 1 (D-03) | HIGH |
-| 3. Observability | — | — | 1 (O-01) | 2 (O-02, O-03) | HIGH |
-| 4. Human Factors | — | — | 1 (H-02) | 3 (H-01, H-03, H-04) | HIGH |
-| 5. Security | — | 1 (S-01) | 1 (S-03) | 2 (S-02, S-04) | HIGH |
-| 6. Data Management | — | — | 1 (DM-01) | 2 (DM-02, DM-03) | HIGH |
-| 7. Failure Handling | — | — | 1 (F-01) | 1 (F-03) | HIGH |
-| 8. Concurrency | — | — | 2 (C-01, C-02) | 1 (C-03) | HIGH |
-| 9. Dependencies | — | 1 (D-03) | 3 | — | HIGH |
-| 10. Performance | — | — | — | 3 | HIGH |
-| **TOTAL** | **0** | **2** | **14** | **16** | **HIGH** |
-
-### Ship Decision: **CONDITIONAL**
-
-P1 items exist with mitigations. The `.env` CI gate (S-01) should be added before the next release to prevent the most likely accident. The `js-yaml` dependency risk (D-03) is inherent to any YAML-based config system — acceptable with active maintenance. No P0 items — no data loss, no security breach, no service-down risks.
+| Risk | Severity | Assessment |
+|---|---|---|
+| Architectural regression (plan's own work) | None | Steps 1–5 reduce coupling; Step 6 progress reduces `test-all.mjs`'s monolith risk with no boundary weakened |
+| Technical debt (plan's own work) | Net reduction | ~9,000+ net lines moved out of one file into topically-organized, independently-runnable test files |
+| Backward compatibility | Low, unchanged from prior audit | Internal script internals only, no published API surface, project convention explicitly disallows compat shims |
+| Security — Apify | Improved, unchanged from prior audit | Sandbox boundary enforced, not advisory |
+| Security — new Step 6 test files | None | Test-only code, no network/secrets/eval/shell paths |
+| **Data-matching correctness — `lib/company-name.mjs`** | **Medium (new)** | Two distinct companies sharing one leading word plus *either* a legal suffix (Inc/Corp/LLC) *or* any generic descriptor (Solutions/Technologies/Group/Holdings) normalize to an identical key, scoring a false `1.0` "exact match" in `invite-match.mjs`'s ranking. Bounded: both consumers (`invite-match.mjs`, `detect-reposts.mjs`) are advisory/reporting only — a human reviews the ranked output, nothing auto-writes. Pre-existing in the code before this plan; carried over verbatim, not introduced. Full fix package available, not yet applied — see C-2 |
+| **Repo hygiene — `.claude/launch.json`** | **Resolved** | Hardcoded an absolute, machine-specific path (`E:/Documents/Vibe-Coding/Porphyra`) and was tracked-but-unclassified in `update-system.mjs`. Fixed by gitignoring it and `git rm --cached` (kept locally, untracked) — no contributor's clone ships it anymore. See C-1 |
+| CI/branch-hygiene process risk | Low-Medium (new, process not code) | Pushing new commits to a branch after its PR has merged, with no new PR opened, means those commits get zero independent verification and don't reach `main`. Not a plan defect — a process gap surfaced by this session's own actions. Worth the user's attention going forward, not a code fix |
+| Cross-platform (Steps 1–5) | Resolved | Prior audit's "untested on Linux/macOS" caveat is now closed — PR #22's CI ran and passed on all three OSes |
 
 ---
 
-### Uncertainty Register
+## 7. Required Corrections
 
-1. **Top 3 claims most likely to be wrong:**
-   - [ΕΙΚΑΣΙΑ] T-02 clock-jump sentinel GC — I assume NTP can jump backward by hours; on modern NTP this is typically < 1s. [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ] — need a real-world NTP drift measurement on the user's OS.
-   - [ΕΙΚΑΣΙΑ] S-03 redirect-chain validation — I assume `fetch` validates TLS on redirects. This is correct per the Fetch spec but I haven't verified it on the user's Node version with their CA bundle. [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ] — need the user's Node environment.
-   - [ΕΙΚΑΣΙΑ] D-04 ollama/openai tracker inconsistency — I assume it's deferred, not a bug. The original author may have intended gemini as the primary evaluator and ollama/openai as quick-look alternatives. [ΔΕΔΟΜΕΝΟ ΕΛΛΙΠΕΣ] — need developer intent.
+| Severity | File | Issue | Recommendation |
+|---|---|---|---|
+| **FIXED** | `.gitignore` | **C-1.** `.claude/launch.json` was tracked, hardcoded an absolute machine-specific path (`E:/Documents/Vibe-Coding/Porphyra`), and was absent from both `SYSTEM_PATHS` and `USER_PATHS` — `node test-all.mjs --quick` failed on it (3344 passed, 1 failed). Confirmed reproducible, not flaky; confirmed `.claude/settings.json` was *not* affected (already registered at `update-system.mjs:402`). | Applied option (b) from the original two-option recommendation: added `.claude/launch.json` to `.gitignore` (matching `.claude/settings.local.json`'s existing treatment) and ran `git rm --cached .claude/launch.json` — file kept locally, untracked, no `update-system.mjs` classification needed. Re-ran `test-all.mjs --quick` post-fix: **3345 passed, 0 failed, 1 warning** — baseline restored. Still pending: commit this fix and open it through an actual PR + CI rather than a direct push, per C-3. |
+| **MEDIUM — pre-existing, not introduced by this plan** | `lib/company-name.mjs` (docstring + `normalizeCompanyName`, lines ~38-41 and ~67-72) | **C-2.** `"Data Corp"` and `"Data Solutions"` both normalize to `"data"` — a legal suffix and a generic descriptor can each independently collapse a name to the same bare leading token, contradicting the function's own docstring, which cites this *exact pair* as a case it prevents. Hand-verified via full execution trace, not assumed. Reachable from `invite-match.mjs`'s ranking (`companySimilarity('data','data')` → false `1.0`) and `detect-reposts.mjs`'s clustering. Bounded severity: both call sites are advisory/reporting, never auto-write. | A verified, minimal fix package was produced and reviewed earlier this session: track whether a legal suffix was stripped from the name; only allow a generic-descriptor strip to collapse the name to a single remaining token when one was. Hand-verified against all 6 existing `invite-match.mjs`/`invite-match.test.mjs` assertions — none regress. Diff, regression test, and full adversarial self-review already exist in this session's transcript; not re-pasted here to keep this report focused on plan compliance. **Not yet applied** — apply on request. |
+| **INFO** | Branch/PR process | **C-3.** `a1c267d` was pushed to `chore/scan-data-source-cluster` after PR #22 (which drew from that same branch) had already squash-merged. The commit reached `origin` but not `main`, and was never submitted to CI. | Open a fresh PR for any further work on this branch (or a new branch), so it gets independent CI verification before merging — same standard the plan's own Step 6 PRs (#13–#22) were correctly held to. |
+| **INFO — carried forward, now closed** | `tests/README.md`, `lib/company-name.mjs` (regex precompilation) | Prior audit's R-1 and R-3. | No action — both confirmed fixed this session (§0). |
 
-2. **Requires runtime validation:**
-   - Windows FAT/exFAT `renameSync` atomicity for `writeFileAtomic` — static analysis says it's non-atomic; a stress test with 100 concurrent merges would confirm.
-   - Browser orphan cleanup on SIGKILL — need to test with actual `kill -9` and count zombie Chromium processes.
+No CRITICAL findings. No findings block Steps 1–6's own execution quality — C-1 (fixed this session) and C-2 (open) are scoped to work bundled into PR #22 alongside the plan or pre-dating the plan entirely, respectively.
 
-3. **[ΕΙΚΑΣΙΑ] items needing confirmation:**
-   - T-02 clock-jump sentinel GC (see above)
-   - D-04 ollama/openai tracker intent (see above)
-   - F-02 parallel over-provisioning impact on CI runner memory
+---
+
+## 8. Final Verdict
+
+# APPROVED WITH CHANGES
+
+The plan itself — Steps 1 through 6 — is implemented faithfully, at high fidelity, and (as of this session) with materially stronger verification than before: full three-OS CI evidence where the prior audit had none. Step 6's partial state is exactly what the plan called for ("do not attempt this in one sitting"), not a shortfall.
+
+**One correction remains, and it does not reflect on the plan's execution:**
+
+1. **C-1 is fixed.** The branch tip's local-gate failure (`.claude/launch.json` untracked-in-manifest gap) is resolved — `test-all.mjs --quick` is back to 3345/0/1. The underlying commit (`a1c267d`) plus this fix still need to go through an actual PR + CI rather than a direct push (C-3), not yet done.
+2. **C-2 is real but not urgent.** A latent, pre-existing data-matching defect in Step 4's moved code, with bounded (advisory-only) impact and a verified fix ready to apply on request.
+
+Everything already merged to `main` through PR #22 (`e11367e`) is sound. C-1's fix is applied locally but, like `a1c267d` itself, has not yet gone through a PR.
+
+---
+
+*Report generated 2026-08-29, C-1 fix applied and re-verified 2026-08-30. Evidence: `git log`/`git diff --stat` across `ed0c1a6..HEAD`, `gh pr list --state merged` (PRs #11, #13–#22), `gh pr checks 22`, local runs of `node test-all.mjs --quick` (3344/1/1 pre-fix, 3345/0/1 post-fix) and `node test-runner.mjs --parallel 4` (2837/0/1) at current HEAD, direct reads of `lib/http-errors.mjs`, `lib/company-name.mjs`, `lib/test-discovery.mjs`, `plugins/apify/index.mjs`, `plugins/apify/_apify.mjs`, `update-system.mjs`, `tests/README.md`, `ARCHITECTURE.md`, `.claude/launch.json`, `.gitignore`.*

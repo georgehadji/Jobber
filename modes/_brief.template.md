@@ -65,6 +65,11 @@ hard gaps you cannot bridge — be specific so triage can pattern-match them.
 - {e.g. Primary hands-on skill outside your discipline}
 - {e.g. Stated comp ceiling below your floor}
 - {e.g. Travel above your limit for the role type}
+- {e.g. Requires fluent German, Mandarin, or any language you don't speak —
+  triage reads only this file, not `config/profile.yml`'s `languages:` table
+  (see `modes/oferta.md`'s Language Gate, which runs at full evaluation), so
+  a required language you lack needs to be spelled out here too if you want
+  triage to catch it before promoting the role to a full evaluation}
 
 ## Quick Scoring Guide
 

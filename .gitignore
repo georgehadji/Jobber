@@ -52,6 +52,25 @@ interview-prep/sessions/*
 writing-samples/*
 !writing-samples/README.md
 
+# Career documents for /setup ingestion (user data — never committed).
+# Nested subdirs need the same negate-then-reignore idiom as
+# interview-prep/sessions/ above: each level must be un-ignored before its
+# own contents pattern can re-ignore everything except the scaffold file.
+documents/*
+!documents/README.md
+!documents/cv/
+documents/cv/*
+!documents/cv/.gitkeep
+!documents/linkedin/
+documents/linkedin/*
+!documents/linkedin/.gitkeep
+!documents/diplomas/
+documents/diplomas/*
+!documents/diplomas/.gitkeep
+!documents/references/
+documents/references/*
+!documents/references/.gitkeep
+
 # User config and customization (never auto-updated)
 config/profile.yml
 config/cv-facts.json
@@ -99,6 +118,7 @@ data/model-blacklist.json
 .claude/settings.local.json
 .claude/launch.json
 .claude/memory/
+.claude/claudex/
 .opencode/settings.local.json
 .opencode/memory/
 # OpenCode project config (often holds personal MCP/model/per-machine prefs).

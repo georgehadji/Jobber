@@ -36,6 +36,10 @@ const SHA_RE = /<!-- jobber-source-sha:\s*([0-9a-f]{40})\s*-->/;
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
+// --verify is documented as read-only ("exit 1 if any file is unstamped");
+// without the VERIFY check here it silently wrote to real tracked files,
+// since only DRY_RUN gated the write (#stamp-verify-write-bug).
+const WRITE = !DRY_RUN && !VERIFY;
 
 // Subdirectories under modes/ that are NOT language translation dirs.
 const SKIP_DIRS = new Set([
@@ -141,7 +145,7 @@ function stampAll() {
         out.push({ file: `modes/${lang}/${f}`, source: sourceRel, changed: false, line: 0, reason: 'git unavailable — cannot compute source SHA' });
         continue;
       }
-      const { changed, line } = stampFile(transPath, sourceRel, sha, !DRY_RUN);
+      const { changed, line } = stampFile(transPath, sourceRel, sha, WRITE);
       out.push({ file: `modes/${lang}/${f}`, source: sourceRel, changed, line });
     }
   }
@@ -155,7 +159,7 @@ function stampAll() {
     for (const f of readdirSync(JOBBER)) {
       if (!README_LANG_RE.test(f)) continue;
       const transPath = join(JOBBER, f);
-      const { changed, line } = stampFile(transPath, 'README.md', readmeSha, !DRY_RUN);
+      const { changed, line } = stampFile(transPath, 'README.md', readmeSha, WRITE);
       out.push({ file: f, source: 'README.md', changed, line });
     }
   }

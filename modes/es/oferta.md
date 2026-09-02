@@ -1,6 +1,6 @@
 # Modo: oferta -- Evaluación completa A-F
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: bfe0bd822c7a6d6e984302ba76b2ba20dd675132 -->
 
 Cuando el candidato pegue una oferta (texto o URL), SIEMPRE entregar los 6 bloques.
 

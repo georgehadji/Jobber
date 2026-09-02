@@ -60,6 +60,57 @@ function listMjs(dir) {
   return out;
 }
 
+function listPackageJson(dir) {
+  const out = [];
+  const walk = (d, rel) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name === '.git') continue;
+      const abs = path.join(d, e.name);
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) walk(abs, r);
+      else if (e.name === 'package.json') out.push({ abs, rel: r });
+    }
+  };
+  walk(dir, '');
+  return out;
+}
+
+// npm/bun lifecycle scripts that run automatically on `install` with no
+// prompt — strictly more dangerous than any import allowlist above, since
+// `bun install`/`npm install` executes them without the plugin's own code
+// ever running. Ported from the source repo's tools/security_guards.py
+// (Phase 8, docs/AI-JOB-SEARCH-PORT-PLAN.md): the CI guard there rejects
+// exactly this set plus trustedDependencies in every shipped manifest.
+const LIFECYCLE_SCRIPTS = ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'];
+
+/**
+ * @param {string} abs absolute path to a package.json
+ * @param {string} rel path relative to the plugin dir, for findings
+ * @returns {Array<{file:string, issue:string}>}
+ */
+function auditManifest(abs, rel) {
+  const findings = [];
+  let pkg;
+  try {
+    pkg = JSON.parse(readFileSync(abs, 'utf8'));
+  } catch (e) {
+    findings.push({ file: rel, issue: `package.json is not valid JSON: ${e.message}` });
+    return findings;
+  }
+  if (pkg && typeof pkg === 'object') {
+    const scripts = pkg.scripts && typeof pkg.scripts === 'object' ? pkg.scripts : {};
+    for (const name of LIFECYCLE_SCRIPTS) {
+      if (typeof scripts[name] === 'string' && scripts[name].trim() !== '') {
+        findings.push({ file: rel, issue: `package.json defines a "${name}" lifecycle script — this runs automatically on install with no prompt; community plugins may not ship one` });
+      }
+    }
+    if (pkg.trustedDependencies !== undefined) {
+      findings.push({ file: rel, issue: 'package.json sets "trustedDependencies" — this opts a bun install into running THAT dependency\'s lifecycle scripts too; community plugins may not set it' });
+    }
+  }
+  return findings;
+}
+
 /**
  * @param {string} dir absolute plugin directory
  * @returns {{ ok: boolean, findings: Array<{file:string, issue:string}> }}
@@ -81,6 +132,9 @@ export function auditPlugin(dir) {
     if (/\beval\s*\(|new\s+Function\s*\(/.test(src)) findings.push({ file: rel, issue: 'eval/new Function — dynamic code execution is not allowed' });
     if (/process\s*\.\s*(binding|dlopen)\b/.test(src)) findings.push({ file: rel, issue: 'process.binding/dlopen — native escape hatch not allowed' });
     if (firewallRe.test(src)) findings.push({ file: rel, issue: 'commercial/monetization wording in a shipped community plugin (keep it mission-framed)' });
+  }
+  for (const { abs, rel } of listPackageJson(dir)) {
+    findings.push(...auditManifest(abs, rel));
   }
   return { ok: findings.length === 0, findings };
 }

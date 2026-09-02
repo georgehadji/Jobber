@@ -1965,6 +1965,43 @@ job_boards:
     enabled: false
     notes: "Polish job board — Other specialists division"
 
+  # ── Arbetsförmedlingen (Swedish market — free JobTech public API) ─────────
+  # No auth needed. keywords[] falls back to config/profile.yml target_roles
+  # when omitted.
+  - name: Arbetsförmedlingen — Machine Learning
+    provider: arbetsformedlingen
+    arbetsformedlingen:
+      keywords: ["Machine Learning Engineer", "Data Scientist"]
+      limit: 100
+    enabled: false
+    notes: "Sweden — Platsbanken via the public JobTech JobSearch API"
+
+  # ── APEC (French market — cadre/executive roles) ──────────────────────────
+  # No auth needed. keywords[] falls back to config/profile.yml target_roles
+  # when omitted. See docs/SUPPORTED_JOB_BOARDS.md for the detail-URL caveat
+  # (best-effort permalink, not verified — apec.fr is DataDome-protected).
+  - name: APEC — Machine Learning
+    provider: apec
+    apec:
+      keywords: ["Machine Learning Engineer", "Data Scientist"]
+      page_size: 100
+    enabled: false
+    notes: "France — cadre/executive roles via the public rechercheOffre webservice"
+
+  # ── EURES (EU-wide job mobility portal) ────────────────────────────────────
+  # No auth needed. keywords[] falls back to config/profile.yml target_roles
+  # when omitted. location_codes narrows to specific EU/EEA countries (ISO
+  # codes); omit for EU-wide. Request schema is community-documented
+  # (reverse-engineered), not an official stable API.
+  - name: EURES — Machine Learning (DE/AT)
+    provider: eures
+    eures:
+      keywords: ["Machine Learning Engineer", "Data Scientist"]
+      location_codes: ["de", "at"]
+      page_size: 50
+    enabled: false
+    notes: "EU-wide — covers every EU/EEA national employment service"
+
   # ── JustJoin.it / NoFluffJobs (Polish tech market) ────────────────────────
   # Public job-board APIs. Disabled by default; enable and rely on the global
   # title_filter/location_filter/salary_filter above for your target profile.
@@ -2023,3 +2060,20 @@ job_boards:
   # - name: CryptocurrencyJobs             # curated Web3/crypto board (RSS, all-remote)
   #   provider: cryptocurrencyjobs
   #   enabled: true
+
+  # ── freehire (multi-market tech aggregator, ~50 source ATS platforms) ─────
+  # No auth needed. keywords[] falls back to config/profile.yml target_roles
+  # when omitted. countries/regions use freehire's own facet codes (call
+  # GET https://freehire.me/api/v1/jobs/facets for live values before relying
+  # on a specific one — an unrecognized value matches nothing, not an error).
+  # FREEHIRE_API_URL env var points this at a self-hosted instance instead.
+
+  # - name: freehire — Platform Engineering (Denmark)
+  #   provider: freehire
+  #   freehire:
+  #     keywords: ["Platform Engineer", "SRE", "DevOps Engineer"]
+  #     countries: ["dk"]
+  #     is_tech: "tech"
+  #     posted_within_days: 14
+  #   enabled: true
+  #   notes: "freehire.me — Danish tech postings, ~50 source ATS platforms normalized"

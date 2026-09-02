@@ -1,6 +1,6 @@
 # Mode: oferta -- Fuld evaluering A-F
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: bfe0bd822c7a6d6e984302ba76b2ba20dd675132 -->
 
 Når kandidaten indsætter et opslag (tekst eller URL), så lever ALTID alle 6 blokke.
 

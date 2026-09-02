@@ -397,6 +397,38 @@ if (
 }
 
 if (
+  ofertaMode.includes('## Language Gate — run before scoring') &&
+  ofertaMode.includes('`languages:` table') &&
+  ofertaMode.includes('FAIL — hard stop') &&
+  ofertaMode.includes('FLAG, then proceed') &&
+  ofertaMode.includes('language_gate: pass|flag') &&
+  ofertaMode.includes('Absent or empty table = no gate')
+) {
+  pass('oferta.md gates a required-but-undeclared language before scoring, and flags a stretch bar');
+} else {
+  fail('oferta.md missing the Language Gate (fail-on-undeclared-language, flag-on-stretch-bar)');
+}
+
+const pdfMode = readFile('modes/pdf.md');
+const coverMode = readFile('modes/cover.md');
+if (
+  pdfMode.includes('## Optional: Adversarial Review Pass') &&
+  pdfMode.includes('it does not draft') &&
+  pdfMode.includes('may never fabricate') &&
+  pdfMode.includes('may **never** recommend adding a claim') &&
+  pdfMode.includes('must **not** spawn further subagents') &&
+  coverMode.includes('## Optional: Adversarial Review Pass') &&
+  coverMode.includes('it does not draft') &&
+  coverMode.includes('may never fabricate') &&
+  coverMode.includes('may **never** recommend adding an achievement') &&
+  coverMode.includes("Step 8's mandatory chat approval")
+) {
+  pass('pdf/cover modes offer an opt-in adversarial reviewer that may reframe but never fabricate a claim');
+} else {
+  fail('pdf/cover modes missing the Adversarial Review Pass, or its no-fabrication constraint');
+}
+
+if (
   ofertaMode.includes('### Geo-mismatch check') &&
   ofertaMode.includes('binding attendance requirement') &&
   ofertaMode.includes('⚠️ **Geo-mismatch:** location field says remote, but JD body says') &&

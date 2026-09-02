@@ -1,6 +1,6 @@
 # 模式: job — 完整的 A-G 维度评估
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: bfe0bd822c7a6d6e984302ba76b2ba20dd675132 -->
 
 当候选人输入职位描述（JD文本或URL链接）时，**始终**输出以下七个维度的深度评估结果（A-F 评估 + G 真实性）：
 
