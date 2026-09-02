@@ -118,6 +118,7 @@ data/model-blacklist.json
 .claude/settings.local.json
 .claude/launch.json
 .claude/memory/
+.claude/claudex/
 .opencode/settings.local.json
 .opencode/memory/
 # OpenCode project config (often holds personal MCP/model/per-machine prefs).
