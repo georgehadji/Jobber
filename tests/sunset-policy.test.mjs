@@ -1,6 +1,6 @@
 // tests/sunset-policy.test.mjs — lib/sunset-policy.mjs (M5: right to an ending)
 import { pass, fail } from './helpers.mjs';
-import { isStale, isSunsetEligibleStatus } from '../lib/sunset-policy.mjs';
+import { isStale, isSunsetEligibleStatus, resolveSunsetAfterDays } from '../lib/sunset-policy.mjs';
 
 console.log('\nlib/sunset-policy.mjs — staleness predicate (M5)');
 
@@ -93,6 +93,30 @@ try {
     pass('isSunsetEligibleStatus covers Applied/Responded only');
   } else {
     fail('isSunsetEligibleStatus is wrong');
+  }
+
+  // 8. resolveSunsetAfterDays (defect-hunt batch 2, D1): an explicit 0 must
+  //    be honored, not silently replaced by the fallback (`Number(x) || y`
+  //    treats 0 as falsy; `Number.isFinite` does not).
+  if (resolveSunsetAfterDays(0) === 0) {
+    pass('resolveSunsetAfterDays(0) honors an explicit zero');
+  } else {
+    fail(`resolveSunsetAfterDays(0) should be 0, got ${resolveSunsetAfterDays(0)}`);
+  }
+  if (resolveSunsetAfterDays(undefined) === 45 && resolveSunsetAfterDays(null) === 45) {
+    pass('resolveSunsetAfterDays falls back to 45 when unset');
+  } else {
+    fail(`resolveSunsetAfterDays should default to 45 when unset: ${resolveSunsetAfterDays(undefined)} / ${resolveSunsetAfterDays(null)}`);
+  }
+  if (resolveSunsetAfterDays(90) === 90 && resolveSunsetAfterDays(-5) === -5) {
+    pass('resolveSunsetAfterDays honors any other configured finite number');
+  } else {
+    fail(`resolveSunsetAfterDays should pass through finite numbers unchanged: ${resolveSunsetAfterDays(90)} / ${resolveSunsetAfterDays(-5)}`);
+  }
+  if (resolveSunsetAfterDays('not-a-number') === 45) {
+    pass('resolveSunsetAfterDays falls back to 45 for a non-numeric value');
+  } else {
+    fail(`resolveSunsetAfterDays should default to 45 for garbage input, got ${resolveSunsetAfterDays('not-a-number')}`);
   }
 } catch (e) {
   fail(`sunset-policy tests crashed: ${e.message}`);
