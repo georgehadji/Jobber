@@ -82,6 +82,28 @@ try {
     fail(`validateReportSummary did not flag bad dimensions: ${JSON.stringify(problems)}`);
   }
 
+  // B8-D1: a NaN top-level score must be rejected the same way an
+  // out-of-range or missing one is — typeof NaN === 'number' and every NaN
+  // relational comparison is false, so a bare `typeof/</> ` check alone lets
+  // it through silently (validateDimensions's per-dimension check already
+  // guards this with Number.isFinite; the top-level check previously didn't).
+  const nanScore = validateReportSummary({ ...parsed, score: NaN });
+  if (nanScore.length === 1 && nanScore[0].includes('[0,5]')) {
+    pass('validateReportSummary rejects a NaN score');
+  } else {
+    fail(`validateReportSummary accepted a NaN score: ${JSON.stringify(nanScore)}`);
+  }
+
+  // Reachable through the real YAML fence, not just a hand-built object:
+  // YAML 1.1's `.nan` literal parses to a genuine JS NaN via js-yaml.
+  const nanReport = OLD_REPORT.replace(/score: [\d.]+/, 'score: .nan');
+  const nanParsed = parseReportSummary(nanReport);
+  if (Number.isNaN(nanParsed?.score) && validateReportSummary(nanParsed).length === 1) {
+    pass('a real "score: .nan" YAML fence parses to NaN and is rejected end to end');
+  } else {
+    fail(`"score: .nan" fence was not rejected end to end: parsed=${JSON.stringify(nanParsed)}, problems=${JSON.stringify(validateReportSummary(nanParsed))}`);
+  }
+
   // 4. The six dimension keys are canonically defined.
   if (DIMENSION_KEYS.length === 6 && ['cv_match', 'north_star', 'comp', 'cultural', 'red_flags', 'growth'].every(k => DIMENSION_KEYS.includes(k))) {
     pass('DIMENSION_KEYS defines the six scored dimensions');
