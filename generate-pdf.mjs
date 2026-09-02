@@ -38,6 +38,7 @@ import { readFile } from 'fs/promises';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { extractPdfText, auditTextLayer } from './lib/pdf-text.mjs';
+import { assertFacts } from './verify-cv-facts.mjs';
 import { randomUUID } from 'node:crypto';
 import { readStyleTokens, injectThemeStyle } from './theme-style.mjs';
 
@@ -546,6 +547,12 @@ async function generatePDF() {
     if (err?.code !== 'ENOENT') throw err;
   }
   validateCvSectionOrder(html, cvMarkdown, { allowReorder });
+
+  // Same code-level gate generate-cover-letter.mjs already applies (B7-D1) —
+  // this module's own header comment claimed it, but nothing here actually
+  // called it, so a tailored CV never got the fact check unless the agent
+  // remembered modes/pdf.md step 19 by hand.
+  assertFacts(html, { label: 'CV' });
 
   // Normalize text for ATS compatibility (issue #1)
   const normalized = normalizeTextForATS(html);
