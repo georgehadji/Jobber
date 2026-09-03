@@ -620,11 +620,14 @@ func SetLang(lang string) {
 	}
 }
 
-// ToggleLang switches Current between &En and &Tr.
+// ToggleLang cycles Current through &En -> &Tr -> &Es -> &En.
 func ToggleLang() {
-	if Current == &En {
+	switch Current {
+	case &En:
 		Current = &Tr
-	} else {
+	case &Tr:
+		Current = &Es
+	default:
 		Current = &En
 	}
 }

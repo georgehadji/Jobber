@@ -286,6 +286,33 @@ Budget: 1 confirmed & fixed / 15 allocated. Time-boxed close — this batch's sc
 
 ---
 
+## Batch 9 — Go dashboard — 2026-09-03 — PARTIAL
+
+Different test harness than batches 1-8: `dashboard/` is its own Go module (`github.com/santifer/jobber/dashboard`, Go 1.25.0), entirely outside `test-all.mjs`'s discovery — no shared node baseline applies here. Baseline: `go test ./...` — 188 passed / 0 failed / 6 packages, on clean `main`. Post-fix: same 188 passed / 0 failed / 6 packages (the fix's own new/changed assertions replace existing ones in `TestRuntimeLanguageManagement` rather than adding a new top-level test, so the pass count is unchanged; `go build ./...` also confirmed clean both before and after).
+Budget: 1 confirmed & fixed / 8 allocated. Time-boxed close — only a focused subset of the 36-file, ~9,400-line (incl. tests) scope was read.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B9-D1 | `dashboard/internal/i18n/catalog.go` `ToggleLang()` | silent wrong result (T6) | `ToggleLang()` only knows two languages (`if Current == &En { Current = &Tr } else { Current = &En }`), but a third catalog (`Es`, Spanish) was added later — `SetLang()` and `GetLang()` both handle all three correctly, `ToggleLang()` never got updated. Reachable live: `main.go`'s `Update()` binds the `t`/`T` key directly to `i18n.ToggleLang()` (the dashboard's only in-app language switch) | FIRED — `Current = &Es; ToggleLang()` → `Current == &En` (falls into the `else` branch, since `Current != &En`). A user who starts the dashboard in Spanish (`--lang=es` or `$LANG=es_ES`) and presses `t` is silently switched to English instead of cycling to Turkish; pressing `t` again only ever alternates En/Tr — Spanish becomes unreachable via the hotkey for the rest of the session | NO-DEFENSE — confirmed by reading `SetLang()`/`GetLang()`/`ToggleLang()` side by side: the first two enumerate all three catalogs explicitly, the third is still the original two-catalog binary from before `Es` existed. The existing `TestRuntimeLanguageManagement` test only ever exercised En↔Tr, never toggling from Es — proof of the same oversight, not a deliberate scope guard (unlike the analogous `nonmetric-fact-gate.test.mjs` guard from batch 7) | **VERIFIED DEFECT** | this batch's branch (`hunt/batch-9-go-dashboard`); rewrote to a 3-way `switch` cycling `&En -> &Tr -> &Es -> &En` |
+
+### Coverage & residual risk (Batch 9)
+
+**Surface audited (full read):** `dashboard/internal/i18n/catalog.go` + `i18n_test.go`, `dashboard/internal/data/tracker_lock.go` (+ the OS-sibling pairs it dispatches to: `tracker_replace_{windows,unix,other}.go`, `tracker_process_{windows,unix,other}.go`), `dashboard/main.go`'s `Update()` key-routing (confirmed `ToggleLang()`'s only call site). `dashboard/internal/data/career.go`'s `UpdateApplicationStatus`/`UpdateApplicationStatusAndNotes` pair was read in full (proper lock/atomic-write/error-join discipline, no defect found). `dashboard/internal/ui/screens/pipeline.go` (2,196 lines, the largest file in the batch) was only surveyed by function signature, not read line-by-line.
+
+**Surface NOT audited:** `dashboard/internal/ui/screens/pipeline.go` (beyond its function list), `viewer.go` (806 lines), `progress.go` (414 lines), `dashboard/internal/data/derive.go`/`pdf.go`, `dashboard/internal/model/career.go`, `dashboard/internal/theme/*.go`, the `open_*.go` platform-dispatch family for launching URLs/PDFs (`open_windows.go`, `open_darwin.go`, `open_linux.go`, `open_unix_command.go`, `open_unsupported.go`) — a strong sibling-diffing candidate for a future pass, not opened this batch.
+
+**Defect classes covered:** silent wrong result (T6) — one confirmed instance, found by the same sibling-diffing method that has driven every batch since batch 5: `SetLang()`/`GetLang()` enumerate all three language catalogs, `ToggleLang()` didn't. T8 (crash/degradation), this batch's other flagged threat class, was not specifically pursued — no crash-shaped candidate was traced.
+
+**Confirmed defects:** CRITICAL 0 / HIGH 0 / MEDIUM 1 (B9-D1 — a real, always-reachable in-app hotkey silently produces the wrong language and strands the user unable to reach Spanish again without restarting with a flag/env var; MEDIUM rather than HIGH because it's a UX-correctness bug with a workaround, not data loss or fabricated content) / LOW 0.
+**Cleared (innocent):** the six OS-sibling pairs in `dashboard/internal/data/` (`tracker_replace_*`, `tracker_process_*`) — read side by side, all three build-tag variants of each pair implement equivalent semantics (atomic rename on Unix/other, `MoveFileEx` with `MOVEFILE_REPLACE_EXISTING` on Windows; alive/dead/unknown process-status classification consistent across `windows`/unix `syscall.Kill`/the `other` fallback). `tracker_lock.go`'s acquire/release/recover logic (guard-directory staleness recovery, token-based ownership verification before removal) was read in full — no defect found; it already mirrors the Node `lib/file-lock.mjs` design this session audited in earlier batches.
+**Residual UNKNOWN:** the bulk of `pipeline.go` (the largest single file in this batch), all of `viewer.go`/`progress.go`, the `open_*.go` platform-dispatch family, `derive.go`/`pdf.go`, and the `theme`/`model` packages — none opened this batch.
+
+**Clean-claim, scoped:** `dashboard/internal/i18n/catalog.go` (all three catalogs + every helper function) and the tracker-lock/OS-dispatch cluster in `dashboard/internal/data/` were read in full; one real defect found and fixed in the former, none in the latter. This is NOT a claim that `pipeline.go`, `viewer.go`, or the `open_*.go` URL/PDF-launch dispatch are defect-free — none were read this batch.
+
+**Highest-value next hunt:** the `open_*.go` platform-dispatch family (`open_windows.go`, `open_darwin.go`, `open_linux.go`, `open_unix_command.go`, `open_unsupported.go`) — a five-way OS split for launching URLs/PDFs from the dashboard, the exact shape (multiple platform siblings implementing one contract) that has found a confirmed defect in every batch that's had one available (B6-D1/D2, and now B9-D1's two-vs-three-catalog gap). Second: `pipeline.go` itself — 2,196 lines, unread beyond its function signatures, the single largest unaudited file across all nine batches so far.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
