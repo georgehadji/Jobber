@@ -142,15 +142,24 @@ func TestRuntimeLanguageManagement(t *testing.T) {
 		t.Errorf("after SetLang(\"fr\"), GetLang() = %q; want \"en\"", GetLang())
 	}
 
-	// Test ToggleLang
+	// Test ToggleLang cycles all three languages: En -> Tr -> Es -> En (#B9-D1).
+	// Previously ToggleLang only knew about En/Tr; toggling from Es silently
+	// jumped to En instead of continuing the cycle, making Es unreachable via
+	// the "t" hotkey once landed on (only SetLang via --lang/$LANG could set it).
+	Current = &En
 	ToggleLang()
 	if Current != &Tr || GetLang() != "tr" {
 		t.Errorf("after ToggleLang() from En, GetLang() = %q; want \"tr\"", GetLang())
 	}
 
 	ToggleLang()
+	if Current != &Es || GetLang() != "es" {
+		t.Errorf("after ToggleLang() from Tr, GetLang() = %q; want \"es\"", GetLang())
+	}
+
+	ToggleLang()
 	if Current != &En || GetLang() != "en" {
-		t.Errorf("after ToggleLang() from Tr, GetLang() = %q; want \"en\"", GetLang())
+		t.Errorf("after ToggleLang() from Es, GetLang() = %q; want \"en\"", GetLang())
 	}
 }
 
