@@ -196,6 +196,35 @@ Budget: 4 confirmed (one class, 4 instances) / 15 allocated. Class-sampled per p
 
 ---
 
+## Batch 6 — Scanners & liveness — 2026-09-02 — PARTIAL
+
+Baseline: 3525 passed / 0 failed / 1 warning on clean `main` (same baseline as batches 1-5 — none merged yet). Post-fix full run: 3527 passed / 0 failed / 1 warning (+2, one new structural assertion each in `tests/browser-extract.test.mjs` and the new `tests/check-liveness.test.mjs`).
+Budget: 2 confirmed / 12 allocated. Time-boxed close.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B6-D1 | `browser-extract.mjs`, `context.route('**/*', ...)` guard | trust boundary / SSRF via DNS rebinding (T4) | Every request the headless browser makes must be blocked if it targets a private/internal address — `rejectPrivateOrInvalid()` only pattern-matches the literal hostname string, not the address it resolves to; sibling `liveness-browser.mjs`'s `checkUrlLiveness()` route handler additionally calls `validateUrlSecurity()` (DNS-resolves the hostname, blocks on a private resolved IP) for the identical threat, but `browser-extract.mjs` never called (or could call — `validateUrlSecurity` wasn't even exported) anything equivalent | FIRED — real Chromium launched with `--host-resolver-rules=MAP evil.test 127.0.0.1` (a Chromium-internal override, no system DNS/hosts change) navigated to `http://evil.test:{port}/admin-secret` through browser-extract.mjs's exact route-guard logic; the guard let it through and the browser read the "internal" server's response body verbatim | NO-DEFENSE — unconditional `route.continue()` once the literal-pattern check passes, reachable on every navigation and sub-request | **VERIFIED DEFECT** | this batch's branch (`hunt/batch-6-scanners-liveness`); `validateUrlSecurity` exported from `liveness-browser.mjs` and called (with the same abort-on-throw shape) from `browser-extract.mjs`'s route handler |
+| B6-D2 | `check-liveness.mjs` `main()` — browser/headed-page lifecycle | resource lifecycle (T7) | A thrown error between `ensureBrowser()`'s `chromium.launch()` and its `newLivenessPage()` (e.g. the browser crashing mid-flight — a real, observable Playwright failure mode) must not leak the already-launched Chromium process; the close calls (`if (headed) await headed.close(); if (browser) await browser.close();`) sat as plain post-loop statements with no `try/finally`, unlike the identical pattern already done correctly in `scan.mjs`'s `verifyOffers()` and in `scan-interamt.mjs`/`browser-extract.mjs` | FIRED — launched a real browser, closed it out from under `ensureBrowser()` to force the real `newLivenessPage()` (imported, unmodified) to throw exactly as a mid-flight crash would, and confirmed the file's actual control-flow shape (loop with no surrounding try/finally) has no path back to `browser.close()` on that throw | NO-DEFENSE — the only cleanup path was falling out of the loop normally; any exception mid-loop skips it entirely | **VERIFIED DEFECT** | this batch's branch; the URL loop wrapped in `try { ... } finally { if (headed) await headed.close(); if (browser) await browser.close(); }` |
+
+### Coverage & residual risk (Batch 6)
+
+**Surface audited (full read):** `liveness-browser.mjs`, `browser-extract.mjs`, `scan-interamt.mjs`, `check-liveness.mjs`, `liveness-api.mjs`. `scan.mjs`'s `verifyOffers()` (the `--verify` Playwright path) was read in full and traced against the same T7 resource-lifecycle question that found B6-D2 — already correct (proper `try/finally`), used as the positive control confirming B6-D2 is a real regression relative to an established sibling pattern, not a stylistic choice.
+
+**Surface NOT audited:** the bulk of `scan.mjs` (2639 lines total — only `verifyOffers()` and its immediate helpers were read), `scan-ats-full.mjs` (997 lines, parallel-worker reverse-ATS sweep — T7 concurrency/resource-lifecycle questions under its parallelism model are unexamined), `discover-ats.mjs` (902 lines), `verify-portals.mjs` (549 lines), `validate-portals.mjs` (310 lines), `provider-health.mjs` (206 lines), `liveness-core.mjs` (176 lines — `classifyLiveness`'s pure classification logic itself, as opposed to its callers, wasn't independently re-derived this batch).
+
+**Defect classes covered:** trust boundary / SSRF (T4) — one confirmed instance, found by the same method as B5-D1..D4 (diff a file against the sibling that implements the same guard correctly). Resource lifecycle (T7) — one confirmed instance, same diffing method, with `scan.mjs`'s correct implementation serving as direct proof of the regression rather than a hypothesis.
+
+**Confirmed defects:** CRITICAL 0 / HIGH 1 (B6-D1 — a job-posting or listing URL fed to `browser-extract.mjs`, whose host resolves to an internal address, is read and returned to the caller as page content; this is a live SSRF read primitive reachable from ordinary JD-extraction on attacker-influenced input) / MEDIUM 1 (B6-D2 — resource exhaustion / orphaned Chromium processes on repeated failures, not a data-confidentiality issue) / LOW 0.
+**Cleared (innocent):** 0 individual candidates this batch — every file opened yielded either a confirmed defect or a clean full read (`scan-interamt.mjs`, `liveness-api.mjs`, `scan.mjs`'s `verifyOffers()`).
+**Residual SUSPECTED:** 0.
+**Residual UNKNOWN:** the ~5,300 unread lines across `scan.mjs` (bulk), `scan-ats-full.mjs`, `discover-ats.mjs`, `verify-portals.mjs`, `validate-portals.mjs`, `provider-health.mjs` — largest unaudited fraction of any batch's scope so far by line count.
+
+**Clean-claim, scoped:** The two files most exposed to T4 (arbitrary/attacker-influenced URLs reaching a real browser: `browser-extract.mjs`, `liveness-browser.mjs`) and the two most exposed to T7 in the same surface (`check-liveness.mjs`, `scan-interamt.mjs`) were read in full, plus `scan.mjs`'s one Playwright-touching function. Both defects found were the same "sibling got it right, this file dropped the safeguard" shape already established in batch 5 — this method (diff a file against its own codebase's sibling implementing the identical guard) is now 2-for-2 across batches 5 and 6 and is the highest-confidence technique left in this plan. This is NOT a claim that `scan-ats-full.mjs`'s parallel-worker model, `discover-ats.mjs`, `verify-portals.mjs`, `validate-portals.mjs`, or `provider-health.mjs` are defect-free — none were opened this batch.
+
+**Highest-value next hunt:** `scan-ats-full.mjs` (997 lines, parallel-worker sweep over a full public ATS dataset) is the largest unread file with the most direct T7 exposure (concurrent workers, each presumably opening its own resources) left in the entire plan — a future batch revisiting this scope should start there, then continue the sibling-diffing method into `verify-portals.mjs`/`validate-portals.mjs` (both likely share logic with the now-audited `check-liveness.mjs`/`liveness-api.mjs`).
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |

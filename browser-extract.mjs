@@ -35,7 +35,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
-import { LIVENESS_CONTEXT_OPTIONS, rejectPrivateOrInvalid } from './liveness-browser.mjs';
+import { LIVENESS_CONTEXT_OPTIONS, rejectPrivateOrInvalid, validateUrlSecurity } from './liveness-browser.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 
@@ -229,10 +229,20 @@ async function main() {
     // Block every request (main navigation, redirect hop, or subresource) to a
     // private/loopback/link-local or non-http(s) host. Guarding only the initial
     // URL isn't enough once we return page CONTENT: a server-side redirect could
-    // otherwise steer the browser at internal infrastructure (SSRF).
-    await context.route('**/*', (route) => {
-      if (rejectPrivateOrInvalid(route.request().url())) return route.abort('blockedbyclient');
-      return route.continue();
+    // otherwise steer the browser at internal infrastructure (SSRF). The hostname
+    // check alone isn't enough either — a hostname with no literal private-IP
+    // shape can still RESOLVE to one (DNS rebinding), so validateUrlSecurity
+    // (dns-based, same as liveness-browser.mjs's checkUrlLiveness) is required
+    // too (B6-D1).
+    await context.route('**/*', async (route) => {
+      const requestUrl = route.request().url();
+      if (rejectPrivateOrInvalid(requestUrl)) return route.abort('blockedbyclient');
+      try {
+        await validateUrlSecurity(requestUrl);
+        return route.continue();
+      } catch {
+        return route.abort('blockedbyclient');
+      }
     });
     const page = await context.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout });

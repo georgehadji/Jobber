@@ -156,7 +156,9 @@ async function resolveDnsCached(hostname) {
   }
 }
 
-async function validateUrlSecurity(urlString) {
+// Exported so browser-extract.mjs's own route guard can share it (B6-D1) —
+// its own guard only checked hostname string patterns, not the resolved IP.
+export async function validateUrlSecurity(urlString) {
   const url = new URL(urlString.endsWith('.') ? urlString.slice(0, -1) : urlString);
   const hostname = url.hostname;
   const host = normalizeHost(hostname);
