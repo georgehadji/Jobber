@@ -64,6 +64,24 @@ try {
   } finally {
     rmSync(realCwd, { recursive: true, force: true });
   }
+
+  // The actual user-facing claim, end to end in ONE state directory: a dry-run
+  // preview followed by a real run must still ingest the previewed message.
+  // The two isolated checks above prove each half separately; this proves the
+  // sequence itself, which is the shape the defect actually took (dry-run
+  // marks msg-1 processed → the real run afterward skips it forever).
+  const seqCwd = mkdtempSync(join(tmpdir(), 'gmail-sequence-test-'));
+  try {
+    const dry = await runIngestIn(seqCwd, true);
+    const real = await runIngestIn(seqCwd, false);
+    if (dry.jobs.length === 1 && real.jobs.length === 1 && real.statePersisted === true) {
+      pass('a real run after a dry-run in the SAME state dir still ingests the previewed message');
+    } else {
+      fail(`dry-run poisoned the cursor for the following real run: dryJobs=${dry.jobs.length}, realJobs=${real.jobs.length}, statePersisted=${real.statePersisted}`);
+    }
+  } finally {
+    rmSync(seqCwd, { recursive: true, force: true });
+  }
 } catch (e) {
   fail(`gmail dry-run test crashed: ${e.message}`);
 }
