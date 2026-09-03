@@ -139,7 +139,9 @@ export default {
       processedIds.add(m.id);
     }
 
-    saveProcessedIds(processedIds);
+    // dry-run must not persist the processed-id cursor — doing so would
+    // silently make a real run afterward skip these messages forever (B3-D1).
+    if (!ctx?.dryRun) saveProcessedIds(processedIds);
     return jobs;
   },
 };
