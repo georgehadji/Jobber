@@ -36,7 +36,7 @@ import { execFileSync } from 'child_process';
 import yaml from 'js-yaml';
 import { resolveTrackerPath, loadCanonicalStates } from './tracker-utils.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
-import { isStale } from './lib/sunset-policy.mjs';
+import { isStale, resolveSunsetAfterDays } from './lib/sunset-policy.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
@@ -57,7 +57,7 @@ if (args.includes('--help') || args.includes('-h')) {
 let sunsetAfterDays = 45;
 try {
   const profile = yaml.load(readFileSync(join(ROOT, 'config', 'profile.yml'), 'utf-8')) ?? {};
-  sunsetAfterDays = Number(profile.sunset_after_days ?? 45) || 45;
+  sunsetAfterDays = resolveSunsetAfterDays(profile.sunset_after_days);
 } catch {
   // profile.yml missing or unparseable → keep the default.
 }
