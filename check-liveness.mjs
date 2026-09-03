@@ -107,38 +107,43 @@ async function main() {
 
   let active = 0, expired = 0, uncertain = 0, viaApi = 0;
 
-  // Sequential — project rule: never Playwright in parallel
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-    let result, reason, usedBrowser = false;
+  // try/finally so a thrown error mid-loop (e.g. the browser crashing between
+  // ensureBrowser()'s launch() and newContext()) still closes an already-open
+  // browser instead of leaking the Chromium process (B6-D2).
+  try {
+    // Sequential — project rule: never Playwright in parallel
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      let result, reason, usedBrowser = false;
 
-    // Rung 1: zero-token ATS API check. A conclusive active/expired wins; otherwise fall through.
-    const api = await checkLivenessViaApi(url);
-    if (api) {
-      ({ result, reason } = api);
-      viaApi++;
-    } else {
-      // Rung 2: Playwright — handles non-ATS pages and inconclusive API results.
-      await ensureBrowser();
-      const getHeadedPage = headed ? () => headed.get() : undefined;
-      ({ result, reason } = await checkUrlLivenessWithFallback(page, url, { getHeadedPage }));
-      usedBrowser = true;
+      // Rung 1: zero-token ATS API check. A conclusive active/expired wins; otherwise fall through.
+      const api = await checkLivenessViaApi(url);
+      if (api) {
+        ({ result, reason } = api);
+        viaApi++;
+      } else {
+        // Rung 2: Playwright — handles non-ATS pages and inconclusive API results.
+        await ensureBrowser();
+        const getHeadedPage = headed ? () => headed.get() : undefined;
+        ({ result, reason } = await checkUrlLivenessWithFallback(page, url, { getHeadedPage }));
+        usedBrowser = true;
+      }
+
+      const icon = { active: '✅', expired: '❌', uncertain: '⚠️' }[result];
+      console.log(`${icon} ${result.padEnd(10)} ${api ? '(api) ' : '      '}${url}`);
+      if (result !== 'active') console.log(`           ${reason}`);
+      if (result === 'active') active++;
+      else if (result === 'expired') expired++;
+      else uncertain++;
+
+      // Throttle only matters between browser checks (the API is cheap, not WAF-rate-limited).
+      const wait = usedBrowser && i < urls.length - 1 ? jitteredDelayMs(throttleBaseMs) : 0;
+      if (wait) await sleep(wait);
     }
-
-    const icon = { active: '✅', expired: '❌', uncertain: '⚠️' }[result];
-    console.log(`${icon} ${result.padEnd(10)} ${api ? '(api) ' : '      '}${url}`);
-    if (result !== 'active') console.log(`           ${reason}`);
-    if (result === 'active') active++;
-    else if (result === 'expired') expired++;
-    else uncertain++;
-
-    // Throttle only matters between browser checks (the API is cheap, not WAF-rate-limited).
-    const wait = usedBrowser && i < urls.length - 1 ? jitteredDelayMs(throttleBaseMs) : 0;
-    if (wait) await sleep(wait);
+  } finally {
+    if (headed) await headed.close();
+    if (browser) await browser.close();
   }
-
-  if (headed) await headed.close();
-  if (browser) await browser.close();
 
   console.log(`\nResults: ${active} active  ${expired} expired  ${uncertain} uncertain  (${viaApi} via API, no browser)`);
   if (expired > 0 || uncertain > 0) process.exit(1);

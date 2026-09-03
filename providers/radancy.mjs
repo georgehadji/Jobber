@@ -286,8 +286,10 @@ export default {
     // the HTML walk below, so tenants without this endpoint are unaffected.
     if (typeof ctx.fetchJson === 'function') {
       try {
+        // redirect:'error' prevents SSRF via a server-side redirect (B5-D1).
         const first = /** @type {any} */ (await ctx.fetchJson(buildFragmentUrl(listUrl, 1), {
           headers: { accept: 'application/json', 'x-requested-with': 'XMLHttpRequest' },
+          redirect: 'error',
         }));
         const firstHtml = typeof first?.results === 'string' ? first.results : '';
         const firstRows = firstHtml ? parseResults(firstHtml, origin) : [];
@@ -314,6 +316,7 @@ export default {
             try {
               const json = /** @type {any} */ (await ctx.fetchJson(buildFragmentUrl(listUrl, page), {
                 headers: { accept: 'application/json', 'x-requested-with': 'XMLHttpRequest' },
+                redirect: 'error',
               }));
               const frag = typeof json?.results === 'string' ? json.results : '';
               rows = frag ? parseResults(frag, origin) : [];
@@ -349,7 +352,7 @@ export default {
       if (page > 1) await wait(PAGE_DELAY_MS);
       let rows;
       try {
-        const html = await ctx.fetchText(`${listUrl}?p=${page}`, { headers: { accept: 'text/html' } });
+        const html = await ctx.fetchText(`${listUrl}?p=${page}`, { headers: { accept: 'text/html' }, redirect: 'error' });
         rows = parseResults(html, origin);
       } catch {
         break; // keep jobs collected so far — a transient mid-scan failure shouldn't discard earlier pages

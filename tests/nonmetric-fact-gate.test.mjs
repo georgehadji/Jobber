@@ -116,6 +116,67 @@ try {
   } else {
     fail(`fact matching accepted an embedded substring: ${JSON.stringify(boundary)}`);
   }
+
+  // B7-D2: factClaims() previously only recognized "served as"/"worked as"/
+  // "worked at ... as"/"joined" — a fabricated title/employer phrased any
+  // other way (the ordinary way most CVs actually write it) went undetected.
+  // These three phrasings are the ones confirmed live in the batch-7 hunt.
+  const asAtClaims = factClaims('As Chief Technology Officer at Google, I redefined the cloud strategy.');
+  if (asAtClaims.some(c => c.kind === 'title' && c.value === 'chief technology officer')
+      && asAtClaims.some(c => c.kind === 'employer' && c.value === 'google')) {
+    pass('"As $Title at $Company" is extracted as title + employer claims');
+  } else {
+    fail(`"As ... at ..." phrasing was not extracted: ${JSON.stringify(asAtClaims)}`);
+  }
+
+  const currentlyClaims = factClaims('Currently Chief Technology Officer at Google.');
+  if (currentlyClaims.some(c => c.kind === 'title' && c.value === 'chief technology officer')
+      && currentlyClaims.some(c => c.kind === 'employer' && c.value === 'google')) {
+    pass('"Currently $Title at $Company" is extracted as title + employer claims');
+  } else {
+    fail(`"Currently ... at ..." phrasing was not extracted: ${JSON.stringify(currentlyClaims)}`);
+  }
+
+  const headerClaims = factClaims('Google — Chief Technology Officer | 2015–2024\nLed a 240-person org.');
+  if (headerClaims.some(c => c.kind === 'title' && c.value === 'chief technology officer')
+      && headerClaims.some(c => c.kind === 'employer' && c.value === 'google')) {
+    pass('a resume-header "$Company — $Title | $YearRange" line is extracted as title + employer claims');
+  } else {
+    fail(`resume-header phrasing was not extracted: ${JSON.stringify(headerClaims)}`);
+  }
+
+  const fabricatedAsAt = verifyFacts('As Chief Technology Officer at Google, I redefined the cloud strategy.', {
+    sourcePaths: [source], configPath: config,
+  });
+  const fabricatedCurrently = verifyFacts('Currently Chief Technology Officer at Google.', {
+    sourcePaths: [source], configPath: config,
+  });
+  const fabricatedHeader = verifyFacts('Google — Chief Technology Officer | 2015–2024\nLed a 240-person org.', {
+    sourcePaths: [source], configPath: config,
+  });
+  if ([fabricatedAsAt, fabricatedCurrently, fabricatedHeader].every(r => r.verdict === 'block'
+      && r.unsupportedFacts.some(c => c.value === 'google')
+      && r.unsupportedFacts.some(c => c.value === 'chief technology officer'))) {
+    pass('a fabricated employer/title is blocked in all three ordinary phrasings');
+  } else {
+    fail(`a fabricated employer/title slipped through one of the ordinary phrasings: ${JSON.stringify({ fabricatedAsAt, fabricatedCurrently, fabricatedHeader })}`);
+  }
+
+  // Negative guards for the new patterns — ordinary resume section headers
+  // and narrative "as" prose must stay unaffected.
+  const skillsHeader = factClaims('Skills — Python, Docker, Kubernetes');
+  if (!skillsHeader.some(c => c.kind === 'employer' || c.kind === 'title')) {
+    pass('a plain "Skills — ..." header (no year range) is not treated as an employer/title claim');
+  } else {
+    fail(`"Skills — ..." header wrongly produced an employer/title claim: ${JSON.stringify(skillsHeader)}`);
+  }
+
+  const currentlyExploring = factClaims('Currently exploring Rust and WebAssembly.');
+  if (!currentlyExploring.some(c => c.kind === 'employer' || c.kind === 'title')) {
+    pass('"Currently exploring X" (no "at $Company") is not treated as a title/employer claim');
+  } else {
+    fail(`"Currently exploring ..." wrongly produced an employer/title claim: ${JSON.stringify(currentlyExploring)}`);
+  }
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

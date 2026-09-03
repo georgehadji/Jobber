@@ -84,7 +84,8 @@ export default {
   async fetch(entry, ctx) {
     const listUrl = resolveListUrl(entry);
     if (!listUrl) throw new Error(`hecklerkoch: cannot resolve vacancy list for ${entry.name}`);
-    const html = await ctx.fetchText(listUrl, { headers: { accept: 'text/html' } });
+    // redirect:'error' prevents SSRF via a server-side redirect (B5-D1).
+    const html = await ctx.fetchText(listUrl, { headers: { accept: 'text/html' }, redirect: 'error' });
     const rows = parseListing(html);
     const jobs = [];
     for (const row of rows) {
