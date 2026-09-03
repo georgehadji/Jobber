@@ -82,6 +82,41 @@ Budget: 1 confirmed / 10 allocated. Time-boxed close.
 
 ---
 
+## Batch 3 — Plugin trust boundary — 2026-09-02 — PARTIAL
+
+Baseline: 3525 passed / 0 failed / 1 warning on clean `main` (same baseline as batches 1-2 — neither is merged yet). Post-fix full run: 3527 passed / 0 failed / 1 warning (+2, the new gmail dry-run assertions).
+Budget: 1 confirmed / 10 allocated. Time-boxed close.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B3-D1 | `plugins/gmail/index.mjs` `ingest()`, final `saveProcessedIds(processedIds)` call | error & exception paths / documented-contract violation (same class as B1-D1) | `ctx.dryRun` must be a preview — the sibling `notion` plugin's `export` hook explicitly checks `ctx?.dryRun` before every external write; `gmail`'s `ingest()` never checks it before persisting `data/gmail-state.json`, its own processed-message-id cursor | FIRED — ran the real plugin module (`gmailPlugin.ingest(ctx)`) against a mocked `ctx.fetch` in an isolated temp cwd with `ctx.dryRun: true`; `data/gmail-state.json` was written and contained the message id | NO-DEFENSE — unconditional call, no guard, reachable on every dry-run invocation that finds any message | **VERIFIED DEFECT** | this batch's branch (`hunt/batch-3-plugin-trust-boundary`); gated behind `if (!ctx?.dryRun)` |
+| B3-C1 | `plugin-audit.mjs`'s direct-`fetch()` heuristic (`/(?<![.\w$])fetch\s*\(/`) | trust boundary / static-analysis gap | The negative lookbehind excludes any `<ident>.fetch(` from the finding — so `globalThis.fetch(...)` or `window.fetch(...)` evades the "direct global fetch() — use ctx.fetch" flag, bypassing the SSRF/allowedHosts guard undetected | not attempted — the file's own header comment already discloses this scope: "a STATIC heuristic, not containment... a determined attacker can obfuscate" | DOCUMENTED LIMITATION — the module explicitly disclaims general evasion resistance; this is exactly the class of obfuscation it says it doesn't catch, not an unstated gap | FALSE (innocent) — real gap, but within the file's own honestly-scoped disclaimer | — |
+| B3-C2 | `plugins.mjs` `cmdEnable`/`cmdTrust`/`cmdRemove`/`cmdAdd` writes to `config/plugins.yml` and `plugins.lock` | resource lifecycle / concurrency | No shared cross-process lock (unlike `lib/file-lock.mjs` on the tracker) around these writes — two concurrent `plugins.mjs enable`/`add` invocations could race | not attempted — `plugins.mjs` is a manual, single-operator CLI, never invoked by parallel batch workers (unlike the tracker) | design-scope — no concurrent-writer scenario exists for this CLI today; the tracker's locking exists because `batch/` runs N parallel workers, which plugins.mjs has no equivalent of | FALSE (innocent) — no reachable concurrent caller in this codebase | — |
+| B3-C3 | `plugin-install.mjs` `installFromRepo()` — `existsSync(dest)` check, then a slow `safeClone()`, then `cpSync` | resource lifecycle / TOCTOU | Same shape as B3-C2: a second `add <id>` for the same id started during the first's clone would also pass the `existsSync` guard | not attempted — same manual-CLI reasoning as B3-C2 | design-scope — no automated concurrent caller | FALSE (innocent) | — |
+
+### Coverage & residual risk (Batch 3)
+
+**Surface audited:** `plugins/_engine.mjs` (full read — manifest validation, `discoverPlugins`, `resolveSuccessorIds`, `lockGate`, `buildCtx`/guarded-fetch, `loadPlugins`/`runHook`, `mergeProviderPlugins`), `plugins/_lock.mjs` (full read), `plugins/_net.mjs` (full read — SSRF allowlist/DNS-rebinding guard), `plugins/_registry.mjs` (full read), `plugin-install.mjs` (full read — clone-time-RCE hardening, `safeClone`/`validateInstall`/`installFromRepo`/`scaffoldNew`), `plugin-audit.mjs` (full read — static safety scan), `plugins.mjs` (full read — the CLI host, all 9 subcommands), `plugins/notion/index.mjs` + `_notion.mjs` (full read), `plugins/gmail/index.mjs` + `_helpers.mjs` (full read), `plugins/apify/index.mjs` + `_apify.mjs` (full read).
+
+**Surface NOT audited:**
+- `plugins/_template/` (`index.mjs`, `test/smoke.mjs`) — not read this batch; it's inert scaffolding until a user runs `plugins.mjs new`.
+- `validate-plugin-registry.mjs` (the registry-validate CI script) — not read.
+- `plugins/_types.js` — a types-only file, skipped (no runtime logic).
+- End-to-end interaction between `scan.mjs`'s `mergeProviderPlugins()` call and a real `portals.yml` entry — reasoned through the code, not run against a live config.
+
+**Defect classes covered:** error & exception paths (dry-run contract) — the class carried over from B1-D1; found a second, more severe instance (permanent silent data loss vs. B1's stale-sentinel case) in a *different* subsystem, confirming this is a recurring repo-wide pattern worth checking in every future batch that touches a `--dry-run`/`ctx.dryRun` surface. Trust boundary / static-analysis limits — one real gap found, but already within the module's own honest disclaimer (B3-C1). Resource lifecycle / concurrency — two TOCTOU-shaped candidates traced and cleared as design-scope (no concurrent caller exists for either).
+
+**Confirmed defects:** CRITICAL 0 / HIGH 0 / MEDIUM 1 (B3-D1 — permanent, silent loss of job leads on the next real run after any dry-run preview) / LOW 0.
+**Cleared (innocent):** 3 (B3-C1, C2, C3).
+**Residual SUSPECTED:** 0.
+**Residual UNKNOWN:** 0.
+
+**Clean-claim, scoped:** The entire plugin engine's trust-boundary surface (manifest validation, integrity/rug-pull lock, SSRF egress guard, clone-time-RCE hardening in `plugin-install.mjs`, and the static audit scanner) was read in full and no VERIFIED defect was found beyond the one static-analysis gap already disclosed by the module itself (B3-C1). All three bundled reference plugins (gmail, notion, apify) were read end to end; the one real defect (B3-D1) was in the `ctx.dryRun` contract, not the trust/security boundary itself. This is NOT a claim that `plugins/_template/`, `validate-plugin-registry.mjs`, or a live `scan.mjs` + `portals.yml` provider-plugin run are defect-free.
+
+**Highest-value next hunt:** `providers/` fleet itself (batch 5) should specifically re-check the `?? x) || x` boundary-arithmetic class (B2-D1's pattern) and the `ctx.dryRun`/`--dry-run` contract (B1-D1's and B3-D1's pattern) in every provider and plugin that accepts a numeric config default or exposes a dry-run mode — two confirmed hits across three batches makes this the single highest-yield repeatable check left in the plan. Second: `validate-plugin-registry.mjs`, unread this batch.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
