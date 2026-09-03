@@ -11,9 +11,9 @@ Budget: 1 confirmed / 12 allocated. Time-boxed close, not budget exhaustion — 
 
 | ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
 |----|----------|-------|-------------------|---------|-----------|--------|-----|
-| B1-D1 | `merge-tracker.mjs:141` (module top-level, pre-lock) | error & exception paths / documented-contract violation | `--dry-run` must perform zero writes — merge-tracker gates every other mutation in the file behind `!DRY_RUN` (7 other gates) except this one | FIRED — executed trigger (below) | NO-DEFENSE — unconditional call, no guard, reachable on every invocation | **VERIFIED DEFECT** | pending commit on `hunt/batch-1-tracker-locks` |
+| B1-D1 | `merge-tracker.mjs:141` (module top-level, pre-lock) | error & exception paths / documented-contract violation | `--dry-run` must perform zero writes — merge-tracker gates every other mutation in the file behind `!DRY_RUN` (7 other gates) except this one | FIRED — executed trigger (below) | NO-DEFENSE — unconditional call, no guard, reachable on every invocation | **VERIFIED DEFECT** | [PR #25](https://github.com/georgehadji/Jobber/pull/25) |
 | B1-C1 | `lib/file-lock.mjs` recover-guard staleness (`lockCanRecover(recoverGuardDir, staleMs)`) | resource lifecycle / concurrency | none — reasoned through, not tested | not attempted | design tradeoff, explicitly acknowledged in the module's own comment (`OWNERLESS_GRACE_MS` doc, lines 85-97): "a crash while holding the guard cannot disable recovery for good" | FALSE (innocent) — deliberate, documented conservative choice, not a defect | — |
-| B1-C2 | `tracker-utils.mjs:gcStaleSentinels` vs `reserve-report-num.mjs:gcStaleReportReservations` | contract / dependency (duplicate implementations of "the same" GC, per the file's own docstring, with divergent behavior) | `gcStaleSentinels` has no PID-liveness check before deleting a >4h-old sentinel; `gcStaleReportReservations` does | not attempted — requires a >4h-alive process to manifest, out of trigger-test reach within this session | partial — the age threshold (4h) makes the window narrow, and `reserve-report-num.mjs`'s own `--gc` CLI path already has the correct check | **SUSPECTED (HYPOTHESIS)** — real inconsistency, unconfirmed real-world impact | not fixed this batch — candidate for a follow-up session |
+| B1-C2 | `tracker-utils.mjs:gcStaleSentinels` vs `reserve-report-num.mjs:gcStaleReportReservations` | contract / dependency (duplicate implementations of "the same" GC, per the file's own docstring, with divergent behavior) | `gcStaleSentinels` has no PID-liveness check before deleting a >4h-old sentinel; `gcStaleReportReservations` does | not attempted — requires a >4h-alive process to manifest, out of trigger-test reach within this session | partial — the age threshold (4h) makes the window narrow, and `reserve-report-num.mjs`'s own `--gc` CLI path already has the correct check | **SUSPECTED (HYPOTHESIS)** — real inconsistency, unconfirmed real-world impact | not fixed — candidate for a follow-up session |
 | B1-C3 | `dedup-tracker.mjs:270-280,423-435` dry-run gating | error & exception paths | `--dry-run` performs zero writes | not run (code-read only) | CODE-INNOCENT — `mkdirSync` before the gate is directory-creation only (non-destructive); the transaction, backup copy, and replace are all correctly behind `!DRY_RUN` | FALSE (innocent) | — |
 | B1-C4 | `set-status.mjs:275` lock-acquisition gating | resource lifecycle | dry-run should not acquire/hold the exclusive lock | not run (code-read only) | CODE-INNOCENT — explicit design comment: "Dry-run never writes, so it must not hold the exclusive lock"; gated correctly | FALSE (innocent) | — |
 | B1-C5 | `outcome.mjs:206-227` dry-run gating | error & exception paths | `--dry-run` performs zero writes/mkdir | not run (code-read only) | CODE-INNOCENT — `process.exit(EXIT_OK)` at line 224 precedes the first `mkdirSync` at line 227 | FALSE (innocent) | — |
@@ -46,9 +46,45 @@ Budget: 1 confirmed / 12 allocated. Time-boxed close, not budget exhaustion — 
 
 ---
 
+## Batch 2 — Updater & layer boundary — 2026-09-02 — PARTIAL
+
+Baseline: 3525 passed / 0 failed / 1 warning on clean `main` (same baseline as batch 1 — batch 1's fix is not yet merged). Post-fix full run: 3529 passed / 0 failed / 1 warning (+4, the new `resolveSunsetAfterDays` assertions).
+Budget: 1 confirmed / 10 allocated. Time-boxed close.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B2-D1 | `sunset.mjs:60` (`sunsetAfterDays = Number(profile.sunset_after_days ?? 45) \|\| 45`) | boundary & arithmetic (`??` vs `\|\|` footgun on the zero boundary) | A configured `sunset_after_days` value must be honored as documented ("Threshold: `sunset_after_days` in config/profile.yml (default 45)") — the `??` already correctly distinguishes "missing" from "present", but the trailing `\|\| 45` re-applies the fallback to the one falsy-but-valid number, 0 | FIRED — isolated reproduction of the exact expression (below); repo-wide grep confirmed this is the only instance of the `?? x) \|\| x` pattern | NO-DEFENSE — no validation rejects 0, no code path treats it specially, reachable on every `sunset.mjs` invocation once a user sets the value | **VERIFIED DEFECT** | this batch's branch (`hunt/batch-2-updater-layer-boundary`); extracted into a new exported `resolveSunsetAfterDays()` in `lib/sunset-policy.mjs` |
+| B2-C1 | `update-system.mjs` `apply()` re-exec + `initialStatusPaths` interaction | resource lifecycle / contract | Reasoned candidate: the re-exec'd child computes `initialStatusPaths` AFTER the parent's pre-reexec `git checkout FETCH_HEAD -- reexecFiles`, so those files could be wrongly treated as "pre-existing dirt" and protected from a later rollback's cleanup | not attempted — narrow (only matters mid-rollback after a re-exec) | CODE-INNOCENT — traced through `revertPaths()`: the main `git checkout HEAD -- path` step runs unconditionally for every path in `updated` regardless of `protectedPaths`; `protectedPaths` only gates `removeAdditionsNotInHead()`, which handles brand-new files not yet in HEAD. `update-system.mjs` and `scaffolder/bin/skill-entrypoints.mjs` both predate the update (tracked in HEAD), so the main revert path applies to them either way | FALSE (innocent) — traced, not merely asserted | — |
+| B2-C2 | `check-translation-freshness.mjs` `git log -1 -- <file>` staleness computation | contract / dependency (same class as SEED-B) | Same shallow-checkout sensitivity as the already-fixed CI workflow issue | not attempted — the fix already lives at the CI-workflow level (`fetch-depth: 0`), not in this script | N/A — this script's logic was always correct; the defect was the *caller's* checkout depth, already fixed in `b74af31` | FALSE (innocent) — confirmed no second instance of the class exists in batch-2 scope | — |
+| B2-C3 | `doctor.mjs` auto-create paths (`checkAutoDir`, `checkPipelineFile`, `onboardingState`'s template auto-copy) | error & exception paths | None claimed — `doctor.mjs` has no `--dry-run` flag and never claims to be non-mutating; every auto-create is create-if-absent, never an overwrite | not attempted | CODE-INNOCENT — no documented contract to violate; `existsSync` guards every write | FALSE (innocent) | — |
+
+### Coverage & residual risk (Batch 2)
+
+**Surface audited:** `update-system.mjs` (full read, 1387 lines — SYSTEM_PATHS/USER_PATHS/BOOTSTRAP_PATHS manifests, `apply()`/`rollback()`/`check()`/`dismiss()` control flow, `revertPaths()`/`removeAdditionsNotInHead()` rollback safety, re-exec checkout resolution), `lib/sunset-policy.mjs` (full read), `sunset.mjs` (full read), `doctor.mjs` (full read). `check-translation-freshness.mjs` swept for the SEED-B git-log-depth class specifically (not read end to end).
+
+**Surface NOT audited:**
+- `updater-migration-tests.mjs` — not read; its own test assertions were trusted rather than independently re-derived.
+- `ingest-documents.mjs` — not re-audited this batch (already authored/reviewed in an earlier session; no new read).
+- `check-translation-freshness.mjs` — only the git-log-depth angle was checked; not hunted for other classes.
+- The `.gitignore` negation-guard logic inside `test-all.mjs` (`extractArrayFromSource` reuse) — not read this batch.
+- `update-system.mjs`'s `resolveReexecCheckout()` static-import-closure walker — read, not independently stress-tested against a synthetic import graph (trusted the existing `updater-migration-tests.mjs` coverage referenced in its own comments).
+
+**Defect classes covered:** boundary & arithmetic — one real defect found and fixed (B2-D1), plus a repo-wide grep confirming it was the only instance of that exact anti-pattern. Resource lifecycle / rollback safety — one candidate traced through to a confirmed-innocent verdict (B2-C1), not merely assumed. Contract/dependency (shallow-checkout class) — confirmed no second instance in this batch's scope (B2-C2).
+
+**Confirmed defects:** CRITICAL 0 / HIGH 0 / MEDIUM 0 / LOW 1 (B2-D1 — narrow real-world trigger condition, but a genuine documented-contract violation).
+**Cleared (innocent):** 3 (B2-C1, C2, C3).
+**Residual SUSPECTED:** 0.
+**Residual UNKNOWN:** 0.
+
+**Clean-claim, scoped:** `update-system.mjs`'s full read-modify-rollback lifecycle was traced for user-layer-safety and rollback-completeness defects, and none were found beyond the already-cleared B2-C1 candidate. `sunset.mjs`'s only mutable input (`sunset_after_days`) was audited end to end and its one defect fixed. This is NOT a claim that `updater-migration-tests.mjs`, `check-translation-freshness.mjs` beyond the git-log-depth angle, or `ingest-documents.mjs` are defect-free.
+
+**Highest-value next hunt:** `update-system.mjs`'s `missingFromTargetManifest()` / re-exec checkout-closure resolution deserves a dedicated concurrency/boundary pass (two concurrent `apply()` invocations — the `.update-lock` file check has a TOCTOU window between `existsSync(lockFile)` and `writeFileSync(lockFile, ...)` that was not tested this batch). Second: `updater-migration-tests.mjs` itself, unread this batch.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
 |----|----------|--------|------|
 | SEED-A | `lib/robots.mjs` `gate()` cache | VERIFIED, unfixed | Origin-keyed cache conflates per-path verdicts. Zero production callers today (`update-system.mjs:147` is a SYSTEM_PATHS manifest entry, not an import) — LOW now, HIGH once wired into `providers/_http.mjs`. Belongs to batch 4. |
-| SEED-B | `.github/workflows/test.yml` shallow checkout | VERIFIED, FIXED (`b74af31`, pre-dates this plan) | `git log -1 -- <file>` staleness checks broke under depth-1 checkout. Recorded as a class to re-check in batch 2 for any other `git log`/`git rev-list`-dependent module. |
+| SEED-B | `.github/workflows/test.yml` shallow checkout | VERIFIED, FIXED (`b74af31`, pre-dates this plan) | `git log -1 -- <file>` staleness checks broke under depth-1 checkout. Batch 2 checked `check-translation-freshness.mjs` for a second instance of the class (B2-C2) — none found; no other `git log`/`git rev-list`-dependent module encountered in batches 1-2. |
