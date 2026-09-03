@@ -221,6 +221,25 @@ async function run() {
     fail(`gate() caching case crashed: ${e.message}`);
   }
 
+  // 15b. SEED-A (defect-hunt batch 4): the cache must be path-specific. Two
+  //      different paths on the same origin, within the same TTL window, must
+  //      each get their OWN verdict from the cached rule set — not whichever
+  //      verdict happened to be computed first.
+  _clearCacheForTests();
+  try {
+    let calls = 0;
+    const fetchText = async () => { calls++; return 'User-agent: *\nDisallow: /admin\n'; };
+    const admin = await gate('https://example.invalid/admin/secret', { fetchText });
+    const publicPage = await gate('https://example.invalid/public', { fetchText });
+    if (calls === 1 && admin.allowed === false && publicPage.allowed === true) {
+      pass('gate(): a cached origin still gives each path its own correct verdict');
+    } else {
+      fail(`gate(): path-specific verdict lost to origin-level caching: calls=${calls}, admin=${JSON.stringify(admin)}, public=${JSON.stringify(publicPage)}`);
+    }
+  } catch (e) {
+    fail(`gate() path-conflation case crashed: ${e.message}`);
+  }
+
   // 16. Non-http(s) scheme is refused outright (SSRF hardening).
   _clearCacheForTests();
   try {

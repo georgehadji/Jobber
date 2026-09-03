@@ -117,9 +117,42 @@ Budget: 1 confirmed / 10 allocated. Time-boxed close.
 
 ---
 
+## Batch 4 — Provider HTTP core (resolves Seed A) — 2026-09-02 — PARTIAL
+
+Baseline: 3525 passed / 0 failed / 1 warning on clean `main` (same baseline as batches 1-3 — none merged yet). Post-fix full run: 3526 passed / 0 failed / 1 warning (+1, the new path-conflation regression assertion).
+Budget: 1 confirmed (Seed A resolved) / 12 allocated. Time-boxed close.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B4-D1 (= SEED-A) | `lib/robots.mjs` `gate()`, the `cache.set(origin, { result, ... })` line | boundary / cache-key granularity mismatch | The cached verdict is PATH-specific (`isAllowed(groups, agent, path)`) but the cache key is origin-only — a second call for a *different* path on the same origin, inside the 15-minute TTL, wrongly reused the first path's allow/disallow verdict instead of being re-evaluated | FIRED — real `gate()` call for `/admin/secret` (Disallow'd) then `/public` (not covered) on the same origin; `/public` came back `allowed: false`, inheriting `/admin/secret`'s cached verdict | NO-DEFENSE — unconditional per-origin cache of the final decision, reachable on every second call to a distinct path on an already-cached origin | **VERIFIED DEFECT** (pre-existing finding from plan authoring, now fixed) | this batch's branch (`hunt/batch-4-provider-http-core`); cache now stores the parsed rule `groups` per origin (still one fetch per origin — the expensive part), and `isAllowed()`/the allow-decision is recomputed per path on every call, cached or not |
+| B4-C1 | `providers/local-parser.mjs` `resolveCommand`/`resolveInsideRoot` argument-injection and path-escape guards | trust boundary | `parser.command`/`parser.args`/`parser.script` from a shared/template `portals.yml` must never reach an arbitrary binary or an out-of-repo path, and an interpolated `{company}`/`{careers_url}` must never be read as a CLI flag | not attempted — traced through by hand instead: an absolute out-of-repo command (POSIX or Windows-style) is caught by `resolveInsideRoot`'s `realpathSync` + prefix check; a flag-shaped `parser.script` would have to resolve to a real in-repo file to pass at all, which a portals.yml author cannot place | CODE-INNOCENT — every escape path traced ends in a thrown `Error`, not a spawn; `execFileAsync` is called with no `shell` option (argv, not a shell string) throughout | FALSE (innocent) — traced, not merely asserted | — |
+| B4-C2 | `providers/_dns-cache.mjs` `createCachedLookup`'s per-key coalescing (`inflight` Map) | resource lifecycle / concurrency | A crashed/never-callback-invoking `realLookup` would leave a key's `inflight` entry (and every coalesced waiter) stuck forever | not attempted — `dns.lookup`'s C++ binding always invokes its callback exactly once (success or error), so there is no code path in Node's own contract that would leave this hanging | design-scope — depends on a guarantee from Node's own `dns.lookup` contract, not this module's logic | FALSE (innocent) — no reachable trigger within this module's own code | — |
+
+### Coverage & residual risk (Batch 4)
+
+**Surface audited (full read, all 10 files in this batch's scope):** `providers/_http.mjs`, `providers/_dns-cache.mjs`, `providers/_trust-validator.mjs`, `providers/_registry.mjs`, `providers/_config-utils.mjs`, `providers/_html-entities.mjs`, `providers/_profile-keywords.mjs`, `providers/local-parser.mjs`, `lib/robots.mjs`, `lib/http-errors.mjs`.
+
+**Surface NOT audited:**
+- No live end-to-end run of a real provider (e.g. `greenhouse.mjs`) through `providers/_http.mjs`'s `fetchJson`/`fetchText` against a real or mocked server — the transport helpers were read and reasoned through, not exercised via an actual provider call in this batch.
+- `providers/_dns-cache.mjs`'s token-bucket pacing (`createTokenBucket`) was read and reasoned through but not driven with injected fake timers to confirm its scheduling math under load — `tests/` may already cover this (not independently re-derived here).
+- `gate()` still has zero production callers (confirmed unchanged this batch — `providers/_http.mjs` does not call it). The fix makes it CORRECT for whenever it is wired in, but does not itself wire it in — that remains a separate, deliberate follow-up per the plan's own scope note for Seed A.
+
+**Defect classes covered:** boundary / cache-key granularity — the batch's one confirmed, pre-identified defect (B4-D1/Seed A), fixed and regression-tested. Trust boundary (command execution from a semi-trusted config) — one high-value candidate (`local-parser.mjs`) traced in full, no bypass found. Resource lifecycle / concurrency — one candidate in the DNS cache traced to a Node-contract guarantee, cleared.
+
+**Confirmed defects:** CRITICAL 0 / HIGH 0 / MEDIUM 0 / LOW 1 (B4-D1 — zero production callers today, so no live scan is currently affected; severity rises to HIGH the moment `gate()` is wired into `providers/_http.mjs`'s escalation path, per the original Seed A note. Fixing it now, before that wiring, was the point).
+**Cleared (innocent):** 2 (B4-C1, C2).
+**Residual SUSPECTED:** 0.
+**Residual UNKNOWN:** 0.
+
+**Clean-claim, scoped:** All 10 files named in this batch's plan entry were read in full and no VERIFIED defect was found beyond the one already identified during plan authoring (Seed A/B4-D1), which is now fixed and regression-tested. `local-parser.mjs`'s command-execution trust boundary — the highest-stakes single file in this batch's scope — was traced end to end with no bypass found. This is NOT a claim that a live provider run through `_http.mjs`, or `_dns-cache.mjs`'s pacing math under real concurrency, is defect-free — neither was exercised end to end this batch.
+
+**Highest-value next hunt:** the plan's batch 5 (provider fleet, class-sampled across ~70 adapters) should specifically re-check the `?? x) || x` boundary-arithmetic class (B2-D1) and the `ctx.dryRun`/`--dry-run` contract (B1-D1, B3-D1) — now confirmed twice across three batches, the single highest-yield repeatable check left in the plan (carried over from batch 3's note, unchanged — no new instance found this batch). Second: an actual live (or fixture-driven) end-to-end run of one provider through `providers/_http.mjs`, not yet done in this plan.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
 |----|----------|--------|------|
-| SEED-A | `lib/robots.mjs` `gate()` cache | VERIFIED, unfixed | Origin-keyed cache conflates per-path verdicts. Zero production callers today (`update-system.mjs:147` is a SYSTEM_PATHS manifest entry, not an import) — LOW now, HIGH once wired into `providers/_http.mjs`. Belongs to batch 4. |
+| SEED-A | `lib/robots.mjs` `gate()` cache | VERIFIED, FIXED (batch 4, B4-D1) | Origin-keyed cache conflated per-path verdicts — now caches the parsed rule groups per origin and re-evaluates the path-specific verdict on every call. Still zero production callers (`update-system.mjs:147` is a SYSTEM_PATHS manifest entry, not an import) — wiring `gate()` into `providers/_http.mjs`'s escalation path remains a separate follow-up. |
 | SEED-B | `.github/workflows/test.yml` shallow checkout | VERIFIED, FIXED (`b74af31`, pre-dates this plan) | `git log -1 -- <file>` staleness checks broke under depth-1 checkout. Batch 2 checked `check-translation-freshness.mjs` for a second instance of the class (B2-C2) — none found; no other `git log`/`git rev-list`-dependent module encountered in batches 1-2. |
