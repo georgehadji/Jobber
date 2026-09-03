@@ -4,6 +4,7 @@ import { resolveCli } from "@/lib/clis";
 import { jobberRoot } from "@/lib/jobber";
 import { dropNewTabs } from "./diagnose";
 import type { DriveStep } from "./issue";
+import { isSubmitLabel } from "./submit-guard";
 
 export type { DriveStep };
 
@@ -20,8 +21,6 @@ export type { DriveStep };
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type DriveResult = { reached: boolean; turns: number; reason: string; steps: DriveStep[] };
-
-const SUBMIT_RX = /\b(submit|send application|finish( application)?|complete application|apply (and|&) submit|enviar|finalizar)\b/i;
 
 /** Ref-tagged snapshot of the interactive page (a browser_snapshot-style view the
  *  LLM reasons over). Tags data-co-ref on each element so actions are unambiguous. */
@@ -189,8 +188,13 @@ Reply ONE action JSON.`;
     try {
       const loc = act.ref ? frame.locator(`[data-co-ref="${act.ref}"]`).first() : null;
       if (act.action === "click" && loc) {
-        const txt = (await loc.innerText().catch(() => "")) || (await loc.getAttribute("value").catch(() => "")) || "";
-        if (SUBMIT_RX.test(txt)) {
+        const innerText = (await loc.innerText().catch(() => "")) || "";
+        const ariaLabel = (await loc.getAttribute("aria-label").catch(() => "")) || "";
+        const placeholder = (await loc.getAttribute("placeholder").catch(() => "")) || "";
+        const valueAttr = (await loc.getAttribute("value").catch(() => "")) || "";
+        const nameAttr = (await loc.getAttribute("name").catch(() => "")) || "";
+        const txt = innerText || ariaLabel || placeholder || valueAttr || nameAttr;
+        if (isSubmitLabel(innerText, ariaLabel, placeholder, valueAttr, nameAttr)) {
           note = "refused to click a submit control (the human submits)";
           detail = `blocked submit "${txt.slice(0, 40)}"`;
         } else {
