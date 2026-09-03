@@ -190,9 +190,11 @@ Reply ONE action JSON.`;
       if (act.action === "click" && loc) {
         const innerText = (await loc.innerText().catch(() => "")) || "";
         const ariaLabel = (await loc.getAttribute("aria-label").catch(() => "")) || "";
+        const placeholder = (await loc.getAttribute("placeholder").catch(() => "")) || "";
         const valueAttr = (await loc.getAttribute("value").catch(() => "")) || "";
-        const txt = innerText || ariaLabel || valueAttr;
-        if (isSubmitLabel(innerText, ariaLabel, valueAttr)) {
+        const nameAttr = (await loc.getAttribute("name").catch(() => "")) || "";
+        const txt = innerText || ariaLabel || placeholder || valueAttr || nameAttr;
+        if (isSubmitLabel(innerText, ariaLabel, placeholder, valueAttr, nameAttr)) {
           note = "refused to click a submit control (the human submits)";
           detail = `blocked submit "${txt.slice(0, 40)}"`;
         } else {
