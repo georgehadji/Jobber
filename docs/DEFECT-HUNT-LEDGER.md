@@ -347,3 +347,74 @@ Budget: 1 confirmed & fixed / 10 allocated. Time-boxed close — only a focused 
 |----|----------|--------|------|
 | SEED-A | `lib/robots.mjs` `gate()` cache | VERIFIED, FIXED (batch 4, B4-D1) | Origin-keyed cache conflated per-path verdicts — now caches the parsed rule groups per origin and re-evaluates the path-specific verdict on every call. Still zero production callers (`update-system.mjs:147` is a SYSTEM_PATHS manifest entry, not an import) — wiring `gate()` into `providers/_http.mjs`'s escalation path remains a separate follow-up. |
 | SEED-B | `.github/workflows/test.yml` shallow checkout | VERIFIED, FIXED (`b74af31`, pre-dates this plan) | `git log -1 -- <file>` staleness checks broke under depth-1 checkout. Batch 2 checked `check-translation-freshness.mjs` for a second instance of the class (B2-C2) — none found; no other `git log`/`git rev-list`-dependent module encountered in batches 1-2. |
+
+---
+
+## Final aggregate coverage statement — Batches 1-10 (plan §9)
+
+Batch 11 (the test harness itself — `test-all.mjs`, `test-runner.mjs`, `lib/test-discovery.mjs`, `tests/**`) remains **deliberately deferred by design** (plan §2): it is the measuring instrument for every batch above, so it is scoped as its own standalone run against a clean baseline, not folded into this aggregate. Everything below covers batches 1-10 only — the full plan minus that one deferred batch.
+
+None of the 10 batch branches/PRs (#25-34) are merged as of this statement. Every SHA below is the branch tip on its own `hunt/batch-N-*` branch.
+
+### Confirmed defects by severity, with commit SHAs
+
+17 confirmed defects across 10 batches, all fixed with live-trigger evidence and a red→green regression test; zero left unfixed once confirmed.
+
+| Severity | Count | IDs | Batch | Branch tip (short SHA) | PR |
+|---|---|---|---|---|---|
+| CRITICAL | 1 | B10-D1 | 10 | `dbfaff8` | [#34](https://github.com/georgehadji/Jobber/pull/34) |
+| HIGH | 8 | B5-D1, B5-D2, B5-D3, B5-D4, B6-D1, B7-D1, B7-D3, B7-D4 | 5, 6, 7 | `a890a97`, `c93d28d`, `5995e3a` | [#29](https://github.com/georgehadji/Jobber/pull/29), [#30](https://github.com/georgehadji/Jobber/pull/30), [#31](https://github.com/georgehadji/Jobber/pull/31) |
+| MEDIUM | 6 | B1-D1, B3-D1, B6-D2, B7-D2, B8-D1, B9-D1 | 1, 3, 6, 7, 8, 9 | `008f22b`, `b9bd546`, `c93d28d`, `5995e3a`, `dfac66f`, `172056f` | [#25](https://github.com/georgehadji/Jobber/pull/25), [#27](https://github.com/georgehadji/Jobber/pull/27), [#30](https://github.com/georgehadji/Jobber/pull/30), [#31](https://github.com/georgehadji/Jobber/pull/31), [#32](https://github.com/georgehadji/Jobber/pull/32), [#33](https://github.com/georgehadji/Jobber/pull/33) |
+| LOW | 2 | B2-D1, B4-D1 (= SEED-A) | 2, 4 | `2a3cfa4`, `4974e8e` | [#26](https://github.com/georgehadji/Jobber/pull/26), [#28](https://github.com/georgehadji/Jobber/pull/28) |
+
+The single CRITICAL finding (B10-D1) is also the most consequential of the whole hunt: a documented, explicitly-claimed-exhaustive "never submit an application" guard in the web UI's autonomous apply-drive loop had a real, reachable bypass (an icon-only submit control whose only accessible name is `aria-label`). Severity ranking otherwise followed the plan's own ladder (§1: CRITICAL = T1/T2/T5 realized, HIGH = T3/T4 realized or T1 reachable-but-guarded, MEDIUM = T6/T7, LOW = T8/unreachable) with B10-D1 as a documented exception — it realizes AGENTS.md invariant #7, a class the plan's T1-T8 table predates but the project's own Ethical Use section treats as non-negotiable.
+
+### Defect classes covered per batch
+
+| Batch | Scope | Threats flagged | Classes actually found |
+|---|---|---|---|
+| 1 | Tracker & lock core | T1, T7 | Dry-run/write-gating contract violation (T1-adjacent) |
+| 2 | Updater & layer boundary | T2, T5 | `?? x \|\| x` boundary-arithmetic footgun on the zero case |
+| 3 | Plugin trust boundary | T4, T5 | Dry-run contract violation, second instance (more severe: permanent silent data loss) |
+| 4 | Provider HTTP core | T4, T7 | Cache-key granularity mismatch (Seed A resolved) |
+| 5 | Provider fleet (class-sampled) | T4, T6 | Missing SSRF redirect hardening — a class neither of the two plan-flagged patterns predicted, found by sibling-diffing the fleet's own established convention |
+| 6 | Scanners & liveness | T4, T7 | SSRF via DNS rebinding (T4) + browser-lifecycle resource leak (T7) — both by the same sibling-diffing method as batch 5 |
+| 7 | Content generation | T3, T7 | Fabrication-gate wiring missing from 3 of 3 CV output formats, plus the gate's own non-metric detection blind to 3 common phrasings — all T3 |
+| 8 | LLM runners & analytics | T6, T5 | Missing `Number.isFinite` guard on a report's top-level score (T6); the flagged T5 (PII/secret leak) surface was never reached |
+| 9 | Go dashboard | T6, T8 | Silent wrong result — a 2-language toggle never updated for a 3rd added catalog; T8 not pursued |
+| 10 | Web UI | T4, T8 | AGENTS.md invariant #7 violation (a class outside the plan's own T1-T8 table); T4 and T8 not pursued |
+
+**Cross-batch pattern:** sibling-diffing — finding a file/function that implements a safety pattern correctly and checking every sibling that should implement the same pattern — is the single highest-yield technique in this entire hunt. It directly produced B4-D1(Seed A), B5-D1..D4, B6-D1, B6-D2, B7-D1/D3/D4, B8-D1, B9-D1, and B10-D1 — 15 of the 17 confirmed defects. Only B1-D1 (a missing dry-run gate with no correct sibling to diff against) and B2-D1 (a novel boundary-arithmetic pattern) were found by a different method (reading a documented contract against the code that's supposed to honor it).
+
+**Dry-run/write-gating contract** (B1-D1, B3-D1) was flagged after batch 1 as a recurring class worth checking wherever a `--dry-run`/`ctx.dryRun` surface exists; batch 5 grepped the entire 69-provider fleet for it and found zero instances (providers are read-only by contract, so the class has no surface there) — a genuine negative result, not an oversight.
+
+### Cleared candidates (the false-positive record)
+
+Investigated and found innocent, with a traced reason, not merely asserted: **~24 candidates** across batches 1-4 and 9 (batches 5-8 and 10 found zero clean candidates worth a separate row — every file opened in their core scope either yielded a confirmed defect or wasn't distinct enough to warrant its own cleared entry).
+
+- **Batch 1 (9):** `lib/file-lock.mjs`'s recover-guard staleness window (documented tradeoff, not a bug) — B1-C1; six dry-run-gating candidates across `dedup-tracker.mjs`/`set-status.mjs`/`outcome.mjs`/`reconcile-pipeline.mjs`/`tracker.mjs`/`fix-slugs.mjs`/`sync-pdf-flags.mjs`/`normalize-statuses.mjs`/`add-entry.mjs` — B1-C3 through C11.
+- **Batch 2 (3):** `update-system.mjs`'s re-exec/rollback path traced through to confirmed-innocent (B2-C1); the shallow-checkout class confirmed absent a second time (B2-C2); `doctor.mjs`'s auto-create paths have no dry-run contract to violate (B2-C3).
+- **Batch 3 (3):** `plugin-audit.mjs`'s direct-`fetch()` static-analysis gap — real, but within the module's own honest disclaimer (B3-C1); two TOCTOU-shaped concurrency candidates in `plugins.mjs`/`plugin-install.mjs`, cleared as design-scope (no concurrent caller exists for either) — B3-C2, C3.
+- **Batch 4 (2):** `providers/local-parser.mjs`'s command-execution trust boundary traced end to end, no bypass (B4-C1); `providers/_dns-cache.mjs`'s inflight-coalescing map depends on a Node.js `dns.lookup` contract guarantee that can't be violated from this module's own code (B4-C2).
+- **Batch 9 (~7):** the six OS-sibling files in `dashboard/internal/data/` (`tracker_replace_{windows,unix,other}.go`, `tracker_process_{windows,unix,other}.go`) read side by side, all semantically equivalent across build tags; `tracker_lock.go` itself read in full with no defect, already mirroring the audited Node `lib/file-lock.mjs` design.
+
+**Residual SUSPECTED (traced, not confirmed, not cleared — real risk, no live trigger fired):** 2. B1-C2 (`gcStaleSentinels` missing the PID-liveness check its sibling `gcStaleReportReservations` has — needs a >4h-alive process to manifest, out of this session's reach). B8's `estimateCost()` `RATES`-substring-match ordering fragility (safe with today's table; a future model-id addition that's a superstring of an earlier, differently-priced key would silently mis-price it).
+
+### Residual UNKNOWN set → runtime-instrumentation backlog
+
+Every batch closed PARTIAL (time-boxed, not budget-exhausted) — no batch came close to its allocated candidate budget (17 confirmed across ~116 allocated). The unread surface is the real backlog if this plan is ever revisited. Ranked by the batches' own "highest-value next hunt" notes, most consequential first:
+
+1. **`web/src/app/api/apply/{fill,prefill}/route.ts`** (batch 10) — the server-side half of the never-submit boundary; B10-D1 fixed the autonomous-drive client-side guard but the deterministic fill path's own equivalent (or lack of one) was never opened. Directly downstream of this hunt's one CRITICAL finding.
+2. **`build-cv-html.mjs`** (batch 7, 874 lines) — where a tailoring LLM's output actually lands, upstream of all four now-fixed fabrication-gate defects (B7-D1..D4). The single highest-value unread file directly in that fixed chain.
+3. **`dashboard/internal/ui/screens/pipeline.go`** (batch 9, 2,196 lines) — the single largest unaudited file across all 10 batches by line count, only surveyed by function signature.
+4. **`dashboard/open_*.go`** platform-dispatch family (batch 9) — a 5-way OS split for launching URLs/PDFs, the exact shape that has produced a confirmed defect in every batch where one was available (B6-D1/D2, B9-D1).
+5. **`scan-ats-full.mjs`** (batch 6, 997 lines) — parallel-worker sweep over a full public ATS dataset; the most direct unread T7 (resource-lifecycle) exposure left in the plan.
+6. **The T5 (PII/secret leak) surface in batch 8** — `contacts.mjs`, `paste-reply.mjs`, `reply-watch.mjs`/`reply-matcher.mjs`, `company-intel.mjs` — flagged as one of batch 8's two threat classes and never touched at all.
+7. **~55 of the 69-provider fleet** (batch 5) — individually unread beyond a mechanical grep for one specific pattern (missing SSRF redirect hardening, which the grep covered close to exhaustively). Parsing correctness, pagination edge cases, and every other defect class in these files is unknown.
+8. **Every remaining `api/*/route.ts` handler in `web/`** (batch 10) — the T4 untrusted-external-input surface batch 10 was specifically flagged to cover and didn't reach.
+9. **`web/src/components/assistant-console.tsx`** (686 lines, the largest single file in the entire web batch) and the `explore/*` cluster (~1,600 lines) — unopened.
+10. **The remaining ~37 of 42 files in batch 8's scope** (`openrouter-runner.mjs`, `gemini-eval.mjs`, and the rest of the LLM-runner/analytics cluster) — only 5 files read in full out of 42.
+
+Batch 11 (the test harness) is not on this list — it is out of scope by design until every other batch's fix has landed, so the harness itself can be audited against a clean, fully-patched baseline rather than mid-hunt.
+
+---
