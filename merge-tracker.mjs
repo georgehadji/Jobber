@@ -138,7 +138,9 @@ function sleep(ms) {
 // must NOT hold the merge lock. Concurrent writers wait on the lock; keeping
 // the directory walk out of the critical section shaves the readdir+stat cost
 // off every lock-waiter's block time.
-gcStaleSentinels(join(REPORTS_ROOT, 'reports'));
+// --dry-run must perform zero real writes (every other mutation in this file
+// is gated on !DRY_RUN) — this delete was the one unguarded exception.
+if (!DRY_RUN) gcStaleSentinels(join(REPORTS_ROOT, 'reports'));
 
 let trackerLock;
 try {
