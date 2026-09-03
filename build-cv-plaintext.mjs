@@ -19,6 +19,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderPlaintextCv } from './lib/cv-plaintext.mjs';
+import { assertFacts } from './verify-cv-facts.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
@@ -78,6 +79,14 @@ async function main() {
     process.exit(1);
   }
   const text = renderPlaintextCv(payload);
+  // Same code-level gate the other two CV output paths apply (B7-D1, B7-D3) —
+  // this plaintext path had no fact check at all before writing the file.
+  try {
+    assertFacts(text, { label: 'CV (plaintext)' });
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
   try {
     await writeFile(absOutput, text, 'utf-8');
   } catch (err) {

@@ -237,7 +237,7 @@ console.log('\n20b. LaTeX-tex in-place tailoring (extract / patch / compile-only
 
 try {
   const { detectFamily, buildManifest, applyPatches } = await import(pathToFileURL(join(ROOT, 'lib/latex-content.mjs')).href);
-  const { validateLatexContent } = await import(pathToFileURL(join(ROOT, 'generate-latex.mjs')).href);
+  const { validateLatexContent, compileLatexFile } = await import(pathToFileURL(join(ROOT, 'generate-latex.mjs')).href);
 
   const resumeFixture = readFileSync(join(ROOT, 'examples/latex-tex/resume-subheading.tex'), 'utf-8');
   const tabularFixture = readFileSync(join(ROOT, 'examples/latex-tex/tabularx-itemize.tex'), 'utf-8');
@@ -374,6 +374,41 @@ try {
     fail('CLI patch round-trip did not update the .tex file');
   }
   rmSync(extractDir, { recursive: true, force: true });
+
+  // B7-D1: compileLatexFile() must run the CV fact gate before ever touching
+  // a LaTeX engine — before this fix it had no fact check at all (structural
+  // validation only), so a fabricated metric compiled straight through.
+  // Confirmed live against a real pdflatex install during defect-hunt batch 7
+  // (see docs/DEFECT-HUNT-LEDGER.md B7-D1); this test only needs to confirm
+  // the gate fires before compilation is attempted, not exercise a real
+  // engine (no toolchain dependency in CI).
+  const factGateTexDir = mkdtempSync(join(tmpdir(), 'latex-fact-gate-'));
+  const factGateTexPath = join(factGateTexDir, 'fabricated.tex');
+  const fabricatedTex = [
+    '\\documentclass{article}',
+    '\\pdfgentounicode=1',
+    '\\begin{document}',
+    '\\section{Experience}',
+    '\\resumeSubheading{x}{y}{z}{w}',
+    '\\resumeItem{Increased company-wide revenue by 500% at Acme Corp.}',
+    '\\resumeProjectHeading{x}{y}',
+    '\\section{Education}', 'text',
+    '\\section{Skills}', 'text',
+    '\\section{Projects}', 'text',
+    '\\end{document}',
+  ].join('\n');
+  writeFileSync(factGateTexPath, fabricatedTex, 'utf-8');
+  const factGateReport = await compileLatexFile(factGateTexPath, fabricatedTex, null, false);
+  rmSync(factGateTexDir, { recursive: true, force: true });
+  if (
+    factGateReport.valid === false &&
+    factGateReport.issues.some(i => /Fact check failed for CV \(LaTeX\)/.test(i)) &&
+    factGateReport.engine === undefined
+  ) {
+    pass('compileLatexFile() blocks a fabricated metric before attempting compilation');
+  } else {
+    fail(`compileLatexFile() did not block the fabricated CV: ${JSON.stringify(factGateReport)}`);
+  }
 } catch (e) {
   fail(`LaTeX-tex tailoring test crashed: ${e.message}`);
 }
