@@ -150,6 +150,52 @@ Budget: 1 confirmed (Seed A resolved) / 12 allocated. Time-boxed close.
 
 ---
 
+## Batch 5 — Provider fleet (class-sampled) — 2026-09-02 — PARTIAL
+
+Baseline: 3525 passed / 0 failed / 1 warning on clean `main` (same baseline as batches 1-4 — none merged yet). Post-fix full run: 3529 passed / 0 failed / 1 warning (+4, the new per-provider assertions in `tests/providers/ats-ssrf-hardening.test.mjs`).
+Budget: 4 confirmed (one class, 4 instances) / 15 allocated. Class-sampled per plan §4: one representative per structural family hunted fully, then the two flagged recurring classes (dry-run contract, `?? x) || x` boundary arithmetic) grepped fleet-wide.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B5-D1 | `providers/radancy.mjs` — 3 `ctx.fetchJson`/`ctx.fetchText` call sites | trust boundary / SSRF via server-side redirect (same class as `#1440`, `tests/providers/ats-ssrf-hardening.test.mjs`'s pre-existing lever/ashby coverage) | `providers/_http.mjs`'s `fetchWithTimeout` defaults `redirect: 'follow'` when a caller omits the option; every other GET/POST provider in the fleet explicitly passes `redirect: 'error'` to block a company's server from redirecting the crawler off-host (documented inline in 7+ sibling files as "prevents SSRF via a server-side redirect") — these 4 omitted it | FIRED — spun up two real local HTTP servers (one 302-redirecting to the other, standing in for an internal/metadata endpoint) and called the real `fetchText` from `_http.mjs` exactly as each provider calls it: with no `redirect` option, the request followed the redirect and reached the "internal" server; with `redirect: 'error'` (the fix), it threw instead | NO-DEFENSE — unconditional follow, reachable on every fetch this provider makes | **VERIFIED DEFECT** | this batch's branch (`hunt/batch-5-provider-fleet`); `redirect: 'error'` added to all 3 call sites |
+| B5-D2 | `providers/deutschebahn.mjs` — 1 `ctx.fetchText` call site | same class as B5-D1 | same | same trigger method, same file family (single-company HTML scraper "pattern: ibm/dassault/rheinmetall" per this file's own header comment — `ibm.mjs` and `dassault.mjs` DO pass `redirect: 'error'`; this later copy dropped it) | NO-DEFENSE | **VERIFIED DEFECT** | same branch; `redirect: 'error'` added |
+| B5-D3 | `providers/rheinmetall.mjs` — 1 `ctx.fetchText` call site | same class as B5-D1 | same | same trigger method, same family | NO-DEFENSE | **VERIFIED DEFECT** | same branch; `redirect: 'error'` added |
+| B5-D4 | `providers/hecklerkoch.mjs` — 1 `ctx.fetchText` call site | same class as B5-D1 | same | same trigger method, same family | NO-DEFENSE | **VERIFIED DEFECT** | same branch; `redirect: 'error'` added |
+
+### Class-sampling results (Batch 5)
+
+**Representative families hunted fully, no defect found beyond B5-D1..D4:** `greenhouse.mjs` (Greenhouse-shaped JSON), `lever.mjs` (Lever-shaped JSON), `ashby.mjs` (Ashby posting-API + compensation parsing), `workday.mjs` (CXS pagination/retry/early-stop — the most structurally complex file read this batch), `successfactors.mjs` (dual-transport RMK tile scrape + CSB JSON, largest file in the fleet), `dassault.mjs` and `radancy.mjs` (regex-over-HTML/XML scrapers), `arbetsformedlingen.mjs` / `apec.mjs` / `eures.mjs` (the three newest zero-key gov/EU providers added in `b31733a`, least-reviewed by wall-clock age).
+
+**`?? x) || x` boundary-arithmetic class (B2-D1's pattern):** grepped fleet-wide (`\?\?.*\|\|` across `providers/*.mjs`) — **0 instances.** This class needs a numeric-default footgun shape that doesn't occur in provider code (providers don't compute derived numeric defaults the way `sunset.mjs` did); not a defect surface here.
+
+**`ctx.dryRun`/`--dry-run` contract class (B1-D1's and B3-D1's pattern):** grepped fleet-wide (`dryRun|dry_run|dry-run` across `providers/*.mjs`) — **0 instances**, and structurally so: no provider in the fleet performs a write at all (`fetch()` is read-only by contract — it returns `Job[]`, the caller persists). This class has no surface in `providers/`; the write side (where B1-D1 and B3-D1 actually live) is `merge-tracker.mjs` and the plugin engine, both already covered in batches 1 and 3.
+
+**New class found instead — missing SSRF redirect hardening:** not one of the two flagged classes, but the same discovery method (grep the established convention across the fleet, diff against who's missing it) surfaced a real, confirmed 4-instance class. `tests/providers/ats-ssrf-hardening.test.mjs` (added under `#1440`) already existed for exactly this defect shape but only ever covered `lever.mjs`/`ashby.mjs` — it was never generalized, so nothing caught the drift when `radancy.mjs`/`deutschebahn.mjs`/`rheinmetall.mjs`/`hecklerkoch.mjs` were added without it. Fixed both the 4 provider files and generalized the existing test file (same location, not a new file) to cover all 4.
+
+**Not exhaustively swept:** the remaining ~55 providers not individually read this batch were NOT each opened — per plan §4 this batch's completeness claim is over defect classes examined (redirect hardening, dry-run contract, boundary arithmetic), not over every provider instance. The redirect-hardening grep itself (`ctx\.fetchJson\(|ctx\.fetchText\(` vs `redirect:\s*['"](?:error|manual)['"]` counts, diffed) *did* cover the full 69-file fleet mechanically, so that specific class's coverage is closer to exhaustive than the others — see below.
+
+### Coverage & residual risk (Batch 5)
+
+**Surface audited:** 9 providers read in full (`greenhouse.mjs`, `lever.mjs`, `ashby.mjs`, `workday.mjs`, `successfactors.mjs`, `dassault.mjs`, `radancy.mjs`, `deutschebahn.mjs`/`rheinmetall.mjs`/`hecklerkoch.mjs` as one family, `arbetsformedlingen.mjs`, `apec.mjs`, `eures.mjs`) plus a fleet-wide mechanical grep (fetch-call-site count vs. redirect-guard count, diffed per file) across all 69 non-`_` files in `providers/` for the SSRF-redirect class, and a second fleet-wide grep for each of the two plan-flagged classes.
+
+**Surface NOT audited:**
+- ~55 providers not individually opened this batch (their `fetch()`/`detect()` logic, parsing correctness, pagination edge cases were not read) — only mechanically grepped for the one redirect-hardening pattern, which cannot catch logic bugs, only the specific missing-option shape.
+- No live end-to-end run of any provider against a real or mocked ATS server in this batch (existing `tests/providers/*.test.mjs` fixtures were run as part of the full suite, not independently re-derived).
+- `providers/_config-utils.mjs`'s `intInRange` and `providers/_profile-keywords.mjs`'s `resolveProfileKeywords` — used by several providers this batch (`arbetsformedlingen`, `apec`, `eures`) but not independently re-audited; both were already read in full in batch 4.
+
+**Defect classes covered:** trust boundary / SSRF via server-side redirect — 4 confirmed instances, all fixed, all regression-tested (including a revert-and-confirm-red step per guardrail #5). `?? x) || x` boundary arithmetic — grepped fleet-wide, 0 instances. `ctx.dryRun` contract — grepped fleet-wide, 0 instances (no write surface exists in `providers/`).
+
+**Confirmed defects:** CRITICAL 0 / HIGH 1 (B5-D1..D4, counted as one class — a compromised or misconfigured company career-site server could redirect the crawler to an internal address reachable from wherever Jobber runs; MEDIUM-in-isolation per instance, HIGH as a class given 4 live instances and an existing test file that was supposed to prevent exactly this) / MEDIUM 0 / LOW 0.
+**Cleared (innocent):** 0 individual candidates this batch (the 9 representative providers yielded no C-rows — clean on full read, not merely untested).
+**Residual SUSPECTED:** 0.
+**Residual UNKNOWN:** 0 for the classes examined; the ~55 unread providers are UNKNOWN for any class other than SSRF-redirect-hardening.
+
+**Clean-claim, scoped:** One representative per structural family (JSON-ATS ×3, complex-paginated ×2, regex-HTML-scraper ×2, newest-zero-key-gov ×3) was read in full with no defect beyond the one class found. The SSRF-redirect-hardening class was checked mechanically across the *entire* fleet (69 files), not just the samples — this is the one claim in this batch that approaches exhaustive. This is NOT a claim that the ~55 unread providers are free of parsing bugs, pagination edge cases, or any defect class other than missing redirect hardening.
+
+**Highest-value next hunt:** the ~55 providers never individually opened across batches 1-5 are the largest unaudited surface left in the entire plan. If a future batch revisits `providers/`, prioritize the ones sharing `radancy.mjs`'s "modeled on an older sibling, later copy dropped a hardening line" shape — i.e. diff each provider against the sibling its own header comment cites as its pattern origin, the same method that found B5-D1..D4.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
