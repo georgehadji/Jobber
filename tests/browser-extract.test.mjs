@@ -4,7 +4,7 @@
 import { pass, fail, ROOT } from './helpers.mjs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
-import { mkdtempSync, writeFileSync, rmSync } from 'fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 
 console.log('\nbrowser-extract.mjs (config + normalizers)');
@@ -124,6 +124,28 @@ try {
   );
   if (many.jobs.length === 5) pass('normalizeListing respects the max cap');
   else fail(`normalizeListing max => ${many.jobs.length}`);
+
+  // B6-D1: the per-request route guard must resolve the hostname (DNS
+  // rebinding defense), not just pattern-match the literal string — a
+  // hostname with no private-IP shape (e.g. an attacker's own domain) can
+  // still resolve to an internal address. rejectPrivateOrInvalid() alone
+  // (already covered above via liveness-browser.mjs's own tests) cannot
+  // catch that; validateUrlSecurity() is liveness-browser.mjs's DNS-based
+  // check for exactly this, and browser-extract.mjs's route handler
+  // previously never called it. A live Chromium+DNS-override reproduction
+  // confirmed this defect and its fix (see docs/DEFECT-HUNT-LEDGER.md
+  // B6-D1) — not repeated here per guardrail #3 (no real network/browser in
+  // the automated suite); this locks the wiring so it can't silently drop
+  // again.
+  const source = readFileSync(join(ROOT, 'browser-extract.mjs'), 'utf-8');
+  const importsGuard = /import\s*\{[^}]*\bvalidateUrlSecurity\b[^}]*\}\s*from\s*['"]\.\/liveness-browser\.mjs['"]/.test(source);
+  const routeBlock = source.match(/context\.route\(['"]\*\*\/\*['"][\s\S]*?\}\);/);
+  const callsGuardInRoute = !!routeBlock && /validateUrlSecurity\(/.test(routeBlock[0]);
+  if (importsGuard && callsGuardInRoute) {
+    pass('browser-extract.mjs imports validateUrlSecurity and calls it inside its context.route() guard');
+  } else {
+    fail(`browser-extract.mjs's route guard is missing the DNS-based check (importsGuard=${importsGuard}, callsGuardInRoute=${callsGuardInRoute})`);
+  }
 
 } catch (e) {
   fail(`browser-extract tests crashed: ${e.message}`);

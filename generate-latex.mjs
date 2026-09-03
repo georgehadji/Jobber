@@ -18,6 +18,7 @@ import { resolve, basename, dirname, join } from 'path';
 import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { assertFacts } from './verify-cv-facts.mjs';
 
 const MIN_SECTIONS = 4;
 
@@ -118,6 +119,20 @@ export async function compileLatexFile(absPath, content, outputPath, compileOnly
   };
 
   if (issues.length > 0) {
+    return report;
+  }
+
+  // Same code-level gate generate-pdf.mjs/generate-cover-letter.mjs already
+  // apply (B7-D1) — the LaTeX CV path had no fact check at all, structural
+  // or otherwise, before compiling and publishing a PDF. Routed into the
+  // same issues/valid report shape as every other validation check in this
+  // function, rather than thrown, since compileLatexFile() never throws for
+  // a validation failure and its only caller (main()) has no top-level catch.
+  try {
+    assertFacts(content, { label: 'CV (LaTeX)' });
+  } catch (err) {
+    report.issues = [err.message];
+    report.valid = false;
     return report;
   }
 
