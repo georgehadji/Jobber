@@ -55,6 +55,29 @@ const SIMPLE_CLAIM_PATTERNS = [
   /\b\d+(?:\.\d+)?\s?x\b/gi,
 ];
 
+// A capitalized 1-5-word phrase, e.g. "Chief Technology Officer" or "Google".
+// Shared building block for the two patterns below — kept separate from the
+// original `worked at`/`served as` triggers (which stay untouched) because
+// these anchor on structure ("X at Y", a trailing date range) rather than a
+// fixed verb phrase, catching phrasings those triggers miss entirely
+// ("As CTO at Google", "Currently CTO at Google", a resume-header line).
+const TITLE_PHRASE = String.raw`[A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4}`;
+const COMPANY_PHRASE = String.raw`[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}`;
+// 4-digit year through another 4-digit year / "present" / "current" — the
+// signal that anchors the resume-header pattern below. An ordinary section
+// header ("Skills — Python, Docker") never carries this, which is what keeps
+// that pattern from firing on non-employment "X — Y" lines.
+const YEAR_RANGE = String.raw`\d{4}\s*[-–—]\s*(?:\d{4}|[Pp]resent|[Cc]urrent)\b`;
+// "As/Currently $Title at $Company" — ordinary narrative CV/cover-letter
+// phrasing. Requires the literal "at" between two capitalized phrases, so it
+// does not fire on "recognized as a Top Employer" (no trailing "at X") or
+// "As a team, we shipped fast" (no capitalized phrase after "a").
+const AS_AT_EMPLOYER_RE = new RegExp(String.raw`\b(?:[Aa]s|[Cc]urrently)\s+(?:an?\s+|the\s+)?${TITLE_PHRASE}\s+at\s+(${COMPANY_PHRASE})`, 'g');
+const AS_AT_TITLE_RE = new RegExp(String.raw`\b(?:[Aa]s|[Cc]urrently)\s+(?:an?\s+|the\s+)?(${TITLE_PHRASE})\s+at\s+${COMPANY_PHRASE}`, 'g');
+// "$Company — $Title | $YearRange" — a resume-style experience header line.
+const HEADER_EMPLOYER_RE = new RegExp(String.raw`(${COMPANY_PHRASE})\s*[—–|]\s*${TITLE_PHRASE}\s*\|?\s*${YEAR_RANGE}`, 'g');
+const HEADER_TITLE_RE = new RegExp(String.raw`${COMPANY_PHRASE}\s*[—–|]\s*(${TITLE_PHRASE})\s*\|?\s*${YEAR_RANGE}`, 'g');
+
 /** Read a UTF-8 file when it exists, otherwise return an empty string. */
 function readIfExists(path) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
@@ -106,6 +129,10 @@ export function factClaims(text) {
   const patterns = [
     ['employer', /\b(?:worked at|joined|employer\s*:\s*|company\s*:\s*)\s*([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4})/g],
     ['title', /\b(?:served as|worked as|title\s*:\s*|role\s*:\s*)\s*(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})|\b(?:worked at|joined)\s+[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+as\s+(?:an?\s+|the\s+)?([A-Z][\w/-]*(?:\s+[A-Z][\w/-]*){0,4})/g],
+    ['employer', AS_AT_EMPLOYER_RE],
+    ['title', AS_AT_TITLE_RE],
+    ['employer', HEADER_EMPLOYER_RE],
+    ['title', HEADER_TITLE_RE],
     ['tool', /\b(?:using|built with|worked with|technologies?\s*:\s*|tech stack\s*:\s*)([^.;\n]+?)(?=\s+\bfor\b|[.;\n]|$)/gi],
   ];
   for (const [kind, pattern] of patterns) {

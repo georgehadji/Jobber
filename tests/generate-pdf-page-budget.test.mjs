@@ -28,6 +28,8 @@ copyFileSync(join(ROOT, 'generate-pdf.mjs'), script);
 // both into the sandbox too or the isolated script fails to load with
 // ERR_MODULE_NOT_FOUND before it can parse any --max-pages arg.
 copyFileSync(join(ROOT, 'theme-style.mjs'), join(sandbox, 'theme-style.mjs'));
+// generate-pdf.mjs also imports ./verify-cv-facts.mjs (the CV fact gate, B7-D1).
+copyFileSync(join(ROOT, 'verify-cv-facts.mjs'), join(sandbox, 'verify-cv-facts.mjs'));
 mkdirSync(join(sandbox, 'lib'), { recursive: true });
 copyFileSync(join(ROOT, 'lib', 'pdf-text.mjs'), join(sandbox, 'lib', 'pdf-text.mjs'));
 mkdirSync(playwrightStub, { recursive: true });
