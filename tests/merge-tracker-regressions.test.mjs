@@ -11,7 +11,7 @@
  * files are auto-run by both test-all.mjs and test-runner.mjs).
  */
 
-import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, utimesSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync, spawn, spawnSync } from 'child_process';
@@ -1121,4 +1121,54 @@ try {
 } catch (e) {
   fail(`merge-tracker concurrent write test crashed: ${e.message}`);
 }
+}
+
+// ── MERGE-TRACKER --dry-run MUST PERFORM ZERO WRITES (defect-hunt batch 1, D1) ──
+// gcStaleSentinels() ran unconditionally at module top-level, before the
+// --dry-run check — the one mutation in the file not gated behind !DRY_RUN,
+// silently deleting a real reservation sentinel even in "preview" mode.
+console.log('\n🧪 Testing merge-tracker --dry-run performs zero writes (stale sentinel GC)...');
+try {
+  const dryRunTmp = mkdtempSync(join(tmpdir(), 'jobber-merge-dryrun-'));
+  try {
+    const dataDir = join(dryRunTmp, 'data');
+    const reportsDir = join(dryRunTmp, 'reports');
+    const additionsDir = join(dryRunTmp, 'additions');
+    mkdirSync(dataDir, { recursive: true });
+    mkdirSync(reportsDir, { recursive: true });
+    mkdirSync(additionsDir, { recursive: true });
+
+    const tracker = join(dataDir, 'applications.md');
+    writeFileSync(tracker,
+      '| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n' +
+      '|---|------|---------|------|-------|--------|-----|--------|-------|\n');
+
+    const sentinel = join(reportsDir, '042-RESERVED.md');
+    writeFileSync(sentinel, JSON.stringify({ pid: 999999, token: 'x', created_at: new Date(0).toISOString() }));
+    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000); // > SENTINEL_MAX_AGE_MS (4h)
+    utimesSync(sentinel, fiveHoursAgo, fiveHoursAgo);
+
+    const dryRunResult = run(NODE, ['merge-tracker.mjs', '--dry-run'], { env: { ...process.env, JOBBER_TRACKER: tracker, JOBBER_ADDITIONS: additionsDir } });
+    if (dryRunResult === null) {
+      fail('merge-tracker.mjs --dry-run crashed during sentinel-GC regression test');
+    } else if (existsSync(sentinel)) {
+      pass('--dry-run leaves a stale reservation sentinel untouched');
+    } else {
+      fail('--dry-run deleted a real file (stale reservation sentinel) — the flag must perform zero writes');
+    }
+
+    // No-regression: the real (non-dry-run) path must still GC stale sentinels.
+    const realResult = run(NODE, ['merge-tracker.mjs'], { env: { ...process.env, JOBBER_TRACKER: tracker, JOBBER_ADDITIONS: additionsDir } });
+    if (realResult === null) {
+      fail('merge-tracker.mjs crashed during sentinel-GC no-regression check');
+    } else if (!existsSync(sentinel)) {
+      pass('real (non-dry-run) merge still GCs stale reservation sentinels');
+    } else {
+      fail('real (non-dry-run) merge no longer GCs stale reservation sentinels — regression');
+    }
+  } finally {
+    rmSync(dryRunTmp, { recursive: true, force: true });
+  }
+} catch (e) {
+  fail(`merge-tracker --dry-run sentinel-GC test crashed: ${e.message}`);
 }
