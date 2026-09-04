@@ -17,9 +17,18 @@
  * Discovered files share the module-level counters in tests/helpers.mjs
  * (pass/fail/warn). The canonical total is therefore the SUM of every
  * file's assertions — and this runner reproduces exactly that sum, because
- * it uses the SAME in-process import mechanism test-all uses. A file that
- * prints its own "✅" lines (e.g. application-artifacts.test.mjs) does NOT
- * bump the shared counters and is NOT counted here — matching test-all.
+ * it uses the SAME in-process import mechanism test-all uses.
+ *
+ * This holds only while every discovered file reports through pass()/fail()/
+ * warn(). A file that instead prints its own "✅" lines with console.log does
+ * NOT bump the shared counters, so serial mode (which reads the counters)
+ * scores it 0 while --parallel mode (which scrapes the printed markers from
+ * child stdout) scores its real assertions — the same suite totalling two
+ * different numbers depending on which runner you invoked, both reported as
+ * confidently green. application-artifacts.test.mjs was the last such file and
+ * was converted in defect-hunt batch 12 (B12-D1); all discovered files now use
+ * the shared counters, and serial and --parallel totals agree exactly.
+ * tests/counter-parity.test.mjs enforces that for new files.
  *
  * Usage:
  *   node test-runner.mjs                 # serial, in-process (golden parity)
@@ -33,8 +42,10 @@
  * and the runner parses the shared-counter markers (✅/❌/⚠️) from the
  * process's stdout to attribute results per file. Files that call
  * process.exit() are refused (same guard as test-all #1916). Counts in
- * --parallel mode are authoritative for files that use pass()/fail()/warn()
- * only; files printing their own markers are counted as best-effort.
+ * --parallel mode are authoritative for files that use pass()/fail()/warn().
+ * A file printing its own markers would be counted best-effort here and not
+ * at all in serial mode — tests/counter-parity.test.mjs refuses that shape so
+ * the two modes cannot drift apart again.
  */
 
 import { readFileSync, existsSync } from 'fs';
