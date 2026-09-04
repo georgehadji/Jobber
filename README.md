@@ -24,7 +24,7 @@ Jobber turns any agent-skill-compatible AI coding CLI into a job-search pipeline
 
 - **Structured evaluation** — every offer scored across weighted dimensions (blocks A–F), plus an independent **Block G posting-legitimacy check** that flags scams and ghost jobs without touching the 1–5 fit score.
 - **Tailored CV and cover-letter PDFs** — ATS-oriented documents generated per job description from your own `cv.md`.
-- **Zero-token portal scanning** — Greenhouse, Ashby, Lever, Workday, iCIMS and 55+ provider modules queried through public APIs and feeds, no LLM cost.
+- **Zero-token portal scanning** — Greenhouse, Ashby, Lever, Workday, iCIMS and 70+ provider modules queried through public APIs and feeds, no LLM cost.
 - **Batch processing** — evaluate many offers in parallel using headless CLI workers.
 - **A single source of truth** — one Markdown tracker with automated merge, dedup, status normalization, and integrity checks.
 - **Research, not just applications** — company deep-dives, contact discovery, and draft outreach.
@@ -97,6 +97,12 @@ In CLIs that register slash commands:
 /jobber apply          → assisted application-form filling
 /jobber contacto       → find the right contact + draft outreach
 /jobber deep           → structured 6-axis company research
+/jobber triage         → fast first-pass filter before a full evaluation
+/jobber followup       → follow-up cadence and seeded reminders
+/jobber reply-watch    → classify employer replies into tracker updates
+/jobber interview      → prep plans, practice sessions, and debriefs
+/jobber offer-prep     → clause walk on an offer + salary-gap analysis
+/jobber patterns       → rejection patterns and targeting analysis
 /jobber outcome        → record an outcome and archive artifacts
 ```
 
@@ -174,7 +180,7 @@ npm run serve:dashboard   # launch the TUI
 npm run build:dashboard   # optional standalone binary
 ```
 
-Six filter tabs, four sort modes, grouped/flat views, lazy previews, inline status changes. An experimental opt-in web UI lives in [`web/`](web/README.md) — nothing runs unless you start it.
+Nine filter tabs, seven sort modes, a toggleable column picker, grouped/flat views, lazy previews, and inline status changes. An experimental opt-in web UI lives in [`web/`](web/README.md) — nothing runs unless you start it.
 
 ## Project structure
 
@@ -210,7 +216,7 @@ Updates replace the system layer and leave the user layer untouched. Full rules:
 ## Testing
 
 ```bash
-npm test                      # parallel per-file runner
+npm test                      # per-file runner (serial; --parallel N for workers)
 node test-all.mjs             # full canonical suite
 node test-all.mjs --quick     # skip the dashboard build
 node verify-pipeline.mjs      # tracker/report integrity health check
@@ -228,7 +234,7 @@ Test files in `tests/**/*.test.mjs` are auto-discovered — add a file, no regis
 | CV design | `templates/cv-template.html` / `.tex` |
 | Output language / market vocabulary | `language.output` and `language.modes_dir` in `config/profile.yml` |
 
-Market-specific mode sets ship for German, French, Arabic, Japanese, Turkish, and Hindi job markets, each with local employment vocabulary. Output language and market vocabulary are independent axes.
+Market-specific mode sets ship for 18 job markets — Arabic, Chinese (Simplified and Traditional), Danish, Dutch, French, German, Hindi, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Turkish, and Ukrainian — each with local employment vocabulary. Output language and market vocabulary are independent axes.
 
 **The system is designed to be edited by your AI CLI itself.** Ask it to change scoring weights, add companies, or rewrite a mode — it reads the same files it runs on.
 
