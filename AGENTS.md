@@ -142,12 +142,24 @@ Default modes are in `modes/` (English). Market-specific mode sets (each include
 
 | Market | Dir | Evaluation / Apply | Local vocabulary (examples) |
 |--------|-----|--------------------|------------------------------|
-| German (DACH) | `modes/de/` | `angebot` / `bewerben` | 13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag |
-| French (FR/BE/CH/LU) | `modes/fr/` | `offre` / `postuler` | CDI/CDD, SYNTEC, RTT, 13e mois, titres-restaurant, CSE |
 | Arabic (Middle East) | `modes/ar/` | `fursah` / `takdeem` | مكافأة نهاية الخدمة, التأمينات الاجتماعية, فترة التجربة |
-| Japanese (Japan) | `modes/ja/` | `kyujin` / `oubo` | 正社員, 賞与, みなし残業, 年俸制, 36協定 |
-| Turkish (Turkey) | `modes/tr/` | `is-ilani` / `basvuru` | SGK, kıdem tazminatı, brüt/net maaş, BES |
+| Chinese, Simplified (Mainland China) | `modes/zh/` | `oferta` / `apply` | 五险一金, 年终奖, 试用期, 竞业限制, 996/弹性工作制, 落户政策 |
+| Chinese, Traditional (Taiwan) | `modes/zh-TW/` | `oferta` / `apply` | 勞保, 健保, 勞退（雇主提繳 6%）, 年終獎金, 競業禁止（勞基法第 9-1 條）, 責任制（第 84-1 條）, 月薪 × 14 |
+| Danish (Denmark) | `modes/da/` | `oferta` / `apply` | overenskomst, funktionærloven, ferieloven, opsigelsesvarsel, prøvetid, feriepenge, A-kasse |
+| Dutch (NL/BE) | `modes/nl/` | `vacature` / `solliciteren` | cao, vakantiegeld, pensioen, dertiende maand, proefperiode, opzegtermijn |
+| French (FR/BE/CH/LU) | `modes/fr/` | `offre` / `postuler` | CDI/CDD, SYNTEC, RTT, 13e mois, titres-restaurant, CSE |
+| German (DACH) | `modes/de/` | `angebot` / `bewerben` | 13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag |
 | Hindi (India) | `modes/hi/` | `naukri` / `aavedan` | CTC vs. in-hand, PF/EPF, Notice period/buyout, ESOPs |
+| Indonesian (Indonesia) | `modes/id/` | `lowongan` / `melamar` | THR, BPJS Kesehatan & Ketenagakerjaan, PKWT/PKWTT, pesangon, UMR/UMP/UMK, PPh 21 |
+| Italian (Italy) | `modes/it/` | `annuncio` / `candidarsi` | CCNL, TFR, buoni pasto, tredicesima, quattordicesima, periodo di prova, inquadramento Quadro |
+| Japanese (Japan) | `modes/ja/` | `kyujin` / `oubo` | 正社員, 賞与, みなし残業, 年俸制, 36協定 |
+| Korean (South Korea) | `modes/ko/` | `gonggo` / `jiwon` | 정규직, 계약직, 수습기간, 포괄임금제, 퇴직금, 4대 보험, 스톡옵션/RSU |
+| Polish (Poland) | `modes/pl/` | `oferta` / `aplikuj` | umowa o pracę (UoP), B2B, umowa zlecenie, okres próbny, okres wypowiedzenia, ZUS, PPK |
+| Portuguese (Brazil) | `modes/pt/` | `oferta` / `aplicar` | CLT vs PJ, 13º salário, FGTS, PLR, vale-refeição, aviso prévio |
+| Russian (Russia) | `modes/ru/` | `oferta` / `apply` | ТК РФ, НДФЛ 13%, ДМС, испытательный срок, ТК / ГПХ / самозанятость, gross vs net |
+| Spanish (Spain / LatAm) | `modes/es/` | `oferta` / `aplicar` | convenio colectivo, pagas extra, IRPF, Seguridad Social, período de prueba, preaviso, contrato indefinido/temporal |
+| Turkish (Turkey) | `modes/tr/` | `is-ilani` / `basvuru` | SGK, kıdem tazminatı, brüt/net maaş, BES |
+| Ukrainian (Ukraine) | `modes/ua/` | `oferta` / `apply` | ФОП 3-тя група, Дія City, КЗпП, ПДФО 18% + військовий збір, медстрахування |
 
 ### Output Language vs Market Modes
 
