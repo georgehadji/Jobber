@@ -2011,7 +2011,14 @@ try {
   } catch (e) {
     warn(`symlink traversal test skipped: ${e.message}`);
   }
-  if (validateManifest({ ...base, id: 'y' }, '/tmp/x', 'x') === null) pass('manifest id must equal the directory name');
+  // Uses the real fixture directory, not a hardcoded '/tmp/x' (B15-D2). At a
+  // path that does not exist, EVERY manifest is rejected — for the missing
+  // entry, not the id — so the assertion passed without depending on the id
+  // rule at all. It happened to be correct only because the id check runs
+  // before the entry check; reorder them and it would still have passed. vm()
+  // points at a directory where the unmodified base is accepted, so id is the
+  // only variable and the rejection can only be the id rule.
+  if (vm({ ...base, id: 'y' }) === null) pass('manifest id must equal the directory name');
   else fail('id != dirname should be rejected');
   if (vm({ ...base, apiVersion: 2 }) === null) pass('unknown apiVersion is rejected (forward-compat gate)');
   else fail('apiVersion 2 should be rejected');
@@ -2092,6 +2099,9 @@ try {
     if (u === 'https://93.184.216.34/start') return new Response(null, { status: 302, headers: { location: 'https://93.184.216.35/final' } });
     if (u === 'https://93.184.216.35/final') return new Response(JSON.stringify({ ok: 1 }), { status: 200 });
     if (u === 'https://93.184.216.34/bad') return new Response(null, { status: 302, headers: { location: 'https://10.0.0.1/x' } });
+    // Same-host redirect: the other half of the credential rule (B15-D3).
+    if (u === 'https://93.184.216.34/same') return new Response(null, { status: 302, headers: { location: 'https://93.184.216.34/same2' } });
+    if (u === 'https://93.184.216.34/same2') return new Response('{}', { status: 200 });
     return new Response('nope', { status: 404 });
   };
   try {
@@ -2104,10 +2114,26 @@ try {
     fetchCalls.length = 0;
     const r = await gctx.fetch('https://93.184.216.34/start', { headers: { Authorization: 'Bearer secret' } });
     const cross = fetchCalls.find(c => c.url === 'https://93.184.216.35/final');
+    const first = fetchCalls.find(c => c.url === 'https://93.184.216.34/start');
     if (r.status === 200 && cross) pass('ctx.fetch follows a redirect to an allowlisted host');
     else fail('ctx.fetch should follow an in-allowlist redirect');
-    if (cross && !Object.keys(cross.headers).some(k => /^authorization$/i.test(k))) pass('ctx.fetch strips Authorization across a hostname change');
+    const hasAuth = (c) => !!c && Object.keys(c.headers).some(k => /^authorization$/i.test(k));
+    // The positive control (B15-D3): without it, "strips on hostname change" is
+    // indistinguishable from "never forwards the header at all" — a ctx.fetch
+    // that dropped Authorization on every request would satisfy the absence
+    // check below and look like a working credential guard.
+    if (hasAuth(first)) pass('ctx.fetch forwards Authorization on the initial same-host request (control)');
+    else fail('ctx.fetch dropped Authorization before any redirect — the strip assertion below would pass vacuously');
+    if (cross && !hasAuth(cross)) pass('ctx.fetch strips Authorization across a hostname change');
     else fail('ctx.fetch should strip credentials on a cross-host redirect');
+
+    // Stripping on a SAME-host redirect would also satisfy the check above, and
+    // would silently break every plugin that authenticates through one.
+    fetchCalls.length = 0;
+    await gctx.fetch('https://93.184.216.34/same', { headers: { Authorization: 'Bearer secret' } });
+    const sameHop = fetchCalls.find(c => c.url === 'https://93.184.216.34/same2');
+    if (hasAuth(sameHop)) pass('ctx.fetch keeps Authorization across a same-host redirect');
+    else fail('ctx.fetch should not strip credentials when the host is unchanged');
 
     let ssrfRej = false; try { await gctx.fetch('https://93.184.216.34/bad'); } catch { ssrfRej = true; }
     if (ssrfRej) pass('ctx.fetch blocks a redirect hop to a private/SSRF address (10.0.0.1)'); else fail('ctx.fetch should block an SSRF redirect target');
@@ -2156,15 +2182,30 @@ try {
   if (gateLocal.load === false) pass('lockGate BLOCKS a local plugin whose files changed without a version bump (rug-pull)');
   else fail('lockGate should block a local drift-nobump plugin');
 
-  let symRej = false;
+  // Setup failure and the security property are now separate outcomes (B15-D1).
+  // Previously a single outer catch covered BOTH the symlink creation and the
+  // hashPluginTree call, setting symRej = true either way — so on any machine
+  // that refuses symlinks (default Windows without Developer Mode, hardened CI
+  // images, some network filesystems) mkdirSync/symlinkSync threw, the assertion
+  // reported pass, and hashPluginTree was never called. A security check
+  // reporting success having tested nothing, and silently: the sibling symlink
+  // block ~150 lines above warns when it skips, this one did not.
+  let symSetup = true;
+  const symDir = join(lockTmp, 'plugins.local', 'sym');
   try {
     const { symlinkSync } = await import('node:fs');
-    mkdirSync(join(lockTmp, 'plugins.local', 'sym'), { recursive: true });
-    symlinkSync('/etc/hosts', join(lockTmp, 'plugins.local', 'sym', 'evil.mjs'));
-    try { lockMod.hashPluginTree(join(lockTmp, 'plugins.local', 'sym')); } catch { symRej = true; }
-  } catch { symRej = true; } // symlink unsupported on this FS → vacuously safe
-  if (symRej) pass('lock: hashPluginTree refuses to hash a symlink (no follow)');
-  else fail('lock: symlink should be refused');
+    mkdirSync(symDir, { recursive: true });
+    symlinkSync('/etc/hosts', join(symDir, 'evil.mjs'));
+  } catch (e) {
+    symSetup = false;
+    warn(`lock symlink test skipped — could not create the symlink fixture: ${e.message}`);
+  }
+  if (symSetup) {
+    let symRej = false;
+    try { lockMod.hashPluginTree(symDir); } catch { symRej = true; }
+    if (symRej) pass('lock: hashPluginTree refuses to hash a symlink (no follow)');
+    else fail('lock: symlink should be refused');
+  }
   rmSync(lockTmp, { recursive: true, force: true });
 
   // Registry + audit + install naming + skill (v2 distribution layer).
