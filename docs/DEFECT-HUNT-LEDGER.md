@@ -611,6 +611,41 @@ Revert-confirm-red: stashing the section change reddens **4 of 6**; the two that
 
 ---
 
+## Batch 18 — §5 Data Contract — 2026-09-05 — PARTIAL
+
+Fifth batch of the semantic pass, and the first run under the conventions written into `AGENTS.md` in #44 — which were derived from batches 14-17 and immediately found two more instances of the class they describe. §5 was chosen because it guards the user/system layer boundary, which `AGENTS.md` treats as CRITICAL: the files it protects are the user's CV, profile and portal config, defined there as never-committed personal data.
+
+Baseline: **3623 passed / 0 failed / 1 warning** (clean; read-only work only while it ran).
+Post-fix: **3632 passed / 0 failed / 1 warning** — +9, the new regression test. §5's own assertion count is unchanged: both fixes add branches, not assertions.
+Budget: 2 confirmed & fixed / 6 allocated.
+
+Both defects are the same shape as B14-D1 and in the same direction — a privacy guard reporting the protected state while having verified nothing — and both sit a few hundred lines from code in the *same section* that already draws the distinction correctly.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B18-D1 | `test-all.mjs` §5, the user-file gitignore loop | T5 in a privacy guard — an unrunnable check reported as the safe outcome | `git ls-files <path>` has three outcomes and only two are answers: empty output = untracked (the pass), the path back = tracked (the fail), non-zero exit = the lookup could not run. `run()` collapses the third to `null`, and the loop mapped `null` to `pass('User file gitignored: …')` — an explicit branch, not an oversight of omission. Wherever git is absent from PATH, the tree is not a work tree, or the call times out, the suite asserted that `cv.md`, `config/profile.yml`, `modes/_profile.md` and `portals.yml` were safely gitignored having checked nothing | FIRED — ran all three cases through the real `run()` against the real repo: untracked user file → `""` → pass (intended); tracked file → `"package.json"` → fail (intended); lookup that cannot run → `null` → **pass**. Cases one and three are indistinguishable to the branch that decides the verdict | NO-DEFENSE, and refuted by a sibling **inside the same section**: `stagedBlob()` ~150 lines above wraps the same `run('git', …)` and handles the same `null` with `fail('Could not read git index entry for … (lookup failed — not evidence of absence)')`. The distinction was already understood here, written down here, and not applied here | **VERIFIED DEFECT (severity MEDIUM)** | `null` now fails with the sibling's own wording — "lookup failed — not evidence of absence; this file may or may not be tracked". MEDIUM on the same basis as B14-D1: a privacy control failing silent-permissive, not higher because CI always runs inside a work tree with git present |
+| B18-D2 | `test-all.mjs` §5, the `.gitignore` negation guard | vacuity — the guard's entire input can be empty, and empty means "clean" | The guard reads `USER_PATHS` out of `update-system.mjs` with `extractArrayFromSource()`, then flags any `.gitignore` negation re-including a path under one of them. It asserts `suspiciousNegations.length === 0`. Nothing can enter `suspiciousNegations` unless `userPaths` is non-empty, and `extractArrayFromSource` returns `[]` for a constant it cannot find — no throw, no signal. Renaming or restructuring `USER_PATHS` therefore turns a privacy guard into an unconditional pass | FIRED — replayed §5's own loop over two deliberate leaks (`!config/profile.yml`, `!cv.md`) under both inputs. With the real list (21 entries): flags **2 of 2** → assertion fails, correct. With the `[]` that `extractArrayFromSource` returns for a missing constant: flags **0 of 2** → assertion **passes**. Confirmed separately that `extractArrayFromSource(src, 'USER_PATHS_THAT_DOES_NOT_EXIST')` does return `[]` rather than throwing | NO-DEFENSE. Checked whether this pattern recurs elsewhere before fixing the instance: `extractArrayFromSource` has exactly one call site in `test-all.mjs`, so there is no wider class to chase and the single-site fix is the root-cause fix | **VERIFIED DEFECT (severity MEDIUM)** | fail explicitly when `userPaths.length === 0`, saying the guard cannot run and that an empty list would make it pass unconditionally; the success message now names the number of paths actually checked, so a silently shrinking list is visible in the output rather than invisible |
+
+**Regression test:** `tests/data-contract-guards.test.mjs` — 9 assertions, seven behavioural and two source-level. The behavioural ones establish that the three `git ls-files` outcomes are genuinely distinct (including that an unrunnable lookup still returns `null`, so the fix's premise is pinned rather than assumed), and replay the negation logic under both the real and the empty `USER_PATHS` to show it catches 2 of 2 and 0 of 2 respectively. That second pair is the executable record of *why* the length check exists.
+
+Revert-confirm-red: stashing the §5 change reddens **exactly the two source assertions**; the seven behavioural ones stay green, correctly — they exercise git and `extractArrayFromSource`, which this batch did not modify.
+
+### Coverage & residual risk (Batch 18)
+
+**Surface audited:** §5 read end to end — the system-file existence list, the per-CLI `SKILL.md` entrypoint blob comparison, the SYSTEM_PATHS coverage probe and its live counterpart, the `@ts-check` ratchet, the plugin-manifest mirror, the Dockerfile playwright pin triple-check, the user-file gitignore loop, the `.gitignore` negation guard, and the `batch-runner.sh` assertions.
+
+**Cleared by direct examination, and worth recording because they are the counter-examples:** §5 contains the best-written assertions found anywhere in this file. The SKILL.md entrypoint check compares the **git index blob** against the canonical entrypoint rather than trusting file mode, with a comment explaining that mode alone stopped being sufficient once `materializeSkillEntrypoints()` introduced a second legitimate `100644` state — and it fails on a lookup error rather than treating it as absence. The SYSTEM_PATHS coverage probe **runs the control**: it invokes the guard from a directory where git sees nothing and asserts it exits non-zero, with `catch (err) { fail('… a failed probe is not a pass') }` — rules 1 and 5 of the new conventions, already applied, before those conventions existed. The Dockerfile check extracts three separate pins and compares each against `package.json` individually rather than counting matches.
+
+That §5 contains both the best and two of the worst assertions in the file is the useful observation: this is not a section anyone neglected. The same author wrote both, and the difference is whether the failure mode was in mind at the time.
+
+**Confirmed defects:** CRITICAL 0 / HIGH 0 / MEDIUM 2 / LOW 0. Both MEDIUM: they are privacy controls, they fail silent-permissive, and both protect files `AGENTS.md` names as never-committed personal data.
+
+**On the conventions written in #44:** they were derived from batches 14-17 and this batch found two more instances immediately, which is evidence they describe a real recurring class rather than four coincidences. It is also evidence that writing them down does not retroactively fix anything — B18-D1 sat a hundred and fifty lines below a comment stating its exact rule, in the same file, for as long as both existed. Rule 3 ("capture the reason, not just the rejection") now has two independent instances behind it, B14-D1 and B18-D1, both in privacy guards, both mapping a collapsed `null` to the safe-sounding outcome.
+
+**Residual UNKNOWN:** ~3,050 lines of inline assertions unread at this depth. The largest remaining block is §3 (liveness classification, ~545 lines).
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
