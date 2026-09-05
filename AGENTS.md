@@ -321,6 +321,21 @@ One TSV file per evaluation at `batch/tracker-additions/{num}-{company-slug}.tsv
 4. All statuses MUST be canonical (see `templates/states.yml`).
 5. Health check: `node verify-pipeline.mjs` · Normalize statuses: `node normalize-statuses.mjs` · Dedup: `node dedup-tracker.mjs`
 
+### Writing Assertions (test-all.mjs, tests/**)
+
+**THE RULE: an assertion must be able to fail, and must fail for its own reason.** Before writing one, ask what *else* — besides the property you are naming — would make it pass. If the answer is "a broken fixture", "an unrelated error", or "a comment", the assertion does not test what its message claims.
+
+Six rules, each from a defect this suite actually shipped (see `docs/DEFECT-HUNT-LEDGER.md`):
+
+1. **Run the control.** For every assertion, also run the case that should produce the *opposite* result. A rejection test at a path where everything is rejected proves nothing; an "absent" check with no matching "present" check cannot tell "correctly stripped" from "never sent at all".
+2. **Assert identity, not count.** `findings.length >= 3` is satisfied by three findings of one kind. Match each thing you named, and report *which* is missing when it fails.
+3. **Capture the reason, not just the rejection.** `=== null`, `catch { flag = true }` and `if (result)` collapse every failure mode into one. When a helper returns the same value for "clean" and "could not run" — `run()` returns `null` for both a `git grep` no-match (exit 1) and a `git grep` that could not run (exit 128) — read the exit status yourself rather than testing truthiness.
+4. **Never assert a runtime guard by matching source text when the guard is reachable from an entry point.** Spawn the script and assert on the message it prints. A regex over source matches comments, commented-out code, and unrelated lines: `/protocol.*https:/` is satisfied by `// we used to check protocol for https: here`. Text matching is right only when the subject genuinely *is* text (a `package.json` field, a doc string, an old name that must not reappear).
+5. **A fixture that could not be built is not a passing test.** Keep setup failure and the property under test in separate `try` blocks. Setup failure calls `warn()` — visible in the summary counters, exit 0 — never `pass()`. One `catch` around both reports a security property as verified on every machine where the fixture cannot be created.
+6. **A guard that scans source text will scan your test too.** Build fixtures by concatenation (`const FIN = 'fin' + 'ish'`) so the file does not match its own subject. This has bitten four separate tests here; the literal string you are searching for must not appear in the file doing the searching.
+
+**Absence checks are the exception to rule 4 and should stay static:** they fail closed. `!/\bfetch\s*\(/.test(src)` flagging a comment is a false *positive*, which is the safe direction. Widen the pattern list rather than making it behavioural — and say in the comment that a determined rewrite still evades any static list, so nobody reads it as exhaustive.
+
 ### Canonical States (applications.md)
 
 **Source of truth:** `templates/states.yml`
