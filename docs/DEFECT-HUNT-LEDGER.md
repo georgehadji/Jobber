@@ -537,6 +537,43 @@ None indicates a production defect. Severity here reflects what the *test* would
 
 ---
 
+## Batch 16 — §49 registry / audit / successor hinge — 2026-09-05 — PARTIAL
+
+The half of §49 batch 15 left unread: the v2 distribution layer, and specifically the `supersedesBundled` hinge that decides when a community plugin may replace a bundled one — the only place in this section where a permissive defect lets a third party take over an existing plugin id. Third batch of the semantic pass.
+
+Baseline: **3606 passed / 0 failed / 1 warning**, batch 15's verified post-fix total, which is the state of `main` at this batch's start. A baseline run launched at the start of this batch reported 3614, but it overlapped the creation of this batch's regression test: `test-all.mjs` is read once at process start, so the §49 edits could not affect it, but discovery runs at the *end* of the suite and picked up the new file's 8 assertions. Recorded rather than quietly cited — 3614 is 3606 plus this batch's own test, not a pre-change measurement.
+Post-fix: **3616 passed / 0 failed / 1 warning** — 3606 + 8 (the new test) + 2 (the new control assertions inside §49).
+Budget: 2 confirmed & fixed / 6 allocated.
+
+**Again the headline is a negative result: the production code is correct in both cases.** `supersedesBundled` is genuinely enforced, and the plugin auditor genuinely emits one distinct finding per forbidden pattern. Both were verified by running the control the assertions omit. What was defective is, once more, the assertions' ability to notice a regression.
+
+| ID | Location | Class | Property violated | Trigger | Innocence | Status | Fix |
+|----|----------|-------|-------------------|---------|-----------|--------|-----|
+| B16-D1 | `test-all.mjs` §49, the seed→successor block | untested precondition on a trust hinge — three cases vary the wrong variable | The block runs three cases: no lock entry → bundled wins; installed at the *wrong* sha → no override; installed at the *pinned* sha → community override. All three hold `supersedesBundled: true` fixed and vary only the **install**. Nothing varies the flag, so nothing shows that the flag is what grants the override. If `supersedesBundled` stopped being consulted, every registry-approved plugin installed at its own pinned sha could silently take over a bundled plugin id — and all three assertions would still pass | FIRED — built the missing control: identical registry entry, identical exact-sha install, flag removed. With `supersedesBundled: true` → `resolveSuccessorIds` has gmail, discovery resolves to **plugins.local**. With the flag **absent** → not resolved, discovery falls back to **plugins/**. With `supersedesBundled: false` → same as absent. The engine enforces it correctly; the block simply never asked | NO-DEFENSE for the omission. The block's own comment states the rule as "ONLY when registry-approved AND installed at the exact pinned sha", which names two conditions and tests the second three ways and the first not at all. It is the more consequential of the two — the sha pin stops a *tampered* successor, the flag stops an *unrelated* one | **VERIFIED DEFECT (severity LOW)** | added case (4): same fixture, same pinned-sha install, `supersedesBundled` deleted from the registry entry, asserting both that the id is not resolved as a successor and that discovery falls back to the bundled directory. LOW because production is correct and the gap is latent, consistent with how B15-D2/D3 were rated; its consequence class is the highest in the section, which is why it was pursued first |
+| B16-D2 | `test-all.mjs` §49, the plugin-audit assertion | assertion by count where the claim is by identity | The fixture plants three *different* forbidden patterns — a `node:child_process` import, a bare-specifier dependency, and a direct global `fetch()` — and the assertion verifies them with `!aud.ok && aud.findings.length >= 3`. Three findings of a single kind satisfy that identically. Deleting one audit rule while another began double-reporting would keep the assertion green, and its message would still claim all three were flagged | FIRED — ran each pattern in isolation against the real `auditPlugin`. Each produces exactly one finding, and the three are distinct: `forbidden import "node:child_process"`, `bare-specifier import "leftpad"`, `direct global fetch()`. The combined fixture's three findings are therefore genuinely one per pattern today — which is what the count happens to be measuring, and what it does not verify | NO-DEFENSE — the assertion's own message enumerates the three patterns by name, so identity is what it claims. Nothing about the audit API forced the count form; `findings[].issue` carries the pattern | **VERIFIED DEFECT (severity LOW)** | assert by identity: match each of the three named patterns against `findings[].issue` and report which are **missing** on failure, rather than reporting a count that says nothing about which rule broke |
+
+**Regression test:** `tests/registry-successor-audit.test.mjs` — 8 assertions, six behavioural against production and two source-level. The behavioural ones hold the install fixed at the exact pinned sha and vary only `supersedesBundled` across `true` / absent / `false`, and run each audit pattern in isolation to confirm it carries its own finding. The two source assertions confirm §49 now runs the flag control and asserts audit findings by identity.
+
+Revert-confirm-red: stashing the §49 change reddens **exactly the two source assertions**; the six behavioural ones stay green, correctly — they exercise the engine and auditor, which this batch did not modify.
+
+### Coverage & residual risk (Batch 16)
+
+**Surface audited:** the remainder of §49 — registry entry validation, the seed→successor block, `plugin-install.mjs` repo-argument parsing, the plugin auditor, skill loading and injection flagging, malformed-manifest tolerance, and the bundled-plugin discovery/import coverage. §49 is now read end to end across batches 15 and 16.
+
+**Cleared by direct examination, with the control run:** the successor block's three install cases each discriminate properly (no lock / wrong sha / pinned sha give three different outcomes). The skill-injection assertion has a real negative control — the bundled notion skill is asserted to load with `flags.length === 0` — so "flags an injection phrase" is not satisfiable by a loader that flags everything. Bundled-plugin discovery asserts an exact id list rather than a count. `parseRepoArg`'s three rejection cases each name a distinct malformed input.
+
+**Defect classes covered:** the same single shape for the third consecutive batch — an assertion whose stated property is not the only thing that makes it pass, found by running the control rather than by asking whether the assertion can fail.
+
+**Confirmed defects:** CRITICAL 0 / HIGH 0 / MEDIUM 0 / LOW 2.
+
+**The systemic finding, which is worth more than the next few instances.** Across batches 14-16, semantic reading of four high-stakes sections has produced seven defects and **zero production defects**. Every one has the same author-side cause: the suite reaches for the cheapest available predicate — `=== null`, `catch { flag = true }`, `length >= n`, `if (result)`, "the header is absent" — rather than the one that distinguishes the named property from everything else that produces the same observation. The code under test has been correct every time; the tests have been unable to prove it every time. That is a convention problem, not a defect backlog, and the remaining ~3,540 unread lines will keep yielding instances of it at roughly two per section for as long as anyone keeps looking.
+
+**Recommendation, recorded for the maintainer rather than acted on unilaterally:** the higher-leverage move from here is a written convention in `AGENTS.md` — *an assertion must fail for its own reason: prefer identity over count, a captured reason over a truthy rejection, and always run the control that should produce the opposite result* — plus fixing instances opportunistically when a section is touched for other work. Continuing the per-instance hunt is legitimate and will keep finding real gaps, but at LOW severity and a declining rate of anything the convention would not have prevented.
+
+**Residual UNKNOWN:** ~3,540 lines of inline assertions unread at this depth. Nothing is known about the density of this class in ordinary, lower-stakes sections; every batch so far has deliberately opened the highest-stakes section available, so the observed rate of ~2 per section is from the dense end by construction.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
