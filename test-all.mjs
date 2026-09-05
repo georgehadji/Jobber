@@ -1145,11 +1145,19 @@ for (const f of skillEntrypoints) {
 const userFiles = [
   'config/profile.yml', 'modes/_profile.md', 'portals.yml',
 ];
+// `git ls-files <path>` has three outcomes and only two of them are answers:
+// empty output = untracked (the pass), the path back = tracked (the fail), and
+// a non-zero exit = the lookup could not run. run() collapses that third case
+// to null, and this loop used to map null to pass — reporting the user's
+// private file as safely gitignored having verified nothing, wherever git is
+// absent or the repo is not a work tree (B18-D1). The stagedBlob check ~150
+// lines above already draws exactly this distinction ("lookup failed — not
+// evidence of absence"); this now matches it.
 for (const f of userFiles) {
   const tracked = run('git', ['ls-files', f]);
-  if (tracked === '') {
-    pass(`User file gitignored: ${f}`);
-  } else if (tracked === null) {
+  if (tracked === null) {
+    fail(`Could not run git ls-files for ${f} (lookup failed — not evidence of absence; this file may or may not be tracked)`);
+  } else if (tracked === '') {
     pass(`User file gitignored: ${f}`);
   } else {
     fail(`User file IS tracked (should be gitignored): ${f}`);
@@ -1186,8 +1194,17 @@ for (const f of userFiles) {
       suspiciousNegations.push(line);
     }
   }
-  if (suspiciousNegations.length === 0) {
-    pass('.gitignore has no negation that would re-include personal data under USER_PATHS');
+  // This whole guard is driven by userPaths: if it comes back empty, nothing can
+  // ever land in suspiciousNegations and the assertion passes having checked
+  // nothing (B18-D2). extractArrayFromSource returns [] for a constant it cannot
+  // find — no throw, no signal — so renaming USER_PATHS in update-system.mjs
+  // would silently turn this privacy guard into a no-op. Verified: replaying the
+  // loop with userPaths = [] against two deliberate leaks (!config/profile.yml,
+  // !cv.md) flags 0 of 2 and reports a pass.
+  if (userPaths.length === 0) {
+    fail('USER_PATHS could not be read from update-system.mjs — the .gitignore negation guard cannot run, and an empty list would make it pass unconditionally');
+  } else if (suspiciousNegations.length === 0) {
+    pass(`.gitignore has no negation that would re-include personal data under USER_PATHS (${userPaths.length} paths checked)`);
   } else {
     fail(`.gitignore negation(s) would re-include personal data: ${suspiciousNegations.join(', ')}`);
   }
