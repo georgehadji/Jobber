@@ -27,6 +27,16 @@ import { pass, fail, run, ROOT } from './helpers.mjs';
 
 console.log('\ntest-all.mjs §6 — leak scan cannot mistake "could not scan" for "clean" (B14)');
 
+// A string that must not appear anywhere in the tracked tree, used below to
+// provoke a genuine no-match. Built by concatenation: written as one literal it
+// would appear in THIS file, which git grep scans once the file is tracked, so
+// the "no match" probe would match itself and report a hit. That is not
+// hypothetical — the first version of this test did exactly that and passed
+// locally (the file was still untracked, and git grep only sees tracked files)
+// before failing on CI. Same self-reference constraint as the concatenated
+// fixtures in test-discovery-guard and counter-parity.
+const ABSENT = 'zzz-no-such' + '-string-zzz';
+
 // ── B14-D1, behavioural: the three git-grep outcomes are distinguishable ──
 const scratch = mkdtempSync(join(tmpdir(), 'jobber-leak-scan-'));
 try {
@@ -46,7 +56,7 @@ try {
     fail(`git grep outside a work tree exited ${outside.status}, which §6 would read as a completed scan`);
   }
 
-  const noMatch = spawnSync('git', ['grep', '-n', 'zzz-no-such-string-zzz', '--', '*.mjs'], {
+  const noMatch = spawnSync('git', ['grep', '-n', ABSENT, '--', '*.mjs'], {
     cwd: ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'],
   });
   if (noMatch.status === 1) pass('git grep with no match exits 1 — the genuine "clean" signal');
@@ -54,7 +64,7 @@ try {
 
   // The defect itself, pinned: run() erases the distinction the two checks
   // above just established. §6 must not go through it.
-  const viaRunClean = run('git', ['grep', '-n', 'zzz-no-such-string-zzz', '--', '*.mjs'], { stdio: ['pipe', 'pipe', 'ignore'] });
+  const viaRunClean = run('git', ['grep', '-n', ABSENT, '--', '*.mjs'], { stdio: ['pipe', 'pipe', 'ignore'] });
   const viaRunBroken = run('git', ['grep', '-n', 'hi', '--', ':(bogusmagic)*.md'], { stdio: ['pipe', 'pipe', 'ignore'] });
   if (viaRunClean === null && viaRunBroken === null) {
     pass('run() maps both "no match" and "scan failed" to null — why §6 must read the exit status itself');
