@@ -2599,11 +2599,24 @@ console.log('\n prepare-application: ATS auto-fill contract');
 try {
   const src = readFile('prepare-application.mjs');
 
-  // Must not make any network requests
-  if (!/\bfetch\s*\(/.test(src) && !/https?\.request/.test(src) && !/createConnection/.test(src)) {
+  // Must not make any network requests. Static and fail-closed by design: this
+  // is an absence check, so a comment mentioning one of these patterns fails the
+  // file rather than passing it — the safe direction. The pattern list is wider
+  // than the original three (B17): `fetch(` / `https.request` / `createConnection`
+  // left http.get, https.get, axios, XMLHttpRequest, WebSocket and a computed
+  // globalThis["fet"+"ch"] all unmatched, so "makes no network requests" was
+  // asserting the absence of three spellings rather than of network access.
+  // A determined rewrite can still evade any static list; the behavioural guard
+  // that matters is that this script never receives a submit path at all.
+  const netPatterns = [
+    /\bfetch\s*\(/, /https?\.request\s*\(/, /https?\.get\s*\(/, /createConnection/,
+    /\baxios\b/, /XMLHttpRequest/, /\bWebSocket\b/, /globalThis\s*\[/,
+  ];
+  const netHit = netPatterns.find(rx => rx.test(src));
+  if (!netHit) {
     pass('prepare-application.mjs makes no network requests');
   } else {
-    fail('prepare-application.mjs calls a network API — must be prefill-only, no POST');
+    fail(`prepare-application.mjs calls a network API (matched ${netHit}) — must be prefill-only, no POST`);
   }
 
   // Must have concrete handler functions for all three ATS
@@ -2637,19 +2650,50 @@ try {
     fail('prepare-application.mjs does not read config/profile.yml');
   }
 
-  // Must restrict PDF to output/ directory — either the legacy startsWith
-  // prefix check or the path.relative() containment guard counts.
-  if (/output[^'"`\n]*startsWith|startsWith.*output|relative\(outputDir/.test(src)) {
-    pass('prepare-application.mjs restricts PDF path to output/');
-  } else {
-    fail('prepare-application.mjs missing output/ directory restriction for --pdf');
-  }
+  // The --pdf containment and https-only guards are checked by RUNNING the
+  // script, not by grepping for them (B17-D1/D2). The previous assertions used
+  // /protocol.*https:|https:.*protocol/ and an output-dir pattern, and both are
+  // satisfied by a COMMENT: a commented-out guard, or prose merely mentioning
+  // the words, kept them green. Measured — `// TODO: we used to check protocol
+  // for https: here` matches, and so does the unrelated `const outputLabel =
+  // name.startsWith("x")`. Deleting either guard while leaving its comment
+  // behind was invisible to this section.
+  //
+  // Assert on the REASON the script refuses, never on the exit code alone: PDF
+  // validation runs before URL validation, so a missing fixture would exit 1
+  // and read exactly like the https guard firing.
+  const outDir = join(ROOT, 'output');
+  mkdirSync(outDir, { recursive: true });
+  const fixturePdf = join(outDir, `.b17-contract-${process.pid}.pdf`);
+  writeFileSync(fixturePdf, '%PDF-1.4\n%%EOF\n');
+  const runPrep = (a) => spawnSync(NODE, [join(ROOT, 'prepare-application.mjs'), ...a], { cwd: ROOT, encoding: 'utf-8', timeout: 30000 });
+  try {
+    const relFixture = `output/${basename(fixturePdf)}`;
+    const httpRun = runPrep(['--url', 'http://boards.greenhouse.io/acme/jobs/1', '--pdf', relFixture]);
+    if (httpRun.status !== 0 && /must use https/i.test(httpRun.stderr || '')) {
+      pass('prepare-application refuses an http:// apply URL, naming https as the reason');
+    } else {
+      fail(`prepare-application should refuse http:// with an https message (exit ${httpRun.status}; stderr: ${(httpRun.stderr || '').trim().slice(0, 140)})`);
+    }
 
-  // Must enforce https-only
-  if (/protocol.*https:|https:.*protocol/.test(src)) {
-    pass('prepare-application.mjs enforces https-only URLs');
-  } else {
-    fail('prepare-application.mjs missing https enforcement');
+    const escapeRun = runPrep(['--url', 'https://boards.greenhouse.io/acme/jobs/1', '--pdf', '../outside.pdf']);
+    if (escapeRun.status !== 0 && /inside output\//i.test(escapeRun.stderr || '')) {
+      pass('prepare-application refuses a --pdf outside output/, naming containment as the reason');
+    } else {
+      fail(`prepare-application should refuse a --pdf outside output/ (exit ${escapeRun.status}; stderr: ${(escapeRun.stderr || '').trim().slice(0, 140)})`);
+    }
+
+    // The control. Without it, both assertions above are equally satisfied by a
+    // script that refuses everything it is given.
+    const okRun = runPrep(['--url', 'https://boards.greenhouse.io/acme/jobs/1', '--pdf', relFixture]);
+    const okErr = okRun.stderr || '';
+    if (!/must use https/i.test(okErr) && !/inside output\//i.test(okErr)) {
+      pass('prepare-application accepts a valid https URL + in-output PDF (control: it does not refuse everything)');
+    } else {
+      fail(`valid inputs still tripped a guard: ${okErr.trim().slice(0, 160)}`);
+    }
+  } finally {
+    rmSync(fixturePdf, { force: true });
   }
 
   // Must not reference old script name
