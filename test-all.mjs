@@ -37,6 +37,7 @@ import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
 import { discoverTests, endsProcess } from './lib/test-discovery.mjs';
+import { scriptOutcome } from './lib/script-outcome.mjs';
 import { extractArrayFromSource } from './update-system.mjs';
 
 /**
@@ -156,8 +157,14 @@ if (existsSync(tscBin)) {
   if (tscResult !== null) pass('tsc --noEmit clean');
   else fail('tsc --noEmit reported type errors');
 } else {
-  // Never hard-fail a contributor who ran `npm install --omit=dev`.
-  console.log('   ⊘ typescript not installed — skipped');
+  // Never hard-fail a contributor who ran `npm install --omit=dev` — but say so
+  // through warn(), not a bare console.log. warn() does not fail the run either
+  // (exit 0, 🟡 "review before pushing"), so it satisfies the same intent while
+  // keeping the skip visible in the summary counters. A console.log leaves the
+  // summary reading "0 warnings / 🟢 safe to push/merge" with an entire check
+  // silently not run. This matches the dashboard-build block below, which warns
+  // when the go compiler is absent (defect-hunt batch 13, B13-D1).
+  warn('Type checks skipped — typescript not installed');
 }
 
 // ── 2. SCRIPT EXECUTION ─────────────────────────────────────────
@@ -165,7 +172,13 @@ if (existsSync(tscBin)) {
 console.log('\n2. Script execution (graceful on empty data)');
 
 const scripts = [
-  { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
+  // No expectExit: this script's correct exit code is environment-dependent —
+  // 1 in this repo (no cv.md shipped), 0 in a provisioned workspace where cv.md
+  // exists and is in sync. Neither is universally right, so `allowFail` alone
+  // states the real contract: either outcome is acceptable here. It carried
+  // `expectExit: 1` while the loop ignored the field (B13-D2); once the field is
+  // honored, that declaration would warn on every correctly-provisioned install.
+  { name: 'cv-sync-check.mjs', allowFail: true },
   { name: 'verify-pipeline.mjs', expectExit: 0 },
   // --dry-run: these scripts resolve ROOT from import.meta.url and write
   // data/applications.md (or data/pipeline.md) in place. On a provisioned working
@@ -280,7 +293,7 @@ try {
   // assertion failure, and non-deterministic because it tracked machine load.
   // Budget generously and report why it failed.
   const SCRIPT_TIMEOUT_MS = 300_000;
-  for (const { name, allowFail } of scripts) {
+  for (const { name, allowFail, expectExit } of scripts) {
     const parts = name.split(' ');
     const scriptFile = parts[0];
     const args = parts.slice(1);
@@ -290,7 +303,11 @@ try {
       timeout: SCRIPT_TIMEOUT_MS,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
-    if (r.status === 0) {
+    // expectExit is declared on every entry above; scoring it here is what
+    // makes those declarations mean anything (B13-D2). Previously the loop
+    // compared against a hardcoded 0 and never read the field.
+    const outcome = scriptOutcome(r.status, { expectExit, allowFail });
+    if (outcome === 'pass') {
       pass(`${name} runs OK`);
       continue;
     }
@@ -298,7 +315,7 @@ try {
       ? `timed out after ${SCRIPT_TIMEOUT_MS / 1000}s (signal ${r.signal ?? 'none'})`
       : `exit ${r.status}`;
     const tail = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim().split('\n').slice(-8).join('\n');
-    if (allowFail) {
+    if (outcome === 'warn') {
       warn(`${name} exited with error (expected without user data) — ${why}`);
     } else {
       fail(`${name} crashed — ${why}\n${tail}`);
