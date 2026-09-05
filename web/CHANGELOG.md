@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/georgehadji/Jobber/compare/web-v0.5.0...web-v0.6.0) (2026-09-05)
+
+
+### Features
+
+* implement IMPROVEMENT-PLAN.md — scoring loop, policies, and module shape ([6528cc9](https://github.com/georgehadji/Jobber/commit/6528cc997e0289c5f5c70fe57b97b466a31513f5))
+
+
+### Bug Fixes
+
+* apply-drive's never-submit guard misses icon-only submit buttons (B10-D1) ([#34](https://github.com/georgehadji/Jobber/issues/34)) ([543c788](https://github.com/georgehadji/Jobber/commit/543c788deed1c0ac6d56193a6ce7089831c70456))
+
 ## [0.5.0](https://github.com/santifer/jobber/compare/web-v0.4.0...web-v0.5.0) (2026-07-30)
 
 

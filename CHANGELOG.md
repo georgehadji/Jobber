@@ -1,5 +1,65 @@
 # Changelog
 
+## [1.25.0](https://github.com/georgehadji/Jobber/compare/jobber-v1.24.0...jobber-v1.25.0) (2026-09-05)
+
+
+### Features
+
+* add APEC, Arbetsförmedlingen, and EURES zero-key job-source providers ([b31733a](https://github.com/georgehadji/Jobber/commit/b31733ab3a1e59e598af9bf62fcf9f1499a859f8))
+* add freehire.me multi-market job aggregator provider (ai-job-search Phase 7) ([d7c90e8](https://github.com/georgehadji/Jobber/commit/d7c90e8e0d401b5f7b7139860ba0558bf15aa817))
+* adversarial reviewer pass + supply-chain guard parity from ai-job-search ([427c7dc](https://github.com/georgehadji/Jobber/commit/427c7dc617c27cc0668f6371938ddc51969d8783))
+* harden pipeline — CI gates, provider canary, mode-invocation validation ([997d929](https://github.com/georgehadji/Jobber/commit/997d929f00b04bb4e08fe2b7b710a95cd2b34465))
+* implement IMPROVEMENT-PLAN.md — scoring loop, policies, and module shape ([6528cc9](https://github.com/georgehadji/Jobber/commit/6528cc997e0289c5f5c70fe57b97b466a31513f5))
+* keyed LinkedIn/Indeed/Glassdoor coverage, salary-benchmark import, company-intel ([dd9aa5d](https://github.com/georgehadji/Jobber/commit/dd9aa5db8613bfb71f69cbdd84d9a62170af37d3))
+* keyed LinkedIn/Indeed/Glassdoor coverage, salary-benchmark import, company-intel ([6bb7caa](https://github.com/georgehadji/Jobber/commit/6bb7caa31a22daada3bb8f1ddaedb2b66f4b0c70))
+* onboard from existing career documents (ai-job-search Phase 4) ([f59a69a](https://github.com/georgehadji/Jobber/commit/f59a69a7a0113a036ab361ffcee8008c9a676914))
+* optimization tracks T1–T5 — test runner, translation stamps, eval consolidation, capabilities contract, reader-writer safety ([05b6b66](https://github.com/georgehadji/Jobber/commit/05b6b66be6ac211d2ba07cbd5d7550a20d8efe6b))
+* port robots.txt gate, PDF text-layer verification, language gate from ai-job-search ([bfe0bd8](https://github.com/georgehadji/Jobber/commit/bfe0bd822c7a6d6e984302ba76b2ba20dd675132))
+* single source of truth for LLM provider constants ([5d80485](https://github.com/georgehadji/Jobber/commit/5d80485de48a2b88d16c105c52e99d45fef521fb))
+
+
+### Bug Fixes
+
+* §49's successor hinge and audit assertions tested the wrong variable (B16) ([#42](https://github.com/georgehadji/Jobber/issues/42)) ([d8b8e42](https://github.com/georgehadji/Jobber/commit/d8b8e42c1836a8abfabd554060734a0231f588f7))
+* 4 providers follow server-side redirects, missing SSRF hardening ([#29](https://github.com/georgehadji/Jobber/issues/29)) ([479f386](https://github.com/georgehadji/Jobber/commit/479f386ecd85b40582c2d7a28ccb189d608c4a9d))
+* apply-drive's never-submit guard misses icon-only submit buttons (B10-D1) ([#34](https://github.com/georgehadji/Jobber/issues/34)) ([543c788](https://github.com/georgehadji/Jobber/commit/543c788deed1c0ac6d56193a6ce7089831c70456))
+* audit follow-ups — secrets guard, README stamps, eval tracker helpers ([3f84352](https://github.com/georgehadji/Jobber/commit/3f84352feb6e5e364a32f9f231419bf57cca7710))
+* browser-extract.mjs SSRF gap + check-liveness.mjs browser leak ([#30](https://github.com/georgehadji/Jobber/issues/30)) ([a87af94](https://github.com/georgehadji/Jobber/commit/a87af947aabbf08d0c5de17ec41147371060ce8f))
+* close lock regression in A2 and register missing system file ([4b6b6f7](https://github.com/georgehadji/Jobber/commit/4b6b6f780cfb8a09c32c5a35b7283f2545880618))
+* company-name.mjs collapses distinct companies sharing a generic descriptor ([abfb78a](https://github.com/georgehadji/Jobber/commit/abfb78a02da034049a3f2cca2307dc6ddd67a70c))
+* consistent company normalization in company-intel; correct CLI file-arg detection in salary-import ([6a0cfd3](https://github.com/georgehadji/Jobber/commit/6a0cfd37ae387333c766675b9989daf7982cb57f))
+* count only helpers-emitted markers in parallel test runner ([2b183d6](https://github.com/georgehadji/Jobber/commit/2b183d68925e8771f78740ba65d72b950986bca4))
+* CV template dates get reordered/orphaned in exported PDF text ([9861ec0](https://github.com/georgehadji/Jobber/commit/9861ec0cd5163f0e69a260c1941d86ae02523c41))
+* dashboard ToggleLang() strands Spanish behind the language hotkey (B9-D1) ([#33](https://github.com/georgehadji/Jobber/issues/33)) ([3e440c4](https://github.com/georgehadji/Jobber/commit/3e440c4c498971c0174953ae1069d4fc9c305f1b))
+* drop capabilities.mjs from SYSTEM_PATHS to match its removal ([9a2579c](https://github.com/georgehadji/Jobber/commit/9a2579cd67fbb453091c24a41d6811cba056881e))
+* drop removed README translations from the required-manifest guard ([8e3af7f](https://github.com/georgehadji/Jobber/commit/8e3af7fc72e294de21ae8412b330f869eead02ce))
+* fence pasted company-intel text in JSON output, not just --summary ([b1b4266](https://github.com/georgehadji/Jobber/commit/b1b4266975c93e4f7146744163cd55cdea934c6c))
+* give tsc a 5-minute timeout in test-all section 1b ([fe37107](https://github.com/georgehadji/Jobber/commit/fe371078400633c130d57e4c24e45acbc65e10dc))
+* gmail plugin --dry-run silently persists processed-message-id cursor ([#27](https://github.com/georgehadji/Jobber/issues/27)) ([015147e](https://github.com/georgehadji/Jobber/commit/015147ecb6ce94198fadcbd76c59eb9a1a45f80b))
+* harness pass total depends on which runner you invoke (B12-D1) ([#38](https://github.com/georgehadji/Jobber/issues/38)) ([40974ea](https://github.com/georgehadji/Jobber/commit/40974ea1b617df5eafbf01d9e3b368fd38288740))
+* leak scan reports clean when it could not scan (B14-D1/D2) ([#40](https://github.com/georgehadji/Jobber/issues/40)) ([9e6d71a](https://github.com/georgehadji/Jobber/commit/9e6d71a942e89dfd419698efa4163a47a9ee5141))
+* lib/robots.mjs gate() cache conflates verdicts across paths (Seed A) ([#28](https://github.com/georgehadji/Jobber/issues/28)) ([249078a](https://github.com/georgehadji/Jobber/commit/249078aa0fc8b52674a575284f8eff89b7f2a614))
+* materialize CLI skill entrypoints committed as link-path stubs ([08e61f4](https://github.com/georgehadji/Jobber/commit/08e61f433c6b7f30c5c4c87424cc531f3fcc14e9))
+* remove redundant readFileSync dynamic import, add audit report ([e68a233](https://github.com/georgehadji/Jobber/commit/e68a233282a3d898b0fac09e48284b581bfb9b21))
+* report-schema.mjs accepts NaN top-level score as valid (B8-D1) ([#32](https://github.com/georgehadji/Jobber/issues/32)) ([fd4490d](https://github.com/georgehadji/Jobber/commit/fd4490d5ffa201e3da35a8a0e3813efdc45af70e))
+* resolve symlinks before comparing argv[1] in llm-providers.mjs CLI shim ([1e21f50](https://github.com/georgehadji/Jobber/commit/1e21f50f895b9e398e45862ea7e5a2af44c0499f))
+* restore career-ops-plugin- naming convention ([a2523cf](https://github.com/georgehadji/Jobber/commit/a2523cf8cf5da7d2b40017c8f53c7ca8789ad700))
+* restore SIGNATURES.md provenance URLs to upstream ([617f458](https://github.com/georgehadji/Jobber/commit/617f458f3b49610183df5bf90a234449a9b099a8))
+* restore third-party plugin registry names and URLs ([0ad9b44](https://github.com/georgehadji/Jobber/commit/0ad9b44a768c6bd8b8da7971a5a900f391640834))
+* shallow CI checkout breaks translation-freshness git-log history walk ([b74af31](https://github.com/georgehadji/Jobber/commit/b74af31268aa1504149cc0b6938961a19a8cd8be))
+* stamp-translations.mjs --verify silently writes to real files ([822c7e5](https://github.com/georgehadji/Jobber/commit/822c7e53ae9a9feba4f6508e16994232da1e765b))
+* **sunset:** honor an explicit sunset_after_days: 0 (B2-D1) ([#26](https://github.com/georgehadji/Jobber/issues/26)) ([729a25c](https://github.com/georgehadji/Jobber/commit/729a25ce5a731350c4db7ccad5ab51b2272cb8f1))
+* test-all silently skipped 104 of 112 discovered test files ([27a9706](https://github.com/georgehadji/Jobber/commit/27a9706bb4bf30aabac2502064222c95b2ed63d9))
+* test-all silently skipped 104 of 112 discovered test files ([77549a4](https://github.com/georgehadji/Jobber/commit/77549a4aff86bcf1997b66a29fc3aa710118c0a0))
+* test-all's expectExit is dead config; tsc skip is invisible (B13-D1/D2) ([#39](https://github.com/georgehadji/Jobber/issues/39)) ([0cbbba3](https://github.com/georgehadji/Jobber/commit/0cbbba3e4fe06fff4be005b7db0ea780d90ffa6b))
+* test-harness truncation guard misses same-line finish() calls (B11-D1) ([#36](https://github.com/georgehadji/Jobber/issues/36)) ([5a54fd0](https://github.com/georgehadji/Jobber/commit/5a54fd0bb3f802e788c0128f59db49dfe4af2d17))
+* three §49 sandbox assertions could not fail for their stated reason (B15) ([#41](https://github.com/georgehadji/Jobber/issues/41)) ([5f54bc6](https://github.com/georgehadji/Jobber/commit/5f54bc632b68f0a2a29a7b26a26daa9ba74c0bef))
+* **tracker:** merge-tracker --dry-run deleted real files (defect-hunt batch 1) ([#25](https://github.com/georgehadji/Jobber/issues/25)) ([5661037](https://github.com/georgehadji/Jobber/commit/566103782e0aa1c333f5e2b01d125042e68412b3))
+* two §5 privacy guards reported "safe" without checking (B18-D1/D2) ([#45](https://github.com/georgehadji/Jobber/issues/45)) ([1c35211](https://github.com/georgehadji/Jobber/commit/1c35211474d47cdf40c08f2455464f9c541f3c12))
+* two ATS security guards were asserted by regexes that match prose (B17) ([#43](https://github.com/georgehadji/Jobber/issues/43)) ([0b2586a](https://github.com/georgehadji/Jobber/commit/0b2586a8a26ce06c66bb977a2c697dad64f2b3d4))
+* unbreak guard and SYSTEM_PATHS coverage from the audit follow-ups ([908cf4c](https://github.com/georgehadji/Jobber/commit/908cf4ccac64174b20f2241747460fab6cdba90e))
+* wire the CV fact gate into all three generated-CV output paths ([#31](https://github.com/georgehadji/Jobber/issues/31)) ([032dbab](https://github.com/georgehadji/Jobber/commit/032dbab2bea17f0f4decc9a43c76c797d30af49e))
+
 ## [1.24.0](https://github.com/santifer/jobber/compare/jobber-v1.23.0...jobber-v1.24.0) (2026-07-30)
 
 
