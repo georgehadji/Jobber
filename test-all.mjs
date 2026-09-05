@@ -1250,7 +1250,13 @@ const leakPatterns = [
 ];
 
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
-const allowedFiles = [
+// Exact repo-relative paths, matched with Set.has — NOT substring matching
+// (B14-D2). `allowedFiles.some(a => file.includes(a))` allowed any path merely
+// CONTAINING an entry, so a bare 'README.md' entry cleared every README.md in
+// the tree, 'package.json' cleared web/ and scaffolder/ and every plugin's, and
+// 'LICENSE' cleared anything with LICENSE in its name. Two files were reaching
+// this check's pass purely through that over-match.
+const allowedFiles = new Set([
   // English README + localized translations (all legitimately credit Santiago)
   'README.md', 'README.ar.md', 'README.da.md', 'README.de.md', 'README.es.md', 'README.fr.md', 'README.hi.md',
   'README.ja.md', 'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md', 'README.ta.md', 'README.cn.md',
@@ -1267,7 +1273,13 @@ const allowedFiles = [
   // Dashboard credit string
   'dashboard/internal/ui/screens/pipeline.go',
   'dashboard/internal/ui/screens/progress.go',
-];
+  // Scaffolder package metadata + readme: same maintainer-credit content as the
+  // root package.json and README above. These were previously cleared only as a
+  // side effect of substring matching ('package.json' / 'README.md' matching a
+  // nested path), never consciously allowed — listed explicitly now (B14-D2).
+  'scaffolder/package.json',
+  'scaffolder/README.md',
+]);
 
 // Build pathspec for git grep — only scan tracked files matching these
 // extensions. This is what `grep -rn` was trying to do, but git-aware:
@@ -1278,24 +1290,37 @@ const allowedFiles = [
 // pattern reach git verbatim (no quoting layer, nothing interpolated).
 const grepPathspecs = scanExtensions.map(e => `*.${e}`);
 
+// git grep exits 0 when it matched, 1 when it found nothing, and anything else
+// (128 outside a work tree, a rejected pathspec, a spawn failure) when the scan
+// could not run. run() collapses every one of those to null, so "clean" and
+// "never scanned" were indistinguishable and both produced the pass below —
+// a privacy guard reporting success precisely when it did nothing (B14-D1).
+// Reachable wherever .git is absent, e.g. a tarball/zip install, which is a
+// supported way to get this project.
 let leakFound = false;
+let scanBroken = null;
 for (const pattern of leakPatterns) {
-  const result = run(
-    'git',
-    ['grep', '-n', pattern, '--', ...grepPathspecs],
-    { stdio: ['pipe', 'pipe', 'ignore'] }
-  );
-  if (result) {
-    for (const line of result.split('\n')) {
-      const file = line.split(':')[0];
-      if (allowedFiles.some(a => file.includes(a))) continue;
-      if (file.includes('dashboard/go.mod')) continue;
-      warn(`Possible personal data in ${file}: "${pattern}"`);
-      leakFound = true;
-    }
+  const r = spawnSync('git', ['grep', '-n', pattern, '--', ...grepPathspecs], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+    stdio: ['pipe', 'pipe', 'ignore'],
+  });
+  if (r.status !== 0 && r.status !== 1) {
+    scanBroken = r.error?.message ?? `git grep exited ${r.status}`;
+    break;
+  }
+  if (r.status === 1) continue; // no match for this pattern
+  for (const line of (r.stdout || '').split('\n')) {
+    const file = line.split(':')[0].trim().replace(/\\/g, '/');
+    if (!file) continue;
+    if (allowedFiles.has(file)) continue;
+    warn(`Possible personal data in ${file}: "${pattern}"`);
+    leakFound = true;
   }
 }
-if (!leakFound) {
+if (scanBroken) {
+  fail(`Personal data leak scan could not run (${scanBroken}) — this check finds nothing when it cannot scan, so treat it as unverified, not clean`);
+} else if (!leakFound) {
   pass('No personal data leaks outside allowed files');
 }
 
