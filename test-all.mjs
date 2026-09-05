@@ -2268,6 +2268,22 @@ try {
   else fail('successor: approved successor should override the bundled reference');
   if (reg.successorFor(succTmp, 'gmail')?.name === 'career-ops-plugin-gmail') pass('successor: successorFor() surfaces the maintained version of a bundled id');
   else fail('successor: successorFor should return the registered successor');
+
+  // (4) The control for the trust hinge itself (B16-D1). Cases (1)-(3) vary the
+  // INSTALL (absent / wrong sha / pinned sha) while holding supersedesBundled
+  // true throughout, so none of them shows that the flag is what grants the
+  // override. Without this case, supersedesBundled could become decorative —
+  // every registry-approved plugin installed at its pinned sha silently able to
+  // take over a bundled id — with the three assertions above still green.
+  // Same registry entry, same exact-sha install, flag removed.
+  const succRegistry = JSON.parse(readFileSync(join(succTmp, 'plugins-registry.json'), 'utf-8'));
+  delete succRegistry.plugins[0].supersedesBundled;
+  writeFileSync(join(succTmp, 'plugins-registry.json'), JSON.stringify(succRegistry));
+  if (!eng.resolveSuccessorIds(succTmp).has('gmail')) pass('successor: without supersedesBundled, an approved plugin at the pinned sha still does NOT override a bundled id');
+  else fail('successor: supersedesBundled is not enforced — any registry-approved plugin can take over a bundled id');
+  const disc2 = eng.discoverPlugins(eng.pluginRoots(succTmp), eng.resolveSuccessorIds(succTmp)).find(m => m.id === 'gmail');
+  if (disc2 && disc2.dir === bundledGmail) pass('successor: discovery falls back to the BUNDLED gmail once supersedesBundled is absent');
+  else fail('successor: bundled should win when supersedesBundled is absent');
   rmSync(succTmp, { recursive: true, force: true });
 
   if (install.parseRepoArg('alice/career-ops-plugin-foo').id === 'foo') pass('install: owner/career-ops-plugin-foo parses to id "foo"');
@@ -2282,8 +2298,19 @@ try {
   const auditTmp = mkdtempSync(join(tmpdir(), 'co-audit-'));
   writeFileSync(join(auditTmp, 'index.mjs'), "import cp from 'node:child_process';\nimport lp from 'leftpad';\nawait fetch('https://x');\nexport default {};");
   const aud = audit.auditPlugin(auditTmp);
-  if (!aud.ok && aud.findings.length >= 3) pass('audit: flags child_process + bare-dep + global fetch in a community plugin');
-  else fail(`audit: should flag forbidden patterns (got ${aud.findings.length})`);
+  // Assert by identity, not by count (B16-D2). `findings.length >= 3` is
+  // satisfied by three findings of the SAME kind, so deleting one rule while
+  // another started double-reporting would keep this green — the assertion
+  // names three distinct patterns, so it should require all three.
+  const auditIssues = (aud.findings || []).map(f => String(f.issue || ''));
+  const wantPatterns = [
+    ['child_process', /child_process/],
+    ['bare-specifier dependency', /bare-specifier/],
+    ['direct global fetch', /global fetch/],
+  ];
+  const missedPatterns = wantPatterns.filter(([, rx]) => !auditIssues.some(i => rx.test(i))).map(([n]) => n);
+  if (!aud.ok && missedPatterns.length === 0) pass('audit: flags child_process + bare-dep + global fetch in a community plugin');
+  else fail(`audit: should flag each forbidden pattern (missed: ${missedPatterns.join(', ') || 'none'}; ok=${aud.ok}; got ${aud.findings.length} findings)`);
   if (audit.auditPlugin(join(ROOT, 'plugins', '_template')).ok) pass('audit: the plugin template is clean');
   else fail('audit: the template should be clean');
   rmSync(auditTmp, { recursive: true, force: true });
