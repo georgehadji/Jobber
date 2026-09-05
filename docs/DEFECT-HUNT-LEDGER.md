@@ -646,6 +646,61 @@ That §5 contains both the best and two of the worst assertions in the file is t
 
 ---
 
+## Batch 19 — §3 Liveness classification — 2026-09-05 — CLEAN (no defects found)
+
+The largest unread block in `test-all.mjs` (~547 lines, the whole of §3) and the first section this hunt has opened that was chosen for its **size** rather than its stakes. That distinction is the point of the batch: every previous semantic batch deliberately opened the highest-stakes section available, so the observed rate of ~2 findings per section was from the dense end of the file by construction. §3 tests whether that rate generalizes.
+
+**It does not. No defect of this class exists in §3.**
+
+Baseline: 3632 passed / 0 failed (batch 18's verified total; the run launched for this batch reported 3631 / 1 failed, the failure being the machine-local `tracker-writer-lock-tests.mjs` flake that CI has been green on throughout — same tree, opposite result, as recorded in batches 13 and 14).
+No code changed this batch, so there is no post-fix number: the tree is identical to `main`.
+Budget: 0 confirmed / 6 allocated. Closed on evidence, not on exhaustion.
+
+### What was examined
+
+Mechanical scan of all 547 lines for the five shapes the `AGENTS.md` conventions name, then a full read of the section:
+
+| shape scanned for | hits |
+|---|---|
+| `catch` sets a flag, reason discarded | **0** |
+| assertion by `.length >= n` | **0** |
+| bare `.some()` as the whole condition | **0** |
+| truthiness on a call result | 4 — all inside mock plumbing (`if (routeCallback)`), none in an assertion |
+| `=== null` branches | 9 — all on `resolveAtsApi`, where `null` is the **designed** return for "not an ATS URL", not a collapsed error |
+
+Against 25 assertions comparing an exact result value, across 35 `pass()` / 36 `fail()` sites.
+
+### Why it holds up on reading, not just scanning
+
+The `=== null` hits were the only real candidates, since batches 14 and 18 both found privacy guards mapping a collapsed `null` to the safe outcome. They are innocent here, and for a structural reason rather than by luck: **every null assertion is paired with positive assertions on exact field values** — `resolveAtsApi` valid Lever EU, Workday with and without locale prefix, and Ashby postings are each asserted to produce an exact `ats`, `apiUrl` and `parts.jobPath`. A function returning `null` unconditionally fails every positive case; one returning non-null unconditionally fails every null case. The pair is mutually constraining.
+
+Three further patterns in this section are the conventions applied before they were written:
+
+- **`classifyLiveness` asserts two fields, not one.** `result === 'uncertain' && code === 'bot_challenge'` rather than `result !== 'active'`. And the Cloudflare and plain-403 fixtures share `status: 403` while expecting *different* codes — which is itself the control proving the classifier discriminates on body text rather than on status.
+- **`checkLivenessViaApi` covers 8 scenarios in 12 conditions**, each an exact `result`+`code`, with a failure message that dumps all eight values. One assertion for eight behaviours is a granularity choice, not a discrimination gap; the diagnostic makes the granularity harmless.
+- **The SSRF guard block runs both directions explicitly.** 12 known bypass vectors, each with a label and a per-case failure naming which vector slipped, **plus 4 legitimate ATS URLs asserted not to be blocked**. That false-positive control is rule 1, and it is the thing most commonly missing elsewhere in this file.
+- **`isChallengeResult`** is asserted with two positive and two negative cases in a single condition.
+
+### Confirmed defects
+
+CRITICAL 0 / HIGH 0 / MEDIUM 0 / LOW 0.
+
+### Clean-claim, scoped precisely
+
+This says §3's assertions **discriminate** — each can fail, and fails for its own reason. It does **not** say the expected values are themselves correct. Verifying that `bot_challenge` is the right classification for a Cloudflare interstitial, or that `ashby_api_unlisted` is the right reading of an empty `jobs` array, means auditing `liveness-core.mjs` and `liveness-browser.mjs` as production code — a different batch with a different method. Nothing here was checked against those implementations.
+
+### What this changes about the hunt's own conclusions
+
+The batch-16 caveat is now tested and confirmed: the ~2-per-section rate reported across batches 14-18 **was selection bias**. Five sections chosen for stakes yielded nine defects; the first section chosen for size yielded none. The class is real but not uniform, and it concentrates where an assertion is cheap to write and its failure mode is easy not to picture — a source grep, a `catch` around a fixture, an absence check — rather than where behaviour is exercised directly against a real function, which is what §3 does throughout.
+
+That materially weakens the case for continuing section-by-section. The remaining ~2,500 unread lines are not uniformly suspect; the conventions in `AGENTS.md` (#44) plus opportunistic fixes when a section is touched remain the better use of effort, and this batch is the evidence for that rather than an assertion of it.
+
+### Residual UNKNOWN
+
+~2,500 lines of inline assertions unread at this depth. Also unaudited: `liveness-core.mjs` and `liveness-browser.mjs` themselves — §3 exercises them thoroughly, but this batch verified the *tests*, not the classification rules they encode.
+
+---
+
 ## Seeds (pre-existing, recorded before batch 1 — see docs/DEFECT-HUNT-PLAN.md §6)
 
 | ID | Location | Status | Note |
