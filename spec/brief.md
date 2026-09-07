@@ -58,8 +58,23 @@ directly.
 **Free/paid boundary.** [CLIENT INPUT REQUIRED: which capabilities in §5 sit behind the paywall,
 and which stay in the free CLI?]
 
-**Launch state.** [CLIENT INPUT REQUIRED: is the SaaS built, in build, or at concept? Is there a
-waitlist today?]
+**Launch state.** **In build** (founder, 2026-09-07). Not shippable today. The open-source CLI is
+the part that exists and runs now.
+
+**The one commercial action.** **Purchase** (founder, 2026-09-07). The site exists to sell the
+hosted tier, not to collect intent.
+
+**Free versus paid.** **A paid tier exists** (founder, 2026-09-07). This resolves question 13
+against the CLI's "the seeker never pays" language: that sentence does not transfer to the hosted
+product and must not appear on this site. What survives is narrower and still true — the free CLI
+remains free, and the site is paid for by the seeker, never by an employer, recruiter or
+advertiser. [CLIENT INPUT REQUIRED: is that second half true — no employer-side or advertiser
+revenue, now or planned? It is the only version of the rights claim that survives a paid tier.]
+
+**Sequencing conflict, unresolved.** Purchase is the one job, but the product is in build. Either
+the site launches when purchase is live, or it launches earlier and the PRIMARY action is
+something else in the interim. [CLIENT INPUT REQUIRED: does the site go live only when purchase
+works, or before?] `/positioning` does not depend on the answer; `/architecture` and `/copy` do.
 
 ---
 
@@ -67,10 +82,10 @@ waitlist today?]
 
 Ranked. One PRIMARY, one SECONDARY, everything else is not a job for this site.
 
-1. **PRIMARY — waitlist signup with a specific promise.** [CLIENT INPUT REQUIRED: confirm the
-   commercial action. The plan assumes a waitlist because the launch state is unanswered; if the
-   product is live, the primary action becomes trial signup and the home page changes with it.]
-   The promise attached to the signup must be a commitment the product can keep, not a launch date.
+1. **PRIMARY — purchase the hosted tier** (founder, 2026-09-07). Not a waitlist, not a demo
+   request. Every page is measured against whether it moves a stranger toward paying.
+   Blocked on the sequencing conflict in §1: the product is in build, so purchase is the job the
+   site launches into, and the interim state is unanswered.
 2. **SECONDARY — run the open-source CLI.** Under the fork decision this points at Workler's own
    repository, which is the fork's acquisition channel. It converts the technical segment and it
    substitutes for social proof by making the evaluation logic auditable.
@@ -241,9 +256,10 @@ not trade risk for time; it trades a rename for time.
 Each answerable in one line. Every one of these is a fabrication risk if left unanswered — the
 copy stages will otherwise need a plausible sentence exactly where a fact belongs.
 
-1. Is the SaaS built, in build, or at concept — and is there a waitlist today?
-2. What is the one commercial action the site must produce: waitlist, trial, demo, or purchase?
-3. Pricing model and price?
+1. ~~Is the SaaS built, in build, or at concept?~~ **Answered 2026-09-07: in build.**
+2. ~~What is the one commercial action?~~ **Answered 2026-09-07: purchase.**
+3. Pricing model and price? **Now the highest-priority open question** — a site whose one job is
+   purchase cannot ship without a price. Blocks `/copy` and the pricing page in `/architecture`.
 4. Which capabilities sit behind the paywall, and which stay in the free Workler CLI?
 5. Does the hosted product keep the CLI's "recommend against applying below 4.0" behaviour?
 6. Which countries and languages at launch, and which by month 12?
@@ -253,10 +269,9 @@ copy stages will otherwise need a plausible sentence exactly where a fact belong
 10. Is the founder public by name as the site's Person entity?
 11. Waitlist/form processing: self-hosted endpoint, or a third-party processor?
 12. Is there any owned imagery, or is the site entirely typographic and interface-based?
-13. **"You never pay" versus a paid tier.** The CLI's rights language promises the seeker never
-    pays. A paid hosted tier contradicts it unless the free tier is the seeker's and the paid tier
-    is something else. Which is it? This is a positioning decision, not a copy edit, and it blocks
-    the `/rights` page.
+13. ~~"You never pay" versus a paid tier.~~ **Answered 2026-09-07: paid tier.** "You never pay" is
+    retired. Residual question moved to §1: is the narrower claim (no employer/advertiser revenue)
+    true?
 14. Has counsel been engaged for name clearance, the DPIA, the AI Act classification, the
     accessibility statement, and the consent-banner-free claim?
 
@@ -268,8 +283,11 @@ Marked so no later stage mistakes these for facts.
 
 - **INFERENCE:** the three segments in §3 are derived from the capability set and the competitive
   field, not from observed users. Question 9 is the test.
-- **INFERENCE:** the waitlist as PRIMARY follows only from the launch state being unanswered. If
-  the product is live, this is wrong and the home page changes.
+- ~~**INFERENCE:** the waitlist as PRIMARY…~~ **Superseded 2026-09-07.** PRIMARY is purchase, by
+  founder decision. The replacement inference: with the product in build and purchase as the one
+  job, the site is being written ahead of the thing it sells. Everything on it must therefore be
+  demonstrable from the CLI that already exists, or it is a promise — and a promise is the one
+  currency this site has decided not to spend.
 - **INFERENCE:** ghost-job detection is the strongest owned search cluster, because it is a real
   and widely searched pain that almost no competitor addresses. Rank 1 of the six candidate
   differentiators, to be tested in `/positioning`.
