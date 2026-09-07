@@ -47,17 +47,9 @@ linked out (brief §2).
    and `/ghost-jobs`. It is the site's substitute for a logo wall (message-map §4 objection 2), so
    it belongs where the objection is raised, not on a page someone has to choose to visit.
 
-**Unresolved and structural.** `/pricing` is the PRIMARY target, and the product is in build
-(brief §1 sequencing conflict). Two possible builds:
-
-- **Launch-with-purchase.** `/pricing` carries a real price and a checkout. The sitemap above is
-  final.
-- **Launch-before-purchase.** `/pricing` becomes a price *stated* with a "not open yet" state and
-  a single email capture. This is a different page and a different home-page CTA.
-
-[CLIENT INPUT REQUIRED: which one?] Building the first and retrofitting the second is cheap;
-building the second and retrofitting the first is not, because the home page's whole argument
-changes. Recommend building toward launch-with-purchase.
+**Resolved 2026-09-08: launch-with-purchase.** The site does not go live until purchase works
+(brief §1). `/pricing` carries a real price and a checkout, the sitemap above is final, and there
+is no second version of the home page to design. No email-capture component is built.
 
 ---
 
@@ -221,7 +213,6 @@ prone to): every `page` has an `answer_block` within 40–60 words; every `claim
 |------------------|----------|------|
 | `/pricing` — the whole page | Price and pricing model | brief §7 Q3 |
 | `/pricing` — the tier comparison | Which capabilities are paid vs free CLI | brief §7 Q4 |
-| `/` — the CTA, and the sitemap's final shape | Does the site launch with purchase live, or before? | brief §1 sequencing conflict |
 | `/privacy`, `/terms` | Entity, jurisdiction, host, processors, retention | brief §7 Q7, Q11 |
 | `/about` | Is the founder public by name? | brief §7 Q10 |
 | The `de` locale, the hreflang matrix, the price-per-market rule | Markets and languages at launch | brief §7 Q6 |

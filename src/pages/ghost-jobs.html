@@ -1,0 +1,87 @@
+<!--meta {
+  "title": "Ghost jobs: how to tell if a posting is real",
+  "description": "A ghost job is a posting advertised with no intention to hire. Here are the signals that give one away, and how Workler checks a posting before you apply.",
+  "answer_block": "A ghost job is a posting that is advertised while no hire is intended: already filled, held open to collect résumés, or left up after the role closed. The signals are checkable, such as a listing relisted three times in ninety days or a role still advertised after it was filled. Workler scores posting legitimacy separately.",
+  "jsonld": { "@context": "https://schema.org", "@type": "WebPage", "name": "Ghost jobs: how to tell if a posting is real", "url": "https://workler.example/ghost-jobs", "about": "Ghost jobs and job posting legitimacy" }
+}-->
+
+<section class="section wrap">
+  <h1>Some job postings were never open</h1>
+  <div class="answer">
+    <p>A ghost job is a posting that is advertised while no hire is intended: already filled, held
+    open to collect r&eacute;sum&eacute;s, or left up after the role closed. The signals are
+    checkable, such as a listing relisted three times in ninety days or a role still advertised
+    after it was filled. Workler scores posting legitimacy separately.</p>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Why this happens</h2>
+    <p>If you have sent eighty applications and heard back from four, the explanation you have
+    probably settled on is that something is wrong with your CV.</p>
+    <p>Sometimes it is. Often the posting was not a real vacancy.</p>
+    <p>Companies leave postings up after a role is filled. Some keep a pipeline advert running
+    permanently. Agencies post roles they do not have, to collect CVs. None of this is visible from
+    the advert, and none of it is your fault.</p>
+  </div>
+</section>
+
+<section class="section section--sunk wrap">
+  <div class="prose">
+    <h2>The signals</h2>
+    <p>These are checkable from the outside, without any tool:</p>
+    <ul>
+      <li><strong>The same role, relisted.</strong> A posting that reappears every few weeks is
+      either a role nobody is filling or an advert not attached to one. Three times in ninety days
+      is the point where coincidence stops being the explanation.</li>
+      <li><strong>It outlives its own hire.</strong> The role is announced as filled, or someone
+      appears in it, and the advert stays up.</li>
+      <li><strong>No closing date, forever.</strong> Evergreen postings with no requisition and no
+      date attached.</li>
+      <li><strong>The advert describes no team.</strong> No manager named, no product named, no
+      reporting line — a description that would fit any company on the shelf.</li>
+      <li><strong>It reappears across agencies under different titles.</strong> The same role, three
+      intermediaries, none of whom will name the employer.</li>
+    </ul>
+    <p>None of these is proof on its own. Two or three together usually are.</p>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>What Workler does about it</h2>
+    <p>Workler scores this separately from how well you fit the job. It is Block G of the report,
+    and it does not get averaged into your fit score — because a role you are perfect for is worth
+    nothing if nobody is hiring.</p>
+    <p>It checks whether a posting is still live, tracks roles that get relisted, and flags the ones
+    that behave like ghosts.</p>
+    <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URLs for check-liveness.mjs and detect-reposts.mjs]">Liveness
+    checking and repost detection are scripts in the repository.
+    <a class="claim__receipt" href="/open-source">Receipt &rarr; the repository</a></p>
+  </div>
+  <p class="todo">[CLIENT INPUT REQUIRED: the legitimacy-flagged demo record — spec/brief.md §4 CAN
+  GET.]</p>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>And then it still might tell you no</h2>
+    <p>For postings that are real, Workler scores your fit from 1 to 5. Below 4.0 it recommends you
+    don&rsquo;t apply, and tells you what was missing.</p>
+    <p>The point of both checks is the same: fewer applications, aimed better.</p>
+    <p><a href="/how-it-works">How the score works</a></p>
+  </div>
+  <div class="threshold"><span class="threshold__label">4.0 threshold</span></div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Workler never sends an application for you</h2>
+    <p>It tells you which ones are worth sending.</p>
+    <div class="cta-row">
+      <a class="cta" href="/pricing">See what it costs</a>
+      <a href="/open-source">Or run the free command-line version</a>
+    </div>
+  </div>
+</section>

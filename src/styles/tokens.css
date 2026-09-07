@@ -1,0 +1,145 @@
+/* Workler — design tokens.
+ * The single source of every colour, size, space, radius, duration and width on this site.
+ * Component CSS may not introduce a raw value; scripts/check-tokens.sh enforces it.
+ * Derived from spec/art-direction.md (Direction 1, "The Instrument", revised).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ── Colour ───────────────────────────────────────────────────────────────
+   * Achromatic by default. --color-signal is licensed for ONE meaning:
+   * a score below the 4.0 threshold, a legitimacy flag, or the threshold rule.
+   * Not for buttons, links, hover, emphasis or decoration. See art-direction rule 1.
+   * --color-focus is accessibility infrastructure and is exempt; it appears only
+   * under keyboard focus.
+   */
+  --color-paper:        oklch(98.5% 0.003 250);
+  --color-paper-sunk:   oklch(95.6% 0.005 250);
+  --color-ink:          oklch(20.0% 0.014 250);
+  --color-ink-muted:    oklch(47.0% 0.012 250);  /* ≈7.4:1 on paper */
+  --color-rule:         oklch(84.0% 0.008 250);  /* structural only, never carries meaning alone */
+  --color-signal:       oklch(58.0% 0.152 65);   /* fills and bars only, ≥3:1 non-text */
+  --color-signal-text:  oklch(46.0% 0.140 65);   /* ≥4.5:1 on paper, use whenever it carries text */
+  --color-focus:        oklch(55.0% 0.180 250);
+
+  /* Semantic aliases — components use these, never the raw scale above. */
+  --color-bg:            var(--color-paper);
+  --color-bg-sunk:       var(--color-paper-sunk);
+  --color-text:          var(--color-ink);
+  --color-text-muted:    var(--color-ink-muted);
+  --color-border:        var(--color-rule);
+  --color-threshold:     var(--color-ink);
+  --color-below:         var(--color-signal);
+  --color-below-text:    var(--color-signal-text);
+  --color-btn-bg:        var(--color-ink);
+  --color-btn-text:      var(--color-paper);
+
+  /* ── Type ─────────────────────────────────────────────────────────────────
+   * 2 families, 4 weights. At the budget ceiling — nothing left for a third.
+   * Every numeral is mono and tabular (art-direction rule 3).
+   */
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono",
+               Menlo, Consolas, "Liberation Mono", monospace;
+
+  --weight-regular: 400;
+  --weight-medium:  500;  /* mono only */
+  --weight-semibold: 600; /* sans only */
+
+  /* Scale: ratio 1.25 at mobile. --size-display steps up at ≥64rem (below). */
+  --size-2xs:  0.75rem;
+  --size-xs:   0.875rem;
+  --size-base: 1rem;
+  --size-sm:   0.9375rem;
+  --size-md:   1.25rem;
+  --size-lg:   1.563rem;
+  --size-xl:   1.953rem;
+  --size-2xl:  2.441rem;
+  --size-display: var(--size-2xl);
+
+  /* Deliberate breaks from the scale (art-direction, "where it breaks on purpose").
+   * The score is a measurement, not text, and sits outside the scale entirely. */
+  --size-score:       4.5rem;
+  --size-score-large: 6rem;
+
+  --leading-tight: 1.15;
+  --leading-snug:  1.35;
+  --leading-body:  1.6;
+
+  --tracking-tight:  -0.015em;
+  --tracking-normal: 0em;
+  --tracking-label:  0.08em;   /* mono labels, uppercase */
+
+  --measure: 68ch;
+
+  /* ── Space — 8px base rhythm ─────────────────────────────────────────────── */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  2rem;
+  --space-xl:  3rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 8rem;
+
+  /* ── Radius ───────────────────────────────────────────────────────────────
+   * Near-zero. An instrument is machined, not rounded. Cards exist only for
+   * records (art-direction rule 4), and they get 2px, not a soft 12px.
+   */
+  --radius-none: 0;
+  --radius-sm:   2px;
+  --radius-md:   3px;
+
+  /* ── Border ───────────────────────────────────────────────────────────────── */
+  --border-hair: 1px;
+  --border-thick: 2px;
+
+  /* ── Shadow ───────────────────────────────────────────────────────────────
+   * There are no shadows. Depth is carried by tone (--color-bg-sunk) and rule.
+   * The token exists so that any component reaching for a shadow gets `none`
+   * rather than inventing a raw rgba().
+   */
+  --shadow-none: none;
+
+  /* ── Motion ───────────────────────────────────────────────────────────────
+   * One orchestrated moment per page: the score bar drawing to its value.
+   * Everything else is instant. All of it disabled under prefers-reduced-motion.
+   */
+  --duration-instant: 0ms;
+  --duration-fast:    120ms;
+  --duration-signature: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Containers ───────────────────────────────────────────────────────────── */
+  --container-prose: 42rem;   /* the reading column, ≈68ch at base size */
+  --container-wide:  72rem;   /* nav, footer, demo grids */
+  --container-pad:   var(--space-sm);
+
+  /* ── Breakpoints (documented; media queries cannot read custom properties) ──
+   * 22.5rem 360  ·  30rem 480  ·  48rem 768  ·  64rem 1024  ·  90rem 1440
+   * Base stylesheet is written for 320px and adds complexity upward.
+   */
+  --bp-sm: 30rem;
+  --bp-md: 48rem;
+  --bp-lg: 64rem;
+  --bp-xl: 90rem;
+}
+
+@media (min-width: 64rem) {
+  :root {
+    /* Ratio steps up to 1.333 at desktop; only the display step changes. */
+    --size-display: 3.052rem;
+    --container-pad: var(--space-lg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: var(--duration-instant);
+    --duration-signature: var(--duration-instant);
+  }
+}

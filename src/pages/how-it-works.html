@@ -1,0 +1,109 @@
+<!--meta {
+  "title": "How Workler scores a job posting — Workler",
+  "description": "Seven blocks, a score from 1 to 5, and a separate legitimacy check. Below 4.0 Workler recommends not applying. The scoring logic is open to read.",
+  "answer_block": "Workler reads a job posting and your CV and produces a report in seven blocks: role summary, CV match, level strategy, compensation research, personalisation, interview preparation, and work authorisation. Posting legitimacy is scored separately. The result is a score from 1 to 5, and below 4.0 Workler recommends not applying. It then stops and hands the decision to you.",
+  "jsonld": { "@context": "https://schema.org", "@type": "WebPage", "name": "How Workler scores a job posting", "url": "https://workler.example/how-it-works", "about": "Job posting evaluation methodology" }
+}-->
+
+<section class="section wrap">
+  <h1>How Workler decides whether a job is worth your evening</h1>
+  <div class="answer">
+    <p>Workler reads a job posting and your CV and produces a report in seven blocks: role summary,
+    CV match, level strategy, compensation research, personalisation, interview preparation, and
+    work authorisation. Posting legitimacy is scored separately. The result is a score from 1 to 5,
+    and below 4.0 Workler recommends not applying. It then stops and hands the decision to you.</p>
+  </div>
+</section>
+
+<section class="section wrap">
+  <h2>The seven blocks</h2>
+  <p>Each block answers one question, and each is written out in full so you can disagree with it.</p>
+  <table class="blocks">
+    <caption class="record__meta">The evaluation report</caption>
+    <thead><tr><th scope="col" class="letter">&nbsp;</th><th scope="col">Block</th><th scope="col">The question it answers</th></tr></thead>
+    <tbody>
+      <tr><td class="letter">A</td><th scope="row">Role summary</th><td>What is this job, stripped of the advert?</td></tr>
+      <tr><td class="letter">B</td><th scope="row">CV match</th><td>Which of your actual experience lines up, and which does not?</td></tr>
+      <tr><td class="letter">C</td><th scope="row">Level strategy</th><td>Are you under-levelled, over-levelled, or right for this?</td></tr>
+      <tr><td class="letter">D</td><th scope="row">Compensation</th><td>What does this role pay, in this market, in local terms?</td></tr>
+      <tr><td class="letter">E</td><th scope="row">Personalisation</th><td>What in this posting is worth responding to directly?</td></tr>
+      <tr><td class="letter">F</td><th scope="row">Interview preparation</th><td>Which of your stories fit the questions this role will ask?</td></tr>
+      <tr><td class="letter">G</td><th scope="row">Posting legitimacy</th><td>Is anyone actually hiring for this?</td></tr>
+    </tbody>
+  </table>
+  <p>Block G is scored on its own and never averaged into your fit score. A job you are perfect for
+  is worth nothing if the role was filled in March.</p>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>The score, and the line under it</h2>
+    <p>Fit is scored from 1 to 5. <strong>Below 4.0, Workler recommends you don&rsquo;t apply</strong>,
+    and says why.</p>
+    <p>That threshold is the part most job tools do not have. A scoring system that never returns a
+    bad number is not measuring anything — it is agreeing with you.</p>
+    <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URL to the evaluation mode]">The
+    4.0 threshold and the recommend-against behaviour are in the evaluation mode, not in marketing
+    copy. <a class="claim__receipt" href="/open-source">Receipt &rarr; the evaluation mode</a></p>
+  </div>
+  <div class="threshold"><span class="threshold__label">4.0 threshold</span></div>
+  <p class="todo">[CLIENT INPUT REQUIRED: does the hosted product keep the recommend-against-below-4.0
+  behaviour? spec/brief.md §7 Q5. This page describes the CLI. If the hosted tier drops it, this
+  section is false and the positioning loses half its axis.]</p>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Then it stops</h2>
+    <p>Workler drafts. You send.</p>
+    <p>It will write the CV, the covering letter, the form answers and the follow-up. It will not
+    submit an application, send an email, or click anything on your behalf. That is not a missing
+    feature — it is enforced in the code, and there is a test that fails if it ever stops being
+    true.</p>
+    <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URL to web/test-submit-guard.mjs]">The
+    submit guard is a test in the repository.
+    <a class="claim__receipt" href="/open-source">Receipt &rarr; the submit-guard test</a></p>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Nothing is invented</h2>
+    <p>Workler reformulates what is already in your CV. It reorders, reframes and emphasises. It
+    does not add an achievement you did not describe, a tool you did not use, or a project you did
+    not build.</p>
+    <p>The rule is one line in the instructions the model runs under: keywords get reformulated,
+    never fabricated.</p>
+    <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URL to the instruction file]">That
+    rule is a line in the instruction file, not a claim on a website.
+    <a class="claim__receipt" href="/open-source">Receipt &rarr; the instruction file</a></p>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>In your market&rsquo;s words</h2>
+    <p>Pay, notice periods and contract types are not the same everywhere, and a tool that only
+    knows American conventions gets them wrong quietly. Workler ships eighteen market vocabulary
+    sets — so it knows that a 13.&nbsp;Monatsgehalt is not a bonus, what a TFR is worth, what
+    k&#305;dem tazminat&#305; means for a Turkish notice period, and the difference between CTC and
+    in-hand.</p>
+    <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URL to the modes directory]">The
+    eighteen vocabulary sets are directories in the repository.
+    <a class="claim__receipt" href="/open-source">Receipt &rarr; the modes directory</a></p>
+  </div>
+  <p class="todo">[CLIENT INPUT REQUIRED: how many of the eighteen ship in the hosted tier at
+  launch? spec/brief.md §7 Q6.]</p>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Read it yourself</h2>
+    <p>Everything on this page is in a public repository. The free command-line version runs the
+    same logic on your own machine.</p>
+    <div class="cta-row">
+      <a class="cta" href="/open-source">Read the code</a>
+      <a href="/pricing">See what it costs</a>
+    </div>
+  </div>
+</section>

@@ -125,11 +125,11 @@ depends on.
 | 6 | "Does it scrape job boards? I don't want to be banned." | Named providers — Greenhouse, Ashby, Lever, Workday, iCIMS — described as public APIs and feeds. The word "scraping" appears nowhere on the site, in any tense (brief §6). |
 | 7 | "There's a free open-source version. Why pay?" | Pricing page: the free/paid boundary drawn explicitly. **Blocked: brief §7 Q4.** Note the structural risk — the SECONDARY action (run the free CLI) competes with the PRIMARY one (purchase) unless that line is drawn honestly and visibly. |
 | 8 | "Why does this cost anything at all? The CLI says the seeker never pays." | `/rights`, rewritten. "You never pay" is retired (brief §1, founder 2026-09-07). The surviving claim, **confirmed 2026-09-08: the seeker pays, and nobody else** — no employer, recruiter or advertiser revenue. **Unblocked.** The argument the page makes: a tool whose only customer is the seeker has nobody else to optimise for, and the absence of employer-side features is checkable in the open repository. |
-| 9 | "It's not even finished." | Honesty as the answer: the CLI exists and can be run today; the hosted tier is in build. **The interim PRIMARY action is unresolved (brief §1 sequencing conflict) and this objection cannot be fully answered until it is.** |
+| 9 | "It's not even finished." | Honesty as the answer: the CLI exists and can be run today; the hosted tier is in build. **Largely retired 2026-09-08:** the site does not launch until purchase works, so at launch the product is finished. What survives is the thinner version — no users yet — answered by the free CLI being runnable today. |
 | 10 | "Who is behind this?" | `/about` with a named Person entity. **CAN GET; brief §7 Q10 unanswered.** |
 
 Four of ten objections are currently unanswerable. All four trace to the same three unanswered
-questions: price, privacy posture, and launch sequencing.
+questions: price and privacy posture. Launch sequencing was the third and is now answered.
 
 ---
 
@@ -200,8 +200,8 @@ Beliefs in §3 and objections in §4 with nothing behind them. Each blocks a spe
    is drawn, the SECONDARY action cannibalises the PRIMARY one.
 3. **What entity, in which jurisdiction, hosted where, with which processors, retaining what for
    how long?** (Q7, Q11) — Belief 7, objection 4. Blocks `/privacy` and all of segment C.
-4. **Does the site go live only when purchase works, or before?** (brief §1 sequencing conflict) —
-   objection 9. Blocks `/architecture`.
+4. ~~Does the site go live only when purchase works, or before?~~ **Answered 2026-09-08:
+   only when purchase works.** No interim state to design.
 5. ~~Is the "nobody but the seeker pays" claim true?~~ **Answered 2026-09-08: yes, the seeker pays
    and nobody else.** `/rights` unblocked. Promoted out of homework and into Belief 6a: *the only
    person Workler is paid by is the person using it.*

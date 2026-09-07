@@ -1,0 +1,311 @@
+/* Workler — base and components.
+ * Every value is a token from tokens.css. No raw colour, size, space or radius here.
+ * Written for 320px first; complexity is added upward.
+ *
+ * Fonts: the @font-face block below is commented out until the subset woff2 files are
+ * added (spec/art-direction.md names Instrument Sans and IBM Plex Mono, both SIL OFL).
+ * Until then the stacks in tokens.css fall through to the system faces. Shipping
+ * @font-face rules pointing at files that do not exist would cost two failed requests
+ * per page and a layout shift, which is a worse default than a system stack.
+ *
+ * @font-face { font-family:"Instrument Sans"; src:url("/fonts/instrument-sans-400.woff2") format("woff2");
+ *   font-weight:400; font-display:swap; unicode-range:U+0000-00FF,U+0100-024F,U+0400-04FF; }
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--size-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  text-rendering: optimizeLegibility;
+}
+
+/* Every numeral on this site is mono and tabular (art-direction rule 3). */
+.num, .score__value, .price, time, code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+h1, h2, h3 { line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); margin: 0; }
+h1 { font-size: var(--size-xl); font-weight: var(--weight-semibold); }
+h2 { font-size: var(--size-lg); font-weight: var(--weight-semibold); }
+h3 { font-size: var(--size-md); font-weight: var(--weight-semibold); }
+p, li { max-width: var(--measure); }
+p { margin: 0 0 var(--space-sm); }
+
+a { color: inherit; text-decoration-thickness: var(--border-hair); text-underline-offset: 0.2em; }
+a:hover { text-decoration-thickness: var(--border-thick); }
+
+/* Focus is designed, not inherited (art-direction rule 8). --color-focus is the one
+   colour exempt from the colour licence, and it appears only here. */
+:focus-visible {
+  outline: var(--border-thick) solid var(--color-focus);
+  outline-offset: var(--border-thick);
+}
+
+.skip {
+  position: absolute;
+  left: var(--space-2xs);
+  top: calc(var(--space-2xl) * -1);
+  z-index: 10;
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.skip:focus { top: var(--space-2xs); }
+
+.wrap {
+  width: 100%;
+  max-width: var(--container-wide);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────────
+ * Not logo-left / links-centre / sign-in-right (banlist). Logo left, links right,
+ * no sign-in until there is something to sign into. The threshold rule is its border.
+ */
+.site-head { border-bottom: var(--border-hair) solid var(--color-threshold); }
+.head-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  align-items: baseline;
+  justify-content: space-between;
+  padding-block: var(--space-sm);
+}
+.lockup { text-decoration: none; display: inline-block; }
+.lockup__name {
+  font-weight: var(--weight-semibold);
+  font-size: var(--size-md);
+  letter-spacing: var(--tracking-tight);
+}
+/* The signature, at logotype scale. Blocked on trademark clearance, this is a lockup
+   rather than a logo — and deliberately cheap to replace. */
+.lockup__rule {
+  display: block;
+  height: var(--border-hair);
+  background: var(--color-threshold);
+  margin-top: var(--space-3xs);
+}
+.nav { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); list-style: none; margin: 0; padding: 0; }
+.nav a { text-decoration: none; font-size: var(--size-sm); }
+.nav a:hover, .nav a[aria-current="page"] { text-decoration: underline; }
+
+/* ── Sections ──────────────────────────────────────────────────────────────── */
+.section { padding-block: var(--space-2xl); }
+.section + .section { border-top: var(--border-hair) solid var(--color-border); }
+.section--sunk { background: var(--color-bg-sunk); }
+.prose { max-width: var(--container-prose); }
+.lede { font-size: var(--size-md); color: var(--color-text); }
+
+/* The answer block: same component, same position, every page (ia §2). */
+.answer {
+  max-width: var(--container-prose);
+  font-size: var(--size-md);
+  line-height: var(--leading-snug);
+  margin-block: var(--space-md) var(--space-lg);
+  padding-left: var(--space-sm);
+  border-left: var(--border-thick) solid var(--color-threshold);
+}
+
+.hero { padding-block: var(--space-2xl) var(--space-xl); }
+.hero h1 {
+  /* Deliberately one step below its scale position (art-direction). A site arguing that
+     the tool refuses to oversell cannot open at the display size. */
+  font-size: var(--size-xl);
+  max-width: 20ch;
+}
+
+/* ── The threshold rule — the signature (art-direction rule 2) ────────────────
+ * At most once per viewport. Always labelled 4.0 in mono at its right end.
+ */
+.threshold {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-block: var(--space-lg);
+}
+.threshold::before {
+  content: "";
+  flex: 1;
+  height: var(--border-hair);
+  background: var(--color-threshold);
+}
+.threshold__label {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+}
+
+/* ── Score ───────────────────────────────────────────────────────────────────
+ * Colour licence (art-direction rule 1): --color-below is used ONLY for a score under
+ * 4.0 or a legitimacy flag. A page with no negative judgment on it is achromatic.
+ */
+.score { display: flex; align-items: baseline; gap: var(--space-2xs); }
+.score__value {
+  font-size: var(--size-score);
+  line-height: 1;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-tight);
+}
+.score__max { font-size: var(--size-md); color: var(--color-text-muted); }
+.score--below .score__value { color: var(--color-below-text); }
+.score__verdict {
+  font-family: var(--font-mono);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.score--below .score__verdict { color: var(--color-below-text); }
+
+.bar { height: var(--space-2xs); background: var(--color-bg-sunk); position: relative; }
+.bar__fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  /* The width is data, supplied per record as --bar-fill. Keeping it a custom property
+     rather than an inline width keeps every literal value out of the style attribute. */
+  width: var(--bar-fill, 0%);
+  background: var(--color-text);
+  /* The one orchestrated moment on the page (art-direction rule 5). */
+  transition: width var(--duration-signature) var(--ease-out);
+}
+.bar--below .bar__fill { background: var(--color-below); }
+
+/* ── Records: the only cards on this site (art-direction rule 4) ───────────── */
+.record {
+  border: var(--border-hair) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-none);
+}
+.record__meta {
+  font-family: var(--font-mono);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.records { display: grid; gap: var(--space-md); }
+
+.flag {
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--color-below-text);
+  border-left: var(--border-thick) solid var(--color-below);
+  padding-left: var(--space-2xs);
+}
+
+/* ── Claim with receipt ──────────────────────────────────────────────────────
+ * A claim is not publishable without its link; build.mjs fails the build otherwise.
+ */
+.claim { margin-block: var(--space-sm); }
+.claim__receipt {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ── Blocks table (A–G), block letter in the left margin ─────────────────── */
+.blocks { border-collapse: collapse; width: 100%; max-width: var(--container-wide); }
+.blocks th, .blocks td {
+  text-align: left;
+  padding: var(--space-2xs) var(--space-sm) var(--space-2xs) 0;
+  border-bottom: var(--border-hair) solid var(--color-border);
+  vertical-align: baseline;
+}
+.blocks th { font-weight: var(--weight-semibold); font-size: var(--size-sm); }
+.blocks .letter {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-medium);
+  width: var(--space-lg);
+  color: var(--color-text-muted);
+}
+
+/* ── CTA — one component, one destination, ink on paper. No signal colour. ── */
+.cta {
+  display: inline-block;
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  text-decoration: none;
+  font-weight: var(--weight-semibold);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  /* ≥44px tall at base size: 2×0.75rem padding + 1.6 line-height. Target 2.5.8 is 24px;
+     designing to 44 costs nothing here. */
+  min-height: 2.75rem;
+}
+.cta:hover { text-decoration: underline; }
+.cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; margin-top: var(--space-md); }
+.cta-note { font-size: var(--size-sm); color: var(--color-text-muted); max-width: var(--measure); }
+
+.terminal {
+  background: var(--color-bg-sunk);
+  border: var(--border-hair) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  overflow-x: auto;
+  font-size: var(--size-xs);
+  line-height: var(--leading-snug);
+}
+
+/* Visible marker for anything still awaiting a client fact. It is deliberately loud:
+   an unanswered question that looks like finished copy is how a placeholder ships. */
+.todo {
+  border: var(--border-thick) dashed var(--color-below);
+  color: var(--color-below-text);
+  padding: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  max-width: var(--container-prose);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.site-foot { border-top: var(--border-hair) solid var(--color-threshold); margin-top: var(--space-3xl); padding-block: var(--space-xl); }
+.foot-inner { display: grid; gap: var(--space-lg); }
+.foot-head { font-size: var(--size-2xs); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2xs); }
+.foot-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3xs); }
+.foot-group a { font-size: var(--size-sm); text-decoration: none; }
+.foot-group a:hover { text-decoration: underline; }
+.foot-note { margin-top: var(--space-lg); font-size: var(--size-xs); color: var(--color-text-muted); }
+.foot-note p { margin: 0 0 var(--space-3xs); }
+
+/* ── Upward from 320 ─────────────────────────────────────────────────────── */
+@media (min-width: 48rem) {
+  h1 { font-size: var(--size-2xl); }
+  .hero h1 { font-size: var(--size-2xl); }
+  .records { grid-template-columns: repeat(2, 1fr); }
+  .foot-inner { grid-template-columns: repeat(3, 1fr); }
+  .foot-note { display: flex; justify-content: space-between; gap: var(--space-md); }
+}
+
+@media (min-width: 64rem) {
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; gap: var(--space-2xl); align-items: start; }
+  .hero__margin { position: sticky; top: var(--space-md); }
+  .records { grid-template-columns: repeat(3, 1fr); }
+  .score__value { font-size: var(--size-score-large); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

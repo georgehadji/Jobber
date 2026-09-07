@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const routes = ['/']; // extend from spec/ia.md sitemap
+// Every URL in spec/ia.md §1. The suite shipped with only '/' — a site is not
+// accessible because its home page is.
+const routes = [
+  '/', '/how-it-works', '/ghost-jobs', '/open-source', '/pricing',
+  '/rights', '/privacy', '/terms', '/about', '/attribution', '/accessibility',
+];
 
 for (const route of routes) {
   test(`no accessibility violations: ${route}`, async ({ page }) => {

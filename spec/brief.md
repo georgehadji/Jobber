@@ -75,10 +75,15 @@ This is the rights claim that replaces "you never pay", and it is stronger than 
 category the seeker is usually the product. A tool whose only customer is the seeker cannot be
 optimising for anyone else, and that is checkable against the absence of employer-side features.
 
-**Sequencing conflict, unresolved.** Purchase is the one job, but the product is in build. Either
-the site launches when purchase is live, or it launches earlier and the PRIMARY action is
-something else in the interim. [CLIENT INPUT REQUIRED: does the site go live only when purchase
-works, or before?] `/positioning` does not depend on the answer; `/architecture` and `/copy` do.
+**Launch sequencing. Resolved 2026-09-08: the site goes live only when purchase works.** No
+interim waitlist, no "coming soon", no email capture standing in for the CTA. Site and
+purchasable product ship together.
+
+Three consequences the later stages inherit. `/pricing` is built once, with a real price and a
+working checkout — `availability` in its `Offer` markup is `InStock`, never `PreOrder`. Objection 9
+("it's not even finished") disappears from the launch build, because at launch it is finished.
+And the site's launch date is now the product's launch date: the seven-week schedule in the plan
+of record measures the site, not the release, and whichever finishes last sets the date.
 
 ---
 
@@ -88,8 +93,8 @@ Ranked. One PRIMARY, one SECONDARY, everything else is not a job for this site.
 
 1. **PRIMARY — purchase the hosted tier** (founder, 2026-09-07). Not a waitlist, not a demo
    request. Every page is measured against whether it moves a stranger toward paying.
-   Blocked on the sequencing conflict in §1: the product is in build, so purchase is the job the
-   site launches into, and the interim state is unanswered.
+   Unblocked: the site does not launch until purchase works (§1), so there is no interim action
+   to design and no second version of the home page.
 2. **SECONDARY — run the open-source CLI.** Under the fork decision this points at Workler's own
    repository, which is the fork's acquisition channel. It converts the technical segment and it
    substitutes for social proof by making the evaluation logic auditable.

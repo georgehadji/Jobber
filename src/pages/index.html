@@ -1,0 +1,101 @@
+<!--meta {
+  "title": "Workler — the job tool that tells you not to apply",
+  "description": "Workler scores a job posting against your CV out of 5, flags postings that were never really open, and never sends anything. You send it. Free CLI.",
+  "answer_block": "Workler evaluates job postings against your CV, scores the fit from 1 to 5, flags postings that look like they were never open, and prepares your application. It does not submit anything. The last click is always yours. A free command-line version is open source; the hosted version is paid, and paid only by the person using it.",
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", "@id": "https://workler.example/#org", "name": "Workler", "url": "https://workler.example/" },
+      { "@type": "WebSite", "@id": "https://workler.example/#site", "name": "Workler", "url": "https://workler.example/", "publisher": { "@id": "https://workler.example/#org" } },
+      { "@type": "SoftwareApplication", "name": "Workler", "applicationCategory": "BusinessApplication", "operatingSystem": "Web", "description": "Evaluates job postings against a CV, scores fit from 1 to 5, checks posting legitimacy, and prepares applications without sending them.", "publisher": { "@id": "https://workler.example/#org" } }
+    ]
+  }
+}-->
+
+<section class="section hero wrap">
+  <div>
+    <h1>Some job postings were never open</h1>
+    <p class="lede">Postings get left up after the role is filled. Some are only there to collect
+    CVs. Workler checks whether a posting is real before you spend an evening on it — and it never
+    sends anything on your behalf.</p>
+
+    <div class="answer">
+      <p>Workler evaluates job postings against your CV, scores the fit from 1 to 5, flags postings
+      that look like they were never open, and prepares your application. It does not submit
+      anything. The last click is always yours. A free command-line version is open source; the
+      hosted version is paid, and paid only by the person using it.</p>
+    </div>
+
+    <div class="cta-row">
+      <a class="cta" href="/pricing">See what it costs</a>
+      <a href="/open-source">Or run the free command-line version</a>
+    </div>
+    <p class="cta-note">No employer, recruiter or advertiser pays for any part of this.</p>
+  </div>
+
+  <aside class="hero__margin" aria-label="Example evaluation">
+    <div class="record">
+      <p class="record__meta">Block G · posting legitimacy</p>
+      <p class="flag">Relisted 3&times; in 90 days</p>
+      <p class="record__meta">Overall fit</p>
+      <div class="score score--below">
+        <span class="score__value">2.8</span><span class="score__max">/5</span>
+      </div>
+      <div class="bar bar--below" role="img" aria-label="Fit score 2.8 out of 5, below the 4.0 threshold"><div class="bar__fill" style="--bar-fill:56%"></div></div>
+      <p class="score__verdict">Do not apply</p>
+    </div>
+  </aside>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Seven blocks, one score, and a separate check on whether the job is real</h2>
+    <p>Workler reads a job posting and your CV and writes a report: role summary, CV match, level
+    strategy, pay research, what to personalise, interview preparation, and work authorisation.
+    Posting legitimacy is scored on its own, because a job you fit perfectly is still worth nothing
+    if nobody is hiring for it.</p>
+    <p>The result is a number from 1 to 5. Below 4.0, Workler recommends you don&rsquo;t apply.</p>
+    <p><a href="/how-it-works">How the score works</a></p>
+  </div>
+  <div class="threshold"><span class="threshold__label">4.0 threshold</span></div>
+</section>
+
+<section class="section section--sunk wrap">
+  <div class="prose">
+    <h2>Three real postings. Here is what it said about them.</h2>
+    <p>These were evaluated with the tool, not written for this page.</p>
+  </div>
+  <p class="todo">[CLIENT INPUT REQUIRED: the three committed demo records — spec/brief.md §4 CAN
+  GET. One must score below 4.0 with do-not-apply, one must carry a legitimacy flag. This section
+  ships with real evaluations or it does not ship.]</p>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>The command-line version is free, and it is the same judgment</h2>
+    <p>Workler CLI is open source under the MIT licence. It runs on your own machine inside ten AI
+    coding tools. The scoring logic is in the repository, and you can read it before you trust
+    it.</p>
+    <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URL]">The evaluation modes and
+    the scoring logic are readable in the repository.
+    <a class="claim__receipt" href="/open-source">Receipt &rarr; the repository</a></p>
+    <div class="cta-row"><a class="cta" href="/open-source">Read the code</a></div>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Who pays for this? You do. Nobody else does.</h2>
+    <p>There is no employer paying for placement, no recruiter buying your details, no advertiser.
+    The only person Workler is paid by is the person using it — which means there is nobody else for
+    it to be optimised for.</p>
+    <p><a href="/rights">Who this works for</a></p>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Workler is for people who apply on purpose</h2>
+    <div class="cta-row"><a class="cta" href="/pricing">See what it costs</a></div>
+  </div>
+</section>

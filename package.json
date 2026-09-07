@@ -1,0 +1,18 @@
+{
+  "name": "workler-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Workler marketing site. No framework: eleven static pages, zero client-side JS.",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:strict": "node build.mjs --strict",
+    "serve": "node --run build && node -e \"import('node:http').then(async({default:h})=>{const{readFile}=await import('node:fs/promises');const{join,extname}=await import('node:path');const T={'.html':'text/html','.css':'text/css','.xml':'application/xml','.txt':'text/plain'};h.createServer(async(q,s)=>{let p=q.url.split('?')[0];if(!extname(p))p=join(p,'index.html');try{const b=await readFile(join('dist',p));s.writeHead(200,{'content-type':T[extname(p)]||'application/octet-stream'});s.end(b)}catch{s.writeHead(404);s.end('not found')}}).listen(4321,()=>console.log('http://localhost:4321'))})\"",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@lhci/cli": "^0.14.0",
+    "@playwright/test": "^1.49.0"
+  }
+}

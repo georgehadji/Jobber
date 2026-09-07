@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="canonical" href="{{canonical}}">{{robots}}
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{canonical}}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<!-- og:image and the favicon are blocked on trademark clearance (spec/brief.md §1).
+     Shipping a placeholder image would be worse than shipping none: an OG card with a
+     stand-in wordmark is the asset that gets screenshotted and reshared. -->
+<link rel="stylesheet" href="/styles/tokens.css">
+<link rel="stylesheet" href="/styles/base.css">
+<script type="application/ld+json">{{jsonld}}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-inner">
+    <a class="lockup" href="/">
+      <span class="lockup__name">Workler</span>
+      <span class="lockup__rule" aria-hidden="true"></span>
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+          {{nav}}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+{{body}}
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <div class="foot-group">
+      <h2 class="foot-head">Product</h2>
+      <ul>
+        <li><a href="/how-it-works">How it works</a></li>
+        <li><a href="/ghost-jobs">Ghost jobs</a></li>
+        <li><a href="/open-source">Open source</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+      </ul>
+    </div>
+    <div class="foot-group">
+      <h2 class="foot-head">Trust</h2>
+      <ul>
+        <li><a href="/rights">Who this works for</a></li>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/accessibility">Accessibility</a></li>
+      </ul>
+    </div>
+    <div class="foot-group">
+      <h2 class="foot-head">Project</h2>
+      <ul>
+        <li><a href="/about">About</a></li>
+        <li><a href="/attribution">Attribution</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap foot-note">
+    <p>Workler is based on Jobber, an MIT-licensed project by santifer. <a href="/attribution">Lineage and licence</a>.</p>
+    <p>&copy; {{year}}</p>
+  </div>
+</footer>
+</body>
+</html>
