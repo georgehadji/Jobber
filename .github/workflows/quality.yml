@@ -1,0 +1,21 @@
+name: quality
+on: [push, pull_request]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - name: Design tokens not bypassed
+        run: bash scripts/check-tokens.sh
+      - run: npm run build
+      - name: Accessibility (axe, WCAG 2.2 AA)
+        run: npx playwright install --with-deps chromium && npx playwright test
+      - name: Performance budgets (Lighthouse CI)
+        run: npx @lhci/cli autorun
+      - name: Structured data present
+        run: |
+          grep -rq 'application/ld+json' dist/ || { echo "No JSON-LD in build output"; exit 1; }
