@@ -66,10 +66,14 @@ hosted tier, not to collect intent.
 
 **Free versus paid.** **A paid tier exists** (founder, 2026-09-07). This resolves question 13
 against the CLI's "the seeker never pays" language: that sentence does not transfer to the hosted
-product and must not appear on this site. What survives is narrower and still true — the free CLI
-remains free, and the site is paid for by the seeker, never by an employer, recruiter or
-advertiser. [CLIENT INPUT REQUIRED: is that second half true — no employer-side or advertiser
-revenue, now or planned? It is the only version of the rights claim that survives a paid tier.]
+product and must not appear on this site. What survives is narrower and **confirmed by the founder,
+2026-09-08: the seeker pays, and nobody else.** No employer, recruiter or advertiser revenue. The
+free CLI remains free. Visitors arrive at the site and pay for the service it provides — that is
+the whole commercial relationship.
+
+This is the rights claim that replaces "you never pay", and it is stronger than it looks: in this
+category the seeker is usually the product. A tool whose only customer is the seeker cannot be
+optimising for anyone else, and that is checkable against the absence of employer-side features.
 
 **Sequencing conflict, unresolved.** Purchase is the one job, but the product is in build. Either
 the site launches when purchase is live, or it launches earlier and the PRIMARY action is
