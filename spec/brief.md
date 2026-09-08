@@ -283,6 +283,11 @@ copy stages will otherwise need a plausible sentence exactly where a fact belong
     true?
 14. Has counsel been engaged for name clearance, the DPIA, the AI Act classification, the
     accessibility statement, and the consent-banner-free claim?
+15. Checkout provider? Recommendation from the UI/UX audit (2026-09-08): a hosted,
+    merchant-of-record checkout (Paddle or Lemon Squeezy) rather than any on-site form. The site
+    stays at zero JS, no card data touches it, and the provider collects and remits EU/UK VAT —
+    which settles the tax half of Q7 and the processor half of Q11. Opening the account needs the
+    entity from Q7. Blocks the Buy link on `/pricing`.
 
 ---
 

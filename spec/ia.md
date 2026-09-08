@@ -213,6 +213,7 @@ prone to): every `page` has an `answer_block` within 40–60 words; every `claim
 |------------------|----------|------|
 | `/pricing` — the whole page | Price and pricing model | brief §7 Q3 |
 | `/pricing` — the tier comparison | Which capabilities are paid vs free CLI | brief §7 Q4 |
+| `/pricing` — the Buy link | Checkout provider (hosted merchant-of-record recommended) | brief §7 Q15 |
 | `/privacy`, `/terms` | Entity, jurisdiction, host, processors, retention | brief §7 Q7, Q11 |
 | `/about` | Is the founder public by name? | brief §7 Q10 |
 | The `de` locale, the hreflang matrix, the price-per-market rule | Markets and languages at launch | brief §7 Q6 |

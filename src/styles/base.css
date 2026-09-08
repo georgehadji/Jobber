@@ -8,8 +8,20 @@
  * @font-face rules pointing at files that do not exist would cost two failed requests
  * per page and a layout shift, which is a worse default than a system stack.
  *
+ * When the files land, three things ship together or the CLS budget (≤0.05) fails:
+ *   1. the face itself, font-display: swap;
+ *   2. a metric-matched fallback face — size-adjust, ascent-override, descent-override and
+ *      line-gap-override computed from the real font file with fontpie or capsize (never
+ *      guessed) — and its name inserted into --font-sans in tokens.css right after
+ *      "Instrument Sans", so the swap happens between two faces of the same metrics;
+ *   3. <link rel="preload" as="font" type="font/woff2" crossorigin> for the 400 sans in
+ *      layout.html — the face the first paint needs.
+ * Same recipe for IBM Plex Mono.
+ *
  * @font-face { font-family:"Instrument Sans"; src:url("/fonts/instrument-sans-400.woff2") format("woff2");
  *   font-weight:400; font-display:swap; unicode-range:U+0000-00FF,U+0100-024F,U+0400-04FF; }
+ * @font-face { font-family:"Instrument Sans Fallback"; src:local("Segoe UI"),local("Arial");
+ *   size-adjust:<fontpie>; ascent-override:<fontpie>; descent-override:<fontpie>; line-gap-override:<fontpie>; }
  */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -241,6 +253,24 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   text-transform: uppercase;
   color: var(--color-text);
 }
+
+/* ── Document pages: last-reviewed line and contents (built by build.mjs) ── */
+.doc-meta {
+  font-family: var(--font-mono);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-top: var(--space-2xs);
+}
+.contents {
+  max-width: var(--container-prose);
+  margin-block: var(--space-md) var(--space-lg);
+  padding-left: var(--space-sm);
+  border-left: var(--border-hair) solid var(--color-border);
+}
+.contents ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3xs); font-size: var(--size-sm); }
+.contents a { display: inline-block; padding-block: var(--space-3xs); }
 
 /* ── Blocks table (A–G), block letter in the left margin ─────────────────── */
 .blocks { border-collapse: collapse; width: 100%; max-width: var(--container-wide); }

@@ -104,6 +104,36 @@ for (const p of pages) {
   if (markers) (STRICT ? fail : warn)(`${p.file}: ${markers} unanswered CLIENT INPUT REQUIRED marker(s)`);
 }
 
+// Every h2 gets a stable id so any section can be linked to. Document pages (ia §2) also
+// get a last-reviewed line under the title and, with two or more headings, a contents list
+// after the answer block — the answer block keeps its position on every page.
+const slug = (s) => s.replace(/<[^>]+>/g, '').replace(/&[a-z]+;|&#\d+;/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+for (const p of pages) {
+  const seen = new Set();
+  const heads = [];
+  p.body = p.body.replace(/<h2(?![^>]*\bid=)([^>]*)>([\s\S]*?)<\/h2>/g, (m, attrs, text) => {
+    const base = slug(text) || 'section';
+    let id = base;
+    for (let i = 2; seen.has(id); i++) id = `${base}-${i}`;
+    seen.add(id);
+    heads.push([id, text]);
+    return `<h2 id="${id}"${attrs}>${text}</h2>`;
+  });
+  if (p.meta.template !== 'document') continue;
+
+  const last = p.meta.last_reviewed;
+  if (!last) (p.meta.blocked ? warn : fail)(`${p.file}: document page has no last_reviewed`);
+  else if (!/^\d{4}-\d{2}-\d{2}$/.test(last)) fail(`${p.file}: last_reviewed must be YYYY-MM-DD`);
+  const reviewed = last ? `\n  <p class="doc-meta">Last reviewed <time datetime="${last}">${last}</time></p>` : '';
+  const contents = heads.length >= 2
+    ? `\n  <nav class="contents" aria-label="Contents"><ol>${heads.map(([id, t]) => `<li><a href="#${id}">${t}</a></li>`).join('')}</ol></nav>`
+    : '';
+  const answer = p.body.match(/<div class="answer">[\s\S]*?<\/div>/);
+  p.body = answer
+    ? p.body.replace('</h1>', () => '</h1>' + reviewed).replace(answer[0], () => answer[0] + contents)
+    : p.body.replace('</h1>', () => '</h1>' + reviewed + contents);
+}
+
 if (PLACEHOLDER_ORIGIN) {
   (STRICT ? fail : warn)(`SITE_ORIGIN is unset — building against the placeholder ${SITE}`);
 }
