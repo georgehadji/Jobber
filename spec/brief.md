@@ -309,7 +309,11 @@ copy stages will otherwise need a plausible sentence exactly where a fact belong
 8. Who operates the site after launch, and how technical are they?
 9. Are there any users, beta testers, or a documented case of someone landing a role?
 10. Is the founder public by name as the site's Person entity?
-11. Waitlist/form processing: self-hosted endpoint, or a third-party processor?
+11. Waitlist/form processing: self-hosted endpoint, or a third-party processor? *Partial,
+    2026-09-08: the hosted tier's LLM path is decided (fork repo, `docs/HOSTED-APP-PLAN.md` §5):
+    OpenRouter as gateway with `data_collection: deny`, and the model vendors behind it
+    (DeepSeek, Z.ai, Alibaba/Qwen, Moonshot, Google). Those are processors and belong on
+    `/privacy` by name; the remaining half of this question is the entity and the DPA.*
 12. Is there any owned imagery, or is the site entirely typographic and interface-based?
 13. ~~"You never pay" versus a paid tier.~~ **Answered 2026-09-07: paid tier.** "You never pay" is
     retired. Residual question moved to §1: is the narrower claim (no employer/advertiser revenue)
