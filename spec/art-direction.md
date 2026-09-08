@@ -363,3 +363,48 @@ reasoning, restated: what a Material-branded audience would guess (violet, FAB, 
 ripple) is exactly the set this revision closes off, and the mechanisms that made the pre-Material
 direction unusual — the colour-as-rule licence, the threshold-rule signature, the demoted H1 — are
 kept verbatim. Gate met (`spec/material-plan.md` §6, Phase 0: ≤3/10 with reasons).
+
+---
+
+# REVISION 3 — Simplicity audit, John Maeda's ten laws (2026-09-08)
+
+**Trigger.** Founder input: the site must read as modern, clean, minimal, and should be checked
+against Maeda's *Laws of Simplicity*. This is not a fourth direction. "Modern, clean, minimal" is
+what Direction 1 has argued since Pass 1 — achromatic by default, one signature, no icons, no card
+without a record — and Maeda's laws are a lens to audit that claim, not a brief to redesign
+against. Each law below is scored **HOLDS** (the current build already satisfies it, cited) or
+**ACTION** (a concrete, scoped change — some done in this pass, some flagged for the phase that
+owns that surface, per `spec/material-plan.md` §6's own phase boundaries).
+
+| # | Law | Verdict | Finding |
+|---|---|---|---|
+| 1 | **Reduce** | HOLDS, one ACTION flagged | Zero client JS, one CTA per section, no icons, 2 font families/4 weights, cards only for records. **ACTION (Phase 4, not executed here):** the home page's `.answer` block states the €79/no-renewal fact once; `.cta-note` directly below restates the same fact in different words before adding its two *new* clauses (no renewal is implied twice; "no employer/recruiter/advertiser" is the only genuinely new clause). Flagged in `spec/qa-report.md`-style form for whoever next edits `index.html` copy — not changed here, because it is a copy decision `message-map.md` made deliberately and reversing it needs the same sign-off, not a silent edit under a design pass |
+| 2 | **Organize** | HOLDS | Footer is already three labelled groups (Product / Trust / Project) instead of one flat list of eleven links — categorisation this law asks for, already built. The A–G blocks table groups by letter, one row per concept. Header nav stays flat at four items on purpose: organizing four items into groups would be law 2 applied where law 1 (reduce) already finished the job |
+| 3 | **Time** | HOLDS | The answer-block convention (40–60 words, same position, every page) puts the answer before the visitor has to look for it — this *is* the law, not a metaphor for it. Zero third-party scripts, self-hosted fonts (once Phase 2 ships), LCP/CLS budgets enforced in CI. A visitor's *perceived* wait is the metric, and the site is built to make that near-zero before a byte of marketing copy loads |
+| 4 | **Learn** | HOLDS | Every device borrows a shape the visitor already knows: `/5` is a familiar rating grammar, mono tabular numerals read as "this is data" the way a terminal or a spreadsheet does, the assist chip on the legitimacy flag is the tag pattern from every issue tracker, the block-letter margin is the pattern of a legal exhibit or an audit report. Nothing on the site asks the visitor to learn a new visual grammar to use it |
+| 5 | **Difference** | HOLDS — this is the site's core device | An achromatic page with exactly one licensed chromatic value *is* Maeda's law 5 as a colour system: the amber only means something because everything else refuses to. Art-direction rule 1 (`--color-error`, licensed for one meaning) predates this audit and is the strongest single instance of the law on the site |
+| 6 | **Context** | HOLDS, expanded this pass | Dark scheme now follows `prefers-color-scheme` at zero JS cost (Phase 1, this session) — the page reads its ambient context instead of asking the visitor to set a preference. `forced-colors: active` (Windows High Contrast) is handled the same way: the signature elements redraw in `CanvasText` rather than vanishing. Both are the page adapting to where it is rendered, which is exactly what this law asks for |
+| 7 | **Emotion** | ACTION taken this pass | Named as "the one real aesthetic risk" since Pass 2: an all-achromatic, no-icon, no-shadow page can read as unfinished rather than restrained. Two changes this session push back on that without adding colour or icons: M3's `md` shape token (12px) on record cards softens the old near-zero radius, and the hero record's `elevation-1` (§4) plus the new **CTA hover lift** (`box-shadow` → `elevation-1` on hover, `base.css`, this pass) give the page two small tactile moments — the state layer already in place, plus this one. Neither uses colour or motion the banlist restricts; both are quality-of-material warmth, not decoration |
+| 8 | **Trust** | HOLDS — this is the site's proof mechanism | `.claim`/`data-receipt` is law 8 enforced at build time: `build.mjs` fails the build on a claim with no resolving link, so the visitor never has to take a claim on faith — the mechanism checks itself. The score bar drawing to its measured value on load is the same idea applied to data: the number is shown arriving, not asserted |
+| 9 | **Failure** | HOLDS, stated as a boundary | Not everything simplifies. `/privacy`, `/terms`, `/accessibility` and the AI Act / GDPR material in `spec/brief.md` §6 carry real legal precision that a "clean, minimal" pass must not flatten into a slogan — doing so would be a functional failure (an inaccurate compliance claim), not a design win. This mirrors the project's own anti-fabrication rule (`AGENTS.md`, "Keywords get reformulated, never fabricated"): reduction applies to visual noise, never to the precision a claim needs to stay true |
+| 10 | **The One** | HOLDS — the synthesis | One answer block, one threshold rule, one CTA per section, one chromatic value, one orchestrated motion. The site does not have a "simplicity feature" to point at because the whole document is built by subtracting toward it — which is the law's own definition of done |
+
+**The three life technologies, applied:**
+
+- **SHRINK.** Already enforced as CI budgets, not aspiration: first-load JS 0KB, ≤2 font
+  families/4 weights, inlined CSS budgeted at ≤9KB gz (`spec/material-plan.md` §5).
+- **HIDE.** The secondary action in every `.cta-row` is a text link, never a second filled
+  button, so the page has one visually loud action per section, not two competing ones. Pages
+  still waiting on a founder fact (`meta.blocked`) are `noindex`ed and excluded from the sitemap —
+  hidden from search until they are real, rather than shipped half-true. Document pages only grow
+  a contents nav once they have two or more headings to justify it (`build.mjs`) — the structure
+  stays hidden until it earns its place.
+- **EMBODY.** The genuine risk of SHRINK + HIDE taken this far is a page that reads as cheap
+  rather than restrained. This is where the M3 elevation/shape work (§4) and this pass's CTA hover
+  lift earn their cost, and it is the reason Phase 2 (real Roboto files, not the system-stack
+  fallback) is worth doing rather than deferring indefinitely: a system-font fallback reads as
+  *unstyled*, which is the one failure mode EMBODY exists to prevent.
+
+**Net effect on the Pass 2 estimate.** This audit does not reopen the ten-studios test — it is a
+different question (does the direction hold together, not would ten studios draw it). No change
+to the 2/10 figure above.

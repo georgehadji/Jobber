@@ -160,8 +160,16 @@ mkdirSync(OUT, { recursive: true });
 for (const p of pages) {
   const slug = basename(p.file, '.html');
   const url = slug === 'index' ? '/' : `/${slug}`;
-  const dir = slug === 'index' ? OUT : join(OUT, slug);
-  mkdirSync(dir, { recursive: true });
+  // 404.html is the one page that must land at dist/404.html, not dist/404/index.html —
+  // that exact path is the convention static hosts (Netlify, GitHub Pages, Cloudflare
+  // Pages) look for as the custom error page. Every other page keeps the /slug/ directory
+  // form so a bare URL with no extension resolves.
+  const outPath = slug === 'index'
+    ? join(OUT, 'index.html')
+    : slug === '404'
+      ? join(OUT, '404.html')
+      : join(join(OUT, slug), 'index.html');
+  mkdirSync(join(outPath, '..'), { recursive: true });
 
   const html = layout
     .replaceAll('{{lang}}', p.meta.lang || 'en')
@@ -175,7 +183,7 @@ for (const p of pages) {
     .replaceAll('{{body}}', () => p.body)
     .replaceAll('{{year}}', String(new Date().getFullYear()));
 
-  writeFileSync(join(dir, 'index.html'), html);
+  writeFileSync(outPath, html);
 }
 
 if (existsSync(join(ROOT, 'public'))) cpSync(join(ROOT, 'public'), OUT, { recursive: true });

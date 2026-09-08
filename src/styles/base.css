@@ -349,8 +349,13 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   font-weight: var(--weight-medium);
   padding-inline: var(--space-md);
   border-radius: var(--shape-full);
+  box-shadow: var(--elevation-0);
+  transition: box-shadow var(--duration-short-2) var(--ease-standard);
 }
-.cta:hover { text-decoration: underline; }
+/* Micro-interaction: filled buttons pick up elevation-1 on hover, on top of the state
+   layer (::after, above). M3's hover treatment for filled buttons; short-2 (100ms) is
+   feedback, not a moment, so it does not count against the one-orchestrated-motion rule. */
+.cta:hover { text-decoration: underline; box-shadow: var(--elevation-1); }
 .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; margin-block-start: var(--space-md); }
 .cta-note { font-size: var(--size-body-medium); color: var(--color-text-muted); max-width: var(--measure); }
 
