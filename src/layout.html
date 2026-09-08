@@ -11,7 +11,12 @@
 <meta property="og:description" content="{{description}}">
 <meta property="og:url" content="{{canonical}}">
 <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
+<!-- No og:locale: it wants underscore region format (en_US), and this site tracks a bare
+     language code, not a region. A guessed region is worse than the tag's own default. -->
+<!-- summary, not summary_large_image: that card type without an og:image is an invalid
+     card, not a smaller one. Flip both together once an OG image ships (blocked on
+     trademark clearance, spec/brief.md §1 — see the og:image comment below). -->
+<meta name="twitter:card" content="summary">
 <!-- og:image and the favicon are blocked on trademark clearance (spec/brief.md §1).
      Shipping a placeholder image would be worse than shipping none: an OG card with a
      stand-in wordmark is the asset that gets screenshotted and reshared. -->

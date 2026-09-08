@@ -154,6 +154,28 @@ const navHtml = (current) =>
       `<li><a href="${href}"${href === current ? ' aria-current="page"' : ''}>${label}</a></li>`)
     .join('\n          ');
 
+// Every non-home page's structured data gets isPartOf (linking back to the homepage's
+// WebSite entity) and a two-step BreadcrumbList — an entity-graph consistency pass, not
+// new facts: every id and url used here is already known (SITE + the page's own route).
+// A page that hand-authors its own @graph (only index.html does) is left alone rather
+// than merged into, so a future graph there does not silently gain an extra node.
+function jsonldFor(meta, url, slug) {
+  const base = meta.jsonld || { '@context': 'https://schema.org', '@type': 'WebPage', name: meta.title, url: SITE + url };
+  if (slug === 'index' || base['@graph']) return base;
+  const { '@context': _ctx, ...node } = base;
+  const graph = [
+    { ...node, isPartOf: { '@id': `${SITE}/#site` } },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+        { '@type': 'ListItem', position: 2, name: base.name || meta.title, item: SITE + url },
+      ],
+    },
+  ];
+  return { '@context': 'https://schema.org', '@graph': graph };
+}
+
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
@@ -178,7 +200,13 @@ for (const p of pages) {
     .replaceAll('{{canonical}}', SITE + url)
     .replaceAll('{{robots}}', p.meta.blocked ? '\n<meta name="robots" content="noindex">' : '')
     .replaceAll('{{nav}}', navHtml(url))
-    .replaceAll('{{jsonld}}', JSON.stringify(p.meta.jsonld || { '@context': 'https://schema.org', '@type': 'WebPage', name: p.meta.title, url: SITE + url }))
+    // The placeholder-domain replace catches hand-authored jsonld (only index.html has
+    // one): its @id/url strings are written as literal JSON in the page source, so they
+    // cannot reference the SITE variable the way the generated fallback above does. Left
+    // alone, a real SITE_ORIGIN deploy would ship a WebSite/Organization graph still
+    // pointing at workler.example while canonical/og:url correctly point at the real
+    // domain — an entity-id mismatch, not a cosmetic one.
+    .replaceAll('{{jsonld}}', () => JSON.stringify(jsonldFor(p.meta, url, slug)).replaceAll('https://workler.example', SITE))
     .replaceAll('{{css}}', () => css)
     .replaceAll('{{body}}', () => p.body)
     .replaceAll('{{year}}', String(new Date().getFullYear()));
@@ -190,18 +218,30 @@ if (existsSync(join(ROOT, 'public'))) cpSync(join(ROOT, 'public'), OUT, { recurs
 
 // Blocked pages are excluded from the sitemap as well as noindexed. Submitting a
 // placeholder for indexing is a trust cost, not just an SEO one.
-const urls = pages
-  .filter((p) => !p.meta.blocked)
-  .map((p) => {
-    const slug = basename(p.file, '.html');
-    return slug === 'index' ? '/' : `/${slug}`;
-  });
+const indexable = pages.filter((p) => !p.meta.blocked);
+const urls = indexable.map((p) => {
+  const slug = basename(p.file, '.html');
+  return { loc: slug === 'index' ? '/' : `/${slug}`, lastmod: p.meta.last_reviewed };
+});
 
 writeFileSync(
   join(OUT, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((u) => `  <url><loc>${SITE}${u}</loc></url>`)
+    // lastmod only where the page actually tracks a review date (document pages) — a
+    // fabricated "changed today" on every URL is worse than no signal at all.
+    .map((u) => `  <url><loc>${SITE}${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}</url>`)
     .join('\n')}\n</urlset>\n`
+);
+
+// llms.txt: the sitemap's answer for an LLM crawler rather than a search indexer — page
+// title + the same one-line description already validated for meta description (≤155
+// chars, rule 1 above), one line per page. No new copy: every string here already exists
+// in the page's own meta block.
+writeFileSync(
+  join(OUT, 'llms.txt'),
+  `# Workler\n\n${indexable
+    .map((p) => `- [${p.meta.title}](${SITE}${basename(p.file, '.html') === 'index' ? '/' : `/${basename(p.file, '.html')}`}): ${p.meta.description || ''}`)
+    .join('\n')}\n`
 );
 
 // robots.txt does not block AI crawlers. If the client ever decides otherwise that is a
