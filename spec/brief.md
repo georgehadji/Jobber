@@ -53,10 +53,41 @@ public repository is at 0 stars, 0 forks, 0 watchers (verified via the GitHub AP
 Acquisition at launch is: search, the open-source repository, and whatever the founder does
 directly.
 
-**Pricing.** [CLIENT INPUT REQUIRED: subscription, usage-based, or something else? What price?]
+**Pricing. Founder decision, 2026-09-08: a 90-day pass at €79, paid once, VAT included, with no
+automatic renewal and no card kept on file.** Adopted from the pricing research below; the number
+is a decision, not a market fact, and it is changeable in one file until checkout opens.
 
-**Free/paid boundary.** [CLIENT INPUT REQUIRED: which capabilities in §5 sit behind the paywall,
-and which stay in the free CLI?]
+Why a time-boxed pass rather than the category-standard monthly subscription:
+
+- **The category prices $14–50/month** — Teal $29, Huntr $30–40, Jobscan $49.95 (or $24.95/month
+  billed annually), AIApply $16, FastApply $14 — and almost all of it auto-renews.
+- **Job search is the textbook "happy churn" case.** The median search runs about 11 weeks; the
+  average is 5–6.6 months, ~9.7 in tech, 6–9+ at executive level. The customer leaves *because the
+  product worked*. Realised subscription lifetime here is roughly three months whatever the page
+  says, so €79 collects the whole realistic lifetime at day zero instead of chasing it monthly.
+- **Auto-renewal contradicts the product.** A tool whose one distinguishing behaviour is telling
+  you *not* to apply cannot bill someone in month four because they got hired in month three and
+  forgot to cancel. That charge is revenue taken from a seeker for someone else's benefit, which is
+  precisely what `/rights` says does not happen here.
+- **It makes the rights claim checkable.** "We cannot charge you twice by accident" is not a
+  promise if there is no stored renewal to charge against — it is an architectural fact, and this
+  site's proof mechanism is claims with receipts.
+- **It removes a whole product surface from launch.** No dunning, no failed-payment recovery, no
+  cancellation flow. On a zero-JS static site with no logged-in account area, a cancellation flow
+  would have to be built before launch. The pass means it does not exist.
+- **90 days is the median search, not a guess**, and it clears the sub-$10 floor that makes small
+  amounts awkward at a merchant of record.
+
+Long searches renew by choosing to, which is an upsell rather than a trap. The €79 sits just under
+three months of the nearest comparable (3 × $29 ≈ $87), so the pass is cheaper than the tool it is
+most often compared against, and it is one number rather than a tier grid.
+
+**Free/paid boundary. Founder decision, 2026-09-08: the boundary is who runs it, not what it
+decides.** The free CLI keeps the entire judgment — every mode, the full scoring, the legitimacy
+check — under MIT, running on the user's machine. What the hosted tier sells is not a better
+verdict but the absence of setup: no AI coding CLI to install, no model keys to hold, no local
+runtime, plus the chat interface and the hosted scanning. A boundary drawn through the judgment
+itself would make the free tier the crippled demo that §1 already refuses to ship.
 
 **Launch state.** **In build** (founder, 2026-09-07). Not shippable today. The open-source CLI is
 the part that exists and runs now.
@@ -267,9 +298,11 @@ copy stages will otherwise need a plausible sentence exactly where a fact belong
 
 1. ~~Is the SaaS built, in build, or at concept?~~ **Answered 2026-09-07: in build.**
 2. ~~What is the one commercial action?~~ **Answered 2026-09-07: purchase.**
-3. Pricing model and price? **Now the highest-priority open question** — a site whose one job is
-   purchase cannot ship without a price. Blocks `/copy` and the pricing page in `/architecture`.
-4. Which capabilities sit behind the paywall, and which stay in the free Workler CLI?
+3. ~~Pricing model and price?~~ **Answered 2026-09-08: a 90-day pass at €79, paid once, VAT
+   included, no automatic renewal, no card on file.** Reasoning and the comparable set are in §1.
+4. ~~Which capabilities sit behind the paywall, and which stay in the free Workler CLI?~~
+   **Answered 2026-09-08: none of the judgment is behind it.** The paywall is on running the
+   thing — hosting, model access, the chat interface, hosted scanning. See §1.
 5. Does the hosted product keep the CLI's "recommend against applying below 4.0" behaviour?
 6. Which countries and languages at launch, and which by month 12?
 7. What legal entity, in which jurisdiction, and hosted where?

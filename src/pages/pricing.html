@@ -1,38 +1,69 @@
 <!--meta {
-  "title": "Pricing — Workler",
-  "description": "Workler CLI is free and open source. The hosted version is paid, and paid only by the person using it.",
+  "title": "What it costs — Workler",
+  "description": "Workler CLI is free and open source. The hosted version is €79 for ninety days, paid once, with no automatic renewal. Paid for by the person using it.",
   "blocked": true,
-  "answer_block": "Workler CLI is free and open source. The hosted version costs a published price per period and adds capabilities the command-line version does not have. It is paid for by the person using it. There is no employer, recruiter or advertiser revenue, so there is nobody else for it to be optimised for.",
+  "answer_block": "Workler CLI is free and open source under the MIT licence. The hosted version is €79 for ninety days, paid once, with no automatic renewal and no card kept on file. It is paid for by the person using it, and by nobody else. No employer, recruiter or advertiser revenue.",
   "jsonld": { "@context": "https://schema.org", "@type": "WebPage", "name": "Pricing", "url": "https://workler.example/pricing" }
 }-->
 
 <section class="section wrap">
   <h1>What it costs</h1>
-  <p class="todo">[CLIENT INPUT REQUIRED: price and pricing model (spec/brief.md §7 Q3) and the
-  free/paid boundary (Q4). This page ships with a real price and a working checkout, or the site
-  does not launch — see spec/brief.md §1, launch-with-purchase. The answer block above is written
-  around the missing number and must be rewritten to contain it. A pricing meta description without
-  a price is a wasted search result.]</p>
+  <div class="answer">
+    <p>Workler CLI is free and open source under the MIT licence. The hosted version is &euro;79 for
+    ninety days, paid once, with no automatic renewal and no card kept on file. It is paid for by
+    the person using it, and by nobody else. No employer, recruiter or advertiser revenue.</p>
+  </div>
+  <p class="todo">[CLIENT INPUT REQUIRED: the checkout URL, and only that. Price and free/paid
+  boundary were answered 2026-09-08 (spec/brief.md §7 Q3, Q4). This page stays noindex and out of
+  the sitemap until the buy link resolves and the Offer markup can carry availability InStock —
+  see spec/brief.md §1, launch-with-purchase. Blocked on the merchant-of-record account (§7 Q15),
+  which is blocked on the operating entity (§7 Q7).]</p>
+</section>
+
+<section class="section wrap">
+  <div class="prose">
+    <h2>Ninety days, one payment, and then it stops</h2>
+    <p>The hosted version is sold as a ninety-day pass. You pay once. It does not renew, there is
+    no card kept on file, and there is nothing to remember to cancel.</p>
+    <p>This is deliberate, and it costs us money. The median job search runs about eleven weeks, so
+    a monthly subscription in this category makes most of its margin on the month after you were
+    hired &mdash; billing a person for a search that already ended. A tool whose whole argument is
+    that it tells you when not to apply cannot also be quietly charging you for a job you already
+    have.</p>
+    <p>If your search runs longer than ninety days, you buy another pass. That is a decision you
+    make, not one that happens to you.</p>
+  </div>
 </section>
 
 <section class="section wrap">
   <div class="prose">
     <h2>The two tiers</h2>
     <p>The command-line version is not a crippled demo of the hosted product. It is the whole
-    judgment, running on your machine, and it stays that way.</p>
+    judgment, running on your machine, and it stays that way. The paid tier is not a better verdict.
+    It is the same verdict without the setup.</p>
   </div>
   <div class="records">
     <div class="record">
       <p class="record__meta">Workler CLI</p>
-      <p><strong>Free</strong> &middot; MIT licence</p>
-      <p>Runs on your machine, inside your AI coding CLI.</p>
-      <p class="todo">[CLIENT INPUT REQUIRED: includes / does not include.]</p>
+      <p><strong>Free</strong> &middot; MIT licence &middot; forever</p>
+      <p>Every evaluation mode, the full scoring, and the posting-legitimacy check. Runs on your own
+      machine, inside an AI coding CLI you already use.</p>
+      <p><strong>Does not include:</strong> anything we run for you. You supply the coding CLI and
+      your own model access, and you pay whoever provides it. No account here, no support queue, and
+      nothing about your CV reaches us &mdash; because nothing reaches us at all.</p>
+      <p class="claim" data-receipt="[CLIENT INPUT REQUIRED: repository URL]">The scoring logic and
+      the evaluation modes are the same code in both tiers.
+      <a class="claim__receipt" href="/open-source">Receipt &rarr; the repository</a></p>
     </div>
     <div class="record">
       <p class="record__meta">Workler hosted</p>
-      <p class="todo">[CLIENT INPUT REQUIRED: price, period, includes, does not include. The
-      &ldquo;does not include&rdquo; list is required and non-empty — a boundary drawn only by what
-      each tier includes is not a boundary.]</p>
+      <p><span class="price">&euro;79</span> &middot; ninety days &middot; paid once</p>
+      <p>The same judgment with nothing to install: no coding CLI, no model keys, no local runtime.
+      Adds the chat interface and hosted scanning of the job boards.</p>
+      <p><strong>Does not include:</strong> sending anything. Workler never submits an application,
+      never emails a recruiter, and never clicks apply. It drafts; you review; you send. There is
+      also no employer-side product, now or later &mdash; no candidate database, no sourcing tool,
+      nothing sold to the other side of the table.</p>
     </div>
   </div>
 </section>
@@ -50,13 +81,27 @@
 <section class="section wrap">
   <div class="prose">
     <h2>What happens when you pay</h2>
+    <p>One payment of &euro;79 buys ninety days of the hosted version. VAT is included in that
+    number, so the figure on this page is the figure you are charged.</p>
+    <p>Nothing renews. No card is stored. At day ninety the pass ends on its own and you decide,
+    from a standing start, whether to buy another one.</p>
+    <p>Payment is handled off this site by a merchant of record, which is also why this site has no
+    payment form, no card field and no analytics attached to one.</p>
+    <p class="todo">[CLIENT INPUT REQUIRED, narrowed to three: (1) the refund window and its
+    wording &mdash; the intent is fourteen days, no questions asked, but the EU/UK statutory
+    withdrawal right for digital content delivered immediately interacts with that and is counsel's
+    call, not this pipeline's (§7 Q14); (2) currencies beyond EUR at launch, which depends on
+    markets (§7 Q6); (3) what happens to your data when a pass expires, which is the retention
+    answer from §7 Q11 and must match /privacy exactly.]</p>
   </div>
-  <p class="todo">[CLIENT INPUT REQUIRED, and each of these is a conversion leak until answered: is
-  there a free trial or a refund window? Monthly, annual or one-off? Can you cancel in one click? Is
-  VAT included in the displayed price or added at checkout? Which currencies? What happens to your
-  data if you cancel?
+</section>
 
-  Checkout itself (spec/brief.md §7 Q15): a hosted merchant-of-record page, so the Buy link on
-  this page goes off-site and nothing on this site ever takes a card. Keeps the site at zero JS and
-  hands VAT to the provider.]</p>
+<section class="section wrap">
+  <div class="prose">
+    <h2>Or pay nothing and run it yourself</h2>
+    <p>If you already work in an AI coding CLI, the free version is the honest recommendation. It is
+    the same scoring, it is MIT-licensed, and it never sends your CV anywhere because it never
+    leaves your machine.</p>
+    <div class="cta-row"><a class="cta" href="/open-source">Read the code</a></div>
+  </div>
 </section>

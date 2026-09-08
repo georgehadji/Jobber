@@ -211,9 +211,7 @@ prone to): every `page` has an `answer_block` within 40–60 words; every `claim
 
 | Blocked artefact | Question | From |
 |------------------|----------|------|
-| `/pricing` — the whole page | Price and pricing model | brief §7 Q3 |
-| `/pricing` — the tier comparison | Which capabilities are paid vs free CLI | brief §7 Q4 |
-| `/pricing` — the Buy link | Checkout provider (hosted merchant-of-record recommended) | brief §7 Q15 |
+| `/pricing` — the Buy link and the `Offer` markup | Checkout provider and the live buy URL (hosted merchant-of-record recommended). Price and boundary were answered 2026-09-08 (brief §7 Q3, Q4); this is the last thing keeping the page `noindex`. | brief §7 Q15, Q7 |
 | `/privacy`, `/terms` | Entity, jurisdiction, host, processors, retention | brief §7 Q7, Q11 |
 | `/about` | Is the founder public by name? | brief §7 Q10 |
 | The `de` locale, the hreflang matrix, the price-per-market rule | Markets and languages at launch | brief §7 Q6 |
