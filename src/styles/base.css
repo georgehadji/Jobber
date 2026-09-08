@@ -97,7 +97,15 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   margin-top: var(--space-3xs);
 }
 .nav { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); list-style: none; margin: 0; padding: 0; }
-.nav a { text-decoration: none; font-size: var(--size-sm); }
+/* 36px tall targets (WCAG 2.5.8 wants 24; the row is 20). The negative margin keeps the
+   header the same height — only the hit area grows. */
+.nav a {
+  text-decoration: none;
+  font-size: var(--size-sm);
+  display: inline-block;
+  padding-block: var(--space-2xs);
+  margin-block: calc(var(--space-2xs) * -1);
+}
 .nav a:hover, .nav a[aria-current="page"] { text-decoration: underline; }
 
 /* ── Sections ──────────────────────────────────────────────────────────────── */
@@ -169,7 +177,14 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 }
 .score--below .score__verdict { color: var(--color-below-text); }
 
-.bar { height: var(--space-2xs); background: var(--color-bg-sunk); position: relative; }
+/* The track needs the hairline: sunk-on-paper is 1.09:1, and on a sunk section it is
+   invisible — a 2.8 read as a short line, not as a fraction of 5. */
+.bar {
+  height: var(--space-2xs);
+  background: var(--color-bg-sunk);
+  border: var(--border-hair) solid var(--color-border);
+  position: relative;
+}
 .bar__fill {
   position: absolute;
   inset-block: 0;
@@ -178,9 +193,13 @@ a:hover { text-decoration-thickness: var(--border-thick); }
      rather than an inline width keeps every literal value out of the style attribute. */
   width: var(--bar-fill, 0%);
   background: var(--color-text);
-  /* The one orchestrated moment on the page (art-direction rule 5). */
-  transition: width var(--duration-signature) var(--ease-out);
+  /* The one orchestrated moment on the page (art-direction rule 5): the bar draws to its
+     value on load. An animation, not a transition — with no JS the width never changes, so
+     a transition never fires. scaleX stays on the compositor; width would relayout. */
+  transform-origin: left;
+  animation: draw var(--duration-signature) var(--ease-out);
 }
+@keyframes draw { from { transform: scaleX(0); } }
 .bar--below .bar__fill { background: var(--color-below); }
 
 /* ── Records: the only cards on this site (art-direction rule 4) ───────────── */
@@ -212,13 +231,15 @@ a:hover { text-decoration-thickness: var(--border-thick); }
  * A claim is not publishable without its link; build.mjs fails the build otherwise.
  */
 .claim { margin-block: var(--space-sm); }
+/* The receipt is the trust mechanism; it must not be the smallest, faintest text on the
+   page. Ink, one step up from the meta labels. */
 .claim__receipt {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: var(--size-2xs);
+  font-size: var(--size-xs);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
 /* ── Blocks table (A–G), block letter in the left margin ─────────────────── */
@@ -280,7 +301,7 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 .foot-inner { display: grid; gap: var(--space-lg); }
 .foot-head { font-size: var(--size-2xs); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2xs); }
 .foot-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3xs); }
-.foot-group a { font-size: var(--size-sm); text-decoration: none; }
+.foot-group a { font-size: var(--size-sm); text-decoration: none; display: inline-block; padding-block: var(--space-2xs); }
 .foot-group a:hover { text-decoration: underline; }
 .foot-note { margin-top: var(--space-lg); font-size: var(--size-xs); color: var(--color-text-muted); }
 .foot-note p { margin: 0 0 var(--space-3xs); }
@@ -299,6 +320,16 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   .hero__margin { position: sticky; top: var(--space-md); }
   .records { grid-template-columns: repeat(3, 1fr); }
   .score__value { font-size: var(--size-score-large); }
+}
+
+/* Windows High Contrast strips background fills. Without this the score bar, the logotype
+   rule and the threshold rule — the signature — all vanish. CanvasText is the only correct
+   value here: a token colour would be overridden, and the user chose the palette. */
+@media (forced-colors: active) {
+  .bar__fill, .lockup__rule, .threshold::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

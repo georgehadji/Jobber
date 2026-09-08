@@ -17,7 +17,7 @@
   --color-paper:        oklch(98.5% 0.003 250);
   --color-paper-sunk:   oklch(95.6% 0.005 250);
   --color-ink:          oklch(20.0% 0.014 250);
-  --color-ink-muted:    oklch(47.0% 0.012 250);  /* ≈7.4:1 on paper */
+  --color-ink-muted:    oklch(47.0% 0.012 250);  /* 6.5:1 on paper, 6.0:1 on sunk (measured; AA, not AAA) */
   --color-rule:         oklch(84.0% 0.008 250);  /* structural only, never carries meaning alone */
   --color-signal:       oklch(58.0% 0.152 65);   /* fills and bars only, ≥3:1 non-text */
   --color-signal-text:  oklch(46.0% 0.140 65);   /* ≥4.5:1 on paper, use whenever it carries text */

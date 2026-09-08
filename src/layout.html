@@ -14,8 +14,9 @@
 <!-- og:image and the favicon are blocked on trademark clearance (spec/brief.md §1).
      Shipping a placeholder image would be worse than shipping none: an OG card with a
      stand-in wordmark is the asset that gets screenshotted and reshared. -->
-<link rel="stylesheet" href="/styles/tokens.css">
-<link rel="stylesheet" href="/styles/base.css">
+<!-- Both stylesheets are inlined by build.mjs: 5KB of CSS is cheaper than two
+     render-blocking requests. -->
+<style>{{css}}</style>
 <script type="application/ld+json">{{jsonld}}</script>
 </head>
 <body>

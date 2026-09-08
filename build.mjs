@@ -36,6 +36,7 @@ const fail = (m) => { errors++; console.error(`  FAIL  ${m}`); };
 
 // ── read ────────────────────────────────────────────────────────────────────
 const layout = readFileSync(join(SRC, 'layout.html'), 'utf8');
+const css = ['tokens.css', 'base.css'].map((f) => readFileSync(join(SRC, 'styles', f), 'utf8')).join('\n');
 const pageFiles = readdirSync(join(SRC, 'pages')).filter((f) => f.endsWith('.html'));
 
 const META_RE = /^<!--meta\s*([\s\S]*?)-->\s*/;
@@ -140,13 +141,13 @@ for (const p of pages) {
     .replaceAll('{{robots}}', p.meta.blocked ? '\n<meta name="robots" content="noindex">' : '')
     .replaceAll('{{nav}}', navHtml(url))
     .replaceAll('{{jsonld}}', JSON.stringify(p.meta.jsonld || { '@context': 'https://schema.org', '@type': 'WebPage', name: p.meta.title, url: SITE + url }))
-    .replaceAll('{{body}}', p.body)
+    .replaceAll('{{css}}', () => css)
+    .replaceAll('{{body}}', () => p.body)
     .replaceAll('{{year}}', String(new Date().getFullYear()));
 
   writeFileSync(join(dir, 'index.html'), html);
 }
 
-cpSync(join(SRC, 'styles'), join(OUT, 'styles'), { recursive: true });
 if (existsSync(join(ROOT, 'public'))) cpSync(join(ROOT, 'public'), OUT, { recursive: true });
 
 // Blocked pages are excluded from the sitemap as well as noindexed. Submitting a
