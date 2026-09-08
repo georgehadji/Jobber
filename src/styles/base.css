@@ -353,6 +353,21 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   color: var(--color-text-muted);
 }
 
+/* ── Comparison table — the two tiers, one shared row axis (plan §6 Phase 4; the
+ * boundary between free and paid is one continuous line, not two cards to eye-compare).
+ * Table semantics throughout, same discipline as .blocks.
+ */
+.compare { border-collapse: collapse; width: 100%; max-width: var(--container-wide); margin-block-start: var(--space-md); }
+.compare th, .compare td {
+  text-align: start;
+  padding-block: var(--space-sm);
+  padding-inline: 0 var(--space-md);
+  border-bottom: var(--border-hair) solid var(--color-border);
+  vertical-align: top;
+}
+.compare thead th { font-weight: var(--weight-medium); font-size: var(--size-title-medium); }
+.compare tbody th { font-weight: var(--weight-medium); font-size: var(--size-body-medium); color: var(--color-text-muted); white-space: nowrap; }
+
 /* ── CTA — M3 filled button: full shape, primary/on-primary, state layer (plan §4).
  * The secondary link in a .cta-row (a plain <a>, no .cta class) is the M3 text button —
  * same state layer via the shared selector list above, no fill.
