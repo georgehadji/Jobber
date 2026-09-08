@@ -5,7 +5,20 @@
       "settings": {
         "preset": "desktop"
       },
-      "staticDistDir": "./dist"
+      "staticDistDir": "./dist",
+      "url": [
+        "http://localhost/index.html",
+        "http://localhost/how-it-works/index.html",
+        "http://localhost/ghost-jobs/index.html",
+        "http://localhost/open-source/index.html",
+        "http://localhost/pricing/index.html",
+        "http://localhost/rights/index.html",
+        "http://localhost/privacy/index.html",
+        "http://localhost/terms/index.html",
+        "http://localhost/about/index.html",
+        "http://localhost/attribution/index.html",
+        "http://localhost/accessibility/index.html"
+      ]
     },
     "assert": {
       "assertions": {
