@@ -43,7 +43,7 @@ import {
   baseUrlFor,
   apiKeyFor,
   contextTokensFor,
-  requestTimeoutMsFor,
+  requestTimeoutMsFor, routingFields,
 } from './lib/llm-providers.mjs';
 import { readContextFile, parseScoreSummary, slugifyCompany } from './eval-runner.mjs';
 
@@ -325,12 +325,18 @@ const headers = { 'Content-Type': 'application/json' };
 if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
 let evaluationText;
+// The model that actually answered. With a fallback chain this can differ from
+// modelName, and it is the one the request was billed as — so the report header
+// and the cost breakdown must name it, not the chain.
+let answeredBy = modelName;
 try {
   const res = await fetch(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model:    modelName,
+      // A comma-separated --model is a fallback chain on OpenRouter (`models`);
+      // other hosts get the primary only. See routingFields in lib/llm-providers.mjs.
+      ...routingFields(modelName, endpointHost),
       messages: [
         buildSystemMessage(systemPrompt, endpointHost),
         { role: 'user', content: `JOB DESCRIPTION TO EVALUATE:\n\n${jdText}` },
@@ -355,6 +361,7 @@ try {
 
   const data = await res.json();
   evaluationText = data.choices?.[0]?.message?.content?.trim();
+  if (typeof data.model === 'string' && data.model) answeredBy = data.model;
   const usage = normalizeOpenAIUsage(data.usage);
   tracker.record('evaluation', usage);
   if (!evaluationText) {
@@ -375,7 +382,7 @@ try {
 // Display evaluation
 // ---------------------------------------------------------------------------
 console.log('\n' + '═'.repeat(66));
-console.log('  JOBBER EVALUATION — powered by ' + modelName + ' (' + endpointHost + ')');
+console.log('  JOBBER EVALUATION — powered by ' + answeredBy + ' (' + endpointHost + ')');
 console.log('═'.repeat(66) + '\n');
 console.log(evaluationText);
 
@@ -411,7 +418,7 @@ if (saveReport) {
 **Score:** ${score}/5
 **Legitimacy:** ${legitimacy}
 **PDF:** pending
-**Tool:** OpenAI-compatible (${modelName} @ ${endpointHost})
+**Tool:** OpenAI-compatible (${answeredBy} @ ${endpointHost})
 
 ---
 
@@ -433,7 +440,7 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
         normalizedTrackerScore(score),
         '❌',
         `[${num}](reports/${filename})`,
-        `OpenAI evaluation (${modelName})`,
+        `OpenAI evaluation (${answeredBy})`,
       ];
       writeFileSync(`${PATHS.trackerAdditions}/${num}-${companySlug}.tsv`, `${trackerFields.join('\t')}\n`, 'utf-8');
       console.log(`📊  Tracker addition saved: batch/tracker-additions/${num}-${companySlug}.tsv`);
@@ -466,4 +473,4 @@ console.log('\n' + '─'.repeat(66));
 console.log(`  Score: ${score}/5  |  Archetype: ${archetype}  |  Legitimacy: ${legitimacy}`);
 console.log('─'.repeat(66) + '\n');
 
-console.log(formatBreakdown(tracker, modelName, 'openai'));
+console.log(formatBreakdown(tracker, answeredBy, 'openai'));

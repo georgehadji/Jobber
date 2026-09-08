@@ -298,6 +298,9 @@ const SYSTEM_PATHS = [
   '.grok/skills/',
   '.kimi/skills/',
   'docs/',
+  // Stage-gated website-studio scaffold (docs/WEBSITE-PLAN.md §15). Tooling,
+  // not user data — ships with updates like any other script.
+  'bootstrap-web-studio.sh',
   'writing-samples/README.md',
   'documents/README.md',
   'documents/cv/.gitkeep',
@@ -398,6 +401,10 @@ const USER_PATHS = [
   'voice-dna.md',
   'portals.yml',
   'article-digest.md',
+  // Founder-written intake for the Workler site pipeline (business facts,
+  // decisions, open questions). Personal to this fork; an update must never
+  // overwrite it.
+  'intake-material.md',
   'interview-prep/',
   'data/',
   'reports/',

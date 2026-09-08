@@ -21,7 +21,7 @@ import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import {
-  PROVIDERS, defaultModelFor, baseUrlFor, apiKeyFor, requestTimeoutMsFor,
+  PROVIDERS, defaultModelFor, baseUrlFor, apiKeyFor, requestTimeoutMsFor, routingFields,
 } from './lib/llm-providers.mjs';
 
 try {
@@ -264,7 +264,8 @@ try {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model:    modelName,
+      // Comma-separated --model = fallback chain on OpenRouter; primary only elsewhere.
+      ...routingFields(modelName, endpointHost),
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user',   content: `EVALUATION REPORT:\n\n${reportText}\n\nJOB DESCRIPTION:\n\n${jdText}\n\nNow, generate and output the fully filled HTML CV matching the rules above. Output ONLY raw HTML.` },
@@ -284,6 +285,9 @@ try {
 
   const data = await res.json();
   tailoredHtml = data.choices?.[0]?.message?.content?.trim();
+  if (typeof data.model === 'string' && data.model && data.model !== modelName) {
+    console.log(`   answered by ${data.model} (fallback)`);
+  }
   if (!tailoredHtml) {
     console.error('❌  The endpoint returned an empty response.');
     process.exit(1);

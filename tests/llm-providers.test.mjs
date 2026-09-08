@@ -25,6 +25,10 @@ import {
   baseUrlFor,
   apiKeyFor,
   contextTokensFor,
+  HOSTED_ROUTES,
+  OPENROUTER_HOST,
+  hostedModelSpec,
+  routingFields,
 } from '../lib/llm-providers.mjs';
 
 console.log('\nlib/llm-providers.mjs — single source of truth for LLM constants');
@@ -180,7 +184,7 @@ try {
   }
   const ownedEnvVars = new Set();
   for (const spec of Object.values(PROVIDERS)) {
-    for (const v of [spec.modelEnv, spec.baseUrlEnv, spec.keyEnv, spec.timeoutEnv]) {
+    for (const v of [spec.modelEnv, spec.baseUrlEnv, spec.keyEnv, spec.timeoutEnv, spec.dataPolicyEnv]) {
       if (v) ownedEnvVars.add(v);
     }
   }
@@ -266,6 +270,54 @@ try {
   } else {
     fail(`modes/_shared.md is stale — missing: ${missingFromShared.join(', ')}`);
   }
+
+  // ---- 5. Hosted routes: every workload has a fallback, every model is priced --
+  // Identity, not count (AGENTS.md rule 2): report WHICH route or model is wrong.
+  const routeProblems = [];
+  for (const [workload, chain] of Object.entries(HOSTED_ROUTES)) {
+    if (!Array.isArray(chain) || chain.length < 2) routeProblems.push(`${workload}: no fallback (${chain?.length ?? 0} model)`);
+    else if (new Set(chain).size !== chain.length) routeProblems.push(`${workload}: duplicate model in chain`);
+    for (const m of chain ?? []) if (!RATES[m]) routeProblems.push(`${workload}: ${m} has no RATES entry`);
+  }
+  if (routeProblems.length === 0) {
+    pass('every HOSTED_ROUTES chain has ≥2 distinct models, each priced in RATES');
+  } else {
+    fail(`HOSTED_ROUTES problems:\n    ${routeProblems.join('\n    ')}`);
+  }
+
+  if (hostedModelSpec('evaluate') === HOSTED_ROUTES.evaluate.join(',')
+      && hostedModelSpec('no-such-workload') === HOSTED_ROUTES.chat.join(',')) {
+    pass('hostedModelSpec joins the chain and falls back to the chat route');
+  } else {
+    fail(`hostedModelSpec: ${hostedModelSpec('evaluate')} / ${hostedModelSpec('no-such-workload')}`);
+  }
+
+  // routingFields — the control runs alongside each positive case (rule 1):
+  // a chain becomes `models` on OpenRouter, the primary alone anywhere else,
+  // and a single id never grows a `models` array even on OpenRouter.
+  withEnv({ OPENROUTER_DATA_COLLECTION: undefined }, () => {
+    const onOr = routingFields('a/one,b/two', OPENROUTER_HOST);
+    const elsewhere = routingFields('a/one,b/two', 'api.openai.com');
+    const single = routingFields('a/one', OPENROUTER_HOST);
+    if (JSON.stringify(onOr.models) === '["a/one","b/two"]' && onOr.model === undefined && onOr.provider === undefined
+        && elsewhere.model === 'a/one' && elsewhere.models === undefined
+        && single.model === 'a/one' && single.models === undefined) {
+      pass('routingFields: chain → models on OpenRouter; primary only elsewhere or when single');
+    } else {
+      fail(`routingFields: openrouter=${JSON.stringify(onOr)} elsewhere=${JSON.stringify(elsewhere)} single=${JSON.stringify(single)}`);
+    }
+  });
+
+  withEnv({ OPENROUTER_DATA_COLLECTION: 'deny' }, () => {
+    const onOr = routingFields('a/one', OPENROUTER_HOST);
+    const elsewhere = routingFields('a/one', 'api.openai.com');
+    if (onOr.provider?.data_collection === 'deny' && onOr.provider?.require_parameters === true
+        && elsewhere.provider === undefined) {
+      pass('OPENROUTER_DATA_COLLECTION=deny attaches provider prefs on OpenRouter only');
+    } else {
+      fail(`provider prefs: openrouter=${JSON.stringify(onOr)} elsewhere=${JSON.stringify(elsewhere)}`);
+    }
+  });
 } catch (e) {
   fail(`llm-providers tests crashed: ${e.stack || e.message}`);
 }
