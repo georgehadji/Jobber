@@ -1,26 +1,27 @@
 /* Workler — base and components.
- * Every value is a token from tokens.css. No raw colour, size, space or radius here.
- * Written for 320px first; complexity is added upward.
+ * Every value is a token from tokens.css. No raw colour, size, space, radius, shadow or
+ * easing here. Written for 320px first; complexity is added upward.
+ * M3 roles per spec/art-direction.md Revision 2 and spec/material-plan.md §4.
  *
  * Fonts: the @font-face block below is commented out until the subset woff2 files are
- * added (spec/art-direction.md names Instrument Sans and IBM Plex Mono, both SIL OFL).
- * Until then the stacks in tokens.css fall through to the system faces. Shipping
- * @font-face rules pointing at files that do not exist would cost two failed requests
- * per page and a layout shift, which is a worse default than a system stack.
+ * added (Roboto / Roboto Mono, both Apache-2.0). Until then the stacks in tokens.css fall
+ * through to the system faces. Shipping @font-face rules pointing at files that do not
+ * exist would cost two failed requests per page and a layout shift, which is a worse
+ * default than a system stack.
  *
  * When the files land, three things ship together or the CLS budget (≤0.05) fails:
  *   1. the face itself, font-display: swap;
  *   2. a metric-matched fallback face — size-adjust, ascent-override, descent-override and
  *      line-gap-override computed from the real font file with fontpie or capsize (never
  *      guessed) — and its name inserted into --font-sans in tokens.css right after
- *      "Instrument Sans", so the swap happens between two faces of the same metrics;
+ *      "Roboto", so the swap happens between two faces of the same metrics;
  *   3. <link rel="preload" as="font" type="font/woff2" crossorigin> for the 400 sans in
  *      layout.html — the face the first paint needs.
- * Same recipe for IBM Plex Mono.
+ * Same recipe for Roboto Mono.
  *
- * @font-face { font-family:"Instrument Sans"; src:url("/fonts/instrument-sans-400.woff2") format("woff2");
+ * @font-face { font-family:"Roboto"; src:url("/fonts/roboto-400.woff2") format("woff2");
  *   font-weight:400; font-display:swap; unicode-range:U+0000-00FF,U+0100-024F,U+0400-04FF; }
- * @font-face { font-family:"Instrument Sans Fallback"; src:local("Segoe UI"),local("Arial");
+ * @font-face { font-family:"Roboto Fallback"; src:local("Segoe UI"),local("Arial");
  *   size-adjust:<fontpie>; ascent-override:<fontpie>; descent-override:<fontpie>; line-gap-override:<fontpie>; }
  */
 
@@ -33,7 +34,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: var(--size-base);
+  font-size: var(--size-body);
   font-weight: var(--weight-regular);
   line-height: var(--leading-body);
   text-rendering: optimizeLegibility;
@@ -45,34 +46,56 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── State layer — one CSS-only pattern, shared by every interactive element
+ * (plan §4). No ripple: this is the documented JS-free fallback, and it keeps the
+ * 0 KB script budget honest (banlist, Material Design specifics).
+ */
+.cta, .nav a, .foot-group a, .contents a, .lockup {
+  position: relative;
+  isolation: isolate;
+}
+.cta::after, .nav a::after, .foot-group a::after, .contents a::after, .lockup::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cta:hover::after, .nav a:hover::after, .foot-group a:hover::after, .contents a:hover::after, .lockup:hover::after { opacity: var(--state-hover); }
+.cta:focus-visible::after, .nav a:focus-visible::after, .foot-group a:focus-visible::after, .contents a:focus-visible::after, .lockup:focus-visible::after { opacity: var(--state-focus); }
+.cta:active::after, .nav a:active::after, .foot-group a:active::after, .contents a:active::after, .lockup:active::after { opacity: var(--state-pressed); }
+
 h1, h2, h3 { line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); margin: 0; }
-h1 { font-size: var(--size-xl); font-weight: var(--weight-semibold); }
-h2 { font-size: var(--size-lg); font-weight: var(--weight-semibold); }
-h3 { font-size: var(--size-md); font-weight: var(--weight-semibold); }
+h1 { font-size: var(--size-h1); font-weight: var(--weight-medium); }
+h2 { font-size: var(--size-h2); font-weight: var(--weight-medium); }
+h3 { font-size: var(--size-h3); font-weight: var(--weight-medium); }
 p, li { max-width: var(--measure); }
 p { margin: 0 0 var(--space-sm); }
 
 a { color: inherit; text-decoration-thickness: var(--border-hair); text-underline-offset: 0.2em; }
 a:hover { text-decoration-thickness: var(--border-thick); }
 
-/* Focus is designed, not inherited (art-direction rule 8). --color-focus is the one
-   colour exempt from the colour licence, and it appears only here. */
+/* Focus is designed, not inherited (art-direction rule 8, M3 indicator). --color-focus is
+   the one colour exempt from the colour licence, and it appears only here. */
 :focus-visible {
-  outline: var(--border-thick) solid var(--color-focus);
-  outline-offset: var(--border-thick);
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 .skip {
   position: absolute;
-  left: var(--space-2xs);
-  top: calc(var(--space-2xl) * -1);
+  inset-inline-start: var(--space-2xs);
+  inset-block-start: calc(var(--space-2xl) * -1);
   z-index: 10;
   background: var(--color-btn-bg);
   color: var(--color-btn-text);
   padding: var(--space-2xs) var(--space-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
 }
-.skip:focus { top: var(--space-2xs); }
+.skip:focus { inset-block-start: var(--space-2xs); }
 
 .wrap {
   width: 100%;
@@ -81,23 +104,27 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   padding-inline: var(--container-pad);
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────────
+/* ── Header — M3 small top app bar, 64dp, surface (plan §4) ───────────────────
  * Not logo-left / links-centre / sign-in-right (banlist). Logo left, links right,
  * no sign-in until there is something to sign into. The threshold rule is its border.
  */
-.site-head { border-bottom: var(--border-hair) solid var(--color-threshold); }
+.site-head {
+  background: var(--color-bg);
+  border-bottom: var(--border-hair) solid var(--color-threshold);
+}
 .head-inner {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs) var(--space-md);
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  min-block-size: 4rem; /* 64dp app bar */
   padding-block: var(--space-sm);
 }
-.lockup { text-decoration: none; display: inline-block; }
+.lockup { text-decoration: none; display: inline-block; border-radius: var(--shape-xs); }
 .lockup__name {
-  font-weight: var(--weight-semibold);
-  font-size: var(--size-md);
+  font-weight: var(--weight-medium);
+  font-size: var(--size-title-medium);
   letter-spacing: var(--tracking-tight);
 }
 /* The signature, at logotype scale. Blocked on trademark clearance, this is a lockup
@@ -106,17 +133,19 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   display: block;
   height: var(--border-hair);
   background: var(--color-threshold);
-  margin-top: var(--space-3xs);
+  margin-block-start: var(--space-3xs);
 }
 .nav { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); list-style: none; margin: 0; padding: 0; }
-/* 36px tall targets (WCAG 2.5.8 wants 24; the row is 20). The negative margin keeps the
-   header the same height — only the hit area grows. */
+/* 48dp targets (M3), via padding rather than negative margin so the hit area is real,
+   not just visually implied. */
 .nav a {
   text-decoration: none;
-  font-size: var(--size-sm);
-  display: inline-block;
-  padding-block: var(--space-2xs);
-  margin-block: calc(var(--space-2xs) * -1);
+  font-size: var(--size-body-medium);
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 3rem;
+  padding-inline: var(--space-2xs);
+  border-radius: var(--shape-xs);
 }
 .nav a:hover, .nav a[aria-current="page"] { text-decoration: underline; }
 
@@ -125,23 +154,22 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 .section + .section { border-top: var(--border-hair) solid var(--color-border); }
 .section--sunk { background: var(--color-bg-sunk); }
 .prose { max-width: var(--container-prose); }
-.lede { font-size: var(--size-md); color: var(--color-text); }
+.lede { font-size: var(--size-title-large); color: var(--color-text); }
 
 /* The answer block: same component, same position, every page (ia §2). */
 .answer {
   max-width: var(--container-prose);
-  font-size: var(--size-md);
+  font-size: var(--size-title-large);
   line-height: var(--leading-snug);
   margin-block: var(--space-md) var(--space-lg);
-  padding-left: var(--space-sm);
-  border-left: var(--border-thick) solid var(--color-threshold);
+  padding-inline-start: var(--space-sm);
+  border-inline-start: var(--border-thick) solid var(--color-threshold);
 }
 
 .hero { padding-block: var(--space-2xl) var(--space-xl); }
 .hero h1 {
   /* Deliberately one step below its scale position (art-direction). A site arguing that
-     the tool refuses to oversell cannot open at the display size. */
-  font-size: var(--size-xl);
+     the tool refuses to oversell cannot open at display-large. */
   max-width: 20ch;
 }
 
@@ -163,14 +191,14 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 .threshold__label {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: var(--size-2xs);
+  font-size: var(--size-label-medium);
   letter-spacing: var(--tracking-label);
   color: var(--color-text-muted);
 }
 
 /* ── Score ───────────────────────────────────────────────────────────────────
- * Colour licence (art-direction rule 1): --color-below is used ONLY for a score under
- * 4.0 or a legitimacy flag. A page with no negative judgment on it is achromatic.
+ * Colour licence (art-direction rule 1): --color-below (M3 `error` role) is used ONLY for
+ * a score under 4.0 or a legitimacy flag. A page with no negative judgment is achromatic.
  */
 .score { display: flex; align-items: baseline; gap: var(--space-2xs); }
 .score__value {
@@ -179,64 +207,78 @@ a:hover { text-decoration-thickness: var(--border-thick); }
   font-weight: var(--weight-medium);
   letter-spacing: var(--tracking-tight);
 }
-.score__max { font-size: var(--size-md); color: var(--color-text-muted); }
+.score__max { font-size: var(--size-title-medium); color: var(--color-text-muted); }
 .score--below .score__value { color: var(--color-below-text); }
 .score__verdict {
   font-family: var(--font-mono);
-  font-size: var(--size-2xs);
+  font-size: var(--size-label-medium);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
 }
 .score--below .score__verdict { color: var(--color-below-text); }
 
-/* The track needs the hairline: sunk-on-paper is 1.09:1, and on a sunk section it is
-   invisible — a 2.8 read as a short line, not as a fraction of 5. */
+/* Track: surface-container-highest with an outline-variant border (plan §4) — sunk-on-paper
+   alone was too close to invisible on a sunk section; the highest tier plus the border fixes
+   that a 2.8 must read as a fraction of 5, not a stray short line. */
 .bar {
   height: var(--space-2xs);
-  background: var(--color-bg-sunk);
+  background: var(--color-bg-highest);
   border: var(--border-hair) solid var(--color-border);
   position: relative;
 }
 .bar__fill {
   position: absolute;
   inset-block: 0;
-  left: 0;
+  inset-inline-start: 0;
   /* The width is data, supplied per record as --bar-fill. Keeping it a custom property
      rather than an inline width keeps every literal value out of the style attribute. */
   width: var(--bar-fill, 0%);
   background: var(--color-text);
   /* The one orchestrated moment on the page (art-direction rule 5): the bar draws to its
-     value on load. An animation, not a transition — with no JS the width never changes, so
-     a transition never fires. scaleX stays on the compositor; width would relayout. */
+     value on load, on emphasized-decelerate at medium-4 (400ms). An animation, not a
+     transition — with no JS the width never changes, so a transition never fires. scaleX
+     stays on the compositor; width would relayout. */
   transform-origin: left;
-  animation: draw var(--duration-signature) var(--ease-out);
+  animation: draw var(--duration-signature) var(--ease-emphasized-decelerate);
 }
 @keyframes draw { from { transform: scaleX(0); } }
 .bar--below .bar__fill { background: var(--color-below); }
 
-/* ── Records: the only cards on this site (art-direction rule 4) ───────────── */
+/* ── Records: the only cards on this site (art-direction rule 4) ─────────────
+ * M3 outlined card: surface + outline-variant border, elevation 0. Never outline + shadow
+ * together — that combination is the shadcn banlist entry restated in M3 vocabulary.
+ */
 .record {
   border: var(--border-hair) solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-md);
   padding: var(--space-md);
   background: var(--color-bg);
-  box-shadow: var(--shadow-none);
+  box-shadow: var(--elevation-0);
 }
+/* The hero's example record is the single elevated object on the page — the M3 way of
+   saying "this one is the product" (plan §4). */
+.hero .record { box-shadow: var(--elevation-1); }
 .record__meta {
   font-family: var(--font-mono);
-  font-size: var(--size-2xs);
+  font-size: var(--size-label-medium);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
 .records { display: grid; gap: var(--space-md); }
 
+/* Assist chip, error-container role, sm shape, ~32dp (plan §4). Static, not interactive —
+   32dp is the M3 chip height; the 48dp target minimum applies to controls, not this. */
 .flag {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2rem;
   font-family: var(--font-mono);
-  font-size: var(--size-xs);
-  color: var(--color-below-text);
-  border-left: var(--border-thick) solid var(--color-below);
-  padding-left: var(--space-2xs);
+  font-size: var(--size-label-large);
+  color: var(--color-flag-text);
+  background: var(--color-flag-bg);
+  border-radius: var(--shape-sm);
+  padding-inline: var(--space-2xs);
 }
 
 /* ── Claim with receipt ──────────────────────────────────────────────────────
@@ -248,7 +290,7 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 .claim__receipt {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: var(--size-xs);
+  font-size: var(--size-label-large);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-text);
@@ -257,89 +299,95 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 /* ── Document pages: last-reviewed line and contents (built by build.mjs) ── */
 .doc-meta {
   font-family: var(--font-mono);
-  font-size: var(--size-2xs);
+  font-size: var(--size-label-medium);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-text-muted);
-  margin-top: var(--space-2xs);
+  margin-block-start: var(--space-2xs);
 }
 .contents {
   max-width: var(--container-prose);
   margin-block: var(--space-md) var(--space-lg);
-  padding-left: var(--space-sm);
-  border-left: var(--border-hair) solid var(--color-border);
+  padding-inline-start: var(--space-sm);
+  border-inline-start: var(--border-hair) solid var(--color-border);
 }
-.contents ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3xs); font-size: var(--size-sm); }
+.contents ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3xs); font-size: var(--size-body-medium); }
 .contents a { display: inline-block; padding-block: var(--space-3xs); }
 
-/* ── Blocks table (A–G), block letter in the left margin ─────────────────── */
+/* ── Blocks table (A–G), block letter in the left margin (M3 list, plan §4) ──
+ * Table semantics stay — only the presentation changes.
+ */
 .blocks { border-collapse: collapse; width: 100%; max-width: var(--container-wide); }
 .blocks th, .blocks td {
-  text-align: left;
-  padding: var(--space-2xs) var(--space-sm) var(--space-2xs) 0;
+  text-align: start;
+  padding-block: var(--space-2xs);
+  padding-inline: 0 var(--space-sm);
   border-bottom: var(--border-hair) solid var(--color-border);
   vertical-align: baseline;
 }
-.blocks th { font-weight: var(--weight-semibold); font-size: var(--size-sm); }
+.blocks th { font-weight: var(--weight-medium); font-size: var(--size-body-medium); }
 .blocks .letter {
   font-family: var(--font-mono);
   font-weight: var(--weight-medium);
+  font-size: var(--size-label-large);
   width: var(--space-lg);
   color: var(--color-text-muted);
 }
 
-/* ── CTA — one component, one destination, ink on paper. No signal colour. ── */
+/* ── CTA — M3 filled button: full shape, primary/on-primary, state layer (plan §4).
+ * The secondary link in a .cta-row (a plain <a>, no .cta class) is the M3 text button —
+ * same state layer via the shared selector list above, no fill.
+ */
 .cta {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.5rem; /* 40dp M3 button */
   background: var(--color-btn-bg);
   color: var(--color-btn-text);
   text-decoration: none;
-  font-weight: var(--weight-semibold);
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-sm);
-  /* ≥44px tall at base size: 2×0.75rem padding + 1.6 line-height. Target 2.5.8 is 24px;
-     designing to 44 costs nothing here. */
-  min-height: 2.75rem;
+  font-weight: var(--weight-medium);
+  padding-inline: var(--space-md);
+  border-radius: var(--shape-full);
 }
 .cta:hover { text-decoration: underline; }
-.cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; margin-top: var(--space-md); }
-.cta-note { font-size: var(--size-sm); color: var(--color-text-muted); max-width: var(--measure); }
+.cta-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; margin-block-start: var(--space-md); }
+.cta-note { font-size: var(--size-body-medium); color: var(--color-text-muted); max-width: var(--measure); }
 
 .terminal {
-  background: var(--color-bg-sunk);
+  background: var(--color-bg-highest);
   border: var(--border-hair) solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--shape-sm);
   padding: var(--space-sm);
   overflow-x: auto;
-  font-size: var(--size-xs);
+  font-size: var(--size-label-large);
   line-height: var(--leading-snug);
 }
 
 /* Visible marker for anything still awaiting a client fact. It is deliberately loud:
-   an unanswered question that looks like finished copy is how a placeholder ships. */
+   an unanswered question that looks like finished copy is how a placeholder ships. It is a
+   pre-launch defect marker, not a component — no shape/elevation treatment. */
 .todo {
   border: var(--border-thick) dashed var(--color-below);
   color: var(--color-below-text);
   padding: var(--space-sm);
   font-family: var(--font-mono);
-  font-size: var(--size-xs);
+  font-size: var(--size-label-large);
   max-width: var(--container-prose);
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
-.site-foot { border-top: var(--border-hair) solid var(--color-threshold); margin-top: var(--space-3xl); padding-block: var(--space-xl); }
+.site-foot { border-top: var(--border-hair) solid var(--color-threshold); margin-block-start: var(--space-3xl); padding-block: var(--space-xl); }
 .foot-inner { display: grid; gap: var(--space-lg); }
-.foot-head { font-size: var(--size-2xs); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-2xs); }
+.foot-head { font-size: var(--size-label-medium); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-text-muted); margin-block-end: var(--space-2xs); }
 .foot-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3xs); }
-.foot-group a { font-size: var(--size-sm); text-decoration: none; display: inline-block; padding-block: var(--space-2xs); }
+.foot-group a { font-size: var(--size-body-medium); text-decoration: none; display: inline-block; padding-block: var(--space-2xs); }
 .foot-group a:hover { text-decoration: underline; }
-.foot-note { margin-top: var(--space-lg); font-size: var(--size-xs); color: var(--color-text-muted); }
+.foot-note { margin-block-start: var(--space-lg); font-size: var(--size-label-large); color: var(--color-text-muted); }
 .foot-note p { margin: 0 0 var(--space-3xs); }
 
 /* ── Upward from 320 ─────────────────────────────────────────────────────── */
 @media (min-width: 48rem) {
-  h1 { font-size: var(--size-2xl); }
-  .hero h1 { font-size: var(--size-2xl); }
   .records { grid-template-columns: repeat(2, 1fr); }
   .foot-inner { grid-template-columns: repeat(3, 1fr); }
   .foot-note { display: flex; justify-content: space-between; gap: var(--space-md); }
@@ -347,7 +395,7 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 
 @media (min-width: 64rem) {
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; gap: var(--space-2xl); align-items: start; }
-  .hero__margin { position: sticky; top: var(--space-md); }
+  .hero__margin { position: sticky; inset-block-start: var(--space-md); }
   .records { grid-template-columns: repeat(3, 1fr); }
   .score__value { font-size: var(--size-score-large); }
 }

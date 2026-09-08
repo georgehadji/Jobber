@@ -14,6 +14,19 @@
 - Stock photography of people pointing at laptops.
 - `01 / 02 / 03` markers where the content is not actually a sequence.
 
+## Material Design specifics (added 2026-09-08, `spec/brief.md` §6 directive)
+- The M3 baseline palette — seed `#6750A4` and its default violet containers. A seed must be this
+  site's own (`spec/material-plan.md` §3.1); shipping the baseline seed is the same failure mode
+  as untouched shadcn defaults, one entry up.
+- A FAB (floating action button). Nothing on this site is a single dominant repeated action a FAB
+  fits.
+- Bottom navigation. Marketing site, not an app shell; there is nothing to switch between.
+- Ripple feedback implemented in JS. Contradicts the zero-JS contract (`spec/brief.md` §6
+  "Budgets"). State layers are CSS-only (`::after`, opacity transition); no ripple.
+- Full, un-narrowed M3 elevation on every card. Elevation 1 is reserved for the single record the
+  page is arguing you should trust most (`spec/material-plan.md` §4); a page where every card
+  floats is the "elevated card grid" entry, restated in M3 vocabulary.
+
 ## Motion
 - Decorative scroll lines, meteor/comet trails, cursor-following glows, aurora blobs,
   animated gradient meshes, floating 3D shapes.

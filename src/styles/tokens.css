@@ -1,63 +1,100 @@
 /* Workler — design tokens.
- * The single source of every colour, size, space, radius, duration and width on this site.
- * Component CSS may not introduce a raw value; scripts/check-tokens.sh enforces it.
- * Derived from spec/art-direction.md (Direction 1, "The Instrument", revised).
+ * The single source of every colour, size, space, shape, elevation, duration and width on this
+ * site. Component CSS may not introduce a raw value; scripts/check-tokens.sh enforces colour,
+ * scripts/check-contrast.mjs enforces contrast on every role pair below.
+ * Derived from spec/art-direction.md (Direction 1, "The Instrument", Revision 2 — Material) and
+ * spec/material-plan.md §3. M3 roles, hand-mapped tones (DECISION: no colour-generator dependency
+ * until a brand seed exists — see plan §3.1).
  */
 
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 
-  /* ── Colour ───────────────────────────────────────────────────────────────
-   * Achromatic by default. --color-signal is licensed for ONE meaning:
-   * a score below the 4.0 threshold, a legitimacy flag, or the threshold rule.
-   * Not for buttons, links, hover, emphasis or decoration. See art-direction rule 1.
-   * --color-focus is accessibility infrastructure and is exempt; it appears only
-   * under keyboard focus.
+  /* ── Colour — M3 roles via light-dark(), OKLCH ───────────────────────────────
+   * Neutral seed: hue 250, chroma ≈0.014 (near-neutral, unchanged from Direction 1's ink).
+   * Error seed: hue 65, chroma 0.15 (unchanged from Direction 1's signal).
+   * --color-error is licensed for ONE meaning: a score below the 4.0 threshold, a legitimacy
+   * flag, or the threshold rule. Not for buttons, links, hover, emphasis or decoration.
+   * If a page has no negative judgment on it, that page is achromatic. See art-direction rule 1.
+   * --color-focus is accessibility infrastructure and is exempt; it appears only under
+   * keyboard focus.
    */
-  --color-paper:        oklch(98.5% 0.003 250);
-  --color-paper-sunk:   oklch(95.6% 0.005 250);
-  --color-ink:          oklch(20.0% 0.014 250);
-  --color-ink-muted:    oklch(47.0% 0.012 250);  /* 6.5:1 on paper, 6.0:1 on sunk (measured; AA, not AAA) */
-  --color-rule:         oklch(84.0% 0.008 250);  /* structural only, never carries meaning alone */
-  --color-signal:       oklch(58.0% 0.152 65);   /* fills and bars only, ≥3:1 non-text */
-  --color-signal-text:  oklch(46.0% 0.140 65);   /* ≥4.5:1 on paper, use whenever it carries text */
-  --color-focus:        oklch(55.0% 0.180 250);
+  --m3-surface:                  light-dark(oklch(98% 0.002 250), oklch(6% 0.005 250));
+  --m3-on-surface:                light-dark(oklch(10% 0.008 250), oklch(90% 0.006 250));
+  --m3-on-surface-variant:        light-dark(oklch(30% 0.012 250), oklch(80% 0.008 250));
+  --m3-surface-container-lowest:  light-dark(oklch(100% 0 250),   oklch(4% 0.004 250));
+  --m3-surface-container-low:     light-dark(oklch(96% 0.003 250), oklch(10% 0.008 250));
+  --m3-surface-container:         light-dark(oklch(94% 0.004 250), oklch(12% 0.009 250));
+  --m3-surface-container-high:    light-dark(oklch(92% 0.005 250), oklch(17% 0.011 250));
+  --m3-surface-container-highest: light-dark(oklch(90% 0.006 250), oklch(22% 0.012 250));
+  --m3-outline:                   light-dark(oklch(50% 0.012 250), oklch(60% 0.011 250));
+  --m3-outline-variant:           light-dark(oklch(80% 0.008 250), oklch(30% 0.013 250));
+  --m3-primary:                   light-dark(oklch(40% 0.013 250), oklch(80% 0.008 250));
+  --m3-on-primary:                light-dark(oklch(100% 0 250),   oklch(20% 0.010 250));
+  --m3-primary-container:         light-dark(oklch(90% 0.006 250), oklch(30% 0.013 250));
+  --m3-on-primary-container:      light-dark(oklch(10% 0.008 250), oklch(90% 0.006 250));
+  --m3-error:                     light-dark(oklch(40% 0.150 65),  oklch(80% 0.100 65));
+  --m3-on-error:                  light-dark(oklch(100% 0 65),    oklch(20% 0.040 65));
+  --m3-error-container:           light-dark(oklch(90% 0.050 65),  oklch(30% 0.090 65));
+  --m3-on-error-container:        light-dark(oklch(10% 0.020 65),  oklch(90% 0.030 65));
+  --color-focus:                  light-dark(oklch(55% 0.180 250), oklch(75% 0.150 250));
 
-  /* Semantic aliases — components use these, never the raw scale above. */
-  --color-bg:            var(--color-paper);
-  --color-bg-sunk:       var(--color-paper-sunk);
-  --color-text:          var(--color-ink);
-  --color-text-muted:    var(--color-ink-muted);
-  --color-border:        var(--color-rule);
-  --color-threshold:     var(--color-ink);
-  --color-below:         var(--color-signal);
-  --color-below-text:    var(--color-signal-text);
-  --color-btn-bg:        var(--color-ink);
-  --color-btn-text:      var(--color-paper);
+  /* Semantic aliases — components use these, never the m3-* roles or a raw value directly. */
+  --color-bg:            var(--m3-surface);
+  --color-bg-sunk:       var(--m3-surface-container-low);
+  --color-bg-sunk-high:  var(--m3-surface-container-high);
+  --color-bg-highest:    var(--m3-surface-container-highest);
+  --color-bg-lowest:     var(--m3-surface-container-lowest);
+  --color-text:          var(--m3-on-surface);
+  --color-text-muted:    var(--m3-on-surface-variant);
+  --color-border:        var(--m3-outline-variant);
+  --color-threshold:     var(--m3-on-surface);
+  --color-below:         var(--m3-error);
+  --color-below-text:    var(--m3-error);
+  --color-flag-bg:       var(--m3-error-container);
+  --color-flag-text:     var(--m3-on-error-container);
+  --color-btn-bg:        var(--m3-primary);
+  --color-btn-text:      var(--m3-on-primary);
 
-  /* ── Type ─────────────────────────────────────────────────────────────────
+  /* ── Type — M3 typescale, rem ────────────────────────────────────────────────
    * 2 families, 4 weights. At the budget ceiling — nothing left for a third.
    * Every numeral is mono and tabular (art-direction rule 3).
    */
-  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system,
-               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono",
+  --font-sans: Roboto, ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, "SF Mono",
                Menlo, Consolas, "Liberation Mono", monospace;
 
   --weight-regular: 400;
-  --weight-medium:  500;  /* mono only */
-  --weight-semibold: 600; /* sans only */
+  --weight-medium:  500;
 
-  /* Scale: ratio 1.25 at mobile. --size-display steps up at ≥64rem (below). */
-  --size-2xs:  0.75rem;
-  --size-xs:   0.875rem;
-  --size-base: 1rem;
-  --size-sm:   0.9375rem;
-  --size-md:   1.25rem;
-  --size-lg:   1.563rem;
-  --size-xl:   1.953rem;
-  --size-2xl:  2.441rem;
-  --size-display: var(--size-2xl);
+  /* M3 typescale roles. H1 stays demoted a step (art-direction Revision 2, row 1): headline-large
+   * at compact width, display-small at expanded — never display-large. Score numeral is off-scale
+   * (below), unchanged. */
+  --size-display-small:  2.25rem;
+  --size-display-medium: 2.8125rem;
+  --size-display-large:  3.5625rem;
+  --size-headline-small:  1.5rem;
+  --size-headline-medium: 1.75rem;
+  --size-headline-large:  2rem;
+  --size-title-small:  0.875rem;
+  --size-title-medium: 1rem;
+  --size-title-large:  1.375rem;
+  --size-body-small:  0.75rem;
+  --size-body-medium: 0.875rem;
+  --size-body-large:  1rem;
+  --size-label-small:  0.6875rem;
+  --size-label-medium: 0.75rem;
+  --size-label-large:  0.875rem;
+
+  /* Role mapping (art-direction Revision 2): H1 -> headline-large / display-small (@--bp-md);
+   * H2 -> headline-small; H3 -> title-large; body -> body-large; meta labels -> label-medium
+   * (mono, uppercase, unchanged). */
+  --size-h1: var(--size-headline-large);
+  --size-h2: var(--size-headline-small);
+  --size-h3: var(--size-title-large);
+  --size-body: var(--size-body-large);
+  --size-label: var(--size-label-medium);
 
   /* Deliberate breaks from the scale (art-direction, "where it breaks on purpose").
    * The score is a measurement, not text, and sits outside the scale entirely. */
@@ -86,60 +123,95 @@
   --space-3xl: 6rem;
   --space-4xl: 8rem;
 
-  /* ── Radius ───────────────────────────────────────────────────────────────
-   * Near-zero. An instrument is machined, not rounded. Cards exist only for
-   * records (art-direction rule 4), and they get 2px, not a soft 12px.
+  /* ── Shape — M3 shape scale (art-direction Revision 2) ───────────────────────
+   * Replaces the old --radius-* names outright; not aliased, so a survivor is caught by
+   * scripts/check-tokens.sh's raw-radius pattern (plan §5 item 8).
    */
-  --radius-none: 0;
-  --radius-sm:   2px;
-  --radius-md:   3px;
+  --shape-none: 0;
+  --shape-xs:   0.25rem;  /* 4px */
+  --shape-sm:   0.5rem;   /* 8px  — code blocks, chips */
+  --shape-md:   0.75rem;  /* 12px — record cards */
+  --shape-lg:   1rem;     /* 16px */
+  --shape-xl:   1.75rem;  /* 28px */
+  --shape-full: 9999px;   /* buttons */
 
   /* ── Border ───────────────────────────────────────────────────────────────── */
   --border-hair: 1px;
   --border-thick: 2px;
 
-  /* ── Shadow ───────────────────────────────────────────────────────────────
-   * There are no shadows. Depth is carried by tone (--color-bg-sunk) and rule.
-   * The token exists so that any component reaching for a shadow gets `none`
-   * rather than inventing a raw rgba().
-   */
-  --shadow-none: none;
+  /* M3 focus indicator (art-direction Revision 2, row 8): 3px, 2px offset. */
+  --focus-width: 3px;
+  --focus-offset: var(--border-thick);
 
-  /* ── Motion ───────────────────────────────────────────────────────────────
-   * One orchestrated moment per page: the score bar drawing to its value.
-   * Everything else is instant. All of it disabled under prefers-reduced-motion.
+  /* ── Elevation — M3 tokens 0–5. Only level 1 is consumed at launch: the hero's
+   * example record, the single elevated object on the page (plan §4). Shadow colour is
+   * fixed dark regardless of scheme, per the M3 spec (elevation shadows do not invert). */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px 0 oklch(20% 0.01 250 / 30%), 0 1px 3px 1px oklch(20% 0.01 250 / 15%);
+  --elevation-2: 0 1px 2px 0 oklch(20% 0.01 250 / 30%), 0 2px 6px 2px oklch(20% 0.01 250 / 15%);
+  --elevation-3: 0 1px 3px 0 oklch(20% 0.01 250 / 30%), 0 4px 8px 3px oklch(20% 0.01 250 / 15%);
+  --elevation-4: 0 2px 3px 0 oklch(20% 0.01 250 / 30%), 0 6px 10px 4px oklch(20% 0.01 250 / 15%);
+  --elevation-5: 0 4px 4px 0 oklch(20% 0.01 250 / 30%), 0 8px 12px 6px oklch(20% 0.01 250 / 15%);
+  --shadow-none: var(--elevation-0);
+
+  /* ── Motion — M3 easing + duration sets, plus state-layer opacities ──────────
+   * One orchestrated moment per page: the score bar drawing to its value, on
+   * emphasized-decelerate at medium-4. Everything else is state-layer feedback.
+   * All of it collapses under prefers-reduced-motion (below).
    */
-  --duration-instant: 0ms;
-  --duration-fast:    120ms;
-  --duration-signature: 320ms;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard:              cubic-bezier(0.2, 0, 0, 1);
+  --ease-standard-decelerate:   cubic-bezier(0, 0, 0, 1);
+  --ease-standard-accelerate:   cubic-bezier(0.3, 0, 1, 1);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  --duration-instant:  0ms;
+  --duration-short-1:  50ms;
+  --duration-short-2:  100ms;
+  --duration-short-3:  150ms;
+  --duration-short-4:  200ms;
+  --duration-medium-1: 250ms;
+  --duration-medium-2: 300ms;
+  --duration-medium-3: 350ms;
+  --duration-medium-4: 400ms;
+  --duration-signature: var(--duration-medium-4);
+
+  --state-hover:   0.08;
+  --state-focus:   0.10;
+  --state-pressed: 0.10;
+  --state-dragged: 0.16;
 
   /* ── Containers ───────────────────────────────────────────────────────────── */
   --container-prose: 42rem;   /* the reading column, ≈68ch at base size */
   --container-wide:  72rem;   /* nav, footer, demo grids */
   --container-pad:   var(--space-sm);
 
-  /* ── Breakpoints (documented; media queries cannot read custom properties) ──
-   * 22.5rem 360  ·  30rem 480  ·  48rem 768  ·  64rem 1024  ·  90rem 1440
-   * Base stylesheet is written for 320px and adds complexity upward.
+  /* ── Breakpoints — M3 window-size classes (art-direction Revision 2) ─────────
+   * compact <600px · medium 600–839px · expanded 840–1199px.
+   * Media queries cannot read custom properties; documented here for authors.
    */
-  --bp-sm: 30rem;
-  --bp-md: 48rem;
-  --bp-lg: 64rem;
-  --bp-xl: 90rem;
+  --bp-sm: 37.5rem;  /* 600px  — compact/medium */
+  --bp-md: 52.5rem;  /* 840px  — medium/expanded */
+  --bp-lg: 75rem;    /* 1200px — expanded/large */
 }
 
-@media (min-width: 64rem) {
+@media (min-width: 52.5rem) {
   :root {
-    /* Ratio steps up to 1.333 at desktop; only the display step changes. */
-    --size-display: 3.052rem;
+    --size-h1: var(--size-display-small);
     --container-pad: var(--space-lg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --duration-fast: var(--duration-instant);
+    --duration-short-1: var(--duration-instant);
+    --duration-short-2: var(--duration-instant);
+    --duration-short-3: var(--duration-instant);
+    --duration-short-4: var(--duration-instant);
+    --duration-medium-1: var(--duration-instant);
+    --duration-medium-2: var(--duration-instant);
+    --duration-medium-3: var(--duration-instant);
+    --duration-medium-4: var(--duration-instant);
     --duration-signature: var(--duration-instant);
   }
 }

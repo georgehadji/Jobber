@@ -270,6 +270,19 @@ scripts unless justified in the growth plan.
 Accessibility Act has been enforceable since 2025-06-28, with EN 301 549 (WCAG 2.1 AA) as the
 technical benchmark. Build above the benchmark.
 
+**Design system. Founder decision, 2026-09-08: the site is designed with the principles of
+Material Design (M3).** Not a visual reskin — the existing art direction's rules (colour licence,
+threshold rule, mono numerals, card discipline, one signature motion) are re-expressed as M3 roles
+(colour roles, typescale, shape scale, elevation, state layers, window-size classes) rather than
+discarded. Four things change under this directive: shape (near-zero radius → M3 shape tokens),
+elevation (no shadows → tonal surface containers, level 1 at most), typography (Instrument
+Sans / IBM Plex Mono, never loaded — see art-direction "Open, and named" — → Roboto / Roboto Mono
+on the M3 typescale), and icons (none → Material Symbols permitted as inline SVG only, no icon
+font). Zero client-side JS is kept: no ripple, no JS theme toggle, dark scheme follows
+`prefers-color-scheme`. Full reasoning, token mapping and phased rollout: `spec/material-plan.md`.
+This directive is binding on `spec/art-direction.md` (Revision 2, below) and `spec/banlist.md`
+(amended in the same pass); later stages must not contradict it per this file's own governance.
+
 **Regulatory exposure.**
 - *EU AI Act (Regulation (EU) 2024/1689), Annex III category 4* names employment AI as high-risk,
   with Article 6(2) making the classification automatic. Whether a candidate-side tool falls

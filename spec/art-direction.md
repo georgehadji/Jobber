@@ -311,3 +311,55 @@ from Direction 1.
   name set in Instrument Sans 600 with the threshold rule beneath it — a lockup, not a logo, and
   deliberately cheap to replace.
 - **UNKNOWN:** the favicon and OG images, same blocker, same reason.
+
+---
+
+# REVISION 2 — Material (2026-09-08)
+
+**Trigger.** Founder directive, `spec/brief.md` §6: the site is designed with the principles of
+Material Design (M3). Full reasoning and token-level detail live in `spec/material-plan.md`; this
+revision is the art-direction record the site's own governance requires before `src/` changes —
+`spec/banlist.md` is amended in the same pass (Material Design specifics section).
+
+**What does not change.** The thesis (Direction 1, "The Instrument" — the site is a readout, not a
+brochure), the colour licence's *behaviour* (chromatic only for a negative judgment), the threshold
+rule as signature, the block-letter left margin, the demoted H1, mono/tabular numerals, "no card
+without a record", one orchestrated motion, achromatic-by-default. M3 gives these mechanisms —
+roles, tokens, scales — it does not replace the argument.
+
+**What changes, row by row, against "Rules the build inherits" above and the Direction 1 palette/
+type/layout sections:**
+
+| # | Rule as written above | Changed to | Why |
+|---|---|---|---|
+| 1 | Colour licence: `--color-signal` only for below-4.0 / flag / threshold rule | Same licence, now the M3 `error` / `error-container` / `on-error-container` roles. `primary` is the neutral-seeded ink (tone 40); `secondary`/`tertiary` stay unassigned | M3's `error` role already means "negative judgment" — the licence maps onto an existing role instead of a bespoke one, at zero cost to the rule |
+| 2 | Threshold rule, 1px, `--color-ink`, mono `4.0` label | Same geometry and colour (`on-surface`, not `outline-variant`) | It is now formally a custom `divider`; nothing about it moves |
+| 3 | Every numeral mono and tabular | Same, font family changes (see below) | — |
+| 4 | No card without a record | Records → M3 *outlined* card; sunk sections → *filled* `surface-container`. Never outline + shadow together | Outline+shadow together is the shadcn banlist entry restated in M3 vocabulary — named explicitly so it is not reintroduced by accident |
+| 5 | One orchestrated moment, 320ms, `--ease-out` | Bar draw → 400ms on `emphasized-decelerate` (M3 easing set). State-layer opacity transitions (100ms) are not "orchestrated" and do not count against the one-per-page rule | Banlist's 400ms non-signature cap still holds; state layers are feedback, not a moment |
+| 6 | Nav logo-left / links-right / threshold rule as bottom border | M3 *small top app bar*, 64dp, `surface`, same logo-left/links-right arrangement, threshold rule stays its bottom edge | Restating the existing nav in M3's app-bar component, not replacing it |
+| 7 | No icons, no icon set installed | Material Symbols permitted, inline SVG only, only where a control has no room for a label, always with an accessible name. Three-icon feature row and emoji stay banned | A capability, not a requirement — expected count at launch is zero. Closing this rule outright would contradict a component this site may legitimately need (an assist chip on the legitimacy flag) |
+| 8 | Focus 2px `--color-focus`, 2px offset, exempt from the colour licence | M3 focus indicator: 3px `primary`, 2px offset. Still exempt from the colour licence | M3's accessibility floor for focus is 3px, one px over the original — the original rule undershoots M3, not the banlist |
+| Palette: paper/ink/rule OKLCH values, radius 0/2/3px | M3 shape scale: `none 0 · xs 4 · sm 8 · md 12 · lg 16 · xl 28 · full 9999px`. Buttons `full`, cards `md`, code blocks `sm` | The near-zero-radius argument ("instrument, not a brochure") was never about the literal pixel value, so the M3 scale carries it forward at slightly softer numbers |
+| No shadows, tonal separation only | Elevation tokens 0–5, level 1 only on the hero's example record | The hero record was already singled out as the one card that matters; M3 elevation formalises "this one is the product" instead of inventing a new device |
+| Instrument Sans / IBM Plex Mono (labelled HYPOTHESIS above, never loaded — QA C1) | Roboto 400/500 + Roboto Mono 400/500. Same two-family, four-weight budget | This revision closes the HYPOTHESIS: the original pairing never rendered in this checkout. Replacing an unseen hypothesis costs nothing that has been observed |
+| Type scale 1.25/1.333 ratio, 7 steps | M3 typescale (§3.2 of the plan). H1 stays demoted: `headline-large`/`display-small`, never `display-large`. Score numeral keeps its off-scale size | The demotion rule survives verbatim — only the underlying step values change |
+| Breakpoints 30/48/64/90rem | 37.5/52.5/75rem (M3 window-size classes: compact/medium/expanded) | Aligns the site to M3's compact/medium/expanded/large model instead of an arbitrary four-step scale |
+| `color-scheme: light` only | Light and dark via `light-dark()` + `prefers-color-scheme`, no JS toggle | M3 is defined for both schemes; shipping dark at zero JS cost was already possible and the directive is the occasion to do it |
+
+**Re-run ten-studios test.** Original Pass 2 estimate for Direction 1 was 2/10 after revision.
+Re-running it against *"Material Design site for a technical SaaS"*:
+
+| Risk | Arrival rate if unmitigated | Mitigation already in place |
+|---|---|---|
+| Out-of-the-box M3 (violet `#6750A4` seed, default containers) | High — this is the single most common Material failure mode, and now a banlist entry | Neutral seed carried over from Direction 1, unchanged by this revision |
+| FAB as a default "primary action" affordance | Moderate — FAB is M3's most recognisable component | Banned outright (banlist); nothing on a marketing site is a repeated single action |
+| Elevated card grids (every section boxed and shadowed) | Moderate | Elevation reserved for one card only (rule above); "no card without a record" still gates card usage at all |
+| Bottom navigation / app-shell chrome on a marketing site | Low | Banned outright; there is no app-shell content to switch between |
+| Ripple as the default press feedback | Low, but a JS reflex | Banned; CSS-only state layers, keeps the zero-JS contract |
+
+**Estimate: 2/10, unchanged from the pre-Material Pass 2 figure.** The reasoning is the same
+reasoning, restated: what a Material-branded audience would guess (violet, FAB, elevated grids,
+ripple) is exactly the set this revision closes off, and the mechanisms that made the pre-Material
+direction unusual — the colour-as-rule licence, the threshold-rule signature, the demoted H1 — are
+kept verbatim. Gate met (`spec/material-plan.md` §6, Phase 0: ≤3/10 with reasons).
