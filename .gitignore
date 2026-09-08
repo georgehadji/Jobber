@@ -162,6 +162,11 @@ vmi.json
 # Ephemeral test scratch (test-all.mjs fixtures, coverage probes)
 .tmp-script-test-*/
 .tmp-coverage-guard-probe/
+.tmp-provision-workspace-test-*/
+
+# Hosted-tier local scratch (docs/HOSTED-APP-PLAN.md) — never in a local-first checkout
+.workspaces/
+.workler/
 
 # Local MCP server config — per-machine tooling, not project config
 .mcp.json

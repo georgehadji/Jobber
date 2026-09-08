@@ -56,8 +56,10 @@ export const DASHBOARD_REBUILD_TIMEOUT_MS = parsePositiveInt(process.env.JOBBER_
 export const UPDATE_PATH_CHECKOUT_BUDGET_MS = parsePositiveInt(process.env.JOBBER_UPDATE_PATH_CHECKOUT_BUDGET_MS, 5000);
 export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.JOBBER_REEXEC_BUFFER_TIMEOUT_MS, 60000);
 
-// System layer paths — ONLY these files get updated
-const SYSTEM_PATHS = [
+// System layer paths — ONLY these files get updated. Exported: it is also the
+// SSOT provision-workspace.mjs hardlinks into a hosted-tier tenant workspace
+// (docs/HOSTED-APP-PLAN.md §2.2) — one list, not a second copy to drift.
+export const SYSTEM_PATHS = [
   // Self-healing protocol artifacts (profile, failure catalog, fix plan,
   // runbook). tests/stamp-translations.test.mjs asserts these are present,
   // so they are tracked and must be registered here or the SYSTEM_PATHS
@@ -151,6 +153,7 @@ const SYSTEM_PATHS = [
   'lib/golden-budget-analysis.mjs',
   'lib/token-tracker.mjs',
   'lib/llm-providers.mjs',
+  'lib/hosted-capabilities.mjs',
   'lib/file-lock.mjs',
   'lib/report-schema.mjs',
   'lib/score-summary.mjs',
@@ -241,6 +244,9 @@ const SYSTEM_PATHS = [
   'ollama-eval.mjs',
   'openai-eval.mjs',
   'openai-tailor.mjs',
+  'agent-runner.mjs',
+  'provision-workspace.mjs',
+  'probe-providers.mjs',
   'eval-runner.mjs',
   'eval-golden.mjs',
   'evals/',
@@ -391,8 +397,9 @@ const BOOTSTRAP_PATHS = [
   'agent-inbox-tests.mjs',
 ];
 
-// User layer paths — NEVER touch these (safety check)
-const USER_PATHS = [
+// User layer paths — NEVER touch these (safety check). Exported: also the SSOT
+// provision-workspace.mjs reads to lay down real (non-linked) tenant paths.
+export const USER_PATHS = [
   'cv.md',
   'config/profile.yml',
   'modes/_profile.md',

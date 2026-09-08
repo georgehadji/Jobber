@@ -100,6 +100,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
+    --posting-url <url>  The posting's own URL, written into the report header
     --model <id>     Model id            (env ${PROVIDERS.openai.modelEnv}, default ${PROVIDERS.openai.defaultModel})
     --url <base>     OpenAI-compatible base URL, including any /v1
                      (env ${PROVIDERS.openai.baseUrlEnv}, default ${PROVIDERS.openai.baseUrl})
@@ -133,9 +134,19 @@ let baseUrl    = baseUrlFor('openai');
 let apiKey     = apiKeyFor('openai');
 let saveReport = true;
 let noCompress = false;
+// Optional: the posting's own URL (distinct from --url, which is the
+// OPENAI_BASE_URL endpoint). Threaded into the report between Legitimacy and
+// PDF, matching AGENTS.md rule 3's report header convention — omitted (no
+// line at all) when not passed, so every existing caller is unaffected. The
+// hosted tier's evaluate branch is the first caller that has a real posting
+// URL to hand (web/src/app/api/run/route.ts fetches the JD from it, then
+// passes it through so its own report has one too).
+let postingUrl = '';
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--file' && args[i + 1]) {
+  if (args[i] === '--posting-url' && args[i + 1]) {
+    postingUrl = args[++i];
+  } else if (args[i] === '--file' && args[i + 1]) {
     const filePath = args[++i];
     if (!existsSync(filePath)) {
       console.error(`❌  File not found: ${filePath}`);
@@ -417,7 +428,7 @@ if (saveReport) {
 **Archetype:** ${archetype}
 **Score:** ${score}/5
 **Legitimacy:** ${legitimacy}
-**PDF:** pending
+${postingUrl ? `**URL:** ${postingUrl}\n` : ''}**PDF:** pending
 **Tool:** OpenAI-compatible (${answeredBy} @ ${endpointHost})
 
 ---

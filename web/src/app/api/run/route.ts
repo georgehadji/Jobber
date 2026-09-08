@@ -1,9 +1,89 @@
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
-import { jobberRoot, readMemory } from "@/lib/jobber";
+import { jobberRoot, readMemory, findReportFile } from "@/lib/jobber";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
+import { hostedEnv, fetchJdCached, reportUrl } from "@/lib/hosted-run";
+
+/**
+ * Hosted "pdf": tailor → render → sync the tracker's PDF flag — three of the
+ * CLI's own scripts run in sequence, not reimplemented. Doesn't fit the
+ * single-child streaming shape below (that's built around ONE process), so it
+ * gets its own small NDJSON response instead of bending that shape to fit a
+ * second use case. openai-tailor.mjs prints the exact next-step
+ * `generate-pdf.mjs` invocation it computed (candidate/company/role slugs,
+ * date, report number) — parsed verbatim rather than recomputed, so there is
+ * one place that owns that naming, not two that can drift.
+ */
+function runHostedPdf(reportNum: string): Response {
+  const enc = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let closed = false;
+      const send = (obj: unknown) => {
+        if (closed) return;
+        try {
+          controller.enqueue(enc.encode(JSON.stringify(obj) + "\n"));
+        } catch {
+          closed = true;
+        }
+      };
+      try {
+        const reportFile = findReportFile(reportNum);
+        if (!reportFile) throw new Error(`No report found for #${reportNum}.`);
+        const reportText = fs.readFileSync(reportFile, "utf-8");
+        const url = reportUrl(reportText);
+        if (!url) throw new Error(`Report #${reportNum} has no posting URL on file — hosted CV tailoring needs one.`);
+
+        send({ type: "status", label: "Fetching the posting…" });
+        const jdPath = fetchJdCached(url);
+
+        send({ type: "status", label: "Tailoring your CV…" });
+        const tailorOut = execFileSync(process.execPath, [path.join(jobberRoot(), "openai-tailor.mjs"), "--jd", jdPath, "--report", reportFile], {
+          cwd: jobberRoot(),
+          encoding: "utf-8",
+          timeout: 300_000,
+          env: hostedEnv("write"),
+        });
+        send({ type: "text", text: tailorOut });
+
+        const nextStep = tailorOut.match(/node generate-pdf\.mjs (\S+) (\S+) (--format=\S+) (--report=\S+)/);
+        if (!nextStep) throw new Error("Tailoring finished but didn't report the next render step — cannot continue safely.");
+        const [, htmlRel, pdfRel, formatFlag, reportFlag] = nextStep;
+
+        send({ type: "status", label: "Rendering PDF…" });
+        const pdfOut = execFileSync(process.execPath, [path.join(jobberRoot(), "generate-pdf.mjs"), htmlRel, pdfRel, formatFlag, reportFlag], {
+          cwd: jobberRoot(),
+          encoding: "utf-8",
+          timeout: 300_000,
+          env: process.env,
+        });
+        send({ type: "text", text: pdfOut });
+
+        try {
+          execFileSync(process.execPath, [path.join(jobberRoot(), "sync-pdf-flags.mjs")], { cwd: jobberRoot(), encoding: "utf-8", timeout: 60_000 });
+        } catch (e) {
+          send({ type: "text", text: `(tracker PDF flag sync skipped: ${(e as Error).message})` });
+        }
+
+        send({ type: "done", tokens: 0, costUsd: null });
+      } catch (e) {
+        send({ type: "error", msg: (e as Error).message });
+      } finally {
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          /* already closed */
+        }
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" },
+  });
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,10 +186,22 @@ export async function POST(req: Request) {
     );
   }
 
+  const isHosted = cliId === "workler";
+  // pdf tailoring is inherently multi-step (tailor → render → sync the
+  // tracker's PDF flag) — it doesn't fit the single-child streaming shape
+  // below, so it gets its own small response instead of bending that shape
+  // around a second use case. evaluate DOES fit that shape (one script, plain
+  // stdout) and is handled further down by swapping what gets spawned.
+  if (isHosted && kind === "pdf") return runHostedPdf(input);
+
   const today = new Date().toISOString().slice(0, 10);
   const prompt = buildPrompt(kind, input, readMemory(), today);
 
   const isClaude = cliId === "claude";
+  // agent-runner.mjs emits the same stream-json shape Claude Code does
+  // (docs/HOSTED-APP-PLAN.md §2.1); it is used for every hosted kind except
+  // evaluate, which bypasses the agent for openai-eval.mjs's plain stdout.
+  const usesStreamJson = isClaude || (isHosted && kind !== "evaluate");
   // Tool scope by kind (comma-separated lists; disallowedTools is the hard
   // guardrail). 'evaluate' runs the REAL mode + persists canonical artifacts →
   // it needs Write + Bash (reserve-report-num / merge-tracker / write the
@@ -142,7 +234,31 @@ export async function POST(req: Request) {
   // (tracker.mjs delete doesn't yet share a lock with merge-tracker — see run-registry).
   const writeToken = kind === "evaluate" || kind === "pdf" ? acquireTrackerWrite() : null;
 
-  const child = spawn(binPath, args, { cwd: jobberRoot(), env: process.env });
+  // Hosted evaluate bypasses the agent entirely: openai-eval.mjs IS the CLI's
+  // own evaluator, run with the hosted key/chain — so a web evaluation is
+  // byte-identical to a CLI one, not a reimplementation of it (§2.3). The
+  // fetch happens here (not inside the stream) so a bad/unfetchable URL is a
+  // clean 400, the same shape as the guards above, instead of surfacing only
+  // as a stream error after the client already started reading.
+  let hostedJdPath = "";
+  if (isHosted && kind === "evaluate") {
+    try {
+      hostedJdPath = fetchJdCached(input);
+    } catch (e) {
+      return new Response(JSON.stringify({ error: `Couldn't fetch that posting: ${(e as Error).message}` }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+  const child =
+    isHosted && kind === "evaluate"
+      ? spawn(
+          process.execPath,
+          [path.join(jobberRoot(), "openai-eval.mjs"), "--file", hostedJdPath, "--posting-url", input],
+          { cwd: jobberRoot(), env: hostedEnv("evaluate") },
+        )
+      : spawn(binPath, args, { cwd: jobberRoot(), env: process.env });
   const enc = new TextEncoder();
 
   // `closed` + kill timer in the OUTER scope so cancel() (client disconnect) can
@@ -177,7 +293,7 @@ export async function POST(req: Request) {
 
       child.stdout.on("data", (d: Buffer) => {
         if (closed) return;
-        if (!isClaude) {
+        if (!usesStreamJson) {
           emittedText = true;
           send({ type: "text", text: d.toString() });
           return;

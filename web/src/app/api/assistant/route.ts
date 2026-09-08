@@ -90,6 +90,12 @@ export async function POST(req: Request) {
   // (remember → /api/memory, setStatus → /api/status), never the CLI editing
   // files directly. Scope its tools so it can advise (read) but not blind-write.
   const isClaude = cliId === "claude";
+  // agent-runner.mjs (the hosted engine, docs/HOSTED-APP-PLAN.md §2.1) emits
+  // the SAME stream-json shape Claude Code does, by design, so it takes this
+  // branch's stdout PARSING too — but not its Claude-specific CLI flags below
+  // (agent-runner reads only `-p`; its own tool scoping lives in-process,
+  // §2.3, not behind --allowedTools/--disallowedTools).
+  const usesStreamJson = isClaude || cliId === "workler";
   // allowedTools must be COMMA-separated; disallowedTools is the hard guardrail
   // so the advisor can read (and WebFetch) but never blind-writes or shells out.
   const args = isClaude
@@ -155,7 +161,7 @@ export async function POST(req: Request) {
 
       child.stdout.on("data", (d: Buffer) => {
         if (closed) return;
-        if (!isClaude) {
+        if (!usesStreamJson) {
           emit(d.toString());
           return;
         }

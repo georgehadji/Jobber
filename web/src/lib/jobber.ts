@@ -1,16 +1,34 @@
 import fs from "node:fs";
 import path from "node:path";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { atomicWrite } from "@/lib/core/safe-write";
 import { parseApplications } from "@/lib/tracker-table.mjs";
 
+// Per-request workspace root for the hosted tier (docs/HOSTED-APP-PLAN.md
+// §2.2): one tenant's provisioned workspace, not the single shared checkout a
+// local-first install always reads. Nothing sets this yet — the account/pass
+// middleware that resolves a session to a tenant is phase 4 — but the seam is
+// here so that middleware only has to call withWorkspaceRoot() once, rather
+// than every one of jobberRoot()'s many callers learning about tenancy.
+const workspaceRootStorage = new AsyncLocalStorage<string>();
+
+/** Run `fn` with every jobberRoot() call inside it resolving to `root`. */
+export function withWorkspaceRoot<T>(root: string, fn: () => T): T {
+  return workspaceRootStorage.run(root, fn);
+}
+
 /**
  * Resolve the Jobber "home" — the directory holding the user's sibling
- * files (cv.md, data/, reports/). In production the web/ app lives inside the
- * Jobber checkout, so the home is its parent (..). Dev overrides via
- * JOBBER_ROOT to read the user's real (gitignored) data from a separate
- * checkout — see web/.env.local.
+ * files (cv.md, data/, reports/).
+ *
+ * Resolution order: an active withWorkspaceRoot() context (hosted, per
+ * tenant) > JOBBER_ROOT (dev override, reads a separate checkout's real
+ * gitignored data — see web/.env.local) > the parent of cwd (local-first:
+ * web/ lives inside the Jobber checkout, so its home is one level up).
  */
 export function jobberRoot(): string {
+  const fromWorkspace = workspaceRootStorage.getStore();
+  if (fromWorkspace) return fromWorkspace;
   const env = process.env.JOBBER_ROOT?.trim();
   if (env) return env;
   return path.resolve(process.cwd(), "..");

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { jobberRoot } from "@/lib/jobber";
 
 // Server-only (node imports). The agnostic runtimes Jobber can delegate to
 // in headless mode (AGENTS.md). Install URLs from jobber-docs.
@@ -22,6 +23,13 @@ export const KNOWN: CliSpec[] = [
   { id: "copilot", name: "GitHub Copilot CLI", bin: "copilot", run: "copilot -p", url: "https://docs.github.com/en/copilot/github-copilot-in-the-cli", args: (p) => ["-p", p] },
   { id: "qwen", name: "Qwen CLI", bin: "qwen", run: "qwen -p", url: "https://qwen.ai/qwencode", args: (p) => ["-p", p] },
   { id: "antigravity", name: "Antigravity CLI", bin: "agy", run: "agy -p", url: "https://antigravity.google", args: (p) => ["-p", p] },
+  // The hosted tier's own engine (docs/HOSTED-APP-PLAN.md §2.1) — an OpenRouter
+  // tool loop that emits the same Claude stream-json shape the routes already
+  // parse. `bin` is an absolute path (the current Node binary), not a PATH
+  // lookup; resolveCli() below special-cases that and gates it on HOSTED=1 so
+  // it never appears as a choice in a local-first install.
+  { id: "workler", name: "Workler hosted", bin: process.execPath, run: "node agent-runner.mjs", url: "",
+    args: (p) => [path.join(jobberRoot(), "agent-runner.mjs"), "-p", p] },
 ];
 
 function searchDirs(): string[] {
@@ -93,6 +101,16 @@ export function detectClis() {
 export function resolveCli(id: string): { spec: CliSpec; binPath: string } | null {
   const spec = KNOWN.find((c) => c.id === id);
   if (!spec) return null;
+  // The hosted engine never resolves on a local-first install, even if
+  // someone guesses the id — it needs the tenancy/account machinery (§4 of
+  // the plan) that only exists when this deployment sets HOSTED=1.
+  if (spec.id === "workler" && process.env.HOSTED !== "1") return null;
+  // Most CliSpecs name a bare command found via PATH search (findBin); the
+  // hosted engine's `bin` is already an absolute path to the current Node
+  // binary, so it's used directly instead of being PATH-searched by name.
+  if (path.isAbsolute(spec.bin)) {
+    return fs.existsSync(spec.bin) ? { spec, binPath: spec.bin } : null;
+  }
   const binPath = findBin(spec.bin);
   if (!binPath) return null;
   return { spec, binPath };
