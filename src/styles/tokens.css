@@ -166,6 +166,10 @@
   --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
 
   --duration-instant:  0ms;
+  /* Not 0ms: a zero-duration animation can snap to its initial keyframe instead of
+     resolving to the final one in some engines. 0.01ms is the standard safe near-zero
+     value for prefers-reduced-motion resets (unrelated to JS — this site has none). */
+  --duration-reduced-motion: 0.01ms;
   --duration-short-1:  50ms;
   --duration-short-2:  100ms;
   --duration-short-3:  150ms;

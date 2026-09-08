@@ -87,12 +87,12 @@ body {
 .cta:focus-visible::after, .nav a:focus-visible::after, .foot-group a:focus-visible::after, .contents a:focus-visible::after, .lockup:focus-visible::after { opacity: var(--state-focus); }
 .cta:active::after, .nav a:active::after, .foot-group a:active::after, .contents a:active::after, .lockup:active::after { opacity: var(--state-pressed); }
 
-h1, h2, h3 { line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); margin: 0; }
+h1, h2, h3 { line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); margin: 0; text-wrap: balance; }
 h1 { font-size: var(--size-h1); font-weight: var(--weight-medium); }
 h2 { font-size: var(--size-h2); font-weight: var(--weight-medium); }
 h3 { font-size: var(--size-h3); font-weight: var(--weight-medium); }
 p, li { max-width: var(--measure); }
-p { margin: 0 0 var(--space-sm); }
+p { margin: 0 0 var(--space-sm); text-wrap: pretty; }
 
 a { color: inherit; text-decoration-thickness: var(--border-hair); text-underline-offset: 0.2em; }
 a:hover { text-decoration-thickness: var(--border-thick); }
@@ -171,6 +171,16 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 /* ── Sections ──────────────────────────────────────────────────────────────── */
 .section { padding-block: var(--space-2xl); }
 .section + .section { border-top: var(--border-hair) solid var(--color-border); }
+/* Below-fold sections skip render work until scrolled near (plan §5 item 5). The `auto`
+   keyword form is the CLS-safe one: the browser lays the section out for real the first
+   time it is reachable and remembers that size, so the 600px guess only ever matters for
+   the very first paint of a section nobody has scrolled to yet. HYPOTHESIS pending the
+   CI's real CLS measurement (plan §5 item 9, not yet run) — drop this rule if that number
+   regresses. */
+.section:not(.hero) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
 .section--sunk { background: var(--color-bg-sunk); }
 .prose { max-width: var(--container-prose); }
 .lede { font-size: var(--size-title-large); color: var(--color-text); }
@@ -451,9 +461,9 @@ a:hover { text-decoration-thickness: var(--border-thick); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: var(--duration-reduced-motion) !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: var(--duration-reduced-motion) !important;
     scroll-behavior: auto !important;
   }
 }
