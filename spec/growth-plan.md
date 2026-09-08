@@ -31,6 +31,14 @@ only to explain movement in that number.
 
 Nothing else. A tool that fires forty events produces a dashboard nobody reads.
 
+**One consequence of the 90-day pass (brief §7 Q3), recorded here because two decisions collide.**
+There is no subscription, so there is no churn number and no renewal date to watch; the second
+purchase is a deliberate repeat, ninety days later, by someone who chose to come back. And the
+analytics below are cookieless with no cross-site identifier, which means they cannot tell a repeat
+buyer from a new one — by design. So the repeat rate is not an analytics question at all. It comes
+from the merchant of record's own records, on the account, not from this site. Do not add an
+identifier to recover it; that trade costs the no-consent-banner claim, which is worth more.
+
 ### Analytics setup
 
 **Self-hosted, cookieless, no consent banner** — and the claim has to be true before it is made
