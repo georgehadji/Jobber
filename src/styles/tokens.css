@@ -60,9 +60,9 @@
    * 2 families, 4 weights. At the budget ceiling — nothing left for a third.
    * Every numeral is mono and tabular (art-direction rule 3).
    */
-  --font-sans: Roboto, ui-sans-serif, system-ui, -apple-system,
+  --font-sans: Roboto, "Roboto Fallback", ui-sans-serif, system-ui, -apple-system,
                "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, "SF Mono",
+  --font-mono: "Roboto Mono", "Roboto Mono Fallback", ui-monospace, SFMono-Regular, "SF Mono",
                Menlo, Consolas, "Liberation Mono", monospace;
 
   --weight-regular: 400;

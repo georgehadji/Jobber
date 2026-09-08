@@ -3,27 +3,46 @@
  * easing here. Written for 320px first; complexity is added upward.
  * M3 roles per spec/art-direction.md Revision 2 and spec/material-plan.md §4.
  *
- * Fonts: the @font-face block below is commented out until the subset woff2 files are
- * added (Roboto / Roboto Mono, both Apache-2.0). Until then the stacks in tokens.css fall
- * through to the system faces. Shipping @font-face rules pointing at files that do not
- * exist would cost two failed requests per page and a layout shift, which is a worse
- * default than a system stack.
+ * Fonts: Roboto / Roboto Mono 400+500, latin subset only (Apache-2.0, self-hosted from
+ * public/fonts/, fetched from Google Fonts — see spec/material-plan.md §5 for the size
+ * accounting). DECISION, this pass: latin-ext dropped to hold 4 files instead of 8; a
+ * latin-ext character (e.g. Polish ą, Turkish ş) simply falls through to the fallback face
+ * below rather than shipping a second subset per weight. Revisit if a latin-ext market
+ * mode ships copy that actually needs it.
  *
- * When the files land, three things ship together or the CLS budget (≤0.05) fails:
- *   1. the face itself, font-display: swap;
- *   2. a metric-matched fallback face — size-adjust, ascent-override, descent-override and
- *      line-gap-override computed from the real font file with fontpie or capsize (never
- *      guessed) — and its name inserted into --font-sans in tokens.css right after
- *      "Roboto", so the swap happens between two faces of the same metrics;
- *   3. <link rel="preload" as="font" type="font/woff2" crossorigin> for the 400 sans in
- *      layout.html — the face the first paint needs.
- * Same recipe for Roboto Mono.
- *
- * @font-face { font-family:"Roboto"; src:url("/fonts/roboto-400.woff2") format("woff2");
- *   font-weight:400; font-display:swap; unicode-range:U+0000-00FF,U+0100-024F,U+0400-04FF; }
- * @font-face { font-family:"Roboto Fallback"; src:local("Segoe UI"),local("Arial");
- *   size-adjust:<fontpie>; ascent-override:<fontpie>; descent-override:<fontpie>; line-gap-override:<fontpie>; }
+ * Each fallback face's size-adjust/ascent-override/descent-override/line-gap-override is
+ * computed from the real files with `npx fontpie` (never guessed) — Arial for the sans
+ * fallback, Courier New for the mono fallback, matching what --font-sans/--font-mono
+ * actually list first after the two custom faces.
  */
+@font-face {
+  font-family: "Roboto"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/roboto-400.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Roboto"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/roboto-500.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Roboto Fallback"; font-style: normal; font-weight: 400 500; src: local("Arial");
+  ascent-override: 92.43%; descent-override: 24.32%; line-gap-override: 0%; size-adjust: 100.37%;
+}
+@font-face {
+  font-family: "Roboto Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/roboto-mono-400.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Roboto Mono"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/roboto-mono-500.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Roboto Mono Fallback"; font-style: normal; font-weight: 400 500; src: local("Courier New");
+  ascent-override: 104.79%; descent-override: 27.10%; line-gap-override: 0%; size-adjust: 100%;
+}
 
 *, *::before, *::after { box-sizing: border-box; }
 

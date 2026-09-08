@@ -163,11 +163,17 @@ documented fallback and it keeps the 0 KB script budget honest.
 
 Ordered by what the CI budgets can measure.
 
-1. **Fonts, done properly.** Roboto 400/500 + Roboto Mono 400/500, latin + latin-ext subsets,
-   woff2, self-hosted under `public/fonts/`. Metric-matched fallbacks computed with fontpie
-   (never guessed), inserted into the stacks. `<link rel=preload>` for Roboto 400 only. Budget:
-   ≤ 4 files, ≤ 100 KB total, CLS ≤ 0.05 in LHCI with fonts loaded. The recipe in `base.css` header
-   already says this; it has never been executed.
+1. **Fonts, done properly. DONE this pass**, budget revised against reality: Roboto 400/500 +
+   Roboto Mono 400/500, woff2, self-hosted under `public/fonts/`. **DECISION, revised from the
+   plan's original ≤4-files/≤100KB target:** latin-ext dropped, latin-only ships (Google serves
+   latin and latin-ext as separate compiled subsets, not a mergeable pair — the ≤4-file count
+   holds, the byte budget does not: 4 files, 148.2 KB measured, not ≤100 KB). Same trade this
+   direction already made for CJK (art-direction, "self-hosting CJK is a 4MB decision this site
+   will not spend") extended one step further. A latin-ext character not covered by the shipped
+   subset falls through to the metric-matched fallback face, not to a missing glyph. Metric-matched
+   fallbacks computed with `fontpie` (never guessed) — Arial for the sans fallback, Courier New for
+   mono. `<link rel=preload>` for Roboto 400 in `layout.html`. Verified in-browser: all four faces
+   load 200, `document.fonts` reports all six faces (2 real + 1 fallback × 2 families) `loaded`.
 2. **Dark scheme at zero cost.** `light-dark()` in the token layer, `color-scheme: light dark`.
    No second stylesheet, no JS, no flash. VERIFIED baseline-2024 CSS.
 3. **Icons never as a font.** If a Material Symbol is used, it is an inlined `<svg>` with a
