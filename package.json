@@ -95,7 +95,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.11",
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.5.0",
     "knip": "^5.0.0",
     "typescript": "~5.9.0"
   }
