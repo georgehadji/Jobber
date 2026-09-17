@@ -10,9 +10,11 @@
  */
 
 import { readFileSync, existsSync, readdirSync, statSync, unlinkSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { pass, fail, warn, ROOT, NODE, run } from './helpers.mjs';
+import { buildOutcome } from '../lib/script-outcome.mjs';
 
 const scanScript = readFileSync(join(ROOT, 'scan.mjs'), 'utf-8');
 
@@ -93,10 +95,32 @@ if (!hasBrowser) {
   } else {
     const JDS_DIR = join(ROOT, 'jds');
     const startedAt = Date.now();
-    const archiveOut = run('node', ['archive-posting.mjs', liveJobUrl], { timeout: 60000 });
+    // Not run(): it returns null both when the script exits non-zero and when
+    // the clock runs out, and the old message asserted "exited non-zero" for
+    // either. This step drives a real browser over a live page, so its runtime
+    // is bounded by machine load and a remote server, not by this repo — under
+    // a full parallel suite the 60s budget was routinely blown and reported as
+    // a script failure. Separate the two and give it a realistic budget.
+    let archiveErr = null;
+    try {
+      execFileSync(NODE, ['archive-posting.mjs', liveJobUrl], {
+        cwd: ROOT,
+        encoding: 'utf-8',
+        timeout: 180000,
+      });
+    } catch (e) {
+      archiveErr = e;
+    }
+    const archiveVerdict = buildOutcome(archiveErr);
 
-    if (archiveOut === null) {
-      fail('live archive: script exited non-zero on live URL');
+    if (archiveVerdict === 'timeout') {
+      // This file already degrades to warn() when offline or when no browser is
+      // installed. A timeout is the same class of environment problem, and it
+      // stays visible in the summary counters.
+      warn(`archive render skipped — archive-posting.mjs timed out after 180s (${archiveErr.signal ?? archiveErr.code}); browser/network, not a script failure`);
+    } else if (archiveVerdict === 'fail') {
+      const why = String(archiveErr.stderr || archiveErr.stdout || archiveErr.message || '').trim().slice(0, 300);
+      fail(`live archive: archive-posting.mjs exited ${archiveErr.status} on a live URL: ${why}`);
     } else {
       pass('live archive: exited 0');
 

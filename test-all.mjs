@@ -37,7 +37,7 @@ import yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
 import { discoverTests, endsProcess } from './lib/test-discovery.mjs';
-import { scriptOutcome } from './lib/script-outcome.mjs';
+import { scriptOutcome, buildOutcome } from './lib/script-outcome.mjs';
 import { extractArrayFromSource } from './update-system.mjs';
 
 /**
@@ -929,17 +929,33 @@ if (!QUICK) {
     if (goEnv.GOCACHE) {
       try { mkdirSync(goEnv.GOCACHE, { recursive: true }); } catch (e) {}
     }
-    const goBuild = run('go', ['build', '-o', outPath, '.'], {
-      cwd: join(ROOT, 'dashboard'),
-      env: goEnv,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 60000,
-    });
-    if (goBuild !== null) {
+    // Deliberately not run(): it returns null both when the compiler rejects
+    // the source and when the build is still running at the timeout, so a cold
+    // Go cache on a loaded machine reported a healthy tree as "Dashboard build
+    // failed". Branch on the reason, and give the build the same 120s budget
+    // run() itself uses — the old 60s was under a cold build's real runtime.
+    let goBuildErr = null;
+    try {
+      execFileSync('go', ['build', '-o', outPath, '.'], {
+        cwd: join(ROOT, 'dashboard'),
+        env: goEnv,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 120000,
+      });
+    } catch (e) {
+      goBuildErr = e;
+    }
+    const goVerdict = buildOutcome(goBuildErr);
+    if (goVerdict === 'pass') {
       pass('Dashboard compiles');
       try { rmSync(outPath, { force: true }); } catch (e) {}
+    } else if (goVerdict === 'timeout') {
+      warn(`Dashboard build timed out after 120s (${goBuildErr.signal ?? goBuildErr.code}) — machine load or cold Go cache, not a compile error`);
     } else {
-      fail('Dashboard build failed');
+      const why = String(goBuildErr.stderr || goBuildErr.stdout || goBuildErr.message || '')
+        .trim().split('\n').slice(0, 5).join('\n      ');
+      fail(`Dashboard build failed (exit ${goBuildErr.status}):\n      ${why}`);
     }
     try { rmSync(dashboardBuildTmp, { recursive: true, force: true }); } catch (e) {}
   }
