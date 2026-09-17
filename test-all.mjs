@@ -3313,6 +3313,36 @@ console.log('\n60. Cover-letter template resolver (generate-cover-letter.mjs)');
   else fail('cover-resolver unit tests failed (run: node --test test/cover-resolver.test.mjs)');
 }
 
+// The three sections below spawn test files that this suite never reached.
+// discoverTests() walks tests/ only, and these live in test/ and lib/, so they
+// shipped to users through update-system.mjs SYSTEM_PATHS while running in no
+// suite. All three passed when wired in, so this adds coverage, not failures.
+
+console.log('\n60b. CV profile photo (profile-photo.test.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/profile-photo.test.mjs']);
+  if (unit !== null) pass('profile-photo unit tests pass');
+  else fail('profile-photo unit tests failed (run: node --test test/profile-photo.test.mjs)');
+}
+
+console.log('\n60c. Minimal zh CV template (zh-minimal-template.test.mjs)');
+{
+  const unit = run(NODE, ['--test', 'test/zh-minimal-template.test.mjs']);
+  if (unit !== null) pass('zh-minimal-template unit tests pass');
+  else fail('zh-minimal-template unit tests failed (run: node --test test/zh-minimal-template.test.mjs)');
+}
+
+console.log('\n60d. Context budget (lib/context-budget.test.mjs)');
+{
+  // Not `node --test`: this one is a standalone runner that prints its own
+  // tally and ends with process.exit(failed > 0 ? 1 : 0), so a null from run()
+  // is a real failure. It sits beside its module as a legacy exception
+  // (docs/AI-JOB-SEARCH-PORT-PLAN.md), which is why discovery never saw it.
+  const unit = run(NODE, ['lib/context-budget.test.mjs']);
+  if (unit !== null) pass('context-budget unit tests pass');
+  else fail('context-budget unit tests failed (run: node lib/context-budget.test.mjs)');
+}
+
 // ── 61. INTERVIEW-PREP URL ENTRY (#1816) ────────────────────────
 // Prompt-level slice: prep for a role that was never evaluated. Pins the
 // disambiguation rule (bare URL still routes to auto-pipeline), the
