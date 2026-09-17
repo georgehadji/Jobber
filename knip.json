@@ -7,7 +7,6 @@
     "tests/**/*.test.mjs"
   ],
   "project": ["**/*.mjs", "**/*.js"],
-  "ignore": ["web/**", "dashboard/**", "batch/**", "output/**", "test-fixtures/**", "scaffolder/**"],
-  "ignoreDependencies": ["playwright"],
+  "ignore": ["web/**", "output/**", "scaffolder/**"],
   "ignoreExportsUsedInFile": true
 }
