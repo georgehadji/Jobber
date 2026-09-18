@@ -49,13 +49,13 @@ import { normalizeCompanyName } from './lib/company-name.mjs';
 import { withPipelineLock } from './pipeline-lock.mjs';
 import { withPortalHealthLock } from './portal-health-lock.mjs';
 
+// process.loadEnvFile() writes nothing to stdout, so the dotenv v17 startup
+// banner that --json had to work around (#1906) cannot occur here at all. It
+// throws when .env is absent, which is the ordinary case for most users.
 try {
-  const { config } = await import('dotenv');
-  // quiet: dotenv's startup banner goes to stdout, which --json reserves for a
-  // single JSON object (#1906).
-  config({ quiet: true });
+  process.loadEnvFile();
 } catch {
-  // dotenv is optional — fall back to process.env if not installed
+  // no .env — fall back to ambient process.env
 }
 
 const parseYaml = yaml.load;

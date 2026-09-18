@@ -1,16 +1,18 @@
 // tests/scan-json-stdout.test.mjs — scan.mjs must keep stdout clean so that
 // --json output stays machine-parseable (issue #1906).
 //
-// scan.mjs loads dotenv at module top level. dotenv v17 prints a startup
-// banner to stdout, gated on the `quiet` option rather than on isTTY, so it
-// fires even when stdout is a pipe. scan-ats-full.mjs imports scan.mjs, which
-// means the import alone is enough to put that banner on the stdout channel
-// that --json reserves for a single JSON object. Consumers that accumulate
-// stdout and JSON.parse it then fail on the leading banner.
+// The original offender was dotenv: scan.mjs loaded it at module top level and
+// dotenv v17 printed a startup banner to stdout, gated on its `quiet` option
+// rather than on isTTY, so it fired even into a pipe. scan.mjs now uses
+// process.loadEnvFile(), which prints nothing, so that specific banner is gone.
+// The guard stays because the hazard is structural: scan-ats-full.mjs imports
+// scan.mjs, so the import alone can put output on the channel --json reserves
+// for a single JSON object, and consumers that accumulate stdout and
+// JSON.parse it fail on anything that leads.
 //
 // Both checks run scan.mjs in a child process: stdout has to be measured on a
 // real pipe, and the parent's own stdout carries the suite log.
-import { pass, fail, warn, run, NODE, ROOT } from './helpers.mjs';
+import { pass, fail, run, NODE, ROOT } from './helpers.mjs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 
@@ -19,14 +21,13 @@ console.log('\nscan.mjs — --json stdout stays machine-parseable (#1906)');
 try {
   const scanUrl = JSON.stringify(pathToFileURL(join(ROOT, 'scan.mjs')).href);
 
-  // dotenv is an optional import in scan.mjs. If it is not installed the
-  // banner cannot fire and both checks below would pass without proving
-  // anything, so say so rather than reporting a green that means nothing.
-  const dotenvPresent = run(NODE, ['-e', 'await import("dotenv")']) !== null;
-
-  if (!dotenvPresent) {
-    warn('dotenv is not installed — cannot verify the stdout channel stays clean');
-  } else {
+  // This used to be gated on dotenv being installed, because dotenv's banner
+  // was the known way to dirty stdout and without it the checks proved nothing.
+  // dotenv is gone, and the gate had to go with it: left in place it would have
+  // been permanently false, turning both checks into a silent skip. The property
+  // is broader than one dependency anyway — any module-level write to stdout
+  // breaks a --json consumer, so the checks now always run.
+  {
     // Importing scan.mjs must be silent on stdout. scan.mjs guards its CLI
     // entry point, so the import runs module top level only.
     const importOut = run(NODE, ['-e', `await import(${scanUrl})`]);

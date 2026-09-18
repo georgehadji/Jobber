@@ -592,16 +592,15 @@ export async function loadPlugins(kind, { root, dryRun = false }) {
   return out;
 }
 
-/** Lazily load dotenv exactly once (mirrors gemini-eval.mjs). Idempotent. */
+/** Load .env exactly once (mirrors gemini-eval.mjs). Idempotent. */
 let dotenvLoaded = false;
 export async function loadDotenvOnce() {
   if (dotenvLoaded) return;
   dotenvLoaded = true;
   try {
-    const { config } = await import('dotenv');
-    config();
+    process.loadEnvFile();
   } catch {
-    // dotenv optional — fall back to ambient process.env (CI, exported vars).
+    // no .env — fall back to ambient process.env (CI, exported vars).
   }
 }
 

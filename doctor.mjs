@@ -9,7 +9,6 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFi
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
-import dotenv from 'dotenv';
 import { discoverPlugins, pluginRoots, pluginStatus } from './plugins/_engine.mjs';
 import { resolveExtractorMode } from './browser-extract.mjs';
 
@@ -153,9 +152,12 @@ function resolveActiveCli() {
     }
     return { cli: process.env.JOBBER_CLI, source: 'env' };
   }
-  // .env is best-effort: missing file → fall through to default. dotenv does
-  // not throw on a missing path when `quiet: true`, so no try/catch is needed.
-  dotenv.config({ path: join(projectRoot, '.env'), quiet: true });
+  // .env is best-effort: missing file → fall through to default. Unlike
+  // dotenv.config(), process.loadEnvFile() throws ENOENT on a missing path, so
+  // this try/catch is load-bearing rather than defensive.
+  try {
+    process.loadEnvFile(join(projectRoot, '.env'));
+  } catch { /* no .env — ambient process.env decides */ }
   if (process.env.JOBBER_CLI) {
     if (!VALID_CLIS.includes(process.env.JOBBER_CLI)) {
       return { cli: 'unknown', source: '.env', warning: `JOBBER_CLI in .env is not a recognized CLI. Valid: ${VALID_CLIS.join(', ')}.` };

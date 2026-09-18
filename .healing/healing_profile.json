@@ -9,7 +9,7 @@
   "formatter": "@biomejs/biome",
   "type_checker": "typescript 5.9 (tsc --noEmit, JSDoc annotations, no .ts source)",
   "package_manager": "npm",
-  "runtime_dependencies": ["@google/generative-ai", "dotenv", "js-yaml", "playwright"],
+  "runtime_dependencies": ["@google/generative-ai", "js-yaml", "playwright"],
   "dev_dependencies": ["@biomejs/biome", "@types/node", "knip", "typescript"],
   "coverage_baseline": "1337 test assertions (1232 after tracker merge); ~85 inline core sections + 108 discovered test files",
   "coverage_percentage": "unknown (no code coverage tool configured)",

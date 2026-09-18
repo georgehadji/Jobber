@@ -58,10 +58,9 @@ import {
 // Bootstrap: load .env before anything else
 // ---------------------------------------------------------------------------
 try {
-  const { config } = await import('dotenv');
-  config();
+  process.loadEnvFile();
 } catch {
-  // dotenv is optional — fall back to process.env if not installed
+  // no .env — fall back to ambient process.env
 }
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -113,7 +112,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   SETUP
     1. Get a free API key at https://aistudio.google.com/apikey
     2. Add GEMINI_API_KEY=<your-key> to .env
-    3. Run: npm install   (installs @google/generative-ai + dotenv)
+    3. Run: npm install   (installs @google/generative-ai)
 
   EXAMPLES
     node gemini-eval.mjs "We are looking for a Senior AI Engineer..."

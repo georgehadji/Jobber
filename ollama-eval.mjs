@@ -41,9 +41,8 @@ tracker.recordZeroToken('scan');
 tracker.recordZeroToken('pdf payload');
 
 try {
-  const { config } = await import('dotenv');
-  config();
-} catch { /* dotenv optional */ }
+  process.loadEnvFile();
+} catch { /* no .env — ambient process.env is the source */ }
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
