@@ -48,9 +48,10 @@ const CV_FILE = process.env.JOBBER_CV || join(JOBBER, 'cv.md');
 const ARTICLE_DIGEST_FILE = process.env.JOBBER_ARTICLE_DIGEST || join(JOBBER, 'article-digest.md');
 
 // Normalize a title/heading for duplicate detection: lowercase, collapse to
-// alphanumerics only. "FraudShield", "Fraud-Shield", "fraud shield" all match.
+// letters and digits in any script (Unicode-aware: Greek/Cyrillic/CJK names keep
+// a non-empty key). "FraudShield", "Fraud-Shield", "fraud shield" all match.
 export function normalizeKey(s) {
-  return typeof s === 'string' ? s.toLowerCase().replace(/[^a-z0-9]+/g, '') : '';
+  return typeof s === 'string' ? s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '') : '';
 }
 
 // Split a markdown doc into the block belonging to a `## <section>` heading:

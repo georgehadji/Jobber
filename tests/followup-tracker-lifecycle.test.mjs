@@ -589,6 +589,50 @@ try {
   if (normalizeKey('Fraud-Shield!') === 'fraudshield') pass('normalizeKey strips punctuation/case');
   else fail(`normalizeKey => ${normalizeKey('Fraud-Shield!')}`);
 
+  // Latin behaviour must not change: the three historical spellings still collapse
+  // to one key.
+  {
+    const variants = ['FraudShield', 'Fraud-Shield', 'fraud shield'];
+    const keys = variants.map(normalizeKey);
+    const off = variants.filter((_, i) => keys[i] !== 'fraudshield');
+    if (off.length === 0) pass('normalizeKey collapses all three Latin spellings to fraudshield');
+    else fail(`Latin spellings not collapsed: ${off.map((v, i) => `${v} => ${normalizeKey(v)}`).join(', ')}`);
+  }
+
+  // Non-Latin keys must survive normalization. The repo ships zh/zh-TW/ru/ar/ja/ko/hi
+  // mode sets, so a CV in a non-Latin script is expected input. An ASCII-only class
+  // normalized every such name to '', which made add-entry reject the payload and
+  // made dedup compare '' against ''.
+  {
+    const greekA = 'Κτηνιατρείο Βλαχάβας';
+    const greekB = 'Λογοθεραπεία Μπατσικώστα';
+    const kA = normalizeKey(greekA);
+    const kB = normalizeKey(greekB);
+    if (kA !== '') pass('normalizeKey keeps a Greek name non-empty');
+    else fail(`normalizeKey(${greekA}) => '' (ASCII-only class strips the whole string)`);
+    // Control for the above: without this, everything collapsing to '' would still
+    // satisfy a naive "round-trips" check. Two different names must differ.
+    if (kA !== kB) pass('normalizeKey maps two different Greek names to different keys');
+    else fail(`normalizeKey collapses distinct Greek names: ${greekA} and ${greekB} both => '${kA}'`);
+    // Punctuation/case handling must work in Greek too. The `!== ''` half is not
+    // redundant: without it, an ASCII-only class satisfies this assertion vacuously
+    // because both sides normalize to the empty string.
+    const punct = normalizeKey(' κτηνιατρείο-βλαχάβας! ');
+    if (punct === kA && punct !== '') pass('normalizeKey strips punctuation/case in Greek');
+    else fail(`Greek punctuation variant => '${punct}', expected non-empty '${kA}'`);
+  }
+
+  // End-to-end: dedup over a Greek CV section must match the entry that is there
+  // and reject one that is not (the control — a broken normalizer matching
+  // everything would pass the positive check alone).
+  {
+    const greekCv = ['# CV', '', '## Προσωπικά Έργα', '', '**Κτηνιατρείο Βλαχάβας** - demo', ''].join('\n');
+    const hit = cvHasEntry(greekCv, 'Προσωπικά Έργα', 'Κτηνιατρείο Βλαχάβας');
+    const miss = cvHasEntry(greekCv, 'Προσωπικά Έργα', 'Λογοθεραπεία Μπατσικώστα');
+    if (hit && !miss) pass('cvHasEntry matches a Greek entry and rejects an absent one');
+    else fail(`cvHasEntry Greek: present => ${hit} (want true), absent => ${miss} (want false)`);
+  }
+
   const sampleCv = [
     '# CV -- Test',
     '',
