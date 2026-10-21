@@ -37,6 +37,8 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 import { makeHttpCtx } from './providers/_http.mjs';
+import { loadProviders } from './providers/_registry.mjs';
+import { candidatePages, fetchPage, extractCandidateUrls, detectBoard, detectSelfHosted } from './lib/ats-detect.mjs';
 import greenhouse from './providers/greenhouse.mjs';
 import ashby from './providers/ashby.mjs';
 import lever from './providers/lever.mjs';
@@ -88,14 +90,18 @@ const USAGE = `Usage:
   node discover-ats.mjs --in companies.yml --summary  # human-readable table
   node discover-ats.mjs --in companies.yml --vendors gh,ashby,lever  # restrict probes
   node discover-ats.mjs --in companies.yml --vendors workday         # Workday only
+  node discover-ats.mjs --in companies.yml --vendors website         # careers-page scan only
   node discover-ats.mjs --self-test                   # inline test suite
   node discover-ats.mjs --help                        # print this usage block
 
 portals.yml is a user-layer file: this command NEVER writes it unless you pass
 --write. The default previews the entries it would add (see pendingEntries).
 
-Vendors: gh, ashby, lever (resolve from a name/slug) and workday (resolves from
-a coordinate hint — a name alone can't locate a Workday site). Default: all four.
+Vendors: gh, ashby, lever (resolve from a name/slug), workday (resolves from
+a coordinate hint — a name alone can't locate a Workday site) and website
+(fetches the company's website + /careers + /jobs and routes every link through
+all auto-detecting providers — UKG, Taleo, Paycom, SmartRecruiters, …; needs
+website: in the input). Default: all five.
 
 Input YAML shape:
   companies:
@@ -103,7 +109,7 @@ Input YAML shape:
     - name: Monzo
       slug: monzo-bank      # optional explicit slug (needed for camelCase Ashby boards)
     - name: Mollie
-      website: mollie.com   # optional; surfaced for unresolved companies
+      website: mollie.com   # optional; its careers page is scanned for any supported ATS
     # Workday — give a full careers URL ...
     - name: Nvidia
       workday: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
@@ -480,11 +486,51 @@ export async function resolveWorkday(company, coords, ctx) {
 }
 
 /**
+ * Resolve a board from the company's own website (lib/ats-detect.mjs): fetch
+ * the page plus /careers and /jobs, route every link through the provider
+ * registry, and confirm the first claimed board lists ≥1 job (one page).
+ * @returns {Promise<{resolved:any}|{status:'empty'|'error', vendor:string, careers_url?:string, error?:string}|{status:'none', hint:any, errors:string[]}>}
+ */
+export async function resolveFromWebsite(company, { providers, ctx, fetchImpl } = {}) {
+  const errors = [];
+  let hint = null;
+  let fetchedAny = false;
+  for (const page of candidatePages(company.website)) {
+    let fetched;
+    try {
+      fetched = await fetchPage(page, fetchImpl ? { fetchImpl } : {});
+    } catch (err) {
+      errors.push(`${page}: ${err?.message || err}`);
+      continue;
+    }
+    fetchedAny = true;
+    const board = detectBoard(extractCandidateUrls(fetched.html, fetched.url), providers);
+    if (board) {
+      try {
+        const jobs = await providers.get(board.provider).fetch({ name: company.name, careers_url: board.careers_url }, { ...ctx, maxPages: 1 });
+        const jobCount = Array.isArray(jobs) ? jobs.length : 0;
+        if (jobCount > 0) {
+          return { resolved: { name: company.name, vendor: board.provider, careers_url: board.careers_url, jobCount, via: 'website' } };
+        }
+        return { status: 'empty', vendor: board.provider, careers_url: board.careers_url };
+      } catch (err) {
+        return { status: 'error', vendor: board.provider, error: err?.message || String(err) };
+      }
+    }
+    hint ??= detectSelfHosted(fetched.html, fetched.url);
+  }
+  // A 404 on /jobs after /careers loaded fine is not a probe failure — report
+  // page errors only when no page could be read at all.
+  return { status: 'none', hint, errors: fetchedAny ? [] : errors };
+}
+
+/**
  * Resolve one company: probe slug vendors in VENDOR_ORDER (first with ≥1 job
  * wins), then — if unresolved and Workday coordinates are present/requested —
- * probe Workday. Returns either a resolved record or an unresolved record.
+ * probe Workday, then — if a website is given and providers are loaded — scan
+ * the company's own careers page. Returns a resolved or an unresolved record.
  */
-export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, includeWorkday = true } = {}) {
+export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, includeWorkday = true, providers = null, fetchImpl } = {}) {
   const { candidates, skipped } = buildCandidateUrls(company, vendors);
   const triedVendors = [];
   const emptyBoards = [];
@@ -528,6 +574,21 @@ export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, inc
     }
   }
 
+  // Company website: any of the ~110 detect()-capable providers, found by the
+  // links on the company's own careers page.
+  let selfHostedHint = null;
+  if (providers && company.website) {
+    triedVendors.push('website');
+    const site = await resolveFromWebsite(company, { providers, ctx, fetchImpl });
+    if ('resolved' in site) return { resolved: site.resolved };
+    if (site.status === 'empty') emptyBoards.push({ vendor: site.vendor, careers_url: site.careers_url });
+    else if (site.status === 'error') errors.push({ vendor: site.vendor, error: site.error });
+    else {
+      selfHostedHint = site.hint;
+      if (site.errors.length) errors.push({ vendor: 'website', error: site.errors.join('; ') });
+    }
+  }
+
   // A Workday hint was supplied (via any field parseWorkdayHint reads) but
   // produced no usable coords — i.e. it was malformed/rejected. Distinct from
   // "no hint at all", so the message can tell the user to fix their input
@@ -548,12 +609,18 @@ export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, inc
         ? 'Workday hint given but rejected (invalid/missing tenant or site) — check the `workday` field and re-run'
         : coords
           ? 'Workday coordinates given but no live board with open jobs found at the probed host(s).'
-          : 'no Greenhouse/Ashby/Lever board found. If this company uses Workday, add a hint — '
-            + 'a full careers URL (workday: https://<tenant>.wd<N>.myworkdayjobs.com/<site>) or '
-            + 'workday: {tenant, site} — and re-run; discover-ats will confirm and add it.';
+          : selfHostedHint
+            ? `the careers page runs ${selfHostedHint.provider} on the company's own domain — add it by hand with `
+              + `provider: ${selfHostedHint.provider} (see docs/SUPPORTED_JOB_BOARDS.md for the api: it needs).`
+            : `no Greenhouse/Ashby/Lever board found${company.website ? ' and no supported ATS linked from the website' : ''}. `
+              + (company.website ? '' : 'Add website: <company domain> so discover-ats can scan its careers page for any supported ATS. ')
+              + 'If this company uses Workday, add a hint — '
+              + 'a full careers URL (workday: https://<tenant>.wd<N>.myworkdayjobs.com/<site>) or '
+              + 'workday: {tenant, site} — and re-run; discover-ats will confirm and add it.';
 
   /** @type {any} */
   const unresolved = { name: company.name, triedVendors, reason };
+  if (selfHostedHint) unresolved.selfHostedHint = selfHostedHint;
   if (skipped.length) unresolved.skippedUnsafeSlug = skipped;
   if (emptyBoards.length) unresolved.emptyBoards = emptyBoards;
   if (errors.length) unresolved.errors = errors;
@@ -577,11 +644,14 @@ async function parallelEach(items, limit, fn) {
  * Probe every company (bounded concurrency) and split into resolved/unresolved.
  * @returns {Promise<{resolved:any[], unresolved:any[]}>}
  */
-export async function runDiscovery(companies, { vendors = VENDOR_ORDER, ctx, concurrency = DEFAULT_CONCURRENCY, includeWorkday = true } = {}) {
+export async function runDiscovery(companies, { vendors = VENDOR_ORDER, ctx, concurrency = DEFAULT_CONCURRENCY, includeWorkday = true, includeWebsite = true, providers = null, fetchImpl } = {}) {
   const results = new Array(companies.length);
   const httpCtx = ctx || makeHttpCtx();
+  const registry = includeWebsite && companies.some((c) => c.website)
+    ? providers || await loadProviders(join(JOBBER, 'providers'))
+    : null;
   await parallelEach(companies, concurrency, async (company, idx) => {
-    results[idx] = await resolveCompany(company, { vendors, ctx: httpCtx, includeWorkday });
+    results[idx] = await resolveCompany(company, { vendors, ctx: httpCtx, includeWorkday, providers: registry, fetchImpl });
   });
   const resolved = [];
   const unresolved = [];
@@ -763,8 +833,8 @@ function parseArgs(argv) {
   const vendorsArg = valueOf('--vendors');
   const requested = vendorsArg
     ? vendorsArg.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
-    : [...VENDOR_ORDER, 'workday'];
-  const validVendors = new Set([...VENDOR_ORDER, 'workday']);
+    : [...VENDOR_ORDER, 'workday', 'website'];
+  const validVendors = new Set([...VENDOR_ORDER, 'workday', 'website']);
   const unknownVendors = requested.filter((v) => !validVendors.has(v));
   if (unknownVendors.length) {
     console.error(`Error: unknown vendor(s): ${unknownVendors.join(', ')}. Valid: ${[...validVendors].join(', ')}`);
@@ -772,6 +842,7 @@ function parseArgs(argv) {
   }
   const vendors = requested.filter((v) => VENDORS[v]);
   const includeWorkday = requested.includes('workday');
+  const includeWebsite = requested.includes('website');
 
   // Positional args (not flags, not a consumed flag value) are company names.
   const names = args.filter((a, idx) => !a.startsWith('-') && !consumedValueIndices.has(idx));
@@ -780,6 +851,7 @@ function parseArgs(argv) {
     inPath: valueOf('--in'),
     vendors,
     includeWorkday,
+    includeWebsite,
     // Preview by default; only --write may touch portals.yml. --dry-run is an
     // accepted no-op alias (it just reaffirms the default).
     write: args.includes('--write'),
@@ -835,7 +907,7 @@ async function main() {
     process.exit(0);
   }
 
-  const { resolved, unresolved } = await runDiscovery(companies, { vendors: opts.vendors, includeWorkday: opts.includeWorkday });
+  const { resolved, unresolved } = await runDiscovery(companies, { vendors: opts.vendors, includeWorkday: opts.includeWorkday, includeWebsite: opts.includeWebsite });
 
   // Dedupe resolved matches against the existing tracker.
   let existingEntries = [];

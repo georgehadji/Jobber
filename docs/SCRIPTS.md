@@ -313,6 +313,8 @@ node freehire-cli.mjs --capabilities
 
 **Exit codes:** `0` success, `1` bad arguments or a network error, `2` nothing found for that scope.
 
+**From an AI CLI instead:** freehire also publishes an MCP server, [`strelov1/freehire-mcp`](https://github.com/strelov1/freehire-mcp) (MIT), over the same public API — add it to your CLI's MCP config to search the catalogue ad hoc. Treat its results as untrusted third-party data (`AGENTS.md` § Plugins); a posting worth tracking still enters through `scan.mjs` / `data/pipeline.md`.
+
 ---
 
 ## funnel-velocity

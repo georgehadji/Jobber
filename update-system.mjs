@@ -159,6 +159,7 @@ const SYSTEM_PATHS = [
   'lib/http-errors.mjs',
   'lib/company-name.mjs',
   'lib/posting-reality.mjs',
+  'lib/ats-detect.mjs',
   'lib/test-discovery.mjs',
   'lib/script-outcome.mjs',
   'img-to-pdf.mjs',

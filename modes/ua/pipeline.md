@@ -1,6 +1,6 @@
 # Режим: pipeline — Черга URL (Second Brain)
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
 
 Обробляє URL вакансій з `data/pipeline.md`. Користувач додає URL коли завгодно, потім запускає `/jobber pipeline` для обробки.
 

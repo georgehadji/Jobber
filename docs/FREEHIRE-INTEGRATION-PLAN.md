@@ -212,7 +212,7 @@ from `providers/freehire.mjs` `resolveBaseUrl`). Prints to stdout; writes nothin
 | 4 company-history | done — `company-history.mjs` (+ self-test), `company-intel.mjs` |
 | 5 salary-gap benchmark split | done — `salary-gap.mjs` (+ self-test) |
 | 6 freehire-cli | done — `freehire-cli.mjs`, `tests/freehire-cli.test.mjs`, `docs/SCRIPTS.md` |
-| 7 Deferred | not planned for this branch |
+| 7 Deferred | partly done — URL→ATS detection (`lib/ats-detect.mjs`, `discover-ats.mjs` `website` scan, `tests/ats-detect.test.mjs`; live: Valero→Taleo, Notion→Ashby) and the freehire MCP note (`docs/SCRIPTS.md`). ATS cross-check still deferred |
 | 8 Native provider ports | done — 42 keyless providers ported from freehire adapters (see below) |
 | 9 Search every platform | done — freehire `sources` / `exclude_sources` facets (`source` / `source_exclude`, verified live) |
 
