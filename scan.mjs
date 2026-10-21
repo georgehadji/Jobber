@@ -1431,6 +1431,47 @@ export function formatTrustSegment(offer) {
   return sanitizeMarkdownField(`trust: ${body}`);
 }
 
+// External posting-history evidence (docs/FREEHIRE-INTEGRATION-PLAN.md Phase 2):
+// a provider may attach `offer.postingHistory` (Job contract, _types.js) with
+// facts its source observed across every board it crawls. Returns the
+// validated facts, or null when absent/malformed — a malformed object writes
+// nothing rather than half a row of evidence.
+export function validPostingHistory(offer) {
+  const h = offer && offer.postingHistory;
+  if (!h || typeof h !== 'object') return null;
+  const count = (v) => (Number.isInteger(v) && v >= 0 ? v : null);
+  const ageDays = count(h.ageDays);
+  if (ageDays === null) return null;
+  return {
+    source: typeof h.source === 'string' ? h.source.trim() : '',
+    ageDays,
+    repostCount: count(h.repostCount),
+    concurrentCount: count(h.concurrentCount),
+    fakeFreshness: h.fakeFreshness === true,
+  };
+}
+
+// `source:id` for scan-history col 12, '' when the provider attached none.
+function externalRefCell(offer) {
+  const ref = offer && offer.externalRef;
+  if (!ref || typeof ref !== 'object') return '';
+  const source = typeof ref.source === 'string' ? ref.source.trim() : '';
+  const id = typeof ref.id === 'string' ? ref.id.trim() : '';
+  return source && id ? `${source}:${id}` : '';
+}
+
+// Labeled pipeline segment, e.g. `history: open 74d, 3 postings, 2 concurrent,
+// date restated (freehire)`. Facts only — no verdict word; '' when absent.
+export function formatHistorySegment(offer) {
+  const h = validPostingHistory(offer);
+  if (!h) return '';
+  const parts = [`open ${h.ageDays}d`];
+  if (h.repostCount !== null) parts.push(`${h.repostCount} posting${h.repostCount === 1 ? '' : 's'}`);
+  if (h.concurrentCount !== null) parts.push(`${h.concurrentCount} concurrent`);
+  if (h.fakeFreshness) parts.push('date restated');
+  return sanitizeMarkdownField(`history: ${parts.join(', ')}${h.source ? ` (${h.source})` : ''}`);
+}
+
 export function formatPipelineOffer(offer) {
   const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
@@ -1457,6 +1498,9 @@ export function formatPipelineOffer(offer) {
   // posted:, before note:, for a stable serialization.
   const trust = formatTrustSegment(offer);
   if (trust) line = `${line} | ${trust}`;
+  // Labeled external posting-history segment — after trust:, before note:.
+  const history = formatHistorySegment(offer);
+  if (history) line = `${line} | ${history}`;
   // Optional free-text ranking signal (e.g. a curated-list flag an importer
   // attaches). Labeled — not positional like location/compensation — so it can
   // ride on any row shape (bare URL, 3-, 4-, or 5-column) without a reader
@@ -1505,8 +1549,24 @@ export function formatScanHistoryRow(offer, date, status = 'added') {
     // cols) are unaffected, and older rows that lack it are tolerated by
     // consumers normalizing the raw name on the fly.
     normalizeCompanyName(offer.company || ''),
+    // External posting history (docs/FREEHIRE-INTEGRATION-PLAN.md Phase 2):
+    // col 12 `source:id` reference, cols 13-15 first-seen age / postings /
+    // concurrent postings as the source counted them, col 16 `1` when the
+    // source saw the posting date restated. Trailing and append-only like
+    // cols 7-11; all empty for providers that attach no postingHistory.
+    externalRefCell(offer),
+    ...historyCells(offer),
   ].map(sanitizeTsvField).join('\t');
 }
+
+function historyCells(offer) {
+  const h = validPostingHistory(offer);
+  if (!h) return ['', '', '', ''];
+  const cell = (v) => (v === null ? '' : String(v));
+  return [String(h.ageDays), cell(h.repostCount), cell(h.concurrentCount), h.fakeFreshness ? '1' : ''];
+}
+
+export const SCAN_HISTORY_HEADER = 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\tfingerprint\tposted_at\ttrust_score\ttrust_flags\tnormalized_company\texternal_ref\text_age_days\text_repost_count\text_concurrent_count\text_fake_freshness';
 
 /**
  * Read scan-history.tsv rows that carry a fingerprint, for the cross-listing
@@ -1598,7 +1658,9 @@ export function appendToScanHistory(offers, date, status = 'added') {
   // (formatScanHistoryRow) emits, in the same order: the original 7 positional
   // cols (url…location) plus the append-only trailing cols added since —
   // fingerprint (7), posted_at (8), trust_score (9), trust_flags (10),
-  // normalized_company (11). Written ONLY on fresh-file creation; existing files
+  // normalized_company (11), external_ref (12), ext_age_days (13),
+  // ext_repost_count (14), ext_concurrent_count (15), ext_fake_freshness (16).
+  // Written ONLY on fresh-file creation; existing files
   // (including headerless legacy files and older 7-col-header files) are never
   // rewritten. All readers either skip line 0 unconditionally, detect the header
   // by its `url\t` prefix, or skip non-URL col-0 rows, so widening it stays
@@ -1606,7 +1668,7 @@ export function appendToScanHistory(offers, date, status = 'added') {
   // outcomes (`skipped_expired`, etc.) without the legacy `(expired)` suffix.
   if (!existsSync(SCAN_HISTORY_PATH)) {
     mkdirSync(path.dirname(SCAN_HISTORY_PATH), { recursive: true });
-    writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\tfingerprint\tposted_at\ttrust_score\ttrust_flags\tnormalized_company\n', 'utf-8');
+    writeFileSync(SCAN_HISTORY_PATH, `${SCAN_HISTORY_HEADER}\n`, 'utf-8');
   }
 
   const lines = offers.map(o => formatScanHistoryRow(o, date, status)).join('\n') + '\n';

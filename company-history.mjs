@@ -47,6 +47,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 import { parseScanHistory, detectReposts } from './detect-reposts.mjs';
+import { classifyPostingReality } from './lib/posting-reality.mjs';
 import { normalizeCompany, resolveTrackerPath, readTrackerSafe } from './tracker-utils.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
@@ -227,6 +228,81 @@ export function loadRepostClusters(rootDir = JOBBER, overridePath) {
   return { clusters: detectReposts(rows), loaded: true };
 }
 
+// External posting history (docs/FREEHIRE-INTEGRATION-PLAN.md Phase 4):
+// scan-history cols 12-16 (0-based) carry facts a provider's source observed
+// across every board it crawls — `source:id`, first-seen age, postings,
+// concurrent postings, date-restated flag. Optional like every other source:
+// a missing file, or a history with no such rows, degrades to loaded:false.
+// Latest observation per external reference wins (first_seen is YYYY-MM-DD,
+// so a string compare orders it). Keyed by normalizeCompany(raw company) —
+// the same key buildCompanyCards groups the tracker by.
+export function parseExternalHistory(content) {
+  const latestByRef = new Map();
+  for (const line of String(content || '').split('\n')) {
+    const cols = line.split('\t');
+    if (cols[0] === 'url' || cols.length < 14) continue;
+    const ref = (cols[12] || '').trim();
+    const age = (cols[13] || '').trim();
+    if (!ref || !/^\d+$/.test(age)) continue;
+    const date = (cols[1] || '').trim();
+    const prev = latestByRef.get(ref);
+    if (prev && prev.date >= date) continue;
+    const int = (v) => (/^\d+$/.test((v || '').trim()) ? Number(v.trim()) : null);
+    latestByRef.set(ref, {
+      ref,
+      source: ref.split(':')[0],
+      date,
+      company: (cols[4] || '').trim(),
+      title: (cols[3] || '').trim(),
+      ageDays: Number(age),
+      repostCount: int(cols[14]),
+      concurrentCount: int(cols[15]),
+      fakeFreshness: (cols[16] || '').trim() === '1',
+    });
+  }
+  const byKey = new Map();
+  for (const obs of latestByRef.values()) {
+    const key = normalizeCompany(obs.company);
+    if (!key) continue;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(obs);
+  }
+  return byKey;
+}
+
+export function loadExternalHistory(rootDir = JOBBER, overridePath) {
+  const path = overridePath || join(rootDir, 'data/scan-history.tsv');
+  if (!existsSync(path)) return { byKey: new Map(), loaded: false };
+  const byKey = parseExternalHistory(readFileSync(path, 'utf-8'));
+  return { byKey, loaded: byKey.size > 0 };
+}
+
+// Facts-only summary of one company's external observations. Structural
+// signals come from lib/posting-reality.mjs (a port of freehire's
+// classifier) — reported as a count of postings where >= 2 independent
+// signals fired, never as a label.
+export function summarizeExternal(observations) {
+  if (!Array.isArray(observations) || observations.length === 0) return { label: 'no-data' };
+  const max = (field) => {
+    const vals = observations.map(o => o[field]).filter(v => Number.isFinite(v));
+    return vals.length ? Math.max(...vals) : null;
+  };
+  const sources = [...new Set(observations.map(o => o.source).filter(Boolean))].sort();
+  return {
+    label: 'observed',
+    sources,
+    postings: observations.length,
+    maxRepostCount: max('repostCount'),
+    maxConcurrentCount: max('concurrentCount'),
+    oldestAgeDays: max('ageDays'),
+    dateRestatedCount: observations.filter(o => o.fakeFreshness).length,
+    convergedSignalPostings: observations.filter(o => classifyPostingReality({
+      ageDays: o.ageDays, repostCount: o.repostCount, concurrentCount: o.concurrentCount,
+    }).converged).length,
+    asOf: observations.map(o => o.date).filter(Boolean).sort().pop() || null,
+  };
+}
+
 // Dynamic-only dependency: funnel-velocity.mjs ships on main, but the
 // applied-date/median helpers probed below are not part of its export surface.
 // Loaded exclusively through a try/catch'd dynamic import so a missing (or
@@ -392,15 +468,16 @@ export function computeResponsiveness(rows, followupCountsByAppNum, opts = {}) {
 }
 
 // --- Posting-churn axis (pure) ---
-export function computePostingChurn(clusters, scanHistoryLoaded) {
-  if (!scanHistoryLoaded) return { label: 'no-scan-data', clusters: [] };
+export function computePostingChurn(clusters, scanHistoryLoaded, externalObservations = []) {
+  const external = summarizeExternal(externalObservations);
+  if (!scanHistoryLoaded) return { label: 'no-scan-data', clusters: [], external };
   const mapped = (Array.isArray(clusters) ? clusters : []).map(c => ({
     role: c.role,
     repostCount: c.repostCount,
     daysSpan: c.daysSpan,
     lastSeen: c.lastSeen,
   }));
-  return { label: mapped.length > 0 ? 'reposts-detected' : 'none-detected', clusters: mapped };
+  return { label: mapped.length > 0 ? 'reposts-detected' : 'none-detected', clusters: mapped, external };
 }
 
 // --- Full aggregation (pure — takes already-loaded sources) ---
@@ -469,7 +546,11 @@ export function buildCompanyCards(sources, opts = {}) {
       medianResponseDays: sources.medianResponseDays,
     });
 
-    const postingChurn = computePostingChurn(clusterGroup?.clusters || [], sourcesLoaded.scanHistory);
+    // shortcut: external facts attach only to companies that already have a
+    // card (tracker row or repost cluster) — a freehire scan touches far more
+    // companies than the user tracks; add them as cards if lookups need it.
+    const externalObs = sources.externalHistory instanceof Map ? sources.externalHistory.get(key) || [] : [];
+    const postingChurn = computePostingChurn(clusterGroup?.clusters || [], sourcesLoaded.scanHistory, externalObs);
 
     const hasAnySilent = responsiveness.facts.some(f => 'silentDays' in f);
     const explanations = hasAnySilent ? [EXPLANATION_LINE] : [];
@@ -510,9 +591,21 @@ export function getCompanyCard(result, companyName) {
     company: companyName,
     key,
     responsiveness: { label: 'no-history', facts: [] },
-    postingChurn: { label: scanHistoryLoaded ? 'none-detected' : 'no-scan-data', clusters: [] },
+    postingChurn: { label: scanHistoryLoaded ? 'none-detected' : 'no-scan-data', clusters: [], external: { label: 'no-data' } },
     explanations: [],
   };
+}
+
+// One facts-only line for the external posting-history summary, or null.
+export function renderExternalLine(external) {
+  if (!external || external.label !== 'observed') return null;
+  const parts = [`${external.postings} posting${external.postings === 1 ? '' : 's'} observed`];
+  if (external.maxRepostCount !== null) parts.push(`up to ${external.maxRepostCount} postings of one role`);
+  if (external.maxConcurrentCount !== null) parts.push(`up to ${external.maxConcurrentCount} open at once`);
+  if (external.oldestAgeDays !== null) parts.push(`oldest first seen ${external.oldestAgeDays}d before`);
+  if (external.dateRestatedCount > 0) parts.push(`${external.dateRestatedCount} with a restated posting date`);
+  if (external.convergedSignalPostings > 0) parts.push(`${external.convergedSignalPostings} with 2+ structural signals`);
+  return `external (${external.sources.join(', ')}, as of ${external.asOf}): ${parts.join(', ')}`;
 }
 
 // --- Summary rendering (pure) ---
@@ -560,6 +653,8 @@ export function renderSummary(result) {
     for (const c of card.postingChurn.clusters) {
       lines.push(`      repost: "${c.role}" seen ${c.repostCount}x over ${c.daysSpan}d, last ${c.lastSeen}`);
     }
+    const externalLine = renderExternalLine(card.postingChurn.external);
+    if (externalLine) lines.push(`      ${externalLine}`);
     if (card.explanations.length > 0) {
       lines.push(`      note: ${card.explanations[0]}`);
     }
@@ -794,6 +889,47 @@ async function runSelfTest() {
     check(typeof fact.clearInstruction === 'string' && fact.clearInstruction.includes('set-status'), 'silent fact clearInstruction references set-status.mjs');
   }
 
+  // --- external posting history (scan-history cols 12-16) ---
+  {
+    const pad = (cells) => cells.join('\t');
+    const tsv = [
+      'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\tfingerprint\tposted_at\ttrust_score\ttrust_flags\tnormalized_company\texternal_ref\text_age_days\text_repost_count\text_concurrent_count\text_fake_freshness',
+      pad(['https://x/1', '2026-09-01', 'freehire', 'SRE', 'ExtCo', 'added', '', '', '', '', '', 'extco', 'freehire:sre-extco-1', '40', '2', '1', '']),
+      pad(['https://x/1', '2026-10-01', 'freehire', 'SRE', 'ExtCo', 'added', '', '', '', '', '', 'extco', 'freehire:sre-extco-1', '120', '6', '2', '1']),
+      pad(['https://x/2', '2026-10-01', 'freehire', 'Data Eng', 'ExtCo', 'added', '', '', '', '', '', 'extco', 'freehire:de-extco-2', '5', '1', '1', '']),
+      pad(['https://x/3', '2026-10-01', 'greenhouse', 'PM', 'ExtCo', 'added', '', '', '', '', '', 'extco']), // legacy 12-col row
+      pad(['https://x/4', '2026-10-01', 'freehire', 'QA', 'ExtCo', 'added', '', '', '', '', '', 'extco', 'freehire:qa-4', 'abc', '', '', '']), // bad age
+    ].join('\n');
+    const byKey = parseExternalHistory(tsv);
+    const obs = byKey.get(normalizeCompany('ExtCo')) || [];
+    check(obs.length === 2, 'external history: latest row per external_ref kept, legacy and malformed rows skipped');
+    check(obs.find(o => o.ref === 'freehire:sre-extco-1')?.ageDays === 120, 'external history: the newer observation of a ref wins');
+
+    const result = buildCompanyCards(
+      {
+        trackerRows: [row(130, 'ExtCo', 'Applied', '2026-07-01')], followupRows: [], repostClusters: [],
+        sourcesLoaded: { tracker: true, followups: false, scanHistory: true, statusLog: false, externalHistory: true },
+        externalHistory: byKey,
+      },
+      { now: NOW, silenceWindowDays: 28 },
+    );
+    const ext = result.companies[0].postingChurn.external;
+    check(ext.label === 'observed' && ext.postings === 2 && ext.maxRepostCount === 6 && ext.maxConcurrentCount === 2
+      && ext.oldestAgeDays === 120 && ext.dateRestatedCount === 1 && ext.asOf === '2026-10-01',
+      'external summary reports counts, oldest age, restated dates and as-of date');
+    check(ext.convergedSignalPostings === 1, 'external summary counts postings where 2+ structural signals fired (old + reposted)');
+    const summary = renderSummary(result);
+    check(/external \(freehire, as of 2026-10-01\): 2 postings observed/.test(summary), 'summary renders the external facts line');
+    check(!/risk|ghost|evergreen/i.test(summary), 'external facts line carries no verdict word');
+
+    const noExt = buildCompanyCards(
+      { trackerRows: [row(131, 'PlainCo', 'Applied', '2026-07-01')], followupRows: [], repostClusters: [], sourcesLoaded: { tracker: true, followups: false, scanHistory: true, statusLog: false } },
+      { now: NOW, silenceWindowDays: 28 },
+    );
+    check(noExt.companies[0].postingChurn.external.label === 'no-data', 'no external history -> external label no-data, other axes unchanged');
+    check(loadExternalHistory(join(JOBBER, '__does-not-exist__')).loaded === false, 'loadExternalHistory degrades gracefully on a missing file');
+  }
+
   console.log(`\n  company-history self-test: ${pass} passed, ${fail} failed\n`);
   process.exit(fail > 0 ? 1 : 0);
 }
@@ -813,6 +949,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       const tracker = loadTrackerRows(JOBBER);
       const followups = loadFollowupRows(JOBBER, followupsOverride);
       const scanHistory = loadRepostClusters(JOBBER, scanHistoryOverride);
+      const externalHistory = loadExternalHistory(JOBBER, scanHistoryOverride);
       const statusLog = await loadStatusLogSource();
 
       // parseArgs already validated the flag as a positive integer.
@@ -830,7 +967,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
             followups: followups.loaded,
             scanHistory: scanHistory.loaded,
             statusLog: statusLog.loaded,
+            externalHistory: externalHistory.loaded,
           },
+          externalHistory: externalHistory.byKey,
           statusLogAppliedByNum: statusLog.appliedDateByNum,
           medianResponseDays: statusLog.medianResponseDays,
         },

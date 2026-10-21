@@ -637,6 +637,49 @@ search_queries:
 #                   auto-derived from the URL, override with provider: oraclecloud + siteNumber: / optional locationId:)
 #   gem             jobs.gem.com/<boardId>
 #
+#   Ported from freehire (docs/SUPPORTED_JOB_BOARDS.md has each one's limits):
+#   adp             workforcenow.adp.com/...?cid=<uuid>&ccId=<id>
+#   adpmyjobs       myjobs.adp.com/<slug>/...
+#   careerplug      <board>.careerplug.com
+#   catsone         <tenant>.catsone.com/careers/<portalId>
+#   dayforce        jobs.dayforcehcm.com/[xx-XX/]<tenant>/<site>
+#   deel            jobs.deel.com/<org>
+#   eightfold       <tenant>.eightfold.ai  (branded host → provider: eightfold)
+#   factorial       <t>.factorial.<tld> / <t>.factorialhr.<tld>
+#   freshteam       <tenant>.freshteam.com
+#   gupy            <sub>.gupy.io
+#   herp            herp.careers/v1/<board>
+#   hireology       careers.hireology.com/<slug>
+#   hiringroom      <tenant>.hiringroom.com
+#   hiringthing     <tenant>.hiringthing.com
+#   hrmanager       candidate.hr-manager.net/vacancies/list.aspx?customer=<alias>
+#   hrmdirect       <tenant>.hrmdirect.com
+#   hrmos           hrmos.co/pages/<board>
+#   huntflow        <tenant>[.global].huntflow.io
+#   inhire          <tenant>.inhire.app
+#   isolvedhire     <tenant>.isolvedhire.com
+#   jazzhr          <tenant>.applytojob.com
+#   join            join.com/companies/<domain>
+#   jobscore        careers.jobscore.com/careers/<slug>
+#   keka            <tenant>.keka.com/careers
+#   manatal         www.careers-page.com/<slug> / <slug>.careers-page.com
+#   neogov          [www.]governmentjobs.com/careers/<agency> / schooljobs.com/careers/<agency>
+#   odoo            <tenant>.odoo.com/jobs  (self-hosted Odoo not claimed)
+#   pageup          careers.pageuppeople.com/<id>/...
+#   paycom          [www.]paycomonline.net/.../portal/<32hex>/...
+#   paycor          recruitingbypaycor.com/career/...?clientId=<32hex>
+#   paylocity       recruiting.paylocity.com/Recruiting/Jobs/All/<guid>
+#   peopleforce     <tenant>.peopleforce.io/careers
+#   recruiterflow   recruiterflow.com/<board>/jobs
+#   solides         <slug>.vagas.solides.com.br
+#   taleo           <tenant>.taleo.net/careersection/<section>/...
+#   taleobe         <pod>.tbe.taleo.net/<podNN>/ats/...?org=<ORG>&cws=<n>
+#   talentlyft      <tenant>.talentlyft.com
+#   traffit         <tenant>.traffit.com
+#   trakstar        <board>.hire.trakstar.com
+#   ukg             <x>.ultipro.com|.ultipro.ca|.rec.pro.ukg.net/<tenant>/JobBoard/<guid>
+#   ukgready        <x>.saashr.com|entertimeonline.com|…/ta/<tenant>.careers
+#
 # When the public careers URL is a branded custom domain (e.g.
 # careers.adyen.com), set `provider: smartrecruiters` explicitly to
 # bypass detect(). The `provider:` field wins over auto-detection.
@@ -645,7 +688,7 @@ search_queries:
 # URL to detect, so they must be selected with an explicit `provider:`
 # field: 4dayweek, agentic-jobs, arbeitnow, arbeitsagentur, flowxtra, getonbrd, glints,
 # himalayas, ibm, jobicy, jobstreet, justjoin, landingjobs, nofluffjobs, remoteok, remotive,
-# thehub, vdab, weworkremotely, workingnomads, wttj, a16z-speedrun-talent. Examples for every built-in provider are below.
+# thehub, vdab, weworkremotely, workingnomads, wttj, a16z-speedrun-talent, trudvsem. Examples for every built-in provider are below.
 
 # ── Built-in provider examples ────────────────────────────────────
 # Commented config for each provider in providers/. Copy a stanza into
@@ -653,6 +696,173 @@ search_queries:
 # need careers_url; the rest need provider: plus any fields shown.
 #
 # -- Auto-detected company ATS (careers_url is enough) --
+#
+# Ported from freehire — each careers_url below was a real, live board on
+# 2026-10-21; swap in your own company's URL of the same shape.
+#
+# - name: Example ADP Workforce Now Co
+#   careers_url: https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=8a680274-0b2e-46cf-b2cc-49bd2ef0c20f&ccId=19000101_000001&lang=en_US
+#   enabled: true
+#
+# - name: Example ADP MyJobs Co
+#   careers_url: https://myjobs.adp.com/stellantisexternalcx/cx/job-list
+#   enabled: true
+#
+# - name: Example CareerPlug Co
+#   careers_url: https://golden-corral-careers.careerplug.com/jobs
+#   enabled: true
+#
+# - name: Example CATS Co
+#   careers_url: https://sphereinc.catsone.com/careers/90438   # portal id required
+#   enabled: true
+#
+# - name: Example Dayforce Co
+#   careers_url: https://jobs.dayforcehcm.com/en-US/dcrusa/join-us
+#   enabled: true
+#
+# - name: Example Deel Co
+#   careers_url: https://jobs.deel.com/klarna
+#   enabled: true
+#
+# - name: Example Eightfold Co
+#   careers_url: https://exampleco.eightfold.ai/careers        # branded host → add provider: eightfold
+#   enabled: true
+#
+# - name: Example Factorial Co
+#   careers_url: https://muffin.factorial.it/
+#   enabled: true
+#
+# - name: Example Freshteam Co
+#   careers_url: https://simera-talent.freshteam.com/jobs
+#   enabled: true
+#
+# - name: Example Gupy Co
+#   careers_url: https://caju.gupy.io/
+#   enabled: true
+#
+# - name: Example HERP Co
+#   careers_url: https://herp.careers/v1/a244
+#   enabled: true
+#
+# - name: Example Hireology Co
+#   careers_url: https://careers.hireology.com/visitingangels
+#   enabled: true
+#
+# - name: Example HiringRoom Co
+#   careers_url: https://tatachile.hiringroom.com/jobs
+#   enabled: true
+#
+# - name: Example HiringThing Co
+#   careers_url: https://skijapan.hiringthing.com/
+#   enabled: true
+#
+# - name: Example HR Manager Co
+#   careers_url: https://candidate.hr-manager.net/vacancies/list.aspx?customer=energinet
+#   enabled: true
+#
+# - name: Example HRMDirect Co
+#   careers_url: https://sundance.hrmdirect.com/employment/job-openings.php?search=true
+#   enabled: true
+#
+# - name: Example HRMOS Co
+#   careers_url: https://hrmos.co/pages/cyberagent-group/jobs
+#   enabled: true
+#
+# - name: Example Huntflow Co
+#   careers_url: https://tripster.huntflow.io/
+#   enabled: true
+#
+# - name: Example inhire Co
+#   careers_url: https://contaazul.inhire.app/vagas
+#   enabled: true
+#
+# - name: Example iSolved Hire Co
+#   careers_url: https://saratech.isolvedhire.com/jobs/
+#   enabled: true
+#
+# - name: Example JazzHR Co
+#   careers_url: https://proautomated.applytojob.com/apply
+#   enabled: true
+#
+# - name: Example JOIN Co
+#   careers_url: https://join.com/companies/justhiringde
+#   enabled: true
+#
+# - name: Example JobScore Co
+#   careers_url: https://careers.jobscore.com/careers/ierustechnologiesinc
+#   enabled: true
+#
+# - name: Example Keka Co
+#   careers_url: https://minfy.keka.com/careers
+#   enabled: true
+#
+# - name: Example Manatal Co
+#   careers_url: https://www.careers-page.com/davidjoseph-co
+#   enabled: true
+#
+# - name: Example NEOGOV agency
+#   careers_url: https://www.schooljobs.com/careers/cochisecollege
+#   enabled: true
+#
+# - name: Example Odoo Co
+#   careers_url: https://hhgjapan.odoo.com/jobs
+#   enabled: true
+#
+# - name: Example PageUp Co
+#   careers_url: https://careers.pageuppeople.com/513/cw/en/listing/
+#   enabled: true
+#
+# - name: Example Paycom Co
+#   careers_url: https://www.paycomonline.net/v4/ats/web.php/portal/e743deb45c5896f708643c7d7b581397/jobs/1
+#   enabled: true
+#
+# - name: Example Paycor Co
+#   careers_url: https://recruitingbypaycor.com/career/CareerHome.action?clientId=8a7883c664f8df9e0165119e33353606
+#   enabled: true
+#
+# - name: Example Paylocity Co
+#   careers_url: https://recruiting.paylocity.com/Recruiting/Jobs/All/1a06dc72-45ee-4c90-a268-fe881bbeb577
+#   enabled: true
+#
+# - name: Example PeopleForce Co
+#   careers_url: https://gigacloud.peopleforce.io/careers
+#   enabled: true
+#
+# - name: Example Recruiterflow Co
+#   careers_url: https://recruiterflow.com/radhires/jobs
+#   enabled: true
+#
+# - name: Example Sólides Co
+#   careers_url: https://dynamox.vagas.solides.com.br/
+#   enabled: true
+#
+# - name: Example Taleo Enterprise Co
+#   careers_url: https://valero.taleo.net/careersection/2/jobsearch.ftl?lang=en
+#   enabled: true
+#
+# - name: Example Taleo Business Edition Co
+#   careers_url: https://phh.tbe.taleo.net/phh02/ats/careers/v2/searchResults?org=AMERINC&cws=52
+#   enabled: true
+#
+# - name: Example TalentLyft Co
+#   careers_url: https://inetec.talentlyft.com/
+#   enabled: true
+#
+# - name: Example TRAFFIT Co
+#   careers_url: https://cloudfide.traffit.com/
+#   enabled: true
+#
+# - name: Example Trakstar Hire Co
+#   careers_url: https://cheesecakelabs.hire.trakstar.com/jobs
+#   enabled: true
+#
+# - name: Example UKG Pro Co
+#   careers_url: https://recruiting.ultipro.com/van5000vcscu/JobBoard/a46cbdaa-ca2c-49b6-8d2b-e0ceaafa0e25
+#   enabled: true
+#
+# - name: Example UKG Ready Co
+#   careers_url: https://secure4.saashr.com/ta/6162397.careers
+#   enabled: true
 #
 # - name: Example BambooHR Co
 #   careers_url: https://exampleco.bamboohr.com/careers   # any *.bamboohr.com host
@@ -2061,11 +2271,27 @@ job_boards:
   #   provider: cryptocurrencyjobs
   #   enabled: true
 
-  # ── freehire (multi-market tech aggregator, ~50 source ATS platforms) ─────
+  # ── Trudvsem / Работа России (Russia's government open-data API) ──────────
+  # No auth. keywords[] falls back to config/profile.yml target_roles;
+  # Cyrillic keywords match far better than English. Optional region is a
+  # 13-digit OKATO code. Ported from freehire (MIT).
+
+  # - name: Trudvsem — Python (Russia)
+  #   provider: trudvsem
+  #   trudvsem:
+  #     keywords: ["python", "разработчик python"]
+  #   enabled: true
+
+  # ── freehire (multi-market aggregator, ~120 source ATS platforms) ─────────
   # No auth needed. keywords[] falls back to config/profile.yml target_roles
   # when omitted. countries/regions use freehire's own facet codes (call
   # GET https://freehire.me/api/v1/jobs/facets for live values before relying
   # on a specific one — an unrecognized value matches nothing, not an error).
+  # Closed facets (seniority, category, employment_type, work_mode,
+  # exclude_company_types, exclude_reality, salary_currency) drop values
+  # outside freehire's documented vocabulary — see providers/freehire.mjs.
+  # Prefer open_within_days over posted_within_days: some sources restate
+  # their posting date on every crawl; freehire's first-seen date cannot be.
   # FREEHIRE_API_URL env var points this at a self-hosted instance instead.
 
   # - name: freehire — Platform Engineering (Denmark)
@@ -2074,6 +2300,34 @@ job_boards:
   #     keywords: ["Platform Engineer", "SRE", "DevOps Engineer"]
   #     countries: ["dk"]
   #     is_tech: "tech"
-  #     posted_within_days: 14
+  #     seniority: ["senior", "lead"]
+  #     exclude_company_types: ["outstaff"]
+  #     exclude_reality: ["likely-evergreen"]
+  #     requires_clearance: false
+  #     open_within_days: 14
   #   enabled: true
-  #   notes: "freehire.me — Danish tech postings, ~50 source ATS platforms normalized"
+  #   notes: "freehire.me — Danish tech postings, ~120 source ATS platforms normalized"
+
+  # Search EVERY platform at once — freehire indexes ~320 sources (ATS
+  # platforms, job boards, company career sites; list: freehire.me/sources).
+  # This is the keyword-first route across companies you don't track: native
+  # ATS providers need a careers_url per company, freehire does not.
+  # Narrow with sources: [...] or skip what you already scan natively with
+  # exclude_sources: [...] so the same posting isn't fetched twice.
+
+  # - name: freehire — all platforms (US, senior backend)
+  #   provider: freehire
+  #   freehire:
+  #     keywords: ["Backend Engineer"]
+  #     countries: ["us"]
+  #     seniority: ["senior"]
+  #     exclude_sources: ["greenhouse", "lever", "ashby"]
+  #     open_within_days: 14
+  #   enabled: true
+
+  # - name: freehire — US HCM platforms only
+  #   provider: freehire
+  #   freehire:
+  #     keywords: ["Data Analyst"]
+  #     sources: ["ukg", "paycom", "paylocity", "dayforce", "taleo", "adp", "jazzhr"]
+  #   enabled: true

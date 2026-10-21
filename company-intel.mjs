@@ -52,7 +52,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { slugifyCompany } from './eval-runner.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
 import {
-  loadTrackerRows, loadFollowupRows, loadRepostClusters,
+  loadTrackerRows, loadFollowupRows, loadRepostClusters, loadExternalHistory, renderExternalLine,
   buildCompanyCards, getCompanyCard,
 } from './company-history.mjs';
 import { parseActiveInterviews, aggregateProcessQuality } from './process-quality.mjs';
@@ -128,11 +128,13 @@ function loadAll(rootDir = JOBBER) {
   const tracker = loadTrackerRows(rootDir);
   const followups = loadFollowupRows(rootDir);
   const scanHistory = loadRepostClusters(rootDir);
+  const externalHistory = loadExternalHistory(rootDir);
   const historyResult = buildCompanyCards({
     trackerRows: tracker.rows,
     followupRows: followups.rows,
     repostClusters: scanHistory.clusters,
-    sourcesLoaded: { tracker: tracker.loaded, followups: followups.loaded, scanHistory: scanHistory.loaded, statusLog: false },
+    sourcesLoaded: { tracker: tracker.loaded, followups: followups.loaded, scanHistory: scanHistory.loaded, statusLog: false, externalHistory: externalHistory.loaded },
+    externalHistory: externalHistory.byKey,
   });
 
   const activeInterviewsPath = join(rootDir, 'data/active-interviews.md');
@@ -159,6 +161,8 @@ export function renderSummary(card) {
   lines.push('');
   lines.push('  Posting churn (from scan history):');
   lines.push(`    ${card.postingChurn.label}`);
+  const externalLine = renderExternalLine(card.postingChurn.external);
+  if (externalLine) lines.push(`    ${externalLine}`);
 
   lines.push('');
   lines.push('  Recruiting-process friction (from active-interviews.md):');

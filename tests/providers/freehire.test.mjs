@@ -90,9 +90,128 @@ try {
     fail('normalizeJob should omit an absent description field entirely');
   }
   if (!('salary' in normalizeJob({ title: 'X', url: 'https://x.example/1' }))) {
-    pass('normalizeJob never emits a salary field (deliberately omitted — see module header)');
+    pass('normalizeJob omits salary when the source states none (absent key, not an empty object)');
   } else {
-    fail('normalizeJob should never emit salary');
+    fail('normalizeJob should omit salary without enrichment');
+  }
+
+  // annualizeSalary — year passes, month ×12, day/hour/no-currency omitted, KEY PRESENCE
+  {
+    const { annualizeSalary, postingHistoryFrom, retryAfterMs, buildSearchParams } = mod;
+    const y = annualizeSalary({ salary_min: 90000, salary_max: 130000, salary_currency: 'eur', salary_period: 'year' });
+    const m = annualizeSalary({ salary_min: 5000, salary_currency: 'USD', salary_period: 'month' });
+    const swapped = annualizeSalary({ salary_min: 130000, salary_max: 90000, salary_currency: 'GBP', salary_period: 'year' });
+    if (y && y.min === 90000 && y.max === 130000 && y.currency === 'EUR') pass('annualizeSalary passes a yearly range and uppercases the currency');
+    else fail(`annualizeSalary year = ${JSON.stringify(y)}`);
+    if (m && m.min === 60000 && m.max === null && m.currency === 'USD' && 'max' in m) {
+      pass('annualizeSalary multiplies a monthly figure by 12 and keeps an unknown bound as null (KEY PRESENCE)');
+    } else fail(`annualizeSalary month = ${JSON.stringify(m)}`);
+    if (swapped && swapped.min === 90000 && swapped.max === 130000) pass('annualizeSalary normalizes a reversed range');
+    else fail(`annualizeSalary swapped = ${JSON.stringify(swapped)}`);
+    const omitted = [
+      annualizeSalary({ salary_min: 50, salary_currency: 'EUR', salary_period: 'hour' }),
+      annualizeSalary({ salary_min: 400, salary_currency: 'EUR', salary_period: 'day' }),
+      annualizeSalary({ salary_min: 90000, salary_currency: '', salary_period: 'year' }),
+      annualizeSalary({ salary_min: 90000, salary_period: 'year' }),
+      annualizeSalary({ salary_min: 0, salary_max: null, salary_currency: 'EUR', salary_period: 'year' }),
+      annualizeSalary({ salary_min: 90000, salary_currency: 'EUR', salary_period: 'toString' }),
+      annualizeSalary(undefined),
+    ];
+    if (omitted.every((v) => v === null)) pass('annualizeSalary omits hour/day periods, missing currency, zero bounds and prototype-key periods');
+    else fail(`annualizeSalary should omit imprecise salaries, got ${JSON.stringify(omitted)}`);
+
+    // postingHistoryFrom — facts only, never the class label
+    const h = postingHistoryFrom({ class: 'likely-evergreen', age_days: 74, repost_count: 3, mass_posting_count: 2, fake_freshness: true });
+    if (h && h.source === 'freehire' && h.ageDays === 74 && h.repostCount === 3 && h.concurrentCount === 2
+        && h.fakeFreshness === true && !Object.values(h).includes('likely-evergreen')) {
+      pass('postingHistoryFrom maps reality to facts and drops freehire\'s class label');
+    } else fail(`postingHistoryFrom = ${JSON.stringify(h)}`);
+    if (postingHistoryFrom(null) === null && postingHistoryFrom({ age_days: -1 }) === null && postingHistoryFrom({ age_days: 'x' }) === null) {
+      pass('postingHistoryFrom returns null without a usable age');
+    } else fail('postingHistoryFrom should reject an absent/invalid age');
+
+    // normalizeJob carries salary / postingHistory / externalRef from the real wire shape
+    const full = normalizeJob({
+      public_slug: 'platform-engineer-tomra-oujimwaz',
+      title: 'Platform Engineer', url: 'https://jobs.example/1', company: 'Tomra', location: 'Berlin',
+      enrichment: { salary_min: 70000, salary_max: 90000, salary_currency: 'EUR', salary_period: 'year' },
+      reality: { class: 'stale', age_days: 74, repost_count: 3, mass_posting_count: 2, fake_freshness: false },
+    });
+    if (full && full.salary?.min === 70000 && full.postingHistory?.ageDays === 74
+        && full.externalRef?.source === 'freehire' && full.externalRef?.id === 'platform-engineer-tomra-oujimwaz') {
+      pass('normalizeJob carries annualized salary, postingHistory and externalRef');
+    } else fail(`normalizeJob full = ${JSON.stringify(full)}`);
+    const badSlug = normalizeJob({ public_slug: '../../etc', title: 'X', url: 'https://x.example/1' });
+    if (!('externalRef' in badSlug)) pass('normalizeJob drops a public_slug that is not a plain slug');
+    else fail(`normalizeJob should reject a path-like slug, got ${JSON.stringify(badSlug.externalRef)}`);
+
+    // retryAfterMs — delta-seconds, HTTP-date, garbage
+    const now = Date.parse('2026-10-21T12:00:00Z');
+    if (retryAfterMs('5', now) === 5000 && retryAfterMs('Wed, 21 Oct 2026 12:00:10 GMT', now) === 10000
+        && retryAfterMs('soon', now) === null && retryAfterMs(null, now) === null) {
+      pass('retryAfterMs parses delta-seconds and HTTP-dates, null otherwise');
+    } else fail('retryAfterMs parsing');
+
+    // buildSearchParams always asks for plain-text descriptions
+    if (buildSearchParams({ keyword: 'SRE', pageSize: 10, page: 2, filters: [['seniority', 'senior']] }).toString()
+        === 'q=SRE&limit=10&offset=20&description_format=text&seniority=senior') {
+      pass('buildSearchParams pages by offset, requests description_format=text and appends filters');
+    } else fail('buildSearchParams shape');
+  }
+
+  // parseFreehireConfig — facet table: closed vocabularies drop unknowns, aliases fold, salary floor needs currency
+  {
+    const f = parseFreehireConfig({ freehire: {
+      seniority: ['Senior', 'wizard'], category: 'backend', work_mode: ['hybrid'], remote: true,
+      employment_type: ['full_time'], exclude_company_types: ['outstaff', 'evil'], exclude_reality: ['likely-evergreen'],
+      visa_sponsorship: true, requires_clearance: false, open_within_days: 7, salary_min: 90000, salary_currency: 'eur',
+    } });
+    const pairs = f.filters.map(([p, v]) => `${p}=${v}`);
+    const expect = ['work_mode=hybrid', 'work_mode=remote', 'seniority=senior', 'category=backend', 'employment_type=full_time',
+      'company_type_exclude=outstaff', 'reality_exclude=likely-evergreen', 'visa_sponsorship=true', 'requires_clearance=false',
+      'open_within_days=7', 'salary_min=90000', 'salary_currency=EUR'];
+    if (expect.every((e) => pairs.includes(e)) && !pairs.some((p) => p.includes('wizard') || p.includes('evil'))) {
+      pass('parseFreehireConfig maps every facet row, folds remote into work_mode and drops out-of-vocabulary values');
+    } else fail(`parseFreehireConfig filters = ${JSON.stringify(pairs)}`);
+    const src = parseFreehireConfig({ freehire: { sources: ['UKG', 'paycom'], exclude_sources: 'greenhouse' } }).filters.map(([p, v]) => `${p}=${v}`);
+    if (src.join('&') === 'source=ukg&source=paycom&source_exclude=greenhouse') pass('parseFreehireConfig maps sources/exclude_sources to source/source_exclude (lowercased, scalar accepted)');
+    else fail(`sources filters = ${JSON.stringify(src)}`);
+    const noCur = parseFreehireConfig({ freehire: { salary_min: 90000 } });
+    if (!noCur.filters.some(([p]) => p === 'salary_min')) pass('parseFreehireConfig drops salary_min without salary_currency');
+    else fail('salary_min without a currency should be dropped');
+    const badTypes = parseFreehireConfig({ freehire: { visa_sponsorship: 'yes', open_within_days: -3, salary_currency: 'BTC' } });
+    if (badTypes.filters.length === 0) pass('parseFreehireConfig drops wrongly-typed bool/int and an unknown currency');
+    else fail(`parseFreehireConfig should drop bad types, got ${JSON.stringify(badTypes.filters)}`);
+  }
+
+  // fetch() — a 429 with a short Retry-After is waited out once, then the page succeeds
+  {
+    let calls = 0;
+    const slept = [];
+    const jobs = await provider.fetch(
+      { name: 'freehire', freehire: { keywords: ['SRE'], page_size: 5 } },
+      {
+        sleep: async (ms) => { slept.push(ms); },
+        fetchJson: async () => {
+          calls++;
+          if (calls === 1) { const e = new Error('HTTP 429'); e.status = 429; e.retryAfter = '2'; throw e; }
+          return { data: [{ title: 'SRE', url: 'https://x.example/sre' }], meta: { total: 1 } };
+        },
+      },
+    );
+    if (calls === 2 && slept.includes(2000) && jobs.length === 1) pass('freehire.fetch() waits out a short 429 Retry-After once and retries the page');
+    else fail(`429 retry: calls=${calls} slept=${JSON.stringify(slept)} jobs=${jobs.length}`);
+
+    let longCalls = 0;
+    let threwLong = false;
+    try {
+      await provider.fetch(
+        { name: 'freehire', freehire: { keywords: ['SRE'] } },
+        { sleep: async () => {}, fetchJson: async () => { longCalls++; const e = new Error('HTTP 429'); e.status = 429; e.retryAfter = '3600'; throw e; } },
+      );
+    } catch { threwLong = true; }
+    if (longCalls === 1 && threwLong) pass('freehire.fetch() does not wait out a long Retry-After (no retry, keyword fails fast)');
+    else fail(`long 429: calls=${longCalls} threw=${threwLong}`);
   }
 
   // fetch() — pagination on a short page, dedup across keywords, facet params
@@ -129,8 +248,9 @@ try {
     fail(`freehire.fetch() should GET, sent method=${sentMethod}`);
   }
   const sentParams = new URL(sentUrl).searchParams;
-  if (sentParams.get('countries') === 'dk' && sentParams.get('work_mode') === 'remote' && sentUrl.includes('/api/v1/jobs/search?')) {
-    pass('freehire.fetch() places facet params on the query string against /api/v1/jobs/search');
+  if (sentParams.get('countries') === 'dk' && sentParams.get('work_mode') === 'remote'
+      && sentParams.get('description_format') === 'text' && sentUrl.includes('/api/v1/agent/jobs/search?')) {
+    pass('freehire.fetch() places facet params on the query string against /api/v1/agent/jobs/search (full descriptions)');
   } else {
     fail(`freehire.fetch() built url = ${sentUrl}`);
   }

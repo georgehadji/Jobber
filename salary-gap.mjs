@@ -230,13 +230,19 @@ export function fold(observations, apps, profileDesired) {
     // currencies, so UNKNOWN is never comparable — not even with itself). Skips are
     // reported in quality.currencyMismatches, never dropped silently.
     const advComparable = advertised && actual && advertised.currency === actual.currency && advertised.currency !== 'UNKNOWN';
+    // A `benchmark` advertised value is market data, not this employer's JD
+    // figure (docs/FREEHIRE-INTEGRATION-PLAN.md F6). The fold may still pick it
+    // when nothing better exists, but its delta goes to its own series so it
+    // never blends into the advertised→actual numbers.
+    const advIsBenchmark = advertised?.source === 'benchmark';
     const desComparable = desired && actual && desired.currency === actual.currency && desired.currency !== 'UNKNOWN';
-    if (advertised && actual && !advComparable) currencyMismatches.push({ num, comparison: 'advertised-vs-actual', currencies: [advertised.currency, actual.currency] });
+    if (advertised && actual && !advComparable) currencyMismatches.push({ num, comparison: advIsBenchmark ? 'benchmark-vs-actual' : 'advertised-vs-actual', currencies: [advertised.currency, actual.currency] });
     if (desired && actual && !desComparable) currencyMismatches.push({ num, comparison: 'desired-vs-actual', currencies: [desired.currency, actual.currency] });
     applications.push({
       num, company: apps[num].company, role: apps[num].role,
       desired, advertised, actual, trail,
-      advToActPct: advComparable ? pctDelta(advertised.value, actual.value) : null,
+      advToActPct: advComparable && !advIsBenchmark ? pctDelta(advertised.value, actual.value) : null,
+      benchToActPct: advComparable && advIsBenchmark ? pctDelta(advertised.value, actual.value) : null,
       desiredToActPct: desComparable ? pctDelta(desired.value, actual.value) : null,
     });
   }
@@ -246,7 +252,7 @@ export function fold(observations, apps, profileDesired) {
       applications.push({
         num, company: meta.company, role: meta.role,
         desired: pickEffective('desired', [profileObs]), advertised: null, actual: null,
-        trail: [], advToActPct: null, desiredToActPct: null,
+        trail: [], advToActPct: null, benchToActPct: null, desiredToActPct: null,
       });
     }
   }
@@ -258,7 +264,7 @@ export function fold(observations, apps, profileDesired) {
   for (const a of applications) {
     if (!a.actual) continue;
     const cur = a.actual.currency || 'UNKNOWN';
-    byCurrency[cur] ??= { confirmed: 0, advGaps: [], atOrAboveAdvertised: 0, atOrAboveDesired: 0, newestActual: null };
+    byCurrency[cur] ??= { confirmed: 0, advGaps: [], benchGaps: [], atOrAboveAdvertised: 0, atOrAboveDesired: 0, newestActual: null };
     const agg = byCurrency[cur];
     agg.confirmed += 1;
     agg.newestActual = [agg.newestActual, a.actual.date].filter(Boolean).sort().pop();
@@ -268,6 +274,7 @@ export function fold(observations, apps, profileDesired) {
       agg.advGaps.push(a.advToActPct);
       if (a.actual.value >= a.advertised.value) agg.atOrAboveAdvertised += 1;
     }
+    if (a.benchToActPct !== null) agg.benchGaps.push(a.benchToActPct);
     if (a.desiredToActPct !== null && a.actual.value >= a.desired.value) agg.atOrAboveDesired += 1;
 
     // Legacy reports (no Machine Summary) fold with null company/role — without
@@ -285,7 +292,10 @@ export function fold(observations, apps, profileDesired) {
   for (const agg of Object.values(byCurrency)) {
     agg.meanAdvToActPct = agg.advGaps.length ? agg.advGaps.reduce((s, v) => s + v, 0) / agg.advGaps.length : null;
     agg.medianAdvToActPct = agg.advGaps.length ? median(agg.advGaps) : null;
+    agg.meanBenchToActPct = agg.benchGaps.length ? agg.benchGaps.reduce((s, v) => s + v, 0) / agg.benchGaps.length : null;
+    agg.medianBenchToActPct = agg.benchGaps.length ? median(agg.benchGaps) : null;
     delete agg.advGaps;
+    delete agg.benchGaps;
   }
 
   return {
@@ -548,7 +558,39 @@ function selfTest() {
   assert(legacy.aggregates.byCompanyRole['#101'].company === 'report #101' && legacy.aggregates.byCompanyRole['#101'].role !== null,
     'legacy bucket display fields render without null');
 
-  console.log('salary-gap self-test OK (parser + report extraction + fold + aggregates + currency guard)');
+  // benchmark split (F6): a benchmark-only advertised value lands in its own
+  // series and never in advertised→actual; a JD figure still outranks it.
+  {
+    const benchApps = { '201': { company: 'BenchCo', role: 'SRE' }, '202': { company: 'JdCo', role: 'SRE' } };
+    const benchObs = parseObservations([
+      '201\t2026-07-01\tadvertised\t100k\tEUR\tbenchmark\tbenchmark import: freehire insights',
+      '201\t2026-07-10\tactual\t110k\tEUR\toffer-letter\t',
+      '202\t2026-07-01\tadvertised\t100k\tEUR\tbenchmark\tbenchmark import: freehire insights',
+      '202\t2026-07-02\tadvertised\t90k\tEUR\tuser\tfrom recruiter email',
+      '202\t2026-07-10\tactual\t99k\tEUR\toffer-letter\t',
+    ].join('\n'));
+    const b = fold(benchObs, benchApps, null);
+    const b1 = b.applications.find(a => a.num === '201');
+    const b2 = b.applications.find(a => a.num === '202');
+    assert(b1.advertised.source === 'benchmark', '201 effective advertised falls back to the benchmark');
+    assert(b1.advToActPct === null, `201 benchmark must not produce advertised→actual, got ${b1.advToActPct}`);
+    assert(Math.abs(b1.benchToActPct - 10) < 0.01, `201 benchmark→actual +10%, got ${b1.benchToActPct}`);
+    assert(b2.advertised.source === 'user' && Math.abs(b2.advToActPct - 10) < 0.01 && b2.benchToActPct === null,
+      '202 user figure outranks the benchmark and stays in the advertised series');
+    const eurB = b.aggregates.byCurrency.EUR;
+    assert(Math.abs(eurB.meanAdvToActPct - 10) < 0.01 && eurB.atOrAboveAdvertised === 1,
+      `EUR advertised series holds only the JD/user figure, got mean ${eurB.meanAdvToActPct}`);
+    assert(Math.abs(eurB.meanBenchToActPct - 10) < 0.01 && Math.abs(eurB.medianBenchToActPct - 10) < 0.01,
+      'EUR benchmark series reported separately');
+    const crossBench = fold(parseObservations([
+      '203\t2026-07-01\tadvertised\t100k\tUSD\tbenchmark\t',
+      '203\t2026-07-10\tactual\t90k\tEUR\toffer-letter\t',
+    ].join('\n')), { '203': { company: 'X', role: 'Y' } }, null);
+    assert(crossBench.quality.currencyMismatches.some(m => m.num === '203' && m.comparison === 'benchmark-vs-actual'),
+      'cross-currency benchmark skip is reported as benchmark-vs-actual');
+  }
+
+  console.log('salary-gap self-test OK (parser + report extraction + fold + aggregates + currency guard + benchmark split)');
 }
 
 // --- Real sources ---
@@ -623,6 +665,9 @@ function printSummary(result) {
       if (a.advToActPct !== null || a.desiredToActPct !== null) {
         console.log(`      gap: advertised→actual ${fmtPct(a.advToActPct)}, desired→actual ${fmtPct(a.desiredToActPct)}`);
       }
+      if (a.benchToActPct !== null) {
+        console.log(`      gap: market benchmark→actual ${fmtPct(a.benchToActPct)} (not an employer figure)`);
+      }
     }
 
     const currencies = Object.entries(aggregates.byCurrency);
@@ -630,6 +675,9 @@ function printSummary(result) {
       console.log('\n  Aggregates (per currency — no FX conversion):');
       for (const [cur, agg] of currencies) {
         console.log(`  ${cur}: mean advertised→actual ${fmtPct(agg.meanAdvToActPct)}, median ${fmtPct(agg.medianAdvToActPct)}, at/above advertised ${agg.atOrAboveAdvertised}, at/above desired ${agg.atOrAboveDesired}`);
+        if (agg.meanBenchToActPct !== null) {
+          console.log(`  ${cur}: mean market benchmark→actual ${fmtPct(agg.meanBenchToActPct)}, median ${fmtPct(agg.medianBenchToActPct)} (separate series — market data, not JD figures)`);
+        }
       }
     }
     const companyRoles = Object.entries(aggregates.byCompanyRole);
