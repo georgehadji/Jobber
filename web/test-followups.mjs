@@ -3,7 +3,27 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FOLLOWUPS_HEADER, cellText, followupRow, nextFollowupNum } from "./src/lib/core/followups.ts";
-import { parseFollowups } from "../followup-cadence.mjs";
+
+// Prefer the real parser from the repo root. The web CI job installs only web/ dependencies, and
+// followup-cadence.mjs needs the root's js-yaml, so fall back to a mirror of its table parsing there.
+// (Keep the mirror in sync with parseFollowups in followup-cadence.mjs.)
+let parseFollowups;
+try {
+  ({ parseFollowups } = await import("../followup-cadence.mjs"));
+} catch {
+  parseFollowups = (content) => {
+    const entries = [];
+    for (const line of String(content ?? "").split("\n")) {
+      if (!line.startsWith("|")) continue;
+      const parts = line.split("|").map((x) => x.trim());
+      if (parts.length < 8) continue;
+      const num = parseInt(parts[1]);
+      if (isNaN(num)) continue;
+      entries.push({ num, appNum: parseInt(parts[2]), date: parts[3], company: parts[4], role: parts[5], channel: parts[6], contact: parts[7], notes: parts[8] || "" });
+    }
+    return entries;
+  };
+}
 
 test("a logged follow-up parses back to the same fields", () => {
   const content = FOLLOWUPS_HEADER + "\n" + followupRow({ num: 1, appNum: "42", date: "2026-10-21", company: "Acme", role: "Engineer", channel: "Email", contact: "Pat", notes: "Followed up" }) + "\n";
