@@ -1,6 +1,6 @@
 # Mode: pipeline -- URL-indbakke (Second Brain)
 
-<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
+<!-- jobber-source-sha: 121804185bbf0c1b2c7c5e83cfcdb98c90beaddd -->
 
 Behandler URL'er til opslag, der er samlet i `data/pipeline.md`. Kandidaten tilføjer URL'er, når han vil, og kører derefter `/jobber pipeline` for at behandle dem alle på én gang.
 
