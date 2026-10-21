@@ -10,6 +10,7 @@
 import { existsSync, readdirSync } from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
+import { finalizeJobs } from './_finalize.mjs';
 
 /**
  * Load every provider plugin in a directory into an id→provider Map.
@@ -45,7 +46,8 @@ export async function loadProviders(dir) {
       console.error(`⚠️  ${file}: duplicate provider id "${p.id}" — keeping first`);
       continue;
     }
-    providers.set(p.id, p);
+    // Contract enforcement lives here, once, instead of in ~100 providers.
+    providers.set(p.id, { ...p, fetch: async (entry, ctx) => finalizeJobs(p.id, await p.fetch(entry, ctx)) });
   }
   return providers;
 }

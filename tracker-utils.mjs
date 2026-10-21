@@ -44,10 +44,10 @@ export function rebuildRow(parts) {
  * company key, so a row one script would match is never missed by another.
  *
  * @param {string} name - Company name from the tracker or an input row.
- * @returns {string} Lowercase alphanumeric company key.
+ * @returns {string} Lowercase letter/digit company key in any script; '' means "no usable key" and must never be compared equal to another ''.
  */
 export function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return String(name ?? '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 /**
