@@ -20,6 +20,8 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_CONTRIB_WEBHOOK }}
         with:
           script: |
+            // Forks and mirrors without the secret skip instead of failing every merge.
+            if (!process.env.WEBHOOK) { core.notice('DISCORD_CONTRIB_WEBHOOK not set; skipping post'); return; }
             const pr = context.payload.pull_request;
             const esc = (s) => s.replace(/([*_~`|\\])/g, '\\$1');
             const first = pr.author_association === 'FIRST_TIME_CONTRIBUTOR'
