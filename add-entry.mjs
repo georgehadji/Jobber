@@ -38,7 +38,9 @@
  * files so tests never touch a real user CV.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { withLock } from './lib/file-lock.mjs';
+import { writeFileAtomic } from './tracker-utils.mjs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -109,10 +111,11 @@ export function insertIntoCvSection(md, section, entry) {
   }
   const body = loc.body.replace(/\s+$/, '');
   const newBody = body ? `${body}\n${block}` : block;
-  const parts = [loc.before, loc.heading, '', newBody, ''];
+  // Collapse blank-line runs only inside the section we rebuilt; the rest of the CV is the
+  // user's own formatting and must stay byte-identical.
+  const rebuiltSection = [loc.heading, '', newBody].join('\n').replace(/\n{3,}/g, '\n\n');
   const after = loc.after.replace(/^\n+/, '');
-  const rebuilt = parts.join('\n') + (after ? `\n${after}` : '');
-  return rebuilt.replace(/\n{3,}/g, '\n\n');
+  return [loc.before, rebuiltSection, ''].join('\n') + (after ? `\n${after}` : '');
 }
 
 // article-digest.md is a sequence of `## <name> -- <tagline>` blocks separated
@@ -212,34 +215,40 @@ async function main() {
     process.exit(1);
   }
 
-  const cvText = existsSync(CV_FILE) ? readFileSync(CV_FILE, 'utf-8') : null;
-  const articleText = existsSync(ARTICLE_DIGEST_FILE) ? readFileSync(ARTICLE_DIGEST_FILE, 'utf-8') : null;
-
+  // read -> transform -> atomic write all happen under one lock, so two concurrent adds
+  // cannot both read the old CV and overwrite each other. No process.exit inside the
+  // callback: it would skip the lock release.
   let out;
-  try {
-    out = applyAdd(payload, { cvText, articleText });
-  } catch (e) {
-    console.error(`add-entry: ${e.message}`);
-    process.exit(1);
-  }
-
-  if (!dryRun) {
+  let failure = null;
+  const written = [];
+  await withLock(CV_FILE, { kind: 'cv-add' }, async () => {
+    const cvText = existsSync(CV_FILE) ? readFileSync(CV_FILE, 'utf-8') : null;
+    const articleText = existsSync(ARTICLE_DIGEST_FILE) ? readFileSync(ARTICLE_DIGEST_FILE, 'utf-8') : null;
+    try {
+      out = applyAdd(payload, { cvText, articleText });
+    } catch (e) {
+      failure = `add-entry: ${e.message}`;
+      return;
+    }
+    if (dryRun) return;
     // Track what actually landed so a failure on the second write reports which
     // file was already mutated (the two writes aren't transactional).
-    const written = [];
     try {
       if (payload.cv && out.result.cv?.status === 'added') {
-        writeFileSync(CV_FILE, out.cv);
+        writeFileAtomic(CV_FILE, out.cv);
         written.push('cv.md');
       }
       if (payload.articleDigest && (out.result.articleDigest?.status === 'added' || out.result.articleDigest?.status === 'created')) {
-        writeFileSync(ARTICLE_DIGEST_FILE, out.articleDigest);
+        writeFileAtomic(ARTICLE_DIGEST_FILE, out.articleDigest);
         written.push('article-digest.md');
       }
     } catch (e) {
-      console.error(`add-entry: write failed after writing [${written.join(', ') || 'nothing'}]: ${e.message}`);
-      process.exit(1);
+      failure = `add-entry: write failed after writing [${written.join(', ') || 'nothing'}]: ${e.message}`;
     }
+  });
+  if (failure) {
+    console.error(failure);
+    process.exit(1);
   }
 
   console.log(JSON.stringify({ dryRun, ...out.result }, null, 2));

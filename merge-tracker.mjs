@@ -561,7 +561,11 @@ if (MIGRATE_VIA) {
     const isHeader = parts[colmap.num] === '#';
     const isSeparator = /^[-: ]*$/.test(parts.join(''));
     const insert = isHeader ? 'Via' : isSeparator ? '-----' : '—';
-    const cells = [...parts.slice(1, companyIdx + 1), insert, ...parts.slice(companyIdx + 1, parts.length - 1)];
+    // Drop the trailing empty piece of a closing pipe, but only if it IS empty: a row written
+    // without one would otherwise lose its last cell (the Notes).
+    const tail = parts.slice(companyIdx + 1);
+    if (tail.length > 0 && tail[tail.length - 1] === '') tail.pop();
+    const cells = [...parts.slice(1, companyIdx + 1), insert, ...tail];
     changed++;
     return isSeparator
       ? `|${cells.map(c => c || '---').join('|')}|`
@@ -700,12 +704,31 @@ if (premergeErrors.length > 0) {
 
 const newLines = [];
 const summaryRows = [];
+// TSVs that were NOT merged because they are malformed or refused (batch-failed). They stay in
+// batch/tracker-additions/ for the user to fix or delete; only merged or deliberately deduped
+// files are archived to merged/.
+const keepFiles = new Set(premergeErrors);
+
+// Replace a tracker row (an existing line, or one added earlier in this same batch) and refresh
+// the parsed copy so a later TSV for the same row compares against the CURRENT state.
+function replaceRow(app, newLine) {
+  let idx = appLines.indexOf(app.raw);
+  if (idx >= 0) appLines[idx] = newLine;
+  else {
+    idx = newLines.indexOf(app.raw);
+    if (idx < 0) return false;
+    newLines[idx] = newLine;
+  }
+  const reparsed = parseAppLine(newLine);
+  if (reparsed) Object.assign(app, reparsed);
+  return true;
+}
 
 for (const file of tsvFiles) {
   const addition = parsedAdditions.get(file);
   // Pre-merge validation already rejected malformed files, so a missing entry
   // here is impossible unless the file vanished between readdir and parse.
-  if (!addition) { skipped++; continue; }
+  if (!addition) { keepFiles.add(file); skipped++; continue; }
 
   // A via= tag can only be stored if the tracker has a Via column — warn
   // instead of dropping the channel silently (#1596). Clear the value too:
@@ -729,6 +752,7 @@ for (const file of tsvFiles) {
 
   if (reportNum && FAILED_REPORT_NUMBERS.has(reportNum)) {
     console.warn(`⚠️  Skipping ${file}: report #${reportNum} is marked "failed" in batch-state.tsv — refusing to merge a tracker line for an offer the batch runner itself recorded as failed (possible fabricated result)`);
+    keepFiles.add(file);
     skipped++;
     continue;
   }
@@ -804,8 +828,7 @@ for (const file of tsvFiles) {
     if (newScore > oldScore) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       summaryRows.push({ action: 'update', num: duplicate.num, company: addition.company, role: addition.role, score: `${oldScore}→${newScore}` });
-      const lineIdx = appLines.indexOf(duplicate.raw);
-      if (lineIdx >= 0) {
+      {
         const pdf = reportNum && pdfIndex.has(String(reportNum)) ? '✅' : duplicate.pdf;
         const updatedLine = buildRow({
           num: duplicate.num, date: addition.date, company: addition.company,
@@ -814,10 +837,10 @@ for (const file of tsvFiles) {
           location: addition.location || duplicate.location || '—',
           score: addition.score, status: duplicate.status, pdf,
           report: addition.report,
-          notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`,
+          // Keep what the row already said (one level: the previous re-eval's own history is dropped).
+          notes: `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}${duplicate.notes ? ` (was: ${String(duplicate.notes).split(' (was: ')[0]})` : ''}`,
         });
-        appLines[lineIdx] = updatedLine;
-        updated++;
+        if (replaceRow(duplicate, updatedLine)) updated++;
       }
     } else {
       console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
@@ -853,6 +876,9 @@ for (const file of tsvFiles) {
       report: addition.report, notes: addition.notes,
     });
     newLines.push(newLine);
+    // Visible to later TSVs of this batch: two TSVs for one new role must insert it once.
+    const addedApp = parseAppLine(newLine);
+    if (addedApp) existingApps.push(addedApp);
     added++;
     summaryRows.push({ action: 'add', num: entryNum, company: addition.company, role: addition.role, score: addition.score });
     // Leave a dated anchor in the transition ledger for freshly created rows
@@ -898,10 +924,12 @@ if (!DRY_RUN) {
 
   // Move processed files to merged/
   if (!existsSync(MERGED_DIR)) mkdirSync(MERGED_DIR, { recursive: true });
-  for (const file of tsvFiles) {
+  const archive = tsvFiles.filter(f => !keepFiles.has(f));
+  for (const file of archive) {
     renameSync(join(ADDITIONS_DIR, file), join(MERGED_DIR, file));
   }
-  console.log(`\n✅ Moved ${tsvFiles.length} TSVs to merged/`);
+  console.log(`\n✅ Moved ${archive.length} TSVs to merged/`);
+  if (keepFiles.size > 0) console.warn(`⚠️  Left ${keepFiles.size} unmerged TSV(s) in batch/tracker-additions/: ${[...keepFiles].join(', ')}`);
 }
 
 console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${skipped} skipped`);

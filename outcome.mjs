@@ -78,6 +78,7 @@ const USAGE = `Usage: node outcome.mjs <report#|company> <outcome_type> [options
   --cv "..."         Path to submitted CV (defaults to cv.md)
   --cover "..."      Path to submitted cover letter
   --url "..."        Job posting URL (overrides auto-detection from tracker notes)
+  --force            Let the tracker update override set-status guards (terminal-state moves, report-link/role mismatch)
   --dry-run          Preview outcome logging without writing
   --json             Machine-readable JSON output`;
 
@@ -92,6 +93,7 @@ const flags = {
   cover: null,
   url: null,
   dryRun: false,
+  force: false,
   json: rawArgs.includes('--json'),
 };
 
@@ -116,6 +118,8 @@ for (let i = 0; i < rawArgs.length; i++) {
     i++;
   } else if (a === '--dry-run') {
     flags.dryRun = true;
+  } else if (a === '--force') {
+    flags.force = true;
   } else if (a === '--json') {
     flags.json = true;
   } else if (a === '--help' || a === '-h') {
@@ -173,7 +177,15 @@ if (/^\d+$/.test(selector)) {
   const key = normalizeCompany(selector);
   candidates = rows.filter(r => normalizeCompany(r.company) === key);
   if (candidates.length === 0) {
-    candidates = rows.filter(r => normalizeCompany(r.company).includes(key) || key.includes(normalizeCompany(r.company)));
+    // Whole-word prefix only ("Acme" finds "Acme Corp"). A raw substring made `Meta` match
+    // `Metabase` and recorded a terminal outcome on the wrong company.
+    const words = (n) => String(n ?? '').normalize('NFKC').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    const isWordPrefix = (a, b) => a.length > 0 && a.length <= b.length && a.every((w, i) => b[i] === w);
+    const sel = words(selector);
+    candidates = rows.filter(r => {
+      const co = words(r.company);
+      return isWordPrefix(sel, co) || isWordPrefix(co, sel);
+    });
   }
   if (candidates.length === 0) {
     failExit(`No tracker row for company matching "${selector}"`, 'company-not-found', EXIT_NOT_FOUND);
@@ -222,6 +234,27 @@ if (flags.dryRun) {
     console.log(`🔍 Dry-run: would record outcome "${normalizedOutcomeKey}" for #${matchedRow.num} ${matchedRow.company} (${outcomeConfig.state}) in ${outcomeDir}`);
   }
   process.exit(EXIT_OK);
+}
+
+const setStatusArgs = [
+  SET_STATUS_SCRIPT,
+  String(matchedRow.num),
+  outcomeConfig.state,
+  '--note', noteToAppend,
+  '--json',
+];
+if (flags.force) setStatusArgs.push('--force');
+if (matchedRow.role) {
+  setStatusArgs.push('--role', matchedRow.role);
+}
+
+// Pre-flight the tracker move: if set-status would refuse it (terminal state, report mismatch),
+// fail BEFORE any outcome artifact is written, so a refused outcome leaves no half-recorded trace.
+try {
+  execFileSync(NODE, [...setStatusArgs, '--dry-run'], { cwd: JOBBER, env: process.env, encoding: 'utf-8', stdio: 'pipe' });
+} catch (err) {
+  const why = String(err.stderr || err.stdout || err.message).trim().split('\n')[0];
+  failExit(`Tracker update would be refused by set-status.mjs: ${why}`, 'tracker-update-failed', 1);
 }
 
 mkdirSync(outcomeDir, { recursive: true });
@@ -381,20 +414,7 @@ ${newEntry}`;
   writeFileSync(outcomeLogPath, initialLog);
 }
 
-// 5. Update tracker via set-status.mjs
-const setStatusArgs = [
-  SET_STATUS_SCRIPT,
-  String(matchedRow.num),
-  outcomeConfig.state,
-  '--note', noteToAppend,
-  '--force',
-  '--json',
-];
-
-if (matchedRow.role) {
-  setStatusArgs.push('--role', matchedRow.role);
-}
-
+// 5. Update tracker via set-status.mjs (args built and pre-flighted above)
 let setStatusResult = null;
 try {
   const statusOutput = execFileSync(NODE, setStatusArgs, { cwd: JOBBER, env: process.env, encoding: 'utf-8' });
