@@ -12,7 +12,7 @@ import { readFileSync, writeFileSync, renameSync, rmSync, existsSync, realpathSy
 import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'path';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 /**
  * Rebuild a markdown table row from the cells produced by `line.split('|')`.

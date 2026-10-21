@@ -14,7 +14,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
 import { pathToFileURL } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { classifyFetchError } from '../lib/http-errors.mjs';
 import { pass, fail, ROOT, NODE, run } from './helpers.mjs';
 
