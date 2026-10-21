@@ -28,7 +28,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync } from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { resolveAndValidate } from './_net.mjs';
-import { readLock, writeLockEntry, diffPlugin, hashPluginTree, consentSurface } from './_lock.mjs';
+import { readLock, readLockStrict, writeLockEntry, diffPlugin, hashPluginTree, consentSurface } from './_lock.mjs';
 import { loadRegistry } from './_registry.mjs';
 import { PROVIDERS } from '../lib/llm-providers.mjs';
 
@@ -52,7 +52,7 @@ export const RESERVED_ENV = new Set([
   'PATH', 'HOME', 'NODE_OPTIONS', 'LD_PRELOAD', 'NODE_EXTRA_CA_CERTS',
 ]);
 
-const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
+export const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const DEFAULT_HOOK_TIMEOUT_MS = 15_000;
 const MAX_REDIRECTS = 5;
 
@@ -549,7 +549,8 @@ function pluginSource(manifest, root) {
 export function lockGate(manifest, root) {
   const source = pluginSource(manifest, root);
   let lock;
-  try { lock = readLock(root); } catch { return { load: true }; }
+  // Fail closed: an unreadable lock must not read as "nothing pinned" (that would auto-re-pin and load everything).
+  try { lock = readLockStrict(root); } catch (err) { warnSkip(manifest.id, err.message); return { load: false }; }
   const entry = lock.plugins?.[manifest.id];
   let d;
   try { d = diffPlugin(manifest, entry); }
@@ -568,13 +569,18 @@ export function lockGate(manifest, root) {
   switch (d.status) {
     case 'unpinned': repin(); return { load: true };            // grandfathered hand-enable → pin so future tampering is caught
     case 'match': return { load: true };
-    case 'legit-update': repin(); return { load: true };        // version bumped → honest update, re-pin quietly
+    case 'legit-update':
+      // `version` is author-controlled, so a bump alone proves nothing for code that is not
+      // reviewed in-tree: a local/community plugin needs the user's explicit `trust`.
+      if (source === 'bundled') { repin(); return { load: true }; }
+      warnSkip(manifest.id, `files changed with a version bump (${d.changedFiles.slice(0, 5).join(', ')}). Review, then \`node plugins.mjs trust ${manifest.id}\``);
+      return { load: false };
     case 'drift-nobump':
       if (source === 'bundled') { repin(); return { load: true }; } // reviewed-by-construction (branch-protected checkout) → re-pin
       warnSkip(manifest.id, `files changed since you trusted it without a version bump — possible tampering (${d.changedFiles.slice(0, 5).join(', ')}). Review, then \`node plugins.mjs trust ${manifest.id}\``);
       return { load: false };
     case 'surface-widened':
-      warnSkip(manifest.id, `capability surface expanded since you consented (${[...d.addedHosts, ...d.addedEnv].join(', ')}${manifest.allowsLocalhost ? ', localhost' : ''}) — re-consent: \`node plugins.mjs enable ${manifest.id}\``);
+      warnSkip(manifest.id, `capability surface expanded since you consented (${[...d.addedHosts, ...d.addedEnv, ...(d.addedHooks || [])].join(', ')}${manifest.allowsLocalhost ? ', localhost' : ''}) — re-consent: \`node plugins.mjs enable ${manifest.id}\``);
       return { load: false };
     default: return { load: true };
   }

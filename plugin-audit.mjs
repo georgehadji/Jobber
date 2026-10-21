@@ -32,12 +32,16 @@ const ALLOWED_NODE = new Set([
 
 const IMPORT_RE = /\bimport\s+(?:[\s\S]*?\s+from\s+)?["']([^"']+)["']/g;
 const DYN_IMPORT_RE = /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
+// Re-exports load a module too: `export * from 'x'` / `export { y } from 'x'`.
+const EXPORT_FROM_RE = /\bexport\s+(?:\*(?:\s+as\s+\w+)?|\{[^}]*\}|\w+)\s+from\s+["']([^"']+)["']/g;
+// import(<anything but a plain string literal>) - the specifier is built at runtime.
+const NON_LITERAL_IMPORT_RE = /\bimport\s*\(\s*(?!["'][^"']*["']\s*\))/;
 const REQUIRE_RE = /\brequire\s*\(\s*["']([^"']+)["']\s*\)/g;
 const firewallRe = new RegExp('\\b(' + ['revenue', 'pricing', 'paywall', 'monetiz\\w*', 'moat'].join('|') + ')\\b', 'i');
 
 function collectSpecifiers(src) {
   const specs = [];
-  for (const re of [IMPORT_RE, DYN_IMPORT_RE, REQUIRE_RE]) {
+  for (const re of [IMPORT_RE, DYN_IMPORT_RE, REQUIRE_RE, EXPORT_FROM_RE]) {
     re.lastIndex = 0;
     let m;
     while ((m = re.exec(src)) !== null) specs.push(m[1]);
@@ -49,7 +53,7 @@ function listMjs(dir) {
   const out = [];
   const walk = (d, rel) => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
-      if (e.name === 'node_modules' || e.name === '.git') continue;
+      if (e.name === '.git') continue;
       const abs = path.join(d, e.name);
       const r = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) walk(abs, r);
@@ -64,7 +68,7 @@ function listPackageJson(dir) {
   const out = [];
   const walk = (d, rel) => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
-      if (e.name === 'node_modules' || e.name === '.git') continue;
+      if (e.name === '.git') continue;
       const abs = path.join(d, e.name);
       const r = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) walk(abs, r);
@@ -121,16 +125,23 @@ export function auditPlugin(dir) {
     const src = readFileSync(abs, 'utf8');
     for (const spec of collectSpecifiers(src)) {
       const isRelative = spec.startsWith('./') || spec.startsWith('../');
+      if (isRelative && !path.resolve(path.dirname(abs), spec).startsWith(path.resolve(dir) + path.sep)) {
+        findings.push({ file: rel, issue: `relative import "${spec}" escapes the plugin directory` });
+        continue;
+      }
       const isNode = spec.startsWith('node:') || ['crypto', 'url', 'path', 'buffer', 'util', 'fs', 'os', 'zlib', 'stream', 'events', 'assert', 'querystring'].includes(spec);
       if (FORBIDDEN_MODULES.has(spec)) findings.push({ file: rel, issue: `forbidden import "${spec}" — community plugins egress only through ctx.fetch and may not spawn/raw-socket` });
       else if (isNode && !ALLOWED_NODE.has(spec) && !ALLOWED_NODE.has('node:' + spec)) findings.push({ file: rel, issue: `node builtin "${spec}" is not on the plugin allowlist` });
       else if (!isRelative && !isNode) findings.push({ file: rel, issue: `bare-specifier import "${spec}" — registry plugins must be dependency-free (relative + allowlisted node: builtins only)` });
     }
+    if (rel.split('/').includes('node_modules')) findings.push({ file: rel, issue: 'node_modules inside a community plugin - registry plugins must be dependency-free' });
+    if (NON_LITERAL_IMPORT_RE.test(src)) findings.push({ file: rel, issue: 'import() with a computed specifier - the module it loads cannot be audited' });
+    if (/getBuiltinModule|createRequire/.test(src)) findings.push({ file: rel, issue: 'process.getBuiltinModule/createRequire - loads builtins outside the import allowlist' });
     // Direct egress / code-exec primitives (ctx.fetch / x.fetch are fine).
     if (/(?<![.\w$])fetch\s*\(/.test(src)) findings.push({ file: rel, issue: 'direct global fetch() — use ctx.fetch so the egress allowlist applies' });
     if (/\bXMLHttpRequest\b|\bWebSocket\b/.test(src)) findings.push({ file: rel, issue: 'XMLHttpRequest/WebSocket egress — use ctx.fetch' });
     if (/\beval\s*\(|new\s+Function\s*\(/.test(src)) findings.push({ file: rel, issue: 'eval/new Function — dynamic code execution is not allowed' });
-    if (/process\s*\.\s*(binding|dlopen)\b/.test(src)) findings.push({ file: rel, issue: 'process.binding/dlopen — native escape hatch not allowed' });
+    if (/process\s*\.\s*(binding|dlopen)\b|process\s*\[/.test(src)) findings.push({ file: rel, issue: 'process.binding/dlopen — native escape hatch not allowed' });
     if (firewallRe.test(src)) findings.push({ file: rel, issue: 'commercial/monetization wording in a shipped community plugin (keep it mission-framed)' });
   }
   for (const { abs, rel } of listPackageJson(dir)) {

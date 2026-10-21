@@ -595,8 +595,11 @@ function missingFromTargetManifest(targetPaths) {
 }
 
 function gitStatusEntries() {
-  const status = git('status', '--porcelain');
-  if (!status) return [];
+  // Not git(): its output is trimmed, which eats the leading space of the first entry
+  // (" M file" -> "M file"), and the slice(3) below would then cut that path's first letter.
+  const args = ['status', '--porcelain'];
+  const status = execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: gitTimeoutMs(args) });
+  if (!status.trim()) return [];
 
   return status.split('\n')
     .filter(Boolean)
@@ -623,6 +626,51 @@ function mergePathLists(...lists) {
     }
   }
   return merged;
+}
+
+/**
+ * Drop entries of a remote SYSTEM_PATHS list that could overwrite the user layer
+ * or escape the repo. The remote list is data from the network: a path such as
+ * `cv.md`, `data/`, `config/` (a parent of profile.yml), `.`, an absolute path or
+ * one with `..` must never reach `git checkout FETCH_HEAD -- <path>`. A path the
+ * LOCAL updater lists itself is trusted (e.g. writing-samples/README.md is
+ * system-owned inside a user dir).
+ * @param {string[]} remote
+ * @param {string[]} userPaths
+ * @param {string[]} localPaths
+ * @returns {{ kept: string[], dropped: Array<{ path: string, reason: string }> }}
+ */
+export function sanitizeRemotePaths(remote, userPaths = USER_PATHS, localPaths = []) {
+  const kept = [];
+  const dropped = [];
+  for (const p of remote) {
+    if (localPaths.includes(p)) { kept.push(p); continue; }
+    const norm = String(p).split(String.fromCharCode(92)).join('/');
+    let reason = '';
+    if (!norm || norm === '.' || norm === './') reason = 'repo root';
+    else if (norm.startsWith('/') || norm.startsWith(':') || /^[A-Za-z]:/.test(norm)) reason = 'absolute or magic pathspec';
+    else if (norm.split('/').includes('..') || norm.includes(String.fromCharCode(0))) reason = 'path escape';
+    else {
+      const dir = norm.endsWith('/') ? norm : norm + '/';
+      if (userPaths.some((u) => norm.startsWith(u) || u.startsWith(dir))) reason = 'overlaps the user layer';
+    }
+    if (reason) dropped.push({ path: p, reason }); else kept.push(p);
+  }
+  return { kept, dropped };
+}
+
+/**
+ * Tracked files with uncommitted edits that an update would overwrite.
+ * Untracked files are ignored: checkout only replaces them if upstream ships the same name.
+ * @param {Array<{ code: string, path: string }>} entries  gitStatusEntries()
+ * @param {string[]} ownPaths  system paths the update checks out
+ * @returns {string[]}
+ */
+export function dirtySystemPaths(entries, ownPaths) {
+  const covers = (u, f) => f === u || (u.endsWith('/') && f.startsWith(u));
+  return entries
+    .filter((e) => !e.code.includes('?') && ownPaths.some((u) => covers(u, e.path)))
+    .map((e) => e.path);
 }
 
 // Files the self-reexec stage must check out so the TARGET update-system.mjs
@@ -938,13 +986,26 @@ async function apply() {
     writeFileSync(lockFile, new Date().toISOString());
   }
 
+  const backupBranch = process.env.JOBBER_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
+  const installWarnings = [];
   try {
+    // 0. Refuse to overwrite uncommitted edits to tracked system files (s1).
+    if (!isReexec && !process.argv.includes('--force')) {
+      const dirty = dirtySystemPaths(gitStatusEntries(), mergePathLists(SYSTEM_PATHS, BOOTSTRAP_PATHS));
+      if (dirty.length > 0) {
+        console.error('Update aborted: you have uncommitted changes in system files the update would overwrite:');
+        for (const f of dirty) console.error('  ' + f);
+        console.error('Commit or stash them first, or re-run with --force to overwrite them (a recoverable WIP ref is saved).');
+        process.exitCode = 1;
+        return;
+      }
+    }
+
     // 1. Backup: create branch + stash uncommitted work (#915 bug 3).
     // The branch only captures committed state; any uncommitted edits are
     // invisible to `git branch` and can be lost if the update aborts.
     // `git stash create` builds a stash object without touching the stash
     // stack, giving a recoverable ref for WIP even if the update fails.
-    const backupBranch = process.env.JOBBER_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
     if (!isReexec) {
       try {
         const wip = git('stash', 'create');
@@ -1005,11 +1066,16 @@ async function apply() {
       // local manifest plus bootstrap paths below.
     }
 
+    const sanitized = sanitizeRemotePaths(remoteSystemPaths, USER_PATHS, SYSTEM_PATHS);
+    for (const d of sanitized.dropped) console.error(`Ignoring remote SYSTEM_PATHS entry ${JSON.stringify(d.path)}: ${d.reason}`);
+    remoteSystemPaths = sanitized.kept;
+
     // 3a. Keep bootstrap paths as a fallback for very old targets, but the
     // target updater's SYSTEM_PATHS is now the source of truth for new files.
     const updatePaths = mergePathLists(SYSTEM_PATHS, remoteSystemPaths, BOOTSTRAP_PATHS);
 
     const skippedPaths = [];
+    try {
     for (const path of updatePaths) {
       try {
         // stderr is piped rather than inherited here. A path absent upstream is
@@ -1033,6 +1099,13 @@ async function apply() {
         if (!absentUpstream) throw err;
         skippedPaths.push(path);
       }
+    }
+    } catch (err) {
+      // Saga compensation: a mid-update failure must not leave a half-updated, staged tree.
+      console.error(`Update failed while checking out system files: ${err.message.split(String.fromCharCode(10))[0]}`);
+      try { revertPaths(updated, initialStatusPaths); } catch (revertErr) { console.error(`Revert also failed: ${revertErr.message.split(String.fromCharCode(10))[0]}`); }
+      console.error(`Backup branch: ${backupBranch} (restore with: node update-system.mjs rollback)`);
+      throw err;
     }
     if (skippedPaths.length > 0) {
       console.log(`Skipped ${skippedPaths.length} path(s) absent upstream: ${skippedPaths.join(', ')}`);
@@ -1113,7 +1186,7 @@ async function apply() {
         if (initialStatusPaths.has(file)) continue;
         // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
         // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
-        if (updatePaths.includes(file)) continue;
+        if (mergePathLists(SYSTEM_PATHS, BOOTSTRAP_PATHS).includes(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
@@ -1174,6 +1247,7 @@ async function apply() {
       execSync('npm install --silent', { cwd: ROOT, timeout: NPM_INSTALL_TIMEOUT_MS });
     } catch {
       console.log('npm install skipped (may need manual run)');
+      installWarnings.push('npm install did not complete - run `npm install` before using Jobber');
     }
 
     // 5b. Ensure Playwright browser binary is up to date after npm install
@@ -1192,7 +1266,7 @@ async function apply() {
     const dismissFile = join(ROOT, '.update-dismissed');
     if (existsSync(dismissFile)) {
       unlinkSync(dismissFile);
-      pathsToStage.push('.update-dismissed');
+      // Not staged: the file is gitignored, so `git add` of the deleted path fails the whole commit.
     }
 
     try {
@@ -1248,6 +1322,11 @@ async function apply() {
     console.log(`\nUpdate complete: v${local} → v${remote}`);
     console.log(`Updated ${updated.length} system paths.`);
     console.log(`Rollback available: node update-system.mjs rollback`);
+    if (installWarnings.length > 0) {
+      console.error(String.fromCharCode(10) + 'Update applied, but:');
+      for (const w of installWarnings) console.error('  - ' + w);
+      process.exitCode = 2;
+    }
 
     console.log('\n-- The Jobber Manifesto ------------------------------');
     console.log('A new way of job searching is taking shape. You are');
