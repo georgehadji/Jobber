@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
 import { jobberRoot } from "@/lib/jobber";
+import { claudeToolArgs, scopedToolsMessage } from "@/lib/agent-policy";
 
 // Parse a CV (pasted text or an uploaded PDF) into clean cv.md markdown by running
 // the USER'S OWN CLI headless — the web never ships a heavyweight parser, and the
@@ -97,25 +98,15 @@ export async function POST(req: Request) {
     if (tempFile) cleanupTemp(tempFile);
     return Response.json({ error: `CLI '${cliId}' not found on this machine` }, { status: 404 });
   }
+  const scoped = scopedToolsMessage(cliId);
+  if (scoped) {
+    if (tempFile) cleanupTemp(tempFile);
+    return Response.json({ error: scoped }, { status: 400 });
+  }
   const { spec, binPath } = resolved;
   const prompt = ingestPrompt(promptSource);
   const isClaude = cliId === "claude";
-  const args = isClaude
-    ? [
-        "-p",
-        prompt,
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--include-partial-messages",
-        "--permission-mode",
-        "acceptEdits",
-        "--allowedTools",
-        "Read,Glob,Grep", // read the temp PDF; CANNOT write/edit/shell (proposer)
-        "--disallowedTools",
-        "Bash,Write,Edit,NotebookEdit,Task,WebFetch,WebSearch",
-      ]
-    : spec.args(prompt);
+  const args = ["-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages", ...claudeToolArgs("cv-ingest")];
 
   let child;
   try {

@@ -45,12 +45,15 @@ import { appendToPipeline, appendToScanHistory } from ${JSON.stringify(scanUrl)}
 let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (d) => { input += d; });
-process.stdin.on("end", () => {
+process.stdin.on("end", async () => {
   try {
     const offers = JSON.parse(input);
     const date = new Date().toISOString().slice(0, 10);
-    appendToPipeline(offers);
-    appendToScanHistory(offers, date, "added");
+    // appendToPipeline is async: report success only after BOTH writes finished, and record the
+    // offers as seen only once they are really in the pipeline (otherwise a failed write orphans
+    // them in scan history and they never show up again).
+    await appendToPipeline(offers);
+    await appendToScanHistory(offers, date, "added");
     process.stdout.write(JSON.stringify({ added: offers.length }));
   } catch (e) {
     process.stdout.write(JSON.stringify({ added: 0, error: String((e && e.message) || e) }));

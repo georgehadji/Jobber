@@ -4,6 +4,7 @@ import path from "node:path";
 import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory } from "@/lib/jobber";
 import { assembleDedupContext } from "@/lib/core/discover";
+import { claudeToolArgs, scopedToolsMessage, untrusted } from "@/lib/agent-policy";
 
 // AI search orchestrates modes/discover.md by running the USER'S configured CLI
 // headless (CLI-agnostic, like the assistant). Web hunting is slow → generous
@@ -40,6 +41,8 @@ export async function POST(req: Request) {
 
   const resolved = resolveCli(cliId);
   if (!resolved) return Response.json({ error: `CLI '${cliId}' not found on this machine` }, { status: 404 });
+  const scoped = scopedToolsMessage(cliId);
+  if (scoped) return Response.json({ error: scoped }, { status: 400 });
   const { spec, binPath } = resolved;
 
   // Read the CANONICAL mode at request time — single source of truth, never a
@@ -53,27 +56,12 @@ export async function POST(req: Request) {
 
   const { lines } = assembleDedupContext();
   const memory = readMemory();
-  const memoryLine = memory.trim() ? `\n\nWHAT YOU KNOW ABOUT THE USER (persistent memory):\n${memory.trim()}` : "";
+  const memoryLine = memory.trim() ? `\n\nWHAT YOU KNOW ABOUT THE USER (persistent memory):\n${untrusted("memory", memory.trim())}` : "";
   const knownBlock = lines.length ? `\n\n--- ALREADY KNOWN (dedup — do NOT propose these) ---\n${lines.join("\n")}` : "";
   const prompt = `${mode}${OUTPUT_CONTRACT}${memoryLine}${knownBlock}\n\n--- USER INTENT ---\n${query}\n`;
 
   const isClaude = cliId === "claude";
-  const args = isClaude
-    ? [
-        "-p",
-        prompt,
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--include-partial-messages",
-        "--permission-mode",
-        "acceptEdits",
-        "--allowedTools",
-        "Read,WebFetch,WebSearch,Glob,Grep", // WebSearch ADDED vs the read-only assistant
-        "--disallowedTools",
-        "Bash,Write,Edit,NotebookEdit,Task", // proposer-not-writer, by construction
-      ]
-    : spec.args(prompt);
+  const args = ["-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages", ...claudeToolArgs("explore")];
 
   const child = spawn(binPath, args, { cwd: jobberRoot(), env: process.env });
 

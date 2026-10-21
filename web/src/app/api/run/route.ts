@@ -4,6 +4,7 @@ import path from "node:path";
 import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory } from "@/lib/jobber";
 import { validateRun } from "@/lib/core/run-input";
+import { claudeToolArgs, untrusted } from "@/lib/agent-policy";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
 
 export const runtime = "nodejs";
@@ -17,7 +18,7 @@ export const maxDuration = 800; // a real oferta evaluation / pdf-mode CV tailor
 // so a web evaluation is byte-identical to a CLI one (single source of truth, no
 // drift). kind "research" stays read-only. Streams progress as NDJSON events.
 function buildPrompt(kind: string, input: string, memory: string, today: string): string {
-  const mem = memory.trim() ? `\n\nDurable notes about the user (from their profile):\n${memory.trim()}\n` : "";
+  const mem = memory.trim() ? `\n\nDurable notes about the user (from their profile):\n${untrusted("memory", memory.trim())}\n` : "";
   if (kind === "research") {
     return `You are investigating the user's OWN work / portfolio to surface job-search-relevant strengths, headless. Investigate the target (use WebFetch for URLs; read local files if referenced) and report: what it is, why it is impressive, and how to leverage it in their job search — which roles/claims it supports and how to frame it on a CV. Be specific, honest, and encouraging.${mem}
 
@@ -120,15 +121,9 @@ export async function POST(req: Request) {
   // it needs Write + Bash (reserve-report-num / merge-tracker / write the
   // report). 'research' stays read-only. Task (sub-agents) is always blocked
   // (runaway cost). NEVER auto-submits — that is a prompt-level guarantee.
-  const tools =
-    kind === "evaluate" || kind === "fix-portal" || kind === "pdf"
-      ? { allowed: "Read,WebFetch,WebSearch,Write,Edit,Bash,Glob,Grep", disallowed: "Task,NotebookEdit" }
-      : { allowed: "Read,WebFetch,WebSearch,Glob,Grep", disallowed: "Bash,Write,Edit,NotebookEdit,Task" };
+  const policy = kind === "evaluate" || kind === "fix-portal" || kind === "pdf" ? "run-write" : "run-research";
   const args = isClaude
-    ? ["-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages",
-       "--permission-mode", "acceptEdits",
-       "--allowedTools", tools.allowed,
-       "--disallowedTools", tools.disallowed]
+    ? ["-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages", ...claudeToolArgs(policy)]
     : spec.args(prompt);
 
   // For write-needing kinds, snapshot reports/ so we can verify the worker

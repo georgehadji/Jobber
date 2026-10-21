@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { jobberRoot } from "@/lib/jobber";
+import { matchCvFiles } from "@/lib/apply/cv-match";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,20 +13,11 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const company = (req.nextUrl.searchParams.get("company") ?? "").trim();
   if (!company) return new Response("company required", { status: 400 });
-  // Token-extract instead of replace-then-trim: same slug, and no `-+$`-style
-  // pattern that backtracks polynomially on adversarial input (CodeQL).
-  const slug = (company.toLowerCase().match(/[a-z0-9]+/g) ?? []).join("-");
   const dir = path.join(jobberRoot(), "output");
-  // Match the slug at a token boundary (delimited by non-alphanumerics) so "Meta"
-  // doesn't serve "Metabase"'s tailored CV. The pdf mode names files cv-…-{slug}-….
-  const re = new RegExp(`(^|[^a-z0-9])${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`, "i");
 
   let files: string[];
   try {
-    files = fs
-      .readdirSync(dir)
-      .filter((f) => f.toLowerCase().endsWith(".pdf"))
-      .filter((f) => re.test(f.toLowerCase()));
+    files = matchCvFiles(fs.readdirSync(dir), company);
   } catch {
     return new Response("no output directory", { status: 404 });
   }

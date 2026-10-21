@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory, doctorState } from "@/lib/jobber";
+import { claudeToolArgs, scopedToolsMessage, untrusted } from "@/lib/agent-policy";
 
 export const runtime = "nodejs"; // child_process (spawn) requires the Node runtime
 export const dynamic = "force-dynamic";
@@ -63,16 +64,18 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
     });
   }
+  const scoped = scopedToolsMessage(cliId);
+  if (scoped) return Response.json({ error: scoped }, { status: 400 });
   const { spec, binPath } = resolved;
 
   const history = (body.history ?? []).slice(-8);
   const convo = history.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n");
   const pageLine = pageContext
-    ? `\n\nCURRENT PAGE (the user is looking at this right now): ${pageContext}\nWhen the user's message is ambiguous ("this", "it", "apply", "evaluate this", "draft it"), assume it refers to what's on the current page.`
+    ? `\n\nCURRENT PAGE (the user is looking at this right now): ${untrusted("page", String(pageContext))}\nWhen the user's message is ambiguous ("this", "it", "apply", "evaluate this", "draft it"), assume it refers to what's on the current page.`
     : "";
   const memory = readMemory();
   const memoryLine = memory.trim()
-    ? `\n\nWHAT YOU KNOW ABOUT THE USER (persistent memory — carries across sessions and CLIs):\n${memory.trim()}`
+    ? `\n\nWHAT YOU KNOW ABOUT THE USER (persistent memory — carries across sessions and CLIs):\n${untrusted("memory", memory.trim())}`
     : "\n\n(No persistent memory about the user yet — learn and use <<remember:>> as you go.)";
   // Hand the assistant the SAME authoritative setup signal the home screen reads
   // (doctorState), so it never re-asks for a file that already exists (disc#7) —
@@ -92,22 +95,7 @@ export async function POST(req: Request) {
   const isClaude = cliId === "claude";
   // allowedTools must be COMMA-separated; disallowedTools is the hard guardrail
   // so the advisor can read (and WebFetch) but never blind-writes or shells out.
-  const args = isClaude
-    ? [
-        "-p",
-        prompt,
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--include-partial-messages",
-        "--permission-mode",
-        "acceptEdits",
-        "--allowedTools",
-        "Read,WebFetch,Glob,Grep",
-        "--disallowedTools",
-        "Bash,Write,Edit,NotebookEdit,Task",
-      ]
-    : spec.args(prompt);
+  const args = ["-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages", ...claudeToolArgs("assistant")];
 
   const child = spawn(binPath, args, { cwd: jobberRoot(), env: process.env });
 
