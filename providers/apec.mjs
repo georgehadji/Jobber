@@ -140,7 +140,7 @@ export default {
    * Fetches and normalizes postings from the apec.fr rechercheOffre webservice.
    * @param {{ name?: string, apec?: any }} entry
    * @param {{ fetchJson: (url: string, opts?: object) => Promise<any>, maxPages?: number, sleep?: (ms: number) => Promise<void> }} ctx
-   * @returns {Promise<Array<{title: string, url: string, company: string, location: string, description?: string, postedAt?: number, salary?: object}>>}
+   * @returns {Promise<Array<{title: string, url: string, company: string, location: string, description?: string, postedAt?: number, salary?: {min: number, max: number, currency: string}}>>}
    */
   async fetch(entry, ctx) {
     const { keywords: ownKeywords, pageSize, typeClient } = parseApecConfig(entry);

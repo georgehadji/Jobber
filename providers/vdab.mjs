@@ -204,7 +204,7 @@ export default {
      * rotates that key, re-derive it once from the live bundle and retry.
      *
      * @param {string} url
-     * @param {object} requestOpts
+     * @param {{ headers?: Record<string, string>, [key: string]: any }} requestOpts
      */
     const keyedFetchJson = async (url, requestOpts) => {
       const opts = {

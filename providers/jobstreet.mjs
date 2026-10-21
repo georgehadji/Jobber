@@ -141,7 +141,7 @@ export function parseJobstreetItem(item, origin, fallbackCompany) {
 /**
  * Build the v5 search URL with query parameters.
  * @param {string} origin — scheme + hostname
- * @param {object} params
+ * @param {{ siteKey?: string, keywords?: string, location?: string, pageSize?: number, page?: number }} params
  * @returns {string}
  */
 function buildSearchUrl(origin, params) {
