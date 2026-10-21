@@ -3,6 +3,8 @@ import { extractForm, type ApplyField, type ExtractedForm } from "./extract";
 import { parseGreenhouse, fetchGreenhouseSchema } from "./greenhouse";
 import { statusBlock, dismissConsent, tryApplyTrigger, dropNewTabs, classifyEmpty, captchaWarning, multiStepInfo, verifyFill, type ApplyIssue } from "./diagnose";
 import { agentInterpretForm } from "./agent-interpret";
+import { keystrokeSafe } from "./submit-guard";
+import { assertPublicWebUrl, siteOf } from "@/lib/net-guard";
 
 /** The frame with the most interactive controls — where the agentic interpreter
  *  should look when deterministic extraction found nothing usable. */
@@ -17,6 +19,30 @@ async function richestControlFrame(page: Page): Promise<Frame> {
     }
   }
   return best;
+}
+
+/** Keep the headed browser off private destinations: every top-level or framed
+ *  document request is re-checked (covers redirects and links on a hostile page),
+ *  not just the URL the user typed. Verdicts are cached per host. */
+async function guardNavigations(context: BrowserContext): Promise<void> {
+  const verdicts = new Map<string, Promise<boolean>>();
+  await context.route("**/*", async (route) => {
+    try {
+      const req = route.request();
+      if (req.resourceType() !== "document") return await route.continue();
+      const u = new URL(req.url());
+      if (u.protocol === "data:" || u.protocol === "blob:" || u.protocol === "about:") return await route.continue();
+      let verdict = verdicts.get(u.host);
+      if (!verdict) {
+        verdict = assertPublicWebUrl(req.url()).then(() => true, () => false);
+        verdicts.set(u.host, verdict);
+      }
+      if (await verdict) return await route.continue();
+      await route.abort("blockedbyclient");
+    } catch {
+      await route.abort("failed").catch(() => {});
+    }
+  });
 }
 
 /** Escape a value for use inside a double-quoted CSS attribute selector.
@@ -110,7 +136,12 @@ async function enrichFromAts(url: string, fields: ApplyField[]): Promise<void> {
 // so we can: extract → (user verifies pre-filled answers) → FILL the real form →
 // bringToFront() for the human to submit it themselves. Headed (channel:chrome) =
 // the user's own Chrome on their residential IP (best ATS success); never submits.
-type Session = { id: string; url: string; title: string; fields: ApplyField[]; context: BrowserContext; page: Page; frame: Frame; createdAt: number; formShot?: string };
+type Session = { id: string; url: string; title: string; fields: ApplyField[]; context: BrowserContext; page: Page; frame: Frame; createdAt: number; formShot?: string; sites: Set<string> };
+
+/** Sites (page + embedded frames) a session may type into: the user's answers and CV never follow a redirect elsewhere. */
+function currentSites(page: Page): Set<string> {
+  return new Set([siteOf(page.url()), ...page.frames().map((f) => siteOf(f.url()))].filter(Boolean));
+}
 
 declare global {
   // eslint-disable-next-line no-var
@@ -174,11 +205,13 @@ async function nudgeScroll(page: Page): Promise<void> {
 }
 
 export async function openSession(url: string, cliId?: string, forceAgent?: boolean, noApplyBtn?: boolean): Promise<{ id: string; title: string; fields: ApplyField[]; shots: string[]; issues: ApplyIssue[]; needsDrive?: boolean }> {
+  await assertPublicWebUrl(url); // SSRF: no loopback / LAN / metadata targets
   prune();
   if (globalThis.__coIdleTimer) clearTimeout(globalThis.__coIdleTimer); // someone's active
   const browser = await headedBrowser();
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   context.setDefaultTimeout(8000); // no single action hangs the whole open/fill
+  await guardNavigations(context);
   const page = await context.newPage();
   const abort = async (msg: string): Promise<never> => {
     await context.close().catch(() => {});
@@ -262,7 +295,7 @@ export async function openSession(url: string, cliId?: string, forceAgent?: bool
     if (cliId && why.code === "no-form") {
       const id = `apply-${crypto.randomUUID()}`;
       const title = form.title || (await page.title().catch(() => "")) || "Application";
-      SESSIONS.set(id, { id, url, title, fields: [], context, page, frame, createdAt: Date.now(), formShot: shots[shots.length - 1] });
+      SESSIONS.set(id, { id, url, title, fields: [], context, page, frame, createdAt: Date.now(), formShot: shots[shots.length - 1], sites: currentSites(page) });
       return { id, title, fields: [], shots, issues: [], needsDrive: true };
     }
     return abort(why.message);
@@ -278,7 +311,7 @@ export async function openSession(url: string, cliId?: string, forceAgent?: bool
   if (unlabeled > 0) issues.push({ level: "warn", code: "unlabeled-fields", message: `${unlabeled} field${unlabeled > 1 ? "s" : ""} couldn't be labelled cleanly — double-check ${unlabeled > 1 ? "them" : "it"} before submitting.` });
 
   const id = `apply-${crypto.randomUUID()}`;
-  SESSIONS.set(id, { id, url, title: form.title, fields: form.fields, context, page, frame, createdAt: Date.now(), formShot: shots[shots.length - 1] });
+  SESSIONS.set(id, { id, url, title: form.title, fields: form.fields, context, page, frame, createdAt: Date.now(), formShot: shots[shots.length - 1], sites: currentSites(page) });
   return { id, title: form.title, fields: form.fields, shots, issues };
 }
 
@@ -291,8 +324,10 @@ export function getSession(id: string): Session | undefined {
 export async function newDrivePage(url: string): Promise<{ page: Page; context: BrowserContext }> {
   if (globalThis.__coIdleTimer) clearTimeout(globalThis.__coIdleTimer);
   const browser = await headedBrowser();
+  await assertPublicWebUrl(url);
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   context.setDefaultTimeout(8000);
+  await guardNavigations(context);
   const page = await context.newPage();
   await gotoResilient(page, url);
   await dismissConsent(page).catch(() => {});
@@ -331,6 +366,7 @@ export async function finalizeDrivenSession(id: string, cliId?: string): Promise
   }
   if (!looksLikeApplicationForm(form)) return null;
   s.frame = frame;
+  s.sites = currentSites(s.page);
   s.fields = form.fields;
   if (form.title) s.title = form.title;
   const issues: ApplyIssue[] = [{ level: "info", code: "ai-navigated", message: "AI navigated to reach this application form on your machine — review the fields before submitting." }];
@@ -366,6 +402,11 @@ export async function fillSession(
 ): Promise<{ steps: FillStep[]; navigated: boolean; issues: ApplyIssue[] }> {
   const s = SESSIONS.get(id);
   if (!s) throw new Error("apply session not found (it may have expired)");
+  // The form was extracted on these sites. If the page has since moved to another site (redirect,
+  // injected link), do not type answers or attach the CV there.
+  if (!s.sites.has(siteOf(s.page.url())) || !s.sites.has(siteOf(s.frame.url()))) {
+    throw new Error("page left the application site - not filling it");
+  }
   const byId = new Map(fieldsMeta.map((f) => [f.id, f]));
   const steps: FillStep[] = [];
   // Belt-and-suspenders: if filling ever navigates the page (i.e. something got
@@ -434,8 +475,10 @@ export async function fillSession(
         await loc.scrollIntoViewIfNeeded().catch(() => {});
         await loc.click();
         await s.page.waitForTimeout(150);
-        await loc.pressSequentially(value, { delay: 15 }).catch(async () => {
-          await s.page.keyboard.type(value);
+        // Keystrokes: strip line breaks so a typed Enter can never submit the form.
+        const typed = keystrokeSafe(value);
+        await loc.pressSequentially(typed, { delay: 15 }).catch(async () => {
+          await s.page.keyboard.type(typed);
         });
         await s.page.waitForTimeout(300);
         const esc = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

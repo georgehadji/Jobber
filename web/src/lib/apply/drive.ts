@@ -4,7 +4,8 @@ import { resolveCli } from "@/lib/clis";
 import { jobberRoot } from "@/lib/jobber";
 import { dropNewTabs } from "./diagnose";
 import type { DriveStep } from "./issue";
-import { isSubmitLabel } from "./submit-guard";
+import { refuseClick, isValidRef, keystrokeSafe, type ClickDescriptor } from "./submit-guard";
+import { siteOf } from "@/lib/net-guard";
 
 export type { DriveStep };
 
@@ -134,6 +135,10 @@ ANSWERS (match by the field's label):
 ${answersBlock || "(no answers provided — just reach/observe)"}`;
   let resumeId: string | null = null;
   let lastUrl = page.url();
+  // Sites (top frame + embedded ATS frames) the run started on. In a "full" run the
+  // user's answers are typed into the page, so they must never follow a redirect
+  // or an injected link to another site.
+  const allowedSites = new Set([siteOf(page.url()), ...page.frames().map((f) => siteOf(f.url())).filter(Boolean)]);
 
   const stopVerb = goal === "reach" ? '{"action":"reached_form"}            STOP — the fillable application form is now visible' : '{"action":"done"}                    STOP — every answer is filled (you NEVER submit; the human does)';
   for (let turn = 1; turn <= budget; turn++) {
@@ -186,17 +191,47 @@ Reply ONE action JSON.`;
     let detail = "";
     let note = "";
     try {
-      const loc = act.ref ? frame.locator(`[data-co-ref="${act.ref}"]`).first() : null;
+      // act.ref comes from the model: it must be a ref we minted, never free text in a selector.
+      const loc = isValidRef(act.ref) ? frame.locator(`[data-co-ref="${act.ref}"]`).first() : null;
+      // Typing/selecting carries the user's answers: only on the site the run started on.
+      const offSite = goal === "full" && !allowedSites.has(siteOf(page.url()));
+      if (offSite && (act.action === "type" || act.action === "select")) {
+        const s: DriveStep = { turn, action: "stuck", detail: "page left the application site", thumb: await shot() };
+        steps.push(s);
+        emit(s);
+        return { reached: false, turns: turn, reason: "page left the application site", steps };
+      }
       if (act.action === "click" && loc) {
-        const innerText = (await loc.innerText().catch(() => "")) || "";
-        const ariaLabel = (await loc.getAttribute("aria-label").catch(() => "")) || "";
-        const placeholder = (await loc.getAttribute("placeholder").catch(() => "")) || "";
-        const valueAttr = (await loc.getAttribute("value").catch(() => "")) || "";
-        const nameAttr = (await loc.getAttribute("name").catch(() => "")) || "";
-        const txt = innerText || ariaLabel || placeholder || valueAttr || nameAttr;
-        if (isSubmitLabel(innerText, ariaLabel, placeholder, valueAttr, nameAttr)) {
-          note = "refused to click a submit control (the human submits)";
-          detail = `blocked submit "${txt.slice(0, 40)}"`;
+        const d: ClickDescriptor | null = await loc
+          .evaluate((el): ClickDescriptor => {
+            const t = el.tagName.toLowerCase();
+            const type = (el.getAttribute("type") || "").toLowerCase();
+            const form = (el as HTMLButtonElement).form;
+            const labelledBy = (el.getAttribute("aria-labelledby") || "")
+              .split(/\s+/)
+              .map((id) => document.getElementById(id)?.textContent || "")
+              .join(" ");
+            return {
+              submitLike: type === "submit" || type === "image" || (t === "button" && !["button", "reset", "menu"].includes(type) && !!form),
+              isLink: t === "a",
+              texts: [
+                (el as HTMLElement).innerText,
+                el.getAttribute("aria-label"),
+                el.getAttribute("placeholder"),
+                el.getAttribute("value"),
+                el.getAttribute("name"),
+                el.getAttribute("title"),
+                el.getAttribute("alt"),
+                labelledBy,
+              ],
+            };
+          })
+          .catch(() => null);
+        const txt = (d?.texts.find((t) => !!t && t.trim()) || "") as string;
+        const refusal = d ? refuseClick(d) : "control could not be inspected";
+        if (refusal) {
+          note = `refused to click: ${refusal}`;
+          detail = `blocked click "${txt.slice(0, 40)}"`;
         } else {
           detail = `click "${txt.slice(0, 40)}"`;
           await loc.scrollIntoViewIfNeeded().catch(() => {});
@@ -206,7 +241,8 @@ Reply ONE action JSON.`;
         detail = `type into ${act.ref}`;
         await loc.fill(act.text || "").catch(async () => {
           await loc.click();
-          await page.keyboard.type(act.text || "");
+          // Keystrokes, not fill: a line break here would press Enter and could submit the form.
+          await page.keyboard.type(keystrokeSafe(act.text || ""));
         });
       } else if (act.action === "select" && loc) {
         detail = `select "${act.value}"`;

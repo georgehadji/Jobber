@@ -1,4 +1,5 @@
 import { openSession } from "@/lib/apply/session";
+import { assertPublicWebUrl } from "@/lib/net-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,11 @@ export async function POST(req: Request) {
   }
   const url = (body.url ?? "").trim();
   if (!/^https?:\/\//i.test(url)) return Response.json({ error: "A valid application URL (https://…) is required" }, { status: 400 });
+  try {
+    await assertPublicWebUrl(url);
+  } catch (e) {
+    return Response.json({ error: `Can't open that address: ${e instanceof Error ? e.message : "not allowed"}` }, { status: 400 });
+  }
   try {
     const session = await openSession(url, body.cliId, body.agent, body._noApplyBtn);
     return Response.json(session);
