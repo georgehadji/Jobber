@@ -1,6 +1,6 @@
 {
   "name": "@santifer/jobber",
-  "version": "1.24.0",
+  "version": "1.25.0",
   "description": "One-command installer for Jobber — the AI-powered job search pipeline built on Claude Code.",
   "bin": {
     "jobber": "bin/cli.mjs"
