@@ -27,10 +27,13 @@ jobs:
       # manual dispatch (to recover from a failed publish). Runs in the same job
       # because a release created via GITHUB_TOKEN does not trigger separate
       # `on: release` workflows.
+      # Opt-in: publishing needs the repository variable NPM_PUBLISH=true, set
+      # only where this repo is a trusted publisher for the scaffolder's npm
+      # scope. Without it, releases are tagged but nothing is published.
       - uses: actions/checkout@v7
         if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
       - uses: actions/setup-node@v7
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ vars.NPM_PUBLISH == 'true' && (steps.release.outputs.release_created || github.event_name == 'workflow_dispatch') }}
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
@@ -38,10 +41,10 @@ jobs:
       # id-token against the trusted publisher configured on npmjs.com — no token.
       # setup-node ships an older npm, so upgrade before publishing.
       - name: Upgrade npm for trusted publishing
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ vars.NPM_PUBLISH == 'true' && (steps.release.outputs.release_created || github.event_name == 'workflow_dispatch') }}
         run: npm install -g npm@latest
       - name: Publish scaffolder to npm
-        if: ${{ steps.release.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+        if: ${{ vars.NPM_PUBLISH == 'true' && (steps.release.outputs.release_created || github.event_name == 'workflow_dispatch') }}
         run: npm publish --provenance --access public
         working-directory: scaffolder
 
