@@ -101,12 +101,14 @@ function pluginsConfigPath(root) {
   return path.join(root, 'config', 'plugins.yml');
 }
 
+/** @typedef {{ plugins?: Record<string, any> }} PluginConfig  Parsed config/plugins.yml. */
+
 /**
  * Read config/plugins.yml. Fail-open to {} if absent or malformed — exactly the
  * graceful posture scan.mjs uses for its own config. js-yaml is imported lazily
  * so this module stays side-effect-free at import time.
  * @param {string} root
- * @returns {Promise<object>}
+ * @returns {Promise<PluginConfig>}
  */
 export async function loadPluginConfig(root) {
   const file = pluginsConfigPath(root);
@@ -114,7 +116,7 @@ export async function loadPluginConfig(root) {
   try {
     const yaml = await import('js-yaml');
     const parsed = yaml.load(readFileSync(file, 'utf8'));
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    return parsed && typeof parsed === 'object' ? /** @type {PluginConfig} */ (parsed) : {};
   } catch (err) {
     warnSkip('config/plugins.yml', `unreadable, ignoring — ${err.message}`);
     return {};
@@ -326,7 +328,7 @@ export function pluginRoots(root) {
  * Is a plugin enabled? Requires config/plugins.yml { plugins: { <id>: { enabled: true } } }
  * AND every requiredEnv var present in process.env.
  * @param {PluginManifestNormalized} manifest
- * @param {object} cfg   Parsed config/plugins.yml.
+ * @param {PluginConfig} cfg   Parsed config/plugins.yml.
  * @returns {{ enabled: boolean, configured: boolean, missingEnv: string[] }}
  */
 export function pluginStatus(manifest, cfg) {
@@ -340,7 +342,7 @@ export function pluginStatus(manifest, cfg) {
  * Per-plugin non-secret settings block from config/plugins.yml (e.g.
  * { actor: "...", database_id: "..." }). Secrets never live here.
  * @param {string} id
- * @param {object} cfg
+ * @param {PluginConfig} cfg
  */
 export function pluginSettings(id, cfg) {
   const entry = cfg?.plugins?.[id];
