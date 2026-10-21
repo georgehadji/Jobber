@@ -3068,7 +3068,7 @@ try {
     '2026-07-06',
   );
   const cols = withBody.split('\t');
-  if (cols.length === 12 && /^[0-9a-f]{16}$/.test(cols[7]) && cols[11] === 'acme') {
+  if (cols.length === 17 && /^[0-9a-f]{16}$/.test(cols[7]) && cols[11] === 'acme') {
     pass('formatScanHistoryRow appends a fingerprint column for described offers');
   } else {
     fail(`formatScanHistoryRow columns: ${cols.length}, fingerprint=${JSON.stringify(cols[7])}`);
@@ -3078,7 +3078,7 @@ try {
     '2026-07-06',
   );
   const cols2 = withoutBody.split('\t');
-  if (cols2.length === 12 && cols2[7] === '' && cols2[11] === 'acme') {
+  if (cols2.length === 17 && cols2[7] === '' && cols2[11] === 'acme') {
     pass('formatScanHistoryRow leaves the fingerprint empty when no description is available');
   } else {
     fail(`formatScanHistoryRow (no body) columns: ${cols2.length}, last=${JSON.stringify(cols2[7])}`);

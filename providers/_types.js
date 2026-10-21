@@ -53,6 +53,23 @@
  *                               known bound (min===max), while agentic-jobs.mjs
  *                               leaves it null to preserve "no upper bound
  *                               published" as distinct from "upper equals lower".
+ * @property {{source: string, ageDays: number, repostCount: (number|null), concurrentCount: (number|null), fakeFreshness: boolean}} [postingHistory]
+ *                               External posting-history FACTS a source observed
+ *                               across every board it crawls (freehire.mjs is the
+ *                               reference implementation): days since the source
+ *                               first recorded the posting, distinct postings of the
+ *                               same role it has seen, how many are open at once,
+ *                               and whether the posting date was restated. Facts
+ *                               only — never a classifier label or verdict. Unknown
+ *                               counts are null, never 0. Omit the field when the
+ *                               source exposes no history. Persisted by scan.mjs to
+ *                               scan-history cols 14-17 (1-based) and a `history:` pipeline
+ *                               segment.
+ * @property {{source: string, id: string}} [externalRef]
+ *                               The source's own stable id for the posting (e.g. a
+ *                               freehire public_slug), for tooling that must address
+ *                               it later without a URL lookup. Persisted to
+ *                               scan-history col 13 (1-based) as `source:id`.
  * @property {number} [trustScore] 0-100 trust score from _trust-validator.mjs.
  * @property {string[]} [trustFlags] Flags raised by trust validation (e.g.
  *                                   'invalid_url', 'suspicious_domain').

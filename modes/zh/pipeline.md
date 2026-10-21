@@ -1,6 +1,6 @@
 # 模式: pipeline — 待处理 URL 收件箱 (第二大脑)
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
 
 用于批量处理记录在 `data/pipeline.md` 中的职位 URL 链接。候选人可以随时向待处理列表中追加抓取的岗位链接，然后运行 `/jobber pipeline` 一键自动化评估所有待投递机会。
 

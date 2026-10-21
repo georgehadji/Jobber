@@ -1,6 +1,6 @@
 # Modo: pipeline -- Bandeja de URLs (Second Brain)
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
 
 Procesa las URLs de ofertas acumuladas en `data/pipeline.md`. El candidato añade URLs cuando quiere y luego lanza `/jobber pipeline` para procesarlas todas de una vez.
 

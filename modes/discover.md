@@ -38,7 +38,16 @@ reusable tool that feeds the scanner.
       workday: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
     - name: Salesforce
       workday: { tenant: salesforce, site: External_Career_Site }  # instance auto-probed
+    - name: Valero Energy
+      website: www.valero.com/careers   # careers page scanned for ANY supported ATS (→ Taleo)
   ```
+
+  `website` turns on the careers-page scan: the page, `/careers` and `/jobs` are
+  fetched (https only, redirects followed by hand and validated hop by hop), and
+  every link is routed through the same provider `detect()` chain `scan.mjs` uses —
+  so any auto-detecting provider (UKG, Taleo, Paycom, Dayforce, SmartRecruiters,
+  Workable, …) is found, not just Greenhouse/Ashby/Lever. A JS-rendered page that
+  never puts the ATS link in its HTML cannot be resolved this way.
 
 - `portals.yml` — dedupe target and write destination (user layer). Honors the
   `JOBBER_PORTALS` env override for scratch/testing.
@@ -66,18 +75,20 @@ node discover-ats.mjs Stripe Ramp Mollie          # names as positional args
 node discover-ats.mjs --in companies.yml --summary # human-readable table
 node discover-ats.mjs --in companies.yml --vendors gh,ashby  # restrict probes
 node discover-ats.mjs --in companies.yml --vendors workday   # Workday only
+node discover-ats.mjs --in companies.yml --vendors website   # careers-page scan only
 ```
 
-Vendor keywords for `--vendors`: `gh`, `ashby`, `lever` (slug-resolvable) and
-`workday` (fires only for companies carrying a hint). Default is all four.
+Vendor keywords for `--vendors`: `gh`, `ashby`, `lever` (slug-resolvable),
+`workday` (fires only for companies carrying a hint) and `website` (fires only
+for companies carrying `website:`). Default is all five.
 
 Parse the JSON envelope:
 
 | Key | Contents |
 |-----|----------|
 | `metadata` | Counts (`resolved`, `unresolved`, `duplicatesSkipped`, `fresh`, `freshWritten`), `written` flag, `previewOnly`, `portalsPath`, `warnings` |
-| `resolved` | Per company: `name`, `vendor`, `slug`, `careers_url`, `api` (Greenhouse only), `provider` (Workday only), `jobCount` |
-| `unresolved` | Per company: `name`, `triedVendors`, `reason`, and (when present) `emptyBoards`, `errors`, `skippedUnsafeSlug`, `website` |
+| `resolved` | Per company: `name`, `vendor`, `slug`, `careers_url`, `api` (Greenhouse only), `provider` (Workday only), `jobCount`, `via: website` (found by the careers-page scan) |
+| `unresolved` | Per company: `name`, `triedVendors`, `reason`, and (when present) `emptyBoards`, `errors`, `skippedUnsafeSlug`, `website`, `selfHostedHint` (`{provider, careers_url}` — the page runs Radancy/Phenom/Jibe/Teamtailor on the company's own domain; configure `provider:` + `api:` by hand) |
 | `pendingEntries` | The rendered YAML block — present whenever nothing was written (i.e. on a preview run, the default) so the user can paste it manually |
 
 **Default is preview.** Always show the user the `pendingEntries` / resolved

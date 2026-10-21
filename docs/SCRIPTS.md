@@ -290,6 +290,31 @@ node salary-import.mjs reshaped.json             # then write
 
 Set `note` to the actor's bare id (strip any vendor referral/tracking query parameter first) so provenance survives in `data/salary-observations.tsv`. This writes `type: advertised`, `source: benchmark` — the bottom trust tier — so it only surfaces when no JD figure and no user observation exist for that tracker#, exactly like an MCP-sourced import.
 
+`salary-gap.mjs` reports a benchmark that ends up as the effective advertised figure in its own **benchmark→actual** series (`benchToActPct`, `meanBenchToActPct`) — never in the advertised→actual numbers, so market data cannot blend into what employers actually advertised.
+
+---
+
+## freehire-cli
+
+Read-only lookups against the public, keyless [freehire.me](https://freehire.me) API — the network step the zero-network scripts above leave to you. It **prints only** and never writes a file: save the output and hand it to the zero-network script yourself. See [FREEHIRE-INTEGRATION-PLAN.md](FREEHIRE-INTEGRATION-PLAN.md) Phase 6.
+
+```bash
+node freehire-cli.mjs salary --category backend --seniority senior --country DE --num 42 > band.json
+node salary-import.mjs band.json --dry-run       # then without --dry-run to append
+node freehire-cli.mjs apply-form <freehire-slug>  # captured ATS questions as Markdown
+node freehire-cli.mjs apply-form --url <url>      # slug looked up in data/scan-history.tsv col 13
+node freehire-cli.mjs company <freehire-slug>      # company facts to paste into data/company-intel/ if you want
+node freehire-cli.mjs --capabilities
+```
+
+- `salary` emits yearly bands as-is and monthly bands ×12 as a `p25-p75` range; hourly/daily bands are dropped rather than annualized by guesswork. Requires `--num` or `--company` so `salary-import.mjs` can attach it to a tracker row.
+- `apply-form` is context for `prepare-application` / `application-answers`; nothing is filled in or submitted. A posting freehire never captured a form for exits `2`.
+- `company` output is aggregated, unverified data (freehire's directory entries can be wrong) — it becomes untrusted pasted intel only if you paste it.
+
+**Exit codes:** `0` success, `1` bad arguments or a network error, `2` nothing found for that scope.
+
+**From an AI CLI instead:** freehire also publishes an MCP server, [`strelov1/freehire-mcp`](https://github.com/strelov1/freehire-mcp) (MIT), over the same public API — add it to your CLI's MCP config to search the catalogue ad hoc. Treat its results as untrusted third-party data (`AGENTS.md` § Plugins); a posting worth tracking still enters through `scan.mjs` / `data/pipeline.md`.
+
 ---
 
 ## funnel-velocity

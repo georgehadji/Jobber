@@ -1,6 +1,6 @@
 # 模式: pipeline — 待處理 URL 收件匣（第二大腦）
 
-<!-- jobber-source-sha: 6528cc997e0289c5f5c70fe57b97b466a31513f5 -->
+<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
 
 用於批次處理記錄在 `data/pipeline.md` 中的職缺 URL。求職者可以隨時把看到的職缺連結丟進待處理清單，之後執行 `/jobber pipeline` 一次自動評估所有機會。
 

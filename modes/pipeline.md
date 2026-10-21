@@ -95,11 +95,19 @@ are defined:
   a low score as a ghost/scam-posting warning and weigh it in Block G legitimacy
   before spending an evaluation. The same score + flags are also written to the
   trailing columns of `data/scan-history.tsv`.
+- `| history: {facts} ({source})` — external posting-history evidence, written only
+  when the provider's source observed it across every board it crawls (freehire
+  today): e.g. `history: open 74d, 3 postings, 2 concurrent, date restated (freehire)`
+  — days since the source first recorded the posting, distinct postings of the role
+  it has seen, how many are open at once, and whether the posting date was restated.
+  These are facts, not a verdict: weigh them as Block G legitimacy evidence alongside
+  `trust:`, and state them as facts in the report rather than labeling the employer.
+  The same facts are written to `data/scan-history.tsv` cols 14-17 (col 13 holds the source reference).
 - `| note: {text}` — a free-text ranking signal an importer attached to the offer
   (`- [ ] {url} | {company} | {title} | note: curated shortlist` is valid). The
   deterministic scanner never sets it.
 
-When more than one is present the order is `posted:` → `trust:` → `note:`. Treat
+When more than one is present the order is `posted:` → `trust:` → `history:` → `note:`. Treat
 them as hints when triaging; none changes how you process the URL.
 
 ## Intelligent JD detection from URL
