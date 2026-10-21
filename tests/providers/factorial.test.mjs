@@ -53,6 +53,8 @@ try {
   check(jobs[0].location === '' && jobs[1].location === 'Remote', 'data-is-remote=true → "Remote" (control: false → empty)');
   check(jobs[0].company === 'Muffin', 'company = entry name');
   check(mod.parseFactorialListing('<html>no list</html>', H, 'M').length === 0, 'no list items → []');
+  const dbl = mod.parseFactorialListing(li(`https://${H}/job_posting/escaped-123`, 'R&amp;D &amp;lt;Lead&amp;gt;'), H, 'M');
+  check(dbl[0]?.title === 'R&D &lt;Lead&gt;', `entities decoded once — &amp;lt; stays "&lt;", never "<" (got ${JSON.stringify(dbl[0]?.title)})`);
 
   const calls = [];
   const ctx = { fetchText: async (url, o) => { calls.push({ url, o }); return html; } };

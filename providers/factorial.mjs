@@ -1,6 +1,8 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
+import { decodeEntities } from './_html-entities.mjs';
+
 // Factorial (FactorialHR) provider — career sites at <tenant>.factorial.<tld> or
 // <tenant>.factorialhr.<tld> (the TLD follows the tenant's country).
 // Ported from freehire (github.com/strelov1/freehire,
@@ -42,13 +44,8 @@ export function resolveHost(entry) {
 
 /** @param {string} s */
 function cleanText(s) {
-  return s
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+  // Single-pass decode: chained replaces turned `&amp;lt;` into `<` (CodeQL double-unescape).
+  return decodeEntities(s.replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim();
 }

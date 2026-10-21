@@ -1,6 +1,8 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
+import { decodeEntities } from './_html-entities.mjs';
+
 // Odoo (website_hr_recruitment) provider — ONLY Odoo-hosted careers sites at
 // <tenant>.odoo.com. Self-hosted Odoo sites live on arbitrary company domains
 // and cannot be recognised or SSRF-checked safely, so they are out of scope.
@@ -43,14 +45,8 @@ export function resolveListUrl(entry) {
 
 /** @param {string} s */
 function cleanText(s) {
-  return s
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
+  // Single-pass decode: chained replaces turned `&amp;lt;` into `<` (CodeQL double-unescape).
+  return decodeEntities(s.replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim();
 }

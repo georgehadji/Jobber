@@ -57,7 +57,8 @@ const response = (status, body = '', location = null) => ({
   else fail(`extractCandidateUrls kept a non-https link: ${JSON.stringify(urls)}`);
   const embed = extractCandidateUrls('<script src="https://boards.greenhouse.io/embed/job_board/js?for=acmeco"></script>', 'https://acme.com/');
   const bareEmbed = extractCandidateUrls('<script src="https://boards.greenhouse.io/embed/job_board/js"></script>', 'https://acme.com/');
-  if (embed.includes('https://job-boards.greenhouse.io/acmeco') && !bareEmbed.some((u) => u.startsWith('https://job-boards.'))) {
+  const isGhBoard = (u, slug) => { const p = new URL(u); return p.hostname === 'job-boards.greenhouse.io' && (slug === undefined || p.pathname === `/${slug}`); };
+  if (embed.some((u) => isGhBoard(u, 'acmeco')) && !bareEmbed.some((u) => isGhBoard(u))) {
     pass('legacy Greenhouse board and embed links become job-boards.greenhouse.io/<slug>; an embed without for= is left alone');
   } else fail(`greenhouse canonicalization = ${JSON.stringify({ embed, bareEmbed })}`);
 }

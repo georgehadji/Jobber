@@ -51,6 +51,8 @@ try {
   check(jobs[0].location === 'Hakuba, Kitaazumi, Japan' && jobs[1].location === 'Hakuba, Japan', 'location = addressLocality + addressCountry');
   check(jobs[0].company === 'HHG' && !('description' in jobs[0]) && !('postedAt' in jobs[0]), 'company = entry name; no description/postedAt (list-only)');
   check(mod.parseOdooListing('<html></html>', 'https://x.odoo.com/jobs', 'X').length === 0, 'no cards → []');
+  const dbl = mod.parseOdooListing(card('/jobs/escaped-12', 'R&amp;D &amp;lt;Lead&amp;gt;', 'Tokyo', 'Japan'), 'https://hhgjapan.odoo.com/jobs', 'HHG');
+  check(dbl[0]?.title === 'R&D &lt;Lead&gt;', `entities decoded once — &amp;lt; stays "&lt;", never "<" (got ${JSON.stringify(dbl[0]?.title)})`);
 
   const calls = [];
   const ctx = { fetchText: async (url, o) => { calls.push({ url, o }); return html; } };
