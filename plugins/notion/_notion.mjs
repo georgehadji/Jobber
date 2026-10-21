@@ -26,7 +26,7 @@ const MAX = 1900; // safety margin under Notion's 2000-char rich_text limit
 let _states;
 function loadStates() {
   if (_states) return _states;
-  const doc = yaml.load(readFileSync(STATES_PATH, 'utf-8'));
+  const doc = /** @type {any} */ (yaml.load(readFileSync(STATES_PATH, 'utf-8')));
   const labels = [], aliasMap = {};
   for (const s of doc.states) {
     labels.push(s.label);

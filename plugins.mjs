@@ -192,6 +192,7 @@ function findManifest(id) {
 // the user's other plugins or non-secret settings).
 function setEnabled(id, on, settings) {
   const file = path.join(ROOT, 'config', 'plugins.yml');
+  /** @type {any} */
   let cfg = {};
   if (existsSync(file)) { try { cfg = yaml.load(readFileSync(file, 'utf8')) || {}; } catch {} }
   if (!cfg.plugins || typeof cfg.plugins !== 'object') cfg.plugins = {};
