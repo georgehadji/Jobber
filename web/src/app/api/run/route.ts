@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory } from "@/lib/jobber";
+import { validateRun } from "@/lib/core/run-input";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
 
 export const runtime = "nodejs";
@@ -74,6 +75,10 @@ export async function POST(req: Request) {
   const { kind = "evaluate", input, cliId } = body;
   if (!input || !cliId) {
     return new Response(JSON.stringify({ error: "input and cliId required" }), { status: 400 });
+  }
+  const invalid = validateRun(kind, input);
+  if (invalid) {
+    return new Response(JSON.stringify({ error: invalid }), { status: 400, headers: { "Content-Type": "application/json" } });
   }
   const resolved = resolveCli(cliId);
   if (!resolved) {
