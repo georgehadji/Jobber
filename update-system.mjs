@@ -160,6 +160,7 @@ const SYSTEM_PATHS = [
   'lib/company-name.mjs',
   'lib/posting-reality.mjs',
   'lib/ats-detect.mjs',
+  'lib/employer-board.mjs',
   'lib/test-discovery.mjs',
   'lib/script-outcome.mjs',
   'img-to-pdf.mjs',

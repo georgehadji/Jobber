@@ -1,6 +1,6 @@
 # Mode : pipeline -- Inbox d'URLs (Second Brain)
 
-<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
+<!-- jobber-source-sha: 121804185bbf0c1b2c7c5e83cfcdb98c90beaddd -->
 
 Traite les URLs d'offres accumulees dans `data/pipeline.md`. Le candidat ajoute des URLs quand il veut et lance ensuite `/jobber pipeline` pour toutes les traiter d'un coup.
 

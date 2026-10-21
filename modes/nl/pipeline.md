@@ -1,6 +1,6 @@
 # Modus: pipeline - URL-inbox (tweede brein)
 
-<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
+<!-- jobber-source-sha: 121804185bbf0c1b2c7c5e83cfcdb98c90beaddd -->
 
 Processen bieden URL's aan die zijn verzameld in `data/pipeline.md`. De kandidaat voegt URL's toe wanneer hij maar wil en voert vervolgens `/jobber pipeline` uit om ze allemaal in één keer te verwerken.
 

@@ -1,6 +1,6 @@
 # Mod: pipeline — İlan Gelen Kutusu
 
-<!-- jobber-source-sha: 8f959966b3b49ff63b6af16d8fe8b4b92773d350 -->
+<!-- jobber-source-sha: 121804185bbf0c1b2c7c5e83cfcdb98c90beaddd -->
 
 `data/pipeline.md` dosyasına biriktirilen iş ilanı URL'lerini işler. İstediğin zaman URL ekle, hazır olduğunda `/jobber pipeline` komutunu çalıştır.
 

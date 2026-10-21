@@ -43,6 +43,7 @@ import { loadProviders, resolveProvider } from './providers/_registry.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
 import { fingerprintText, findCrossListings } from './fingerprint-core.mjs';
+import { indexEmployerBoards, crossCheckEmployerBoards } from './lib/employer-board.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
 import { normalizeCompanyName } from './lib/company-name.mjs';
@@ -1472,6 +1473,16 @@ export function formatHistorySegment(offer) {
   return sanitizeMarkdownField(`history: ${parts.join(', ')}${h.source ? ` (${h.source})` : ''}`);
 }
 
+// Labeled segment for a job-board offer the employer's own board did NOT list
+// this run, e.g. `employer-board: not listed (Acme greenhouse board, 42 postings)`.
+// Facts only; '' when the offer was listed or never checked (no coverage).
+export function formatEmployerBoardSegment(offer) {
+  const eb = offer && offer.employerBoard;
+  if (!eb || eb.listed !== false || !Number.isInteger(eb.postings) || eb.postings <= 0) return '';
+  const where = [eb.board, eb.provider].filter((v) => typeof v === 'string' && v.trim()).join(' ');
+  return sanitizeMarkdownField(`employer-board: not listed (${where ? `${where} board, ` : ''}${eb.postings} posting${eb.postings === 1 ? '' : 's'})`);
+}
+
 export function formatPipelineOffer(offer) {
   const url = sanitizePipelineUrl(offer.url);
   const company = sanitizeMarkdownField(offer.company);
@@ -1501,6 +1512,8 @@ export function formatPipelineOffer(offer) {
   // Labeled external posting-history segment — after trust:, before note:.
   const history = formatHistorySegment(offer);
   if (history) line = `${line} | ${history}`;
+  const employer = formatEmployerBoardSegment(offer);
+  if (employer) line = `${line} | ${employer}`;
   // Optional free-text ranking signal (e.g. a curated-list flag an importer
   // attaches). Labeled — not positional like location/compensation — so it can
   // ride on any row shape (bare URL, 3-, 4-, or 5-column) without a reader
@@ -2225,6 +2238,9 @@ async function main() {
   let totalFilteredVisa = 0;
   let totalDupes = 0;
   const newOffers = [];
+  // Each tracked company's FULL board this run (pre-filter), for the
+  // employer-board cross-check of job-board offers (lib/employer-board.mjs).
+  const employerSnapshots = [];
   const errors = [...resolveErrors];
   const emptyTargets = [];
 
@@ -2275,6 +2291,9 @@ async function main() {
       totalFound += jobs.length;
       if (!company._isBoard && jobs.length === 0) {
         emptyTargets.push(company.name);
+      }
+      if (!company._isBoard && jobs.length > 0) {
+        employerSnapshots.push({ name: company.name, provider: provider.id, jobs });
       }
 
       for (const job of jobs) {
@@ -2373,6 +2392,7 @@ async function main() {
           source: sourceName,
           tracked: Boolean(careersUrlDomain),
           careersUrlDomain,
+          fromBoard: Boolean(company._isBoard),
         });
       }
     } catch (err) {
@@ -2385,6 +2405,11 @@ async function main() {
   });
 
   await parallelFetch(tasks, CONCURRENCY);
+
+  // 5.2. Employer-board cross-check: a job-board offer whose role is absent
+  // from the employer's own board fetched THIS run gets an employer-board:
+  // fact. Companies with no board this run are skipped (no coverage ≠ absent).
+  const employerCheck = crossCheckEmployerBoards(newOffers, indexEmployerBoards(employerSnapshots));
 
   // 5.5. Optional liveness verification — drop expired and guard-rejected postings
   let verifiedOffers = newOffers;
@@ -2519,6 +2544,9 @@ async function main() {
       console.log(`    vs ${row.url}`);
     }
     console.log(`  If one side is an agency, apply through ONE channel only — a double submission burns both (#1596).`);
+  }
+  if (employerCheck.checked > 0) {
+    console.log(`Employer-board check:  ${employerCheck.checked} job-board offer(s) checked, ${employerCheck.notListed} not on the employer's own board (flagged, nothing dropped)`);
   }
   if (historyPolicy.recheckAfterDays != null) {
     console.log(`Recheck eligible:      ${seenUrlState.recheckEligible} old scan-history URL(s)`);

@@ -103,11 +103,21 @@ are defined:
   These are facts, not a verdict: weigh them as Block G legitimacy evidence alongside
   `trust:`, and state them as facts in the report rather than labeling the employer.
   The same facts are written to `data/scan-history.tsv` cols 14-17 (col 13 holds the source reference).
+- `| employer-board: not listed ({board} {provider} board, {n} postings)` — written
+  only for a **job-board** offer (from `job_boards`) whose company you also track
+  in `tracked_companies`, when the same scan fetched that company's own board and
+  no posting there matched this role. Title matching is lenient (gender markers,
+  locations and work-mode suffixes are ignored), so a "not listed" is a real gap,
+  not a formatting difference. A company with no board fetched this run is never
+  flagged — no coverage is not absence. Weigh it as Block G evidence (often a
+  stale aggregator copy, an agency re-post, or an evergreen requisition) and
+  state it as a fact; prefer applying through the employer's own board when the
+  role does appear there under another title.
 - `| note: {text}` — a free-text ranking signal an importer attached to the offer
   (`- [ ] {url} | {company} | {title} | note: curated shortlist` is valid). The
   deterministic scanner never sets it.
 
-When more than one is present the order is `posted:` → `trust:` → `history:` → `note:`. Treat
+When more than one is present the order is `posted:` → `trust:` → `history:` → `employer-board:` → `note:`. Treat
 them as hints when triaging; none changes how you process the URL.
 
 ## Intelligent JD detection from URL
