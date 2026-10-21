@@ -53,7 +53,7 @@
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = join(JOBBER, 'templates');

@@ -33,7 +33,7 @@ import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFil
 import { join, dirname, basename, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { pass, fail, warn, run, fileExists, finish, ROOT, QUICK, NODE, getBash, toBashPath } from './tests/helpers.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
 import { discoverTests, endsProcess } from './lib/test-discovery.mjs';
@@ -4217,7 +4217,7 @@ console.log('\n72. Keyed provider cookbook (apify) — field_map validity');
 // check scan.mjs performs before ever running the actor. A cookbook entry
 // that would throw once uncommented is worse than no entry at all.
 try {
-  const yaml = (await import('js-yaml')).default;
+  const yaml = await import('js-yaml');
   const { isFieldSpec } = await import('./plugins/apify/index.mjs');
   const raw = readFile('templates/portals.example.yml');
   const blockStart = raw.indexOf('# -- Keyed provider examples');

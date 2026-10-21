@@ -19,7 +19,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import {
   PROVIDERS, defaultModelFor, baseUrlFor, apiKeyFor, requestTimeoutMsFor,
 } from './lib/llm-providers.mjs';

@@ -19,7 +19,7 @@
 import path from 'path';
 import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 import {
   discoverPlugins, pluginRoots, loadPluginConfig, pluginStatus,
@@ -192,6 +192,7 @@ function findManifest(id) {
 // the user's other plugins or non-secret settings).
 function setEnabled(id, on, settings) {
   const file = path.join(ROOT, 'config', 'plugins.yml');
+  /** @type {any} */
   let cfg = {};
   if (existsSync(file)) { try { cfg = yaml.load(readFileSync(file, 'utf8')) || {}; } catch {} }
   if (!cfg.plugins || typeof cfg.plugins !== 'object') cfg.plugins = {};

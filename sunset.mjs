@@ -33,7 +33,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { resolveTrackerPath, loadCanonicalStates } from './tracker-utils.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { isStale, resolveSunsetAfterDays } from './lib/sunset-policy.mjs';
