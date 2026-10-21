@@ -1,6 +1,6 @@
 // tests/outcome.test.mjs — Unit test suite for outcome.mjs (#1722).
 import { pass, fail, NODE, ROOT } from './helpers.mjs';
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
@@ -26,6 +26,7 @@ function setupTestEnvironment() {
 |---|------|---------|------|-------|--------|-----|--------|-------|
 | 1 | 2026-07-01 | Acme Corp | Senior Backend Engineer | 4.5/5 | Applied | local:output/acme.pdf | local:reports/1-acme.md | Applied online |
 | 2 | 2026-07-02 | Beta Systems | Lead AI Architect | 4.8/5 | Interview | local:output/beta.pdf | local:reports/2-beta.md | Screen passed |
+| 3 | 2026-07-03 | Metabase | Data Engineer | 4.1/5 | Applied | local:output/mb.pdf | local:reports/3-metabase.md | Applied online |
 `;
   writeFileSync(join(testDir, 'data', 'applications.md'), mockTracker);
   writeFileSync(join(testDir, 'cv.md'), '# Candidate CV\n\nSenior Engineer with 10 years experience.\n');
@@ -138,6 +139,7 @@ try {
       OUTCOME_SCRIPT,
       '2',
       type,
+      '--force', // Hired -> Rejected -> Discarded are moves out of terminal states: explicit override
       '--json',
     ], {
       cwd: testDir,
@@ -147,6 +149,30 @@ try {
     const parsed = JSON.parse(out);
     check(`Outcome "${type}" maps to state "${expectedState}"`, parsed.canonicalState === expectedState);
   }
+
+  // Test 7b: set-status guards are no longer bypassed implicitly (row 2 is Discarded, a terminal state)
+  const env7 = { ...process.env, JOBBER_TRACKER: join(testDir, 'data', 'applications.md') };
+  const before7 = readFileSync(join(testDir, 'data', 'applications.md'), 'utf-8');
+  const log2Path = join(testDir, 'data', 'outcomes', readdirSync(join(testDir, 'data', 'outcomes')).find((d) => d.startsWith('2_')), 'outcome.md');
+  const log2Before = readFileSync(log2Path, 'utf-8');
+  try {
+    execFileSync(NODE, [OUTCOME_SCRIPT, '2', 'rejected', '--json'], { cwd: testDir, env: env7, encoding: 'utf-8', stdio: 'pipe' });
+    fail('Leaving a terminal state without --force should fail');
+  } catch (err) {
+    check('Leaving a terminal state without --force is refused', err.status === 1);
+  }
+  check('The refused move wrote no outcome log entry either', readFileSync(log2Path, 'utf-8') === log2Before);
+  check('The refused move left the tracker untouched',readFileSync(join(testDir, 'data', 'applications.md'), 'utf-8') === before7);
+
+  // Test 7c: a company selector is a whole-word match, not a substring (Meta must not hit Metabase)
+  try {
+    execFileSync(NODE, [OUTCOME_SCRIPT, 'Meta', 'rejected', '--json'], { cwd: testDir, env: env7, encoding: 'utf-8', stdio: 'pipe' });
+    fail('Company "Meta" should not match "Metabase"');
+  } catch (err) {
+    check('Company "Meta" does not match "Metabase" (exit 2)', err.status === 2);
+  }
+  const metabaseRow = readFileSync(join(testDir, 'data', 'applications.md'), 'utf-8').split('\n').find((l) => l.includes('| Metabase |')) || '';
+  check('The Metabase row is still Applied', metabaseRow.includes('| Applied |'), metabaseRow);
 
   // Test 8: Verify copying canonical PDF CV from tracker cell and pdf-index.tsv
   mkdirSync(join(testDir, 'output'), { recursive: true });

@@ -324,12 +324,19 @@ async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
   while (Date.now() - startedAt < timeoutMs) {
     try {
       mkdirSync(lockDir);
-      writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
-        pid: process.pid,
-        token,
-        startedAt: new Date().toISOString(),
-        followups: followupsPath,
-      }, null, 2));
+      try {
+        writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
+          pid: process.pid,
+          token,
+          startedAt: new Date().toISOString(),
+          followups: followupsPath,
+        }, null, 2));
+      } catch (writeErr) {
+        // We own the directory but could not record the owner: remove it, or every other writer
+        // waits out the ownerless-lock grace window behind a lock nobody holds.
+        rmSync(lockDir, { recursive: true, force: true });
+        throw writeErr;
+      }
 
       let released = false;
       return {
