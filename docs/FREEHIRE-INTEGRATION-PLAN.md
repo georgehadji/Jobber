@@ -52,7 +52,7 @@ during research:
 ## Phases
 
 Ordered so each phase is independently shippable and tested before the next starts.
-Phases 1–5 are the core; 6 is additive tooling; 7 is deferred.
+Phases 1–5 are the core; 6 is additive tooling; 7 was deferred and is now built.
 
 ### Phase 1 — Provider: fix and extend `providers/freehire.mjs`
 
@@ -184,7 +184,7 @@ from `providers/freehire.mjs` `resolveBaseUrl`). Prints to stdout; writes nothin
 **Tests:** `tests/freehire-cli.test.mjs` with an injected `fetchJson`: each formatter,
 404 handling, argument validation.
 
-### Phase 7 — Deferred (documented, not built)
+### Phase 7 — Deferred (built after Phases 1–6; see Progress)
 
 - **ATS cross-check** (freehire `internal/job/ghost/crosscheck.go`): stamp an aggregator
   posting absent from the employer's own ATS board. Needs per-company board coverage
@@ -212,7 +212,7 @@ from `providers/freehire.mjs` `resolveBaseUrl`). Prints to stdout; writes nothin
 | 4 company-history | done — `company-history.mjs` (+ self-test), `company-intel.mjs` |
 | 5 salary-gap benchmark split | done — `salary-gap.mjs` (+ self-test) |
 | 6 freehire-cli | done — `freehire-cli.mjs`, `tests/freehire-cli.test.mjs`, `docs/SCRIPTS.md` |
-| 7 Deferred | partly done — URL→ATS detection (`lib/ats-detect.mjs`, `discover-ats.mjs` `website` scan, `tests/ats-detect.test.mjs`; live: Valero→Taleo, Notion→Ashby) and the freehire MCP note (`docs/SCRIPTS.md`); ATS cross-check done as a same-run comparison (`lib/employer-board.mjs`, `employer-board:` pipeline segment, `tests/employer-board.test.mjs`) — no stored stamps, so nothing goes stale |
+| 7 Deferred | done — URL→ATS detection (`lib/ats-detect.mjs`, `discover-ats.mjs` `website` scan, `tests/ats-detect.test.mjs`; live: Valero→Taleo, Notion→Ashby) and the freehire MCP note (`docs/SCRIPTS.md`); ATS cross-check done as a same-run comparison (`lib/employer-board.mjs`, `employer-board:` pipeline segment, `tests/employer-board.test.mjs`) — no stored stamps, so nothing goes stale |
 | 8 Native provider ports | done — 42 keyless providers ported from freehire adapters (see below) |
 | 9 Search every platform | done — freehire `sources` / `exclude_sources` facets (`source` / `source_exclude`, verified live) |
 
