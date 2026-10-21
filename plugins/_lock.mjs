@@ -29,7 +29,9 @@ function sha256(buf) {
  * Hash EVERY regular file in a plugin directory tree, recursively. NOT a curated
  * subset — the entry can `import('./anything.mjs')`, so a partial hash would let
  * a rug-pull mutate an un-hashed file. Rejects symlinks (a symlinked file would
- * pass the hash while pointing elsewhere). Excludes node_modules + .git.
+ * pass the hash while pointing elsewhere). Excludes .git only: node_modules is hashed too
+ * (a hostile dependency would otherwise be invisible to the lock; community plugins
+ * with node_modules are rejected by plugin-audit anyway).
  *
  * @param {string} dir absolute plugin directory
  * @returns {{ files: Record<string,string>, integrity: string }}
@@ -42,7 +44,7 @@ export function hashPluginTree(dir) {
     try { entries = readdirSync(abs, { withFileTypes: true }); }
     catch (err) { throw new Error(`cannot read ${rel || '.'}: ${err.message}`); }
     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-      if (e.name === 'node_modules' || e.name === '.git') continue;
+      if (e.name === '.git') continue;
       const childAbs = path.join(abs, e.name);
       const childRel = rel ? `${rel}/${e.name}` : e.name;
       // lstat (not stat) so a symlink is detected, never followed.
@@ -72,6 +74,24 @@ export function readLock(root) {
   }
 }
 
+/**
+ * Like readLock, but a lock file that EXISTS and cannot be read is an error, not
+ * an empty lock: treating corruption as "nothing pinned" would let every plugin
+ * auto-re-pin (and load) after an attacker or a bad write garbles the file.
+ * @returns {{ lockfileVersion: number, plugins: Record<string, any> }}
+ */
+export function readLockStrict(root) {
+  const file = lockPath(root);
+  if (!existsSync(file)) return { lockfileVersion: LOCK_VERSION, plugins: {} };
+  let parsed;
+  try { parsed = JSON.parse(readFileSync(file, 'utf8')); }
+  catch (err) { throw new Error('plugins.lock is unreadable (' + err.message + ') - fix or delete it, then re-enable your plugins'); }
+  if (!parsed || typeof parsed !== 'object' || typeof parsed.plugins !== 'object' || parsed.plugins === null) {
+    throw new Error('plugins.lock has an unexpected shape - fix or delete it, then re-enable your plugins');
+  }
+  return parsed;
+}
+
 /** Merge a single entry into plugins.lock (never clobber other plugins' entries). */
 export function writeLockEntry(root, id, entry) {
   const lock = readLock(root);
@@ -90,29 +110,35 @@ export function removeLockEntry(root, id) {
  * `source` is derived by the CALLER from the filesystem (bundled vs local) —
  * NEVER trusted from the lock (a USER-writable file could spoof it).
  *
- * @returns {{ status: 'unpinned'|'match'|'drift-nobump'|'legit-update'|'surface-widened', changedFiles: string[], addedHosts: string[], addedEnv: string[] }}
+ * @returns {{ status: 'unpinned'|'match'|'drift-nobump'|'legit-update'|'surface-widened', changedFiles: string[], addedHosts: string[], addedEnv: string[], addedHooks: string[] }}
  */
 export function diffPlugin(manifest, lockEntry) {
-  if (!lockEntry) return { status: 'unpinned', changedFiles: [], addedHosts: [], addedEnv: [] };
+  if (!lockEntry) return { status: 'unpinned', changedFiles: [], addedHosts: [], addedEnv: [], addedHooks: [] };
   const tree = hashPluginTree(manifest.dir);
   const addedHosts = (manifest.allowedHosts || []).filter(h => !(lockEntry.consent?.allowedHosts || []).includes(h));
   const addedEnv = (manifest.requiredEnv || []).filter(e => !(lockEntry.consent?.requiredEnv || []).includes(e));
-  const surfaceWidened = addedHosts.length > 0 || addedEnv.length > 0 ||
+  // New hook kinds (e.g. a notify-only plugin adding `provider`) widen what the plugin may do.
+  const recordedHooks = lockEntry.consent?.hooks;
+  const addedHooks = Array.isArray(recordedHooks) ? (manifest.hooks || []).filter(h => !recordedHooks.includes(h)) : [];
+  const recordedOptional = lockEntry.consent?.optionalEnv;
+  const addedOptional = Array.isArray(recordedOptional) ? (manifest.optionalEnv || []).filter(e => !recordedOptional.includes(e)) : [];
+  addedEnv.push(...addedOptional);
+  const surfaceWidened = addedHosts.length > 0 || addedEnv.length > 0 || addedHooks.length > 0 ||
     (manifest.allowsLocalhost === true && lockEntry.consent?.allowsLocalhost !== true);
 
   if (tree.integrity === lockEntry.integrity) {
     return surfaceWidened
-      ? { status: 'surface-widened', changedFiles: [], addedHosts, addedEnv }
-      : { status: 'match', changedFiles: [], addedHosts, addedEnv };
+      ? { status: 'surface-widened', changedFiles: [], addedHosts, addedEnv, addedHooks }
+      : { status: 'match', changedFiles: [], addedHosts, addedEnv, addedHooks };
   }
   // Files changed. Which?
   const prev = lockEntry.files || {};
   const changedFiles = [...new Set([...Object.keys(tree.files), ...Object.keys(prev)])]
     .filter(f => tree.files[f] !== prev[f]);
-  if (surfaceWidened) return { status: 'surface-widened', changedFiles, addedHosts, addedEnv };
+  if (surfaceWidened) return { status: 'surface-widened', changedFiles, addedHosts, addedEnv, addedHooks };
   // A version bump distinguishes an honest update from a stealth mutation.
   const bumped = compareVersions(manifest.version, lockEntry.version) > 0;
-  return { status: bumped ? 'legit-update' : 'drift-nobump', changedFiles, addedHosts, addedEnv };
+  return { status: bumped ? 'legit-update' : 'drift-nobump', changedFiles, addedHosts, addedEnv, addedHooks };
 }
 
 function compareVersions(a, b) {
@@ -127,6 +153,7 @@ export function consentSurface(manifest) {
   return {
     hooks: [...manifest.hooks],
     requiredEnv: [...manifest.requiredEnv],
+    optionalEnv: [...(manifest.optionalEnv || [])],
     allowedHosts: [...manifest.allowedHosts],
     skill: Boolean(manifest.skill),
     allowsLocalhost: manifest.allowsLocalhost === true,

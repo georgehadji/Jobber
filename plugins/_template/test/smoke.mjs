@@ -9,7 +9,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const KINDS = ['provider', 'ingest', 'search', 'notify', 'export'];
 
 const manifest = JSON.parse(readFileSync(path.join(here, '..', 'manifest.json'), 'utf8'));
-const mod = await import(path.join(here, '..', manifest.entry || 'index.mjs'));
+// Literal specifier on purpose: plugin-audit rejects a dynamic import whose specifier is computed.
+// If you rename the entry in manifest.json, change it here too.
+const mod = await import('../index.mjs');
 const hooks = mod.default;
 
 assert(hooks && typeof hooks === 'object', 'default export must be an object of hooks');
