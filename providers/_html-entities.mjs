@@ -31,6 +31,23 @@ export function decodeEntities(s) {
       const valid = Number.isFinite(code) && code >= 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff);
       return valid ? String.fromCodePoint(code) : m;
     }
-    return NAMED_ENTITIES[body.toLowerCase()] ?? m;
+    // hasOwn: a plain-object lookup would resolve `&constructor;` / `&__proto__;`
+    // to inherited Object members.
+    const key = body.toLowerCase();
+    return Object.hasOwn(NAMED_ENTITIES, key) ? NAMED_ENTITIES[key] : m;
   });
+}
+
+/**
+ * Decode an XML/RSS text node in one pass: unwrap CDATA (its content is
+ * literal, never entity-decoded), then decode entities exactly once so
+ * `&amp;lt;` becomes `&lt;`, not `<`. Providers whose source is XML use this
+ * instead of hand-rolled replace chains.
+ * @param {string} s
+ */
+export function decodeXml(s) {
+  return String(s ?? '')
+    .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
+    .map((part) => (part.startsWith('<![CDATA[') ? part.slice(9, -3) : decodeEntities(part)))
+    .join('');
 }

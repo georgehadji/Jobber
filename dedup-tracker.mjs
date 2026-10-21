@@ -40,6 +40,12 @@ const STATUS_RANK = {
   'responded': 4,
   'interview': 5,
   'offer': 6,
+  // Terminal success outranks everything: a Hired row must never lose to a duplicate.
+  'hired': 7,
+  'accepted': 7,
+  'accept': 7,
+  'contratado': 7,
+  'contratada': 7,
   // Spanish aliases — kept for backwards compat with existing tracker data
   'no_aplicar': 0,
   'no aplicar': 0,
@@ -66,10 +72,10 @@ const STATUS_RANK = {
  * @returns {string} Lowercase company key used for same-company grouping.
  */
 function normalizeCompany(name) {
-  return name.toLowerCase()
+  return String(name ?? '').normalize('NFKC').toLowerCase()
     .replace(/[()]/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/[^\p{L}\p{N} ]/gu, '')
     .trim();
 }
 

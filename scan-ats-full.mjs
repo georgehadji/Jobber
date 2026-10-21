@@ -46,6 +46,7 @@ import icims from './providers/icims.mjs';
 import { buildTitleFilter, buildLocationFilter, buildContentFilter, matchedTitleKeywords, loadSeenUrls, normalizeUrlForDedup, appendToPipeline, appendToScanHistory, loadBlacklist } from './scan.mjs';
 import { SEED_SOURCES, toPortalEntry } from './seeds/vc-portfolios.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
+import { withTimeout } from './lib/with-timeout.mjs';
 
 // ── Config ──────────────────────────────────────────────────────────
 
@@ -502,13 +503,7 @@ export async function runSeedScan(seedId, opts, ctx, seenUrls, label) {
 // one company, not freeze a worker slot for the rest of a 12k-company sweep.
 const COMPANY_TIMEOUT_MS = 5 * 60_000;
 
-export function withTimeout(promise, ms, label) {
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`${label}: timed out after ${Math.round(ms / 1000)}s`)), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
+export { withTimeout };
 
 export async function parallelEach(items, limit, fn, onItemDone = null, shouldStop = null) {
   let next = 0;
