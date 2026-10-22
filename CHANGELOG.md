@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.25.1](https://github.com/georgehadji/Jobber/compare/jobber-v1.25.0...jobber-v1.25.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **batch:** keep the worker score, escape & in URLs, protect the lock, fail closed on reservation ([d7fd6e9](https://github.com/georgehadji/Jobber/commit/d7fd6e9605cd3366e583ad163ac20e97f1cd2cd4))
+* **batch:** keep the worker score, escape & in URLs, protect the lock, fail closed on reservation ([0c3be73](https://github.com/georgehadji/Jobber/commit/0c3be732a9e5453c72ab6e29cce6f086f81d9f57))
+* **dashboard:** confine report links, gate what the OS opens, skip spaced separator rows ([9b972a5](https://github.com/georgehadji/Jobber/commit/9b972a547753e350b43d107606ea17932eb06d82))
+* **dashboard:** confine report links, gate what the OS opens, skip spaced separator rows ([4b52a2e](https://github.com/georgehadji/Jobber/commit/4b52a2e634ccb94ec148d6bcdabb73d093eeeed0))
+* employer-board scope, sameOpening across scripts, detectBoard evidence, capped page read ([dac1015](https://github.com/georgehadji/Jobber/commit/dac10157cfc58687923ef05ab234d54fcc0623a3))
+* employer-board scope, sameOpening across scripts, detectBoard evidence, capped page read ([c34c9c3](https://github.com/georgehadji/Jobber/commit/c34c9c35d4c82cfbfbe066e72b7be66048e211fe))
+* **providers:** ashby salary from the live payload, hackernews links, redirect contract, null guards ([e6165b6](https://github.com/georgehadji/Jobber/commit/e6165b656e73c833eca6aa57bb9ad2bef12377fc))
+* **providers:** ashby salary from the live payload, hackernews links, redirect contract, null guards ([f8dfaea](https://github.com/georgehadji/Jobber/commit/f8dfaea0fd6553f839f19834dca943e644a6caf7))
+* **scan:** whole-word keywords, US country aliases, strict CLI flags, 429 not a dead portal ([bee9aa1](https://github.com/georgehadji/Jobber/commit/bee9aa1317dd115264ab77e0e1bbd2043e3fd052))
+* **scan:** whole-word title and content keywords, US country aliases, strict CLI flags, 429 not a dead portal ([776e330](https://github.com/georgehadji/Jobber/commit/776e3300e62754a0b238ded123293aee41448413))
+* shared primitives - Unicode company key, Hired rank, entity decoder, net/url guards, job finalizer ([1c85538](https://github.com/georgehadji/Jobber/commit/1c855382837ad69400cea50507f13478705eefb2))
+* shared primitives - Unicode company key, Hired rank, entity decoder, net/url guards, job finalizer ([37e10a3](https://github.com/georgehadji/Jobber/commit/37e10a3ea8092308d5a8035c6112317a06d69ba2))
+* **tracker:** outcome selector and --force, merge batch semantics, atomic add-entry ([5f185f9](https://github.com/georgehadji/Jobber/commit/5f185f907bbace3ae0dad5a42ef749dd64e42138))
+* **tracker:** outcome selector and --force, merge batch semantics, atomic add-entry ([87509a9](https://github.com/georgehadji/Jobber/commit/87509a9731f6f9bdc71aa0f51ae578e96d4a16f9))
+* **updater,plugins:** filter remote SYSTEM_PATHS, guard dirty system files, fail-closed plugin audit and lock ([976d15f](https://github.com/georgehadji/Jobber/commit/976d15f96fe758b3bdbdcf06ee42ab75b7872b27))
+* **updater,plugins:** filter remote SYSTEM_PATHS, guard dirty system files, fail-closed plugin audit and lock ([a4e593a](https://github.com/georgehadji/Jobber/commit/a4e593a113f83316adfdeac39068093e491c4297))
+* **web:** guard /api with a Host/Origin proxy, bind loopback, validate /api/run ([30a718d](https://github.com/georgehadji/Jobber/commit/30a718dc41deb9c3bf964eac7b36eee713830b64))
+* **web:** guard /api with a Host/Origin proxy, bind loopback, validate /api/run ([3f16a36](https://github.com/georgehadji/Jobber/commit/3f16a361b1d808580898673cf28c1a92a276ce8c))
+* **web:** harden the apply driver - structural submit guard, no Enter, ref check, origin pin, SSRF guard ([57c7cff](https://github.com/georgehadji/Jobber/commit/57c7cff959e5f8a919350980879851b940141ae4))
+* **web:** harden the apply driver - structural submit guard, no Enter, ref check, origin pin, SSRF guard ([bfce54f](https://github.com/georgehadji/Jobber/commit/bfce54f4ea9bfea5303452f21f51741eebd54dad))
+* **web:** least-privilege agent tools, safe writers, status via set-status ([fb5f864](https://github.com/georgehadji/Jobber/commit/fb5f864b64a7580ba04f15881f6ed6ffcc9232e9))
+* **web:** least-privilege agent tools, safe writers, status via set-status ([d8396ff](https://github.com/georgehadji/Jobber/commit/d8396ff1306d6d70716d48698f7dfaae9a53c3fd))
+* **web:** linear untrusted-fence escape (CodeQL), followups test runs without root deps ([ffef4b9](https://github.com/georgehadji/Jobber/commit/ffef4b9f8983647181adb0d387cb47839219c161))
+
 ## [1.25.0](https://github.com/georgehadji/Jobber/compare/jobber-v1.24.0...jobber-v1.25.0) (2026-10-21)
 
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.1](https://github.com/georgehadji/Jobber/compare/web-v0.6.0...web-v0.6.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **web:** guard /api with a Host/Origin proxy, bind loopback, validate /api/run ([30a718d](https://github.com/georgehadji/Jobber/commit/30a718dc41deb9c3bf964eac7b36eee713830b64))
+* **web:** guard /api with a Host/Origin proxy, bind loopback, validate /api/run ([3f16a36](https://github.com/georgehadji/Jobber/commit/3f16a361b1d808580898673cf28c1a92a276ce8c))
+* **web:** harden the apply driver - structural submit guard, no Enter, ref check, origin pin, SSRF guard ([57c7cff](https://github.com/georgehadji/Jobber/commit/57c7cff959e5f8a919350980879851b940141ae4))
+* **web:** harden the apply driver - structural submit guard, no Enter, ref check, origin pin, SSRF guard ([bfce54f](https://github.com/georgehadji/Jobber/commit/bfce54f4ea9bfea5303452f21f51741eebd54dad))
+* **web:** least-privilege agent tools, safe writers, status via set-status ([fb5f864](https://github.com/georgehadji/Jobber/commit/fb5f864b64a7580ba04f15881f6ed6ffcc9232e9))
+* **web:** least-privilege agent tools, safe writers, status via set-status ([d8396ff](https://github.com/georgehadji/Jobber/commit/d8396ff1306d6d70716d48698f7dfaae9a53c3fd))
+* **web:** linear untrusted-fence escape (CodeQL), followups test runs without root deps ([ffef4b9](https://github.com/georgehadji/Jobber/commit/ffef4b9f8983647181adb0d387cb47839219c161))
+
 ## [0.6.0](https://github.com/georgehadji/Jobber/compare/web-v0.5.0...web-v0.6.0) (2026-10-21)
 
 
