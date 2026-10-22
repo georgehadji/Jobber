@@ -12,7 +12,7 @@ import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync, mkdirSync
 import { join, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
-import { pass, fail, ROOT, run, getBash, toBashPath } from './helpers.mjs';
+import { pass, fail, ROOT, run, runAnyExit, getBash, toBashPath } from './helpers.mjs';
 
 /**
  * Create a fully isolated tmp fixture for one spend_tier sub-test. Each
@@ -40,6 +40,8 @@ function makeTierFixture(profileYml) {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  // the runner now refuses to start a worker without a reserved report number, so the fixture needs the reserver
+  writeFileSync(join(tmp, 'reserve-report-num.mjs'), 'console.log("001");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   // batch-runner.sh resolves spend_tier -> model by shelling out to the single
   // source of truth rather than restating the table in bash, so the fixture
@@ -71,7 +73,7 @@ try {
   const { tmp, batchDir, fakeBin } = makeTierFixture('spend_tier: premium\n');
   const argFile = join(tmp, 'claude-argv.txt');
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}`, BATCH_ARG_FILE: argFile };
-  const premiumOut = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
+  const premiumOut = runAnyExit(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1'], { cwd: tmp, env, stdio: ['pipe', 'pipe', 'pipe'] }) || '';
   const premiumArgv = existsSync(argFile) ? readFileSync(argFile, 'utf-8') : '';
   if (premiumArgv.includes('--model') && premiumArgv.includes('claude-opus-5') && premiumOut.includes('spend_tier=premium')) {
     pass('premium spend_tier resolves to claude-opus-5');
