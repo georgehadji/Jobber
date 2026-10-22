@@ -145,7 +145,8 @@ export default {
     const widgetUrl = resolveWidgetUrl(entry);
     if (!widgetUrl) throw new Error(`softgarden: cannot resolve widget URL for ${entry.name}`);
 
-    const html = await ctx.fetchText(widgetUrl, { headers: { accept: 'text/html' } });
+    // redirect:'error': the widget host is allowlisted, so a redirect would leave it (blind SSRF).
+    const html = await ctx.fetchText(widgetUrl, { redirect: 'error', headers: { accept: 'text/html' } });
     const rows = parseWidget(html, widgetUrl);
     const jobs = [];
     for (const row of rows) {

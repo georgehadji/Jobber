@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { decodeEntities } from './_html-entities.mjs';
 
 // Hacker News "Ask HN: Who is hiring?" provider — no auth required.
 //
@@ -33,18 +34,6 @@ function extractUrl(text) {
   return m ? m[0].replace(/[.,;!?)]+$/, '') : '';
 }
 
-// Named HTML entities we decode in comment bodies. Kept in single map
-/** @type {Record<string, string>} */
-const ENTITY_MAP = {
-  '&amp;': '&',
-  '&lt;': '<',
-  '&gt;': '>',
-  '&quot;': '"',
-  '&#x27;': "'",
-  '&#39;': "'",
-  '&nbsp;': ' ',
-};
-const ENTITY_RE = /&amp;|&lt;|&gt;|&quot;|&#x27;|&#39;|&nbsp;/g;
 
 /**
  * Parse a single HN comment text into a normalized job object.
@@ -66,13 +55,13 @@ export function parseHnComment(text, threadUrl = '') {
   // Strip HTML. Anchors: keep the href value in place so URL extraction works.
   // Block-level tags (<p>, <br>, <div>, <li>, headings) become newlines so that
   // body paragraphs never bleed into the first header line after the join.
-  const plain = text
+  const stripped = text
     .replace(/<a\s[^>]*href="([^"]+)"[^>]*>.*?<\/a>/gi, (_, href) => href)
     .replace(/<\/?(?:p|br|div|li|h[1-6])\b[^>]*>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(ENTITY_RE, (m) => ENTITY_MAP[m])
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n');
+    .replace(/<[^>]+>/g, ' ');
+  // HN encodes every slash in a link as &#x2F;. A 7-entity table left `https:&#x2F;&#x2F;...` undecoded, so
+  // no URL was found and all postings fell back to the thread URL (and deduped to one).
+  const plain = decodeEntities(stripped).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   // Split into lines; first non-blank line is the header.
   const lines = plain.split('\n').map(l => l.trim()).filter(Boolean);

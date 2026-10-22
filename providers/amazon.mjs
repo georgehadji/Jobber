@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { compact } from './_finalize.mjs';
 
 // Amazon / AWS provider — hits the public amazon.jobs search JSON API.
 // Auto-detects from a careers_url on `amazon.jobs`; the whole board is one
@@ -80,7 +81,7 @@ export default {
     for (let page = 0; page < MAX_PAGES; page++) {
       const url = buildQuery(entry, page * PAGE_SIZE);
       const json = /** @type {any} */ (await ctx.fetchJson(url, { redirect: 'error' }));
-      const postings = Array.isArray(json?.jobs) ? json.jobs : [];
+      const postings = compact(json?.jobs);
       if (postings.length === 0) break;
 
       let fresh = 0;

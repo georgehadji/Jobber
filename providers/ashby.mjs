@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { compact } from './_finalize.mjs';
 
 // Ashby provider — hits the public posting-api endpoint.
 // Auto-detects from careers_url pattern `https://jobs.ashbyhq.com/<slug>`.
@@ -36,8 +37,20 @@ const INTERVAL_MULTIPLIERS = {
  * @returns {{min: number, max: number, currency: string}|null}
  */
 export function parseCompensation(job) {
-  const comp = job?.compensation;
-  if (!comp) return null;
+  const raw = job?.compensation;
+  if (!raw) return null;
+  // The live posting-api (includeCompensation=true) puts the salary in
+  // compensation.summaryComponents[] as { compensationType: 'Salary', interval, currencyCode,
+  // minValue, maxValue } next to Bonus / EquityPercentage / Commission entries (verified live,
+  // fixture: tests/providers/fixtures/ashby-compensation.json). Before, only a flat
+  // compensation.{minValue,maxValue,interval,currency} was read, which the API does not send,
+  // so every salary came back null. The flat shape stays as a fallback.
+  const live = Array.isArray(raw.summaryComponents)
+    ? raw.summaryComponents.find(/** @param {any} c */ (c) => c && c.compensationType === 'Salary')
+    : null;
+  const comp = live
+    ? { interval: live.interval, minValue: live.minValue, maxValue: live.maxValue, currency: live.currencyCode }
+    : raw;
 
   const interval = /** @type {keyof typeof INTERVAL_MULTIPLIERS} */ (comp.interval || '1 YEAR');
   const multiplier = INTERVAL_MULTIPLIERS[interval];
@@ -170,7 +183,7 @@ export default {
       }
       try {
         const json = /** @type {any} */ (await ctx.fetchJson(apiUrl, { timeoutMs: ASHBY_TIMEOUT_MS, redirect: 'error' }));
-        const jobs = Array.isArray(json?.jobs) ? json.jobs : [];
+        const jobs = compact(json?.jobs);
         return jobs.map(/** @param {any} j */ (j) => ({
           title: j.title || '',
           url: j.jobUrl || '',
