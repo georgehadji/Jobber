@@ -91,6 +91,7 @@ export function parsePageUpListing(fragment, inst, companyName) {
 /** @type {Provider} */
 export default {
   id: 'pageup',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const inst = resolveInstitution(entry);

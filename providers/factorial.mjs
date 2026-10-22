@@ -92,6 +92,7 @@ export function parseFactorialListing(html, host, companyName) {
 /** @type {Provider} */
 export default {
   id: 'factorial',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const host = resolveHost(entry);

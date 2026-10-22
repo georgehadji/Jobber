@@ -96,6 +96,7 @@ export function parseHrmosListing(html, board, companyName) {
 /** @type {Provider} */
 export default {
   id: 'hrmos',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = resolveBoard(entry);

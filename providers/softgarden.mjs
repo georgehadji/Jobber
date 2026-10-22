@@ -134,6 +134,7 @@ export function parseWidget(html, widgetUrl) {
 /** @type {Provider} */
 export default {
   id: 'softgarden',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const url = entry.api || entry.careers_url || '';

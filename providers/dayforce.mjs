@@ -180,6 +180,7 @@ const searchPage = (ctx, board, csrf, start) =>
 /** @type {Provider} */
 export default {
   id: 'dayforce',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = parseDayforceUrl(entry?.careers_url);

@@ -489,7 +489,7 @@ export async function resolveWorkday(company, coords, ctx) {
  * Resolve a board from the company's own website (lib/ats-detect.mjs): fetch
  * the page plus /careers and /jobs, route every link through the provider
  * registry, and confirm the first claimed board lists ≥1 job (one page).
- * @returns {Promise<{resolved:any}|{status:'empty'|'error', vendor:string, careers_url?:string, error?:string}|{status:'none', hint:any, errors:string[]}>}
+ * @returns {Promise<{resolved:any}|{status:'empty'|'error'|'unverified', vendor:string, careers_url?:string, error?:string}|{status:'none', hint:any, errors:string[]}>}
  */
 export async function resolveFromWebsite(company, { providers, ctx, fetchImpl } = {}) {
   const errors = [];
@@ -504,7 +504,12 @@ export async function resolveFromWebsite(company, { providers, ctx, fetchImpl } 
       continue;
     }
     fetchedAny = true;
-    const board = detectBoard(extractCandidateUrls(fetched.html, fetched.url), providers);
+    const board = detectBoard(extractCandidateUrls(fetched.html, fetched.url), providers, { company: company.name });
+    if (board && board.confidence === 'unverified') {
+      // A board is linked, but nothing ties it to this company (it may be a partner's or a competitor's).
+      // Report it as a candidate; never resolve or write it.
+      return { status: 'unverified', vendor: board.provider, careers_url: board.careers_url };
+    }
     if (board) {
       try {
         const jobs = await providers.get(board.provider).fetch({ name: company.name, careers_url: board.careers_url }, { ...ctx, maxPages: 1 });
@@ -534,6 +539,7 @@ export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, inc
   const { candidates, skipped } = buildCandidateUrls(company, vendors);
   const triedVendors = [];
   const emptyBoards = [];
+  const unverifiedBoards = [];
   const errors = [];
 
   for (const candidate of candidates) {
@@ -581,7 +587,8 @@ export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, inc
     triedVendors.push('website');
     const site = await resolveFromWebsite(company, { providers, ctx, fetchImpl });
     if ('resolved' in site) return { resolved: site.resolved };
-    if (site.status === 'empty') emptyBoards.push({ vendor: site.vendor, careers_url: site.careers_url });
+    if (site.status === 'unverified') unverifiedBoards.push({ vendor: site.vendor, careers_url: site.careers_url });
+    else if (site.status === 'empty') emptyBoards.push({ vendor: site.vendor, careers_url: site.careers_url });
     else if (site.status === 'error') errors.push({ vendor: site.vendor, error: site.error });
     else {
       selfHostedHint = site.hint;
@@ -597,7 +604,9 @@ export async function resolveCompany(company, { vendors = VENDOR_ORDER, ctx, inc
   const workdayHintProvided = includeWorkday
     && (typeof company.workday === 'string' ? !!company.workday.trim()
       : (company.workday && typeof company.workday === 'object'));
-  const reason = emptyBoards.length
+  const reason = unverifiedBoards.length
+    ? `a ${unverifiedBoards[0].vendor} board is linked from the website (${unverifiedBoards[0].careers_url}) but nothing ties it to "${company.name}" - check it is theirs, then add it by hand`
+    : emptyBoards.length
     ? 'board(s) found but currently list 0 jobs — re-run later or force-add manually'
     // Every probe errored (transient network/HTTP), and nothing was confirmed
     // absent or empty — don't claim "no board found", the status is unknown.

@@ -245,6 +245,7 @@ export function parseOracleResponse(json, site, companyName) {
 /** @type {Provider} */
 export default {
   id: 'oraclecloud',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     try {

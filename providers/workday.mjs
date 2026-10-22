@@ -181,6 +181,7 @@ export function parseWorkdayResponse(json, entry) {
 /** @type {Provider} */
 export default {
   id: 'workday',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const ep = resolveEndpoint(entry);

@@ -93,6 +93,7 @@ export function parseSolidesPage(json, slug, companyName) {
 /** @type {Provider} */
 export default {
   id: 'solides',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const slug = resolveSlug(entry);

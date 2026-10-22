@@ -93,6 +93,7 @@ export function parseTrakstarFeed(xml, company) {
 /** @type {Provider} */
 export default {
   id: 'trakstar',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = boardFrom(entry?.careers_url);

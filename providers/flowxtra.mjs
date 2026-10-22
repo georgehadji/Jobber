@@ -114,6 +114,7 @@ export function normalizeFlowxtraJob(j, fallbackCompany) {
 /** @type {Provider} */
 export default {
   id: 'flowxtra',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   async fetch(entry, ctx) {
     const maxPages = resolveMaxPages(entry);

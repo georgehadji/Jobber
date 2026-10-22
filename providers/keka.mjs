@@ -78,6 +78,7 @@ export function parseKekaJobs(json, base, companyName) {
 /** @type {Provider} */
 export default {
   id: 'keka',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const t = resolveTenant(entry);

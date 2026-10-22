@@ -106,6 +106,7 @@ export function parseRecruiterflowPage(html, board, companyName) {
 /** @type {Provider} */
 export default {
   id: 'recruiterflow',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = resolveBoard(entry);

@@ -119,6 +119,7 @@ export function parsePostingPage(html, url, companyName) {
 /** @type {Provider} */
 export default {
   id: 'talentlyft',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const host = resolveHost(entry);

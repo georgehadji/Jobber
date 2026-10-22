@@ -47,6 +47,13 @@ export default {
   for free (no extra per-job request — the scanner is zero-token).
 - `postedAt` — optional epoch ms; omit when the source has no usable date.
 
+### Optional `scope`
+
+`scope: 'company'` — declare it when the provider reads ONE employer's own board (a per-company ATS such
+as Greenhouse or Lever). Only those boards feed the employer-board cross-check ("this role is not on the
+employer's own board"). Leave it out for board-wide aggregators and keyword-search sources: a search that
+lists 0 matches says nothing about an employer.
+
 ### Optional deferred-date hook (`enrichDate`)
 
 `enrichDate(job, ctx)` — optional. For sources whose list page carries no

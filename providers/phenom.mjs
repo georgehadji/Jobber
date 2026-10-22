@@ -127,6 +127,7 @@ function resolveMaxPages(entry) {
 /** @type {Provider} */
 export default {
   id: 'phenom',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const url = entry.api || entry.careers_url || '';

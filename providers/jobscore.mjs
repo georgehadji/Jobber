@@ -91,6 +91,7 @@ export function parseJobScoreFeed(json, slug, company) {
 /** @type {Provider} */
 export default {
   id: 'jobscore',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const slug = slugFrom(entry?.careers_url);

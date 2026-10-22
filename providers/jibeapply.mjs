@@ -78,6 +78,7 @@ export function parseJibeapplyResponse(json, entry) {
 /** @type {Provider} */
 export default {
   id: 'jibeapply',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const url = entry.careers_url;

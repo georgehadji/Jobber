@@ -109,6 +109,7 @@ const sleep = (ms, ctx) =>
 /** @type {Provider} */
 export default {
   id: 'ukg',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = parseUkgBoardUrl(entry?.careers_url);

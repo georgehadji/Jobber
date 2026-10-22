@@ -102,6 +102,7 @@ function buildApiUrl(companyId) {
 /** @type {Provider} */
 export default {
   id: 'jobvite',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const companyId = resolveCompanyId(entry);

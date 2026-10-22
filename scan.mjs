@@ -2345,7 +2345,10 @@ async function main() {
       if (!company._isBoard && jobs.length === 0) {
         emptyTargets.push(company.name);
       }
-      if (!company._isBoard && jobs.length > 0) {
+      // Only a per-company board is evidence about one employer: a board-wide or keyword-search
+      // source listed under tracked_companies (freehire, eures...) would otherwise read as that
+      // employer's board and produce false "not listed" facts.
+      if (!company._isBoard && provider.scope === 'company' && jobs.length > 0) {
         employerSnapshots.push({ name: company.name, provider: provider.id, jobs });
       }
 

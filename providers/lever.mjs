@@ -47,6 +47,7 @@ function resolveApiUrl(entry) {
 /** @type {Provider} */
 export default {
   id: 'lever',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     try {
