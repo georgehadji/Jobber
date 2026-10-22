@@ -33,7 +33,7 @@ const scanScript = readFile('scan.mjs');
 if (
   scanScript.includes('typeof entry.name !== \'string\'') &&
   scanScript.includes('entry.name.trim()') &&
-  scanScript.includes('entry.name.toLowerCase()')
+  scanScript.includes('companyFilterMatches(entry.name')
 ) {
   pass('scan.mjs guards company names before filtering');
 } else {

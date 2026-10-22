@@ -313,9 +313,10 @@ title_filter:
   negative:
     # [CUSTOMIZE] Add keywords for roles you want to exclude
     - "Junior"
-    - "Intern"
+    - "Intern "      # trailing space = the whole word (not "Internal" / "International")
+    - "Internship"
     - ".NET"
-    - "Java "
+    - "Java "        # trailing space = the whole word (not "JavaScript")
     - "iOS"
     - "Android"
     - "PHP"

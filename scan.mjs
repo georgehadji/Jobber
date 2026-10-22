@@ -42,6 +42,7 @@ import { buildTrustValidator } from './providers/_trust-validator.mjs';
 import { loadProviders, resolveProvider } from './providers/_registry.mjs';
 import { mergeProviderPlugins } from './plugins/_engine.mjs';
 import { classifyFetchError } from './lib/http-errors.mjs';
+import { withTimeout } from './lib/with-timeout.mjs';
 import { fingerprintText, findCrossListings } from './fingerprint-core.mjs';
 import { indexEmployerBoards, crossCheckEmployerBoards } from './lib/employer-board.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
@@ -87,6 +88,16 @@ const CONCURRENCY = 10;
 // Multi-word phrases and keywords containing non-letters (".NET", "SAP ",
 // "L&D") keep fast, permissive substring matching.
 export function compileKeyword(kw) {
+  const core = kw.trim();
+  if (core !== kw && core) {
+    // Edge whitespace is a word edge: "java " is the word java (not JavaScript), " intern" starts
+    // a word. Callers must pass the keyword UNtrimmed, or the intent is lost.
+    const esc = core.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const left = /^\s/.test(kw) ? '(?<![\\p{L}\\p{N}])' : '';
+    const right = /\s$/.test(kw) ? '(?![\\p{L}\\p{N}])' : '';
+    const re = new RegExp(left + esc + right, 'u');
+    return (lower) => re.test(lower);
+  }
   if (/^[a-z]{2,3}$/.test(kw)) {
     const re = new RegExp(`\\b${kw}\\b`);
     return (lower) => re.test(lower);
@@ -99,8 +110,8 @@ export function buildTitleFilter(titleFilter) {
   // non-string entry in the YAML) must not crash the scan via k.toLowerCase().
   const normalize = (arr) => (Array.isArray(arr) ? arr : [])
     .filter(k => typeof k === 'string')
-    .map(k => k.trim().toLowerCase())
-    .filter(k => k.length > 0)
+    .map(k => k.toLowerCase())
+    .filter(k => k.trim().length > 0)
     .map(compileKeyword);
   const positive = normalize(titleFilter?.positive);
   const negative = normalize(titleFilter?.negative);
@@ -123,7 +134,7 @@ function compiledPositiveMatchers(positiveList) {
   if (compiledPositiveCache.has(positiveList)) return compiledPositiveCache.get(positiveList);
   const compiled = positiveList
     .filter(k => typeof k === 'string' && k.trim().length > 0)
-    .map(k => ({ raw: k, match: compileKeyword(k.trim().toLowerCase()) }));
+    .map(k => ({ raw: k, match: compileKeyword(k.toLowerCase()) }));
   compiledPositiveCache.set(positiveList, compiled);
   return compiled;
 }
@@ -364,18 +375,28 @@ export function buildPostedDateFilter(afterIso, beforeIso) {
 // populate `job.description`. Lever (`descriptionPlain`) does today; others
 // leave it empty and therefore always pass this filter.
 
+// `rust` must not match "trust", `go` must not match "google": up to 4 pure letters = a whole word.
+// Longer or non-letter keywords ("kubernetes", ".net", "c++") keep plain substring matching.
+function compileContentKeyword(k) {
+  if (/^[a-z]{1,4}$/.test(k)) {
+    const re = new RegExp('(?<![\\p{L}\\p{N}])' + k + '(?![\\p{L}\\p{N}])', 'u');
+    return (lower) => re.test(lower);
+  }
+  return (lower) => lower.includes(k);
+}
+
 export function buildContentFilter(contentFilter) {
   if (!contentFilter) return () => true;
-  const positive = normalizeKeywordList(contentFilter.positive);
-  const negative = normalizeKeywordList(contentFilter.negative);
+  const positive = normalizeKeywordList(contentFilter.positive).map(compileContentKeyword);
+  const negative = normalizeKeywordList(contentFilter.negative).map(compileContentKeyword);
 
   const byTitleKeyword = new Map();
   if (contentFilter.by_title_keyword && typeof contentFilter.by_title_keyword === 'object' && !Array.isArray(contentFilter.by_title_keyword)) {
     for (const [kw, rule] of Object.entries(contentFilter.by_title_keyword)) {
       if (typeof kw !== 'string' || !kw.trim()) continue;
       byTitleKeyword.set(kw.trim().toLowerCase(), {
-        positive: normalizeKeywordList(rule?.positive),
-        negative: normalizeKeywordList(rule?.negative),
+        positive: normalizeKeywordList(rule?.positive).map(compileContentKeyword),
+        negative: normalizeKeywordList(rule?.negative).map(compileContentKeyword),
       });
     }
   }
@@ -391,15 +412,15 @@ export function buildContentFilter(contentFilter) {
 
     if (overrides.length > 0) {
       return overrides.some(rule => {
-        if (rule.negative.length > 0 && rule.negative.some(k => lower.includes(k))) return false;
+        if (rule.negative.length > 0 && rule.negative.some(m => m(lower))) return false;
         if (rule.positive.length === 0) return true;
-        return rule.positive.some(k => lower.includes(k));
+        return rule.positive.some(m => m(lower));
       });
     }
 
-    if (negative.length > 0 && negative.some(k => lower.includes(k))) return false;
+    if (negative.length > 0 && negative.some(m => m(lower))) return false;
     if (positive.length === 0) return true;
-    return positive.some(k => lower.includes(k));
+    return positive.some(m => m(lower));
   };
 }
 
@@ -444,6 +465,16 @@ export function buildContentFilter(contentFilter) {
 // exclusionary/inclusive/candidate-country-named semantics, which doesn't
 // fit content_filter's simpler two-list reject/require shape.
 
+const US_COUNTRY_ALIASES = new Set(['united states', 'united states of america', 'usa', 'us', 'u.s', 'u.s.a', 'america']);
+
+/** --company: the whole name, or its leading whole words (`meta` finds `Meta Platforms`, not `Metabase`). */
+export function companyFilterMatches(name, filter) {
+  const words = (n) => String(n ?? '').normalize('NFKC').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const f = words(filter);
+  const w = words(name);
+  return f.length > 0 && f.length <= w.length && f.every((x, i) => w[i] === x);
+}
+
 export function buildCountryEligibilityFilter(countryEligibilityFilter, candidateCountry) {
   if (!countryEligibilityFilter) return () => true;
 
@@ -456,7 +487,8 @@ export function buildCountryEligibilityFilter(countryEligibilityFilter, candidat
   // than relying on the literal-country-name check below (which would miss
   // phrasing like "US-based candidates only" that never spells out "united
   // states").
-  if (candidateCountryLower === 'united states') return () => true;
+  if (US_COUNTRY_ALIASES.has(candidateCountryLower.replace(/\.+$/, ''))) return () => true;
+  const candidateMatch = candidateCountryLower ? compileLocationKeyword(candidateCountryLower) : null;
 
   const exclusionary = normalizeKeywordList(countryEligibilityFilter.exclusionary);
   const inclusive = normalizeKeywordList(countryEligibilityFilter.inclusive);
@@ -468,7 +500,7 @@ export function buildCountryEligibilityFilter(countryEligibilityFilter, candidat
     if (exclusionary.length === 0) return true;
     if (!exclusionary.some(k => lower.includes(k))) return true;
     if (inclusive.length > 0 && inclusive.some(k => lower.includes(k))) return true;
-    if (candidateCountryLower && lower.includes(candidateCountryLower)) return true;
+    if (candidateMatch && candidateMatch(lower)) return true;
 
     return false;
   };
@@ -584,6 +616,8 @@ export function buildSalaryFilter(salaryFilter) {
     // If no salary data exists, pass (conservative - many providers don't expose salary)
     if (!salary) return true;
 
+    // An explicit 0 is kept as data (an unpaid/volunteer posting is below any minimum - pinned by
+    // test-salary-filter.mjs). Providers never emit a placeholder 0: providers/_finalize.mjs strips it.
     const jobMin = salary.min ?? salary.max ?? null;
     const jobMax = salary.max ?? salary.min ?? null;
 
@@ -1805,6 +1839,9 @@ export function loadPortalHealth(filePath = PORTAL_HEALTH_PATH) {
   return records;
 }
 
+// One company's whole fetch may not exceed this, even with per-request timeouts in providers.
+const COMPANY_TIMEOUT_MS = 5 * 60_000;
+
 export function computeConsecutiveFailures(healthRecords) {
   const streaks = new Map();
   for (const r of healthRecords) {
@@ -1812,7 +1849,9 @@ export function computeConsecutiveFailures(healthRecords) {
     // Inverted (vs. listing failure statuses) so the newer error kinds
     // (auth/server/unknown) can't silently fall outside the streak again.
     // 'empty' is deliberately healthy: a live board with 0 jobs is reachable.
-    if (r.status === 'reachable' || r.status === 'empty') {
+    if (r.status === 'rate_limited') {
+      continue; // throttled, not dead: neither extends nor resets the streak
+    } else if (r.status === 'reachable' || r.status === 'empty') {
       streaks.set(r.company, 0);
     } else {
       streaks.set(r.company, (streaks.get(r.company) || 0) + 1);
@@ -1849,7 +1888,9 @@ export function computePortalSkipTargets(healthRecords, {
   for (const r of healthRecords) {
     let c = byCompany.get(r.company);
     if (!c) { c = { streak: 0, lastFailureTs: null }; byCompany.set(r.company, c); }
-    if (r.status === 'reachable' || r.status === 'empty') {
+    if (r.status === 'rate_limited') {
+      continue; // throttled, not dead
+    } else if (r.status === 'reachable' || r.status === 'empty') {
       c.streak = 0;
       c.lastFailureTs = null;
     } else {
@@ -2031,8 +2072,20 @@ async function main() {
   // --include-blacklisted: bypass the data/blacklist.md filter for auditing.
   // Matching postings flow through annotated instead of being counted out.
   const includeBlacklisted = args.includes('--include-blacklisted');
-  const companyFlag = args.indexOf('--company');
-  const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+  const flagValue = (name) => {
+    const i = args.indexOf(name);
+    if (i === -1) return null;
+    const v = args[i + 1];
+    // A flag with no value used to read as undefined, which meant "not given": --company scanned
+    // everything and --posted-after was silently ignored.
+    if (v === undefined || v.startsWith('--')) {
+      console.error(`Error: ${name} needs a value`);
+      process.exit(1);
+    }
+    return v;
+  };
+  const companyArg = flagValue('--company');
+  const filterCompany = companyArg !== null ? companyArg.toLowerCase() : null;
   // --posted-after / --posted-before <YYYY-MM-DD>: absolute-date bounds on the
   // employer's real posting date (job.postedAt), gated against a typo since a
   // silently-ignored bound would look like "no jobs matched" instead of an error.
@@ -2041,10 +2094,8 @@ async function main() {
     const d = new Date(`${s}T00:00:00Z`);
     return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
   };
-  const postedAfterFlag = args.indexOf('--posted-after');
-  const postedAfter = postedAfterFlag !== -1 ? args[postedAfterFlag + 1] : null;
-  const postedBeforeFlag = args.indexOf('--posted-before');
-  const postedBefore = postedBeforeFlag !== -1 ? args[postedBeforeFlag + 1] : null;
+  const postedAfter = flagValue('--posted-after');
+  const postedBefore = flagValue('--posted-before');
   if (postedAfter != null && !isValidIsoDate(postedAfter)) {
     console.error(`Error: --posted-after expects YYYY-MM-DD, got "${postedAfter}"`);
     process.exit(1);
@@ -2170,7 +2221,7 @@ async function main() {
         console.error(`⚠️  Skipping entry — missing or non-string 'name' field: ${JSON.stringify(entry)}`);
         continue;
       }
-      if (filterCompany && !entry.name.toLowerCase().includes(filterCompany)) continue;
+      if (filterCompany && !companyFilterMatches(entry.name, filterCompany)) continue;
 
       const resolved = resolveProvider(entry, providers);
       if (!resolved) {
@@ -2268,18 +2319,20 @@ async function main() {
   const tasks = targets.map(company => async () => {
     let provider = company._provider;
     const ctx = makeHttpCtx();
+    // One hung company must cost one company, not a worker slot for the whole run.
+    const fetchJobs = (p) => withTimeout(Promise.resolve().then(() => p.fetch(company, ctx)), COMPANY_TIMEOUT_MS, company.name);
     let sourceName = provider.id === 'local-parser' ? 'local-parser' : `${provider.id}-api`;
     try {
       let jobs;
       try {
-        jobs = await provider.fetch(company, ctx);
+        jobs = await fetchJobs(provider);
       } catch (parserErr) {
         if (provider.id !== 'local-parser') throw parserErr;
         const fallback = resolveProvider(company, providers, { skipIds: ['local-parser'] });
         if (!fallback || fallback.error) throw parserErr;
         provider = fallback.provider;
         sourceName = `${provider.id}-api`;
-        jobs = await provider.fetch(company, ctx);
+        jobs = await fetchJobs(provider);
         errors.push({
           company: company.name,
           error: `local parser failed, used API fallback: ${parserErr.message}`,
@@ -2398,7 +2451,8 @@ async function main() {
     } catch (err) {
       errors.push({
         company: company.name,
-        error: err.message,
+        // a provider may reject with null, a string or a number: never read .message off that
+        error: err?.message ?? String(err),
         kind: classifyFetchError(err),
       });
     }
