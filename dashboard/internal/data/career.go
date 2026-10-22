@@ -28,6 +28,10 @@ var (
 	reBatchID        = regexp.MustCompile(`(?m)^\*\*Batch ID:\*\*\s*(\d+)`)
 	reDiscardReasons = regexp.MustCompile(`(?s)discard_reasons:\s*\n((?:\s*-\s*.+?\n)+)`)
 	reDiscardItem    = regexp.MustCompile(`\s*-\s*([^\n]+)`)
+	// reSeparatorRow matches a markdown table separator in any spacing a formatter may produce
+	// ("|---|", "| --- | :---: |", "|:---|---:|"). A literal "|---" prefix check missed the spaced forms
+	// and counted them as phantom applications.
+	reSeparatorRow = regexp.MustCompile(`^\|(?:\s*:?-{2,}:?\s*\|)+\s*$`)
 )
 
 // resolveReportPath converts a report link from the tracker into a path
@@ -43,10 +47,17 @@ func resolveReportPath(jobberPath, trackerPath, link string) string {
 			resolved = legacy
 		}
 	}
-	if rel, err := filepath.Rel(jobberPath, resolved); err == nil {
-		return rel
+	// A report link is untrusted tracker text: "[1](../../../.ssh/id_rsa)" must not make the dashboard
+	// read and render a file outside the Jobber root. Only a markdown file that stays inside it is
+	// returned; anything else yields "" (no report), which every consumer already handles.
+	rel, err := filepath.Rel(jobberPath, resolved)
+	if err != nil {
+		rel = link
 	}
-	return link
+	if !isSafeRepoRelativePath(rel) || !strings.EqualFold(filepath.Ext(rel), ".md") {
+		return ""
+	}
+	return rel
 }
 
 // ParseApplications reads applications.md and returns parsed applications.
@@ -75,7 +86,7 @@ func ParseApplications(jobberPath string) []model.CareerApplication {
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "# ") || strings.HasPrefix(line, "|---") || strings.HasPrefix(line, "| #") {
+		if line == "" || strings.HasPrefix(line, "# ") || strings.HasPrefix(line, "|---") || strings.HasPrefix(line, "| #") || reSeparatorRow.MatchString(line) {
 			continue
 		}
 		if !strings.HasPrefix(line, "|") {

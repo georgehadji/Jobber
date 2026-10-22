@@ -119,7 +119,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.ViewerOpenCoverLetterMsg:
 		path := msg.Path
 		return m, func() tea.Msg {
-			if err := openWithDefaultApp(path); err != nil {
+			if err := openChecked(path); err != nil {
 				fmt.Fprintf(os.Stderr, "WARN: could not open cover letter: %v\n", err)
 			}
 			return nil
@@ -193,11 +193,11 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-// openCmd wraps openWithDefaultApp (OS-specific) as a tea.Cmd. Shared by the
+// openCmd wraps openChecked (the guard plus the OS-specific opener) as a tea.Cmd. Shared by the
 // job-URL (`o`) and CV-PDF (`d`) actions.
 func openCmd(target string) tea.Cmd {
 	return func() tea.Msg {
-		if err := openWithDefaultApp(target); err != nil {
+		if err := openChecked(target); err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: failed to open %q: %v\n", target, err)
 		}
 		return nil
@@ -224,7 +224,7 @@ func runGeneratePDF(msg screens.PipelineGeneratePDFMsg) tea.Cmd {
 			return screens.PipelinePDFGeneratedMsg{Err: summarizeCmdError(err, out)}
 		}
 		pdfAbs := filepath.Join(msg.JobberPath, filepath.FromSlash(msg.PDFPath))
-		if err := openWithDefaultApp(pdfAbs); err != nil {
+		if err := openChecked(pdfAbs); err != nil {
 			return screens.PipelinePDFGeneratedMsg{Err: fmt.Sprintf("PDF generated but could not open: %v", err)}
 		}
 		return screens.PipelinePDFGeneratedMsg{Path: pdfAbs}
