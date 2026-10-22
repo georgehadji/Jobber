@@ -30,9 +30,23 @@ export async function POST(req: Request) {
   const root = jobberRoot();
   const file = path.join(root, "portals.yml");
   let doc: Record<string, unknown> = {};
+  let existing: string | null = null;
   try {
-    doc = (yaml.load(fs.readFileSync(file, "utf8")) as Record<string, unknown>) || {};
+    existing = fs.readFileSync(file, "utf8");
   } catch {
+    existing = null; // no portals.yml yet: seed from the template below
+  }
+  if (existing !== null && existing.trim()) {
+    // A portals.yml that exists but does not parse is the user's own file: refuse, never replace it
+    // with the example template (which would drop their tracked_companies).
+    try {
+      const parsed = yaml.load(existing);
+      if (!isObj(parsed)) throw new Error("not a YAML mapping");
+      doc = parsed;
+    } catch (e) {
+      return Response.json({ error: `portals.yml could not be parsed (${e instanceof Error ? e.message.split("\n")[0] : "invalid"}). Fix it, then try again - nothing was changed.` }, { status: 409 });
+    }
+  } else {
     try {
       doc = (yaml.load(fs.readFileSync(path.join(root, "templates", "portals.example.yml"), "utf8")) as Record<string, unknown>) || {};
     } catch {
