@@ -1,7 +1,7 @@
 // tests/helpers.mjs — shared assertion helpers + counters for the test suite.
 // Moved verbatim from test-all.mjs (issue #1440); no framework by design:
 // the suite must run on a fresh clone with only Node.
-import { execFileSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -120,6 +120,18 @@ function resolveAllowedExecutable(cmd) {
 // kill tracked machine load, the same tree passed or failed run to run. Tests
 // that genuinely assert on a short timeout pass one explicitly.
 const RUN_TIMEOUT_MS = 120000;
+
+/**
+ * Like run(), but returns stdout + stderr whatever the exit status. For scripts whose non-zero exit is a
+ * legitimate outcome under test (batch-runner.sh exits 1 when an offer failed), where run()'s null return
+ * would throw the output away.
+ * @returns {string}
+ */
+export function runAnyExit(cmd, args = [], opts = {}) {
+  const exe = resolveAllowedExecutable(cmd);
+  const r = spawnSync(exe, args, { cwd: ROOT, encoding: 'utf-8', timeout: RUN_TIMEOUT_MS, ...opts });
+  return `${r.stdout || ''}${r.stderr || ''}`.trim();
+}
 
 export function run(cmd, args = [], opts = {}) {
   const exe = resolveAllowedExecutable(cmd);

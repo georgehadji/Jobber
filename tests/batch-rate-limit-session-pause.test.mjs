@@ -13,7 +13,7 @@ import { readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSync, copyFileSy
 import { join, delimiter } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
-import { pass, fail, ROOT, run, getBash, toBashPath } from './helpers.mjs';
+import { pass, fail, ROOT, run, runAnyExit, getBash, toBashPath } from './helpers.mjs';
 
 console.log('\n13. Batch rate-limit pause');
 
@@ -33,6 +33,8 @@ try {
     execFileSync('chmod', ['+x', join(batchDir, 'batch-runner.sh')]);
   }
   writeFileSync(join(tmp, 'merge-tracker.mjs'), 'console.log("merge fixture");\n');
+  // the runner now refuses to start a worker without a reserved report number, so the fixture needs the reserver
+  writeFileSync(join(tmp, 'reserve-report-num.mjs'), 'console.log("001");\n');
   writeFileSync(join(tmp, 'verify-pipeline.mjs'), 'console.log("verify fixture");\n');
   // batch-runner.sh resolves spend_tier -> model by shelling out to the single
   // source of truth rather than restating the table in bash, so the fixture
@@ -58,7 +60,7 @@ try {
   }
 
   const env = { ...process.env, PATH: `${fakeBin}${delimiter}${process.env.PATH}` };
-  const out = run(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
+  const out = runAnyExit(getBash(), [toBashPath(join(batchDir, 'batch-runner.sh')), '--parallel', '1', '--max-retries', '3', '--rate-limit-sleep', '0'], {
     cwd: tmp,
     env,
     stdio: ['pipe', 'pipe', 'pipe'],

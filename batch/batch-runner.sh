@@ -141,24 +141,34 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
 fi
 
 # Lock file to prevent double execution
+# LOCK_HELD is set only after this process created the lock file. The EXIT trap is installed for every
+# invocation, so without it --status / --watch / --dry-run would delete the lock of a live runner.
+LOCK_HELD=0
+
 acquire_lock() {
-  if [[ -f "$LOCK_FILE" ]]; then
-    local old_pid
-    old_pid=$(cat "$LOCK_FILE")
-    if kill -0 "$old_pid" 2>/dev/null; then
-      echo "ERROR: Another batch-runner is already running (PID $old_pid)"
-      echo "If this is stale, remove $LOCK_FILE"
-      exit 1
-    else
-      echo "WARN: Stale lock file found (PID $old_pid not running). Removing."
-      rm -f "$LOCK_FILE"
+  local attempt
+  for attempt in 1 2; do
+    # noclobber makes the create atomic: two runners starting together cannot both win.
+    if ( set -o noclobber; echo "$MAIN_PID" > "$LOCK_FILE" ) 2>/dev/null; then
+      LOCK_HELD=1
+      return 0
     fi
-  fi
-  echo "$MAIN_PID" > "$LOCK_FILE"
+    local old_pid
+    old_pid=$(cat "$LOCK_FILE" 2>/dev/null || true)
+    if [[ -n "$old_pid" ]] && kill -0 "$old_pid" 2>/dev/null; then
+      echo "ERROR: Another batch-runner is already running (PID $old_pid)" >&2
+      echo "If this is stale, remove $LOCK_FILE" >&2
+      exit 1
+    fi
+    echo "WARN: Stale lock file found (PID ${old_pid:-unknown} not running). Removing." >&2
+    rm -f "$LOCK_FILE"
+  done
+  echo "ERROR: could not acquire $LOCK_FILE" >&2
+  exit 1
 }
 
 release_lock() {
-  if [[ "${BASHPID:-$$}" != "$MAIN_PID" ]]; then
+  if [[ "${BASHPID:-$$}" != "$MAIN_PID" || "$LOCK_HELD" != "1" ]]; then
     return
   fi
   rm -f "$LOCK_FILE"
@@ -217,7 +227,7 @@ acquire_state_lock() {
       fi
       rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
       rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
-      echo "ERROR: Failed to initialize state lock metadata at $STATE_LOCK_DIR"
+      echo "ERROR: Failed to initialize state lock metadata at $STATE_LOCK_DIR" >&2
       return 1
     fi
 
@@ -228,7 +238,7 @@ acquire_state_lock() {
         STATE_LOCK_OWNED=0
         return 0
       fi
-      echo "ERROR: Failed to create state lock directory $STATE_LOCK_DIR"
+      echo "ERROR: Failed to create state lock directory $STATE_LOCK_DIR" >&2
       return 1
     fi
 
@@ -238,15 +248,15 @@ acquire_state_lock() {
       if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
         rm -f "$STATE_LOCK_PID_FILE"
         if rmdir "$STATE_LOCK_DIR" 2>/dev/null; then
-          echo "WARN: Recovered stale state lock (PID $lock_pid not running)."
+          echo "WARN: Recovered stale state lock (PID $lock_pid not running)." >&2
           continue
         fi
       fi
     fi
 
     if (( waited >= max_waits )); then
-      echo "ERROR: Timed out waiting for state lock at $STATE_LOCK_DIR"
-      echo "If no batch-runner worker is active, remove the stale lock directory."
+      echo "ERROR: Timed out waiting for state lock at $STATE_LOCK_DIR" >&2
+      echo "If no batch-runner worker is active, remove the stale lock directory." >&2
       return 1
     fi
 
@@ -489,6 +499,13 @@ process_offer() {
   retries=$(get_retries "$id")
   local report_num
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
+  # Fail closed: an empty or malformed number used to let the worker compute max+1 itself (the #749 race).
+  if ! [[ "$report_num" =~ ^[0-9]{3,}$ ]]; then
+    if (( retries < MAX_RETRIES )); then retries=$((retries + 1)); fi
+    update_state "$id" "$url" "failed" "$started_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "-" "-" "could not reserve a report number" "$retries"
+    echo "    ❌ Failed (could not reserve a report number for #$id)"
+    return 0
+  fi
   local date
   date=$(date +%Y-%m-%d)
   # Use mktemp instead of a predictable /tmp path: a fixed name like
@@ -520,8 +537,10 @@ process_offer() {
   # Escape sed delimiter characters in variables to prevent substitution breakage
   local esc_url esc_jd_file esc_report_num esc_date esc_id
   esc_url="${url//\\/\\\\}"
+  esc_url="${esc_url//&/\\&}"
   esc_url="${esc_url//|/\\|}"
   esc_jd_file="${jd_file//\\/\\\\}"
+  esc_jd_file="${esc_jd_file//&/\\&}"
   esc_jd_file="${esc_jd_file//|/\\|}"
   esc_report_num="${report_num//|/\\|}"
   esc_date="${date//|/\\|}"
@@ -656,14 +675,16 @@ process_offer() {
             const status = typeof obj.status === "string" ? obj.status : "";
             const error = typeof obj.error === "string" ? obj.error : "";
             const score = typeof obj.score === "number" ? String(obj.score) : "";
-            process.stdout.write(status + "\t" + error + "\t" + score);
+            process.stdout.write(status + "\x1f" + error + "\x1f" + score);
           } catch {
             process.stdout.write("");
           }
         });
       ' 2>/dev/null || true)
       if [[ -n "$parsed" ]]; then
-        IFS=$'\t' read -r parsed_status parsed_error parsed_score <<< "$parsed"
+        # \x1f is not IFS whitespace, so an empty error field stays an (empty) field. With a tab the
+        # empty field collapsed and the score slid into parsed_error: the score was always lost.
+        IFS=$'\x1f' read -r parsed_status parsed_error parsed_score <<< "$parsed"
         if [[ "$parsed_status" == "failed" ]]; then
           worker_failed_match="failed"
           worker_error_match="$parsed_error"
@@ -749,7 +770,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 skipped=0 failed=0 pending=0
+  local total=0 completed=0 skipped=0 failed=0 pending=0 stuck=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -764,11 +785,15 @@ print_summary() {
         ;;
       skipped) skipped=$((skipped + 1)) ;;
       failed) failed=$((failed + 1)) ;;
+      processing) stuck=$((stuck + 1)); pending=$((pending + 1)) ;;
       *) pending=$((pending + 1)) ;;
     esac
   done < "$STATE_FILE"
 
   echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending"
+  # A worker that died mid-offer leaves its row in `processing`; both that and `failed` make the run unhealthy.
+  BATCH_UNHEALTHY=$((failed + stuck))
+  if (( stuck > 0 )); then echo "WARN: $stuck offer(s) still marked processing (a worker died?) - re-run with --retry-failed" >&2; fi
 
   if (( score_count > 0 )); then
     local avg
@@ -945,7 +970,7 @@ main() {
   local -a pending_sources=()
   local -a pending_notes=()
 
-  while IFS=$'\t' read -r id url source notes; do
+  while IFS=$'\x1f' read -r id url source notes || [[ -n "$id" ]]; do
     [[ "$id" == "id" ]] && continue  # skip header
     [[ -z "$id" || -z "$url" ]] && continue
 
@@ -1004,7 +1029,7 @@ main() {
     pending_urls+=("$url")
     pending_sources+=("$source")
     pending_notes+=("$notes")
-  done < "$INPUT_FILE"
+  done < <(tr -d '\r' < "$INPUT_FILE" | tr '\t' '\037')
 
   local pending_count=${#pending_ids[@]}
 
@@ -1096,6 +1121,10 @@ main() {
   # Print summary
   print_summary
 
+  # Non-zero when any offer failed or was left processing, so scripts and CI can tell a clean run from a bad one.
+  if (( ${BATCH_UNHEALTHY:-0} > 0 )); then
+    exit 1
+  fi
   exit 0
 }
 
