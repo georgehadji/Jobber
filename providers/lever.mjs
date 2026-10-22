@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { compact } from './_finalize.mjs';
 
 // Lever provider — hits the public postings endpoint.
 // Auto-detects from careers_url via jobs.(eu.)?lever.co/<slug>.
@@ -62,7 +63,7 @@ export default {
     assertLeverUrl(apiUrl);
     const json = await ctx.fetchJson(apiUrl, { redirect: 'error' });
     if (!Array.isArray(json)) return [];
-    return json.map(j => ({
+    return compact(json).map(j => ({
       title: j.text || '',
       url: j.hostedUrl || '',
       company: entry.name,

@@ -79,13 +79,24 @@ try {
   if (capturedOpts && capturedOpts.redirect === 'error') pass('cryptocurrencyjobs.fetch() passes redirect:"error" (SSRF hardening)');
   else fail(`cryptocurrencyjobs.fetch() should pass redirect:"error", got ${JSON.stringify(capturedOpts)}`);
 
-  // fetch() swallows transport errors and returns [] (zero-token scan must not abort)
-  const errored = await ccj.fetch(
-    { name: 'CryptocurrencyJobs', provider: 'cryptocurrencyjobs' },
-    { transport: 'http', fetchText: async () => { throw new Error('network down'); }, fetchJson: async () => ({}) },
-  );
-  if (errored.length === 0) pass('cryptocurrencyjobs.fetch() returns [] when the feed fetch fails');
-  else fail('cryptocurrencyjobs.fetch() should return [] on fetch failure');
+  // An outage must surface as an error (scan.mjs records it per company and keeps scanning);
+  // returning [] made a dead feed look like a healthy board with no jobs.
+  let outageMsg = '';
+  try {
+    await ccj.fetch(
+      { name: 'CryptocurrencyJobs', provider: 'cryptocurrencyjobs' },
+      { transport: 'http', fetchText: async () => { throw new Error('network down'); }, fetchJson: async () => ({}) },
+    );
+  } catch (err) {
+    outageMsg = err.message;
+  }
+  if (/feed fetch failed - network down/.test(outageMsg)) pass('cryptocurrencyjobs.fetch() rejects with the cause when the feed fetch fails');
+  else fail(`cryptocurrencyjobs.fetch() should reject on fetch failure, got ${JSON.stringify(outageMsg)}`);
+
+  // Links that are not http(s) URLs are not postings.
+  const bad = parseCryptocurrencyJobsRss('<rss><channel><item><title>Dev at Acme</title><link>/relative/path</link></item><item><title>Dev at Beta</title><link>javascript:alert(1)</link></item><item><title>Dev at Gamma</title><link>https://example.com/j/1</link></item></channel></rss>');
+  if (bad.length === 1 && bad[0].url === 'https://example.com/j/1') pass('cryptocurrencyjobs drops relative and javascript: links, keeps the https one');
+  else fail(`cryptocurrencyjobs link validation: ${JSON.stringify(bad)}`);
 } catch (e) {
   fail(`cryptocurrencyjobs provider tests crashed: ${e.message}`);
 }

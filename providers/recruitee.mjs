@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { compact } from './_finalize.mjs';
 
 // Recruitee provider — hits the public per-tenant offers API.
 // Auto-detects from careers_url pattern `https://<slug>.recruitee.com`.
@@ -77,8 +78,7 @@ export default {
  * @returns {Array<{title: string, url: string, company: string, location: string}>}
  */
 export function parseRecruiteeResponse(json, companyName) {
-  const offers = json?.offers;
-  if (!Array.isArray(offers)) return [];
+  const offers = compact(json?.offers);
   return offers.map(j => {
     const city = j.city || '';
     const country = j.country || '';

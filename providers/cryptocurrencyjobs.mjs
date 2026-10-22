@@ -11,6 +11,7 @@
 // the providers/rwfa.mjs pattern.
 
 import { decodeEntities } from './_html-entities.mjs';
+import { isHttpUrl } from '../lib/url-guard.mjs';
 
 // The feed's generator double-encodes entities at the source (verified
 // 2026-07-30: the raw XML carries `Social Media &amp;amp; Growth Lead`), so a
@@ -70,7 +71,7 @@ export function parseCryptocurrencyJobsRss(xml) {
       const block = parts[i];
       const rawTitle = decodeFeedText(extractTag(block, 'title'));
       const link = extractTag(block, 'link') || extractTag(block, 'guid');
-      if (!rawTitle || !link) continue;
+      if (!rawTitle || !isHttpUrl(link)) continue; // relative or javascript: links are not postings
 
       const { title, company } = splitTitle(rawTitle);
       if (!title) continue;
@@ -110,8 +111,9 @@ export default {
       // redirect:'error' — refuse server-side redirects (SSRF hardening, matches
       // the other HTTP providers); the feed host is fixed so a redirect is a flag.
       xml = await ctx.fetchText(FEED, { redirect: 'error' });
-    } catch {
-      return [];
+    } catch (err) {
+      // Rethrow: an outage must read as an error, not as "0 jobs" (which looks like a healthy empty board).
+      throw new Error(`cryptocurrencyjobs: feed fetch failed - ${err && err.message ? err.message : err}`);
     }
     return parseCryptocurrencyJobsRss(xml);
   },

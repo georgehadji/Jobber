@@ -1,5 +1,6 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
+import { compact } from './_finalize.mjs';
 
 // SmartRecruiters provider — hits the public postings API.
 // Auto-detects from careers_url pattern
@@ -104,8 +105,7 @@ export default {
  * @returns {Array<{title: string, url: string, company: string, location: string}>}
  */
 export function parseSmartRecruitersResponse(json, companyName) {
-  const items = json?.content;
-  if (!Array.isArray(items)) return [];
+  const items = compact(json?.content);
   return items.map(j => {
     const loc = j.location || {};
     const fullLocation = loc.fullLocation || [loc.city, loc.region, loc.country].filter(Boolean).join(', ');

@@ -41,7 +41,8 @@ export function resolveConfig(entry) {
   } catch {
     return null;
   }
-  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  // https only: the anonymous bearer token read from this page is sent on the next request.
+  if (u.protocol !== 'https:') return null;
   const host = u.host.toLowerCase();
   if (host !== 'csod.com' && !host.endsWith('.csod.com')) return null;
   const m = u.pathname.match(/\/ux\/ats\/careersite\/(\d+)\//i) || u.pathname.match(/\/ux\/ats\/careersite\/(\d+)$/i);
@@ -146,7 +147,7 @@ export default {
     const cfg = resolveConfig(entry);
     if (!cfg) throw new Error(`csod: cannot resolve careersite URL for ${entry.name}`);
 
-    const html = await ctx.fetchText(cfg.homeUrl, { headers: { accept: 'text/html' } });
+    const html = await ctx.fetchText(cfg.homeUrl, { redirect: 'error', headers: { accept: 'text/html' } });
     const token = extractToken(html);
     if (!token) throw new Error(`csod: no anonymous token on ${cfg.homeUrl}`);
 
