@@ -190,6 +190,7 @@ async function runLocalParser(entry) {
 /** @type {Provider} */
 export default {
   id: 'local-parser',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     if (!entry.parser?.command) return null;

@@ -28,7 +28,7 @@ const PROVIDERS_DIR = join(ROOT, 'providers');
 // else on a default export is either a typo (fetchJobs: instead of fetch:)
 // or an undocumented contract extension — both should fail loudly rather
 // than silently ship.
-const ALLOWED_KEYS = new Set(['id', 'detect', 'fetch', 'enrichDate']);
+const ALLOWED_KEYS = new Set(['id', 'detect', 'fetch', 'enrichDate', 'scope']);
 
 const PROBE_ENTRY = {
   name: 'contract-probe',

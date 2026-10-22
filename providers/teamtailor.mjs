@@ -73,6 +73,7 @@ function fallbackCompany(entry) {
 /** @type {Provider} */
 export default {
   id: 'teamtailor',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     // Auto-detection never claims a branded host — only *.teamtailor.com.

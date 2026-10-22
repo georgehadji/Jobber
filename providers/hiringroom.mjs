@@ -97,6 +97,7 @@ export function parseHiringRoomCards(fragment, tenant, companyName) {
 /** @type {Provider} */
 export default {
   id: 'hiringroom',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const tenant = resolveTenant(entry);

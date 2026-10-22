@@ -115,6 +115,7 @@ export function parsePaylocityJobs(rows, companyName) {
 /** @type {Provider} */
 export default {
   id: 'paylocity',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const guid = parsePaylocityBoardUrl(entry?.careers_url);

@@ -261,6 +261,7 @@ function resolveMaxJobs(entry) {
 /** @type {Provider} */
 export default {
   id: 'radancy',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect() {
     // Branded hosts carry no stable Radancy token in the URL — wire explicitly

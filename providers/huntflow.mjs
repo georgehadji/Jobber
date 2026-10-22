@@ -126,6 +126,7 @@ export function parseHuntflowPayload(rawPayload, companyName, origin) {
 /** @type {Provider} */
 export default {
   id: 'huntflow',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const origin = resolveOrigin(entry);

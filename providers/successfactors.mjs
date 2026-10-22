@@ -392,6 +392,7 @@ async function fetchRmk(entry, cfg, ctx) {
 /** @type {Provider} */
 export default {
   id: 'successfactors',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const url = entry.api || entry.careers_url || '';

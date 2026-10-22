@@ -55,6 +55,7 @@ export function parseHiringThingListing(html, origin, company) {
 /** @type {Provider} */
 export default {
   id: 'hiringthing',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const origin = originFrom(entry?.careers_url);

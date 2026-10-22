@@ -78,6 +78,7 @@ export function parseCareerPlugListing(html, origin, company) {
 /** @type {Provider} */
 export default {
   id: 'careerplug',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const origin = resolveOrigin(entry);

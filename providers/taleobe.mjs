@@ -155,6 +155,7 @@ export function parseTaleobeFeed(xml, board, company = '') {
 /** @type {Provider} */
 export default {
   id: 'taleobe',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = parseTaleobeUrl(entry?.careers_url);

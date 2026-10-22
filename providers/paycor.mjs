@@ -111,6 +111,7 @@ export function parsePaycorListing(html, clientId, companyName) {
 /** @type {Provider} */
 export default {
   id: 'paycor',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const clientId = parsePaycorClientId(entry.careers_url);

@@ -133,6 +133,7 @@ const sleep = (ms, ctx) =>
 /** @type {Provider} */
 export default {
   id: 'ukgready',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const board = parseUkgReadyUrl(entry?.careers_url);

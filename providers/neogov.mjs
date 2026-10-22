@@ -137,6 +137,7 @@ export function parseNeogovListing(fragment, domain, companyName) {
 /** @type {Provider} */
 export default {
   id: 'neogov',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const b = resolveBoard(entry);

@@ -163,6 +163,9 @@
  * (excluding _-prefixed shared helpers).
  *
  * @typedef {object} Provider
+ * @property {'company'|'search'} [scope]  'company' = the board of ONE employer (a per-company ATS);
+ *                              omitted/'search' = a board-wide or keyword-search source. Only 'company' boards feed the
+ *                              employer-board cross-check (a search source listing 0 matches says nothing about an employer).
  * @property {string} id                                                       Unique across all loaded providers.
  * @property {((entry: PortalEntry) => (DetectHit | null))} [detect]           Optional auto-detection.
  * @property {(entry: PortalEntry, ctx: Context) => Promise<Job[]>} fetch      Required.

@@ -83,6 +83,7 @@ export function parseJazzHRListing(html, origin, companyName) {
 /** @type {Provider} */
 export default {
   id: 'jazzhr',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const origin = resolveOrigin(entry);

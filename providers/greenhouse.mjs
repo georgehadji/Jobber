@@ -118,6 +118,7 @@ export function buildOfficeMap(json) {
 /** @type {Provider} */
 export default {
   id: 'greenhouse',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     try {

@@ -106,6 +106,7 @@ export function parseAdpMyJobsResponse(json, companyName, slug) {
 /** @type {Provider} */
 export default {
   id: 'adpmyjobs',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const slug = parseAdpMyJobsSlug(entry.careers_url);

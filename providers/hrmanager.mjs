@@ -122,6 +122,7 @@ export function parseHrManagerList(json, alias, companyName) {
 /** @type {Provider} */
 export default {
   id: 'hrmanager',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const alias = resolveAlias(entry);

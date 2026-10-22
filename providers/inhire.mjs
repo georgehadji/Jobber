@@ -79,6 +79,7 @@ export function parseInhireResponse(json, tenant, companyName) {
 /** @type {Provider} */
 export default {
   id: 'inhire',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     return resolveTenant(entry) ? { url: API } : null;

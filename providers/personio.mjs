@@ -55,6 +55,7 @@ function toEpochMs(value) {
 /** @type {Provider} */
 export default {
   id: 'personio',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const host = resolveHost(entry);

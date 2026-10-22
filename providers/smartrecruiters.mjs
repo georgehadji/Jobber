@@ -60,6 +60,7 @@ function resolveApiUrl(entry) {
 /** @type {Provider} */
 export default {
   id: 'smartrecruiters',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const apiUrl = resolveApiUrl(entry);

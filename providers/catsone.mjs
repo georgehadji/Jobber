@@ -63,6 +63,7 @@ export function parseCatsListing(html, origin, portal, company) {
 /** @type {Provider} */
 export default {
   id: 'catsone',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const p = portalFrom(entry?.careers_url);

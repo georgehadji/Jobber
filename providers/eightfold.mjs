@@ -102,6 +102,7 @@ export function parseEightfoldPage(json, gen, host, companyName) {
 /** @type {Provider} */
 export default {
   id: 'eightfold',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const t = resolveTarget(entry);

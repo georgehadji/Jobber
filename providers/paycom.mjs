@@ -121,6 +121,7 @@ export function parsePreviews(json, clientKey, companyName) {
 /** @type {Provider} */
 export default {
   id: 'paycom',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const key = resolveClientKey(entry);

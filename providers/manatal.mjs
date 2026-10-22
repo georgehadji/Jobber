@@ -101,6 +101,7 @@ export function parseManatalPage(json, slug, companyName) {
 /** @type {Provider} */
 export default {
   id: 'manatal',
+  scope: 'company', // one employer's own board: eligible for the employer-board cross-check
 
   detect(entry) {
     const slug = resolveSlug(entry);
