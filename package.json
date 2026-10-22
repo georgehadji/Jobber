@@ -1,6 +1,6 @@
 {
   "name": "jobber",
-  "version": "1.25.1",
+  "version": "1.26.0",
   "description": "AI-powered job search pipeline — works with any AI coding CLI (Claude Code, Codex, OpenCode, Antigravity, Grok, Qwen, Kimi, Copilot)",
   "private": true,
   "engines": {

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.26.0](https://github.com/georgehadji/Jobber/compare/jobber-v1.25.1...jobber-v1.26.0) (2026-10-22)
+
+
+### Features
+
+* **providers:** add jobs.ac.uk (UK academic jobs) provider ([8ee73a6](https://github.com/georgehadji/Jobber/commit/8ee73a687cf430e0bf40a05d9f7bd6e2b4620ef9))
+* **providers:** add jobs.ac.uk (UK academic jobs) provider ([9a321fa](https://github.com/georgehadji/Jobber/commit/9a321fafd6be0f5cf09a174acc817a06f112c11a))
+
 ## [1.25.1](https://github.com/georgehadji/Jobber/compare/jobber-v1.25.0...jobber-v1.25.1) (2026-10-22)
 
 
