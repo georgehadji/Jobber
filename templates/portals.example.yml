@@ -2263,6 +2263,18 @@ job_boards:
   #   cat_id: 68
   #   enabled: true
 
+  # ── jobs.ac.uk (UK academic jobs) ───────────────────────────────────
+  # Lecturers, researchers, PhD studentships, professional services. Parses the public
+  # search pages (25 per page, newest first). keywords fall back to config/profile.yml
+  # target_roles; with neither, the newest jobs across all subjects are scanned.
+
+  # - name: jobs.ac.uk
+  #   provider: jobs-ac-uk
+  #   jobs_ac_uk:
+  #     keywords: ["computer science", "machine learning"]
+  #     max_pages: 3
+  #   enabled: true
+
   # ── CryptocurrencyJobs (Web3 / crypto) ─────────────────────────────
   # Curated Web3/crypto job board. Public RSS feed, zero-auth, 100% remote
   # listings. The feed URL is hardcoded in the provider — no careers_url
