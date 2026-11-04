@@ -5,7 +5,7 @@
 <title>Georgios-Chrysovalantis Chatzivantsidis - CV</title>
 <style>
   :root { --accent: hsl(187 74% 32%); --purple: hsl(270, 70%, 45%); }
-  @page { size: A4; margin: 0.55in; }
+  @page { size: A4; margin: 0.5in; }
   * { margin: 0; padding: 0; box-sizing: border-box; font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0, "dlig" 0; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { font-family: "Liberation Sans", "Helvetica Neue", Arial, "DejaVu Sans", sans-serif; font-size: 10.5px; line-height: 1.45; color: #1a1a2e; background: #fff; }
@@ -16,7 +16,7 @@
   .header-gradient { height: 2px; background: linear-gradient(to right, var(--accent), var(--purple)); margin-bottom: 8px; }
   .contact-row { font-size: 10px; color: #555; }
   .contact-row .sep { color: #ccc; margin: 0 6px; }
-  .section { margin-bottom: 12px; }
+  .section { margin-bottom: 10px; }
   .section-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); border-bottom: 1.5px solid #e2e2e2; padding-bottom: 3px; margin-bottom: 7px; break-after: avoid; }
   .summary-text { line-height: 1.6; color: #2f2f2f; }
   ul { padding-left: 16px; }
@@ -50,7 +50,7 @@
 
 <div class="section">
   <div class="section-title">Professional Summary</div>
-  <div class="summary-text">Physics graduate (BSc, Aristotle University of Thessaloniki) moving into data science, with a quantitative and computational background. Wrote FORTRAN code for numerical simulation of asteroid orbits and co-authored a peer-reviewed <em>Astronomy &amp; Astrophysics</em> paper based on large-scale numerical experiments on a supercomputer, plus a conference paper on stable chaos in asteroid motion. Taught university tutorials in Statistics, Probability and Theoretical Mechanics, including Statistics for an MSc in Computational Physics. Holds the Workearly Data Science Professional certification (Python, pandas, NumPy, Matplotlib, SQL, data modeling, big data analytics, AI-assisted data analysis), earned by passing exam projects and coding assignments, and completed a data analysis project on football data. Has built more than 10 apps with AI, plus several websites. Explains technical material clearly, from years of teaching students and adult learners.</div>
+  <div class="summary-text">Physics graduate (BSc, Aristotle University of Thessaloniki) moving into data science, with a quantitative and computational background. Wrote FORTRAN code for numerical simulation of asteroid orbits and co-authored a peer-reviewed <em>Astronomy &amp; Astrophysics</em> paper based on large-scale numerical experiments on a supercomputer, plus a conference paper on stable chaos in asteroid motion. Taught university tutorials in Statistics, Probability and Theoretical Mechanics, including Statistics for an MSc in Computational Physics. Holds the Workearly Data Science Professional certification (Python, pandas, NumPy, Matplotlib, SQL, data modeling, big data analytics, AI-assisted data analysis), earned by passing exam projects and coding assignments, and completed a data analysis project on football data. Built a semantic search and RAG tool over 3,000 arXiv abstracts, evaluated against a BM25 baseline. Has built more than 10 apps with AI, plus several websites. Explains technical material clearly, from years of teaching students and adult learners.</div>
 </div>
 
 <div class="section">
@@ -60,7 +60,7 @@
     <li><strong>Statistics and mathematics:</strong> statistics, probability, theoretical mechanics, nonlinear dynamics and chaos</li>
     <li><strong>Scientific computing:</strong> numerical simulation and orbit integration; large-scale numerical experiments on a supercomputer</li>
     <li><strong>Data analysis:</strong> data processing, data cleaning, data quality checks, ETL, data modeling, data warehouses, big data analytics, AI-assisted data analysis</li>
-    <li><strong>AI tools:</strong> ChatGPT, Claude, Gemini, DeepSeek and Qwen (regular use)</li>
+    <li><strong>AI tools:</strong> ChatGPT, Claude, Gemini, DeepSeek and Qwen (regular use); embeddings, semantic search, RAG (Claude API)</li>
     <li><strong>Visualisation:</strong> Matplotlib, Power BI (DAX, Power Query), Tableau, Excel; dashboards and reports</li>
     <li><strong>Technical writing:</strong> TeX for scientific publishing; peer-reviewed publications</li>
     <li><strong>Office software:</strong> Word, Excel, Access, PowerPoint (Cambridge IT Skills, Proficiency level)</li>
@@ -104,6 +104,13 @@
 
 <div class="section">
   <div class="section-title">Projects</div>
+  <div class="job">
+    <div class="job-company">Semantic Paper Search - Personal Project (2026) | github.com/georgehadji/semantic-paper-search</div>
+    <ul>
+      <li>Built, with AI coding assistance, semantic search and cited question-answering (RAG) over 3,000 arXiv astro-ph.EP abstracts (Python, sentence-transformers embeddings, NumPy, Claude API, Streamlit, pytest)</li>
+      <li>Compared it with a BM25 keyword baseline on 20 queries (176 LLM-judged query-paper pairs): precision@5 0.43 vs 0.40 overall, 0.22 vs 0.12 on plain-language queries</li>
+    </ul>
+  </div>
   <div class="job">
     <div class="job-company">Apps and Websites - Personal Projects</div>
     <ul>

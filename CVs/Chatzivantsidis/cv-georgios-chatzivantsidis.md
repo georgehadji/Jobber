@@ -15,7 +15,7 @@ Physics graduate (BSc, Aristotle University of Thessaloniki) moving into data an
 - **Programming:** Python (pandas, NumPy, Matplotlib); SQL; FORTRAN and Pascal (scientific computing); HTML, CSS, JavaScript; VS Code, Git
 - **Data analysis and BI:** data processing, data cleaning, data quality checks, ETL, data modeling, data warehouses, OLAP cubes, AI-assisted data analysis
 - **Visualisation and reporting:** Power BI (DAX, Power Query), Tableau, Excel, Python in Excel; interactive dashboards and reports; data storytelling
-- **AI tools:** ChatGPT, Claude, Gemini, DeepSeek and Qwen (regular use); AI-assisted data analysis
+- **AI tools:** ChatGPT, Claude, Gemini, DeepSeek and Qwen (regular use); AI-assisted data analysis; embeddings, semantic search, RAG (Claude API)
 - **Office software:** Word, Excel, Access, PowerPoint (Cambridge IT Skills, Proficiency level)
 - **Statistics and mathematics:** statistics, probability, theoretical mechanics, nonlinear dynamics and chaos
 - **Scientific computing:** numerical simulation and orbit integration; large-scale numerical experiments
@@ -33,6 +33,11 @@ Physics graduate (BSc, Aristotle University of Thessaloniki) moving into data an
 - **Chaos and Stability in Planetary Systems** -- 3rd Helmholtz Summer School, Helmholtz Institute for Supercomputational Physics, Potsdam (Sep 2003; 80 hours of lectures, 50 hours of computing practicals; presented results)
 
 ## Projects
+
+### Semantic Paper Search -- Personal Project (2026) | github.com/georgehadji/semantic-paper-search
+
+- Built, with AI coding assistance, semantic search and cited question-answering (RAG) over 3,000 arXiv astro-ph.EP abstracts (Python, sentence-transformers embeddings, NumPy, Claude API, Streamlit, pytest)
+- Compared it with a BM25 keyword baseline on 20 queries (176 LLM-judged query-paper pairs): precision@5 0.43 vs 0.40 overall, 0.22 vs 0.12 on plain-language queries
 
 ### Apps and Websites -- Personal Projects
 
