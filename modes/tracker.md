@@ -18,13 +18,14 @@ With the optional Via column (intermediary channel, #1596) after Company:
 - **Unknown end employer** (recruiter hasn't named the client yet): Company = `?` (the structural marker — never the word "Confidential", which is locale-dependent and collides with real firm names), Via = the agency, and a distinguishing descriptor in Notes (e.g. `fintech, Leeds`). Display it to the user as "Confidential (via {Via})".
 - The row's identity is its `#` (report number) — Company is display data and changes at most once, at reveal.
 
-Possible states: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
+Possible states: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` → `Hired` / `Rejected` / `Discarded` / `SKIP`
 
 - `Evaluated` = offer evaluated with report, pending decision
 - `Applied` = the candidate submitted their application
 - `Responded` = Company has responded (not yet interview)
 - `Interview` = active interview process
 - `Offer` = job offer received
+- `Hired` = offer accepted, job landed (terminal success)
 - `Rejected` = rejected by company
 - `Discarded` = discarded by candidate or offer closed
 - `SKIP` = doesn't fit, don't apply
