@@ -974,16 +974,21 @@ async function apply() {
   const initialStatusPaths = new Set(gitStatusEntries().map(entry => entry.path));
   const isReexec = process.env.JOBBER_UPDATE_REEXEC === '1';
 
-  // Check for lock
-  const lockFile = join(ROOT, '.update-lock');
-  if (existsSync(lockFile) && !isReexec) {
-    console.error('Update already in progress (.update-lock exists). If stuck, delete it manually.');
-    process.exit(1);
-  }
-
-  // Create lock
+  // Cross-process lock via lib/file-lock.mjs (owner-PID liveness stale
+  // recovery, so a SIGKILLed apply no longer blocks forever). Imported lazily:
+  // this file must stay self-loading (see the NOTE at the top). The re-exec
+  // child skips it; its parent still holds the lock.
+  const lockPath = join(ROOT, '.update-lock');
+  let lock = null;
   if (!isReexec) {
-    writeFileSync(lockFile, new Date().toISOString());
+    const { acquireLock, LockTimeoutError } = await import('./lib/file-lock.mjs');
+    try {
+      lock = await acquireLock(lockPath, { lockDir: lockPath, kind: 'update', timeoutMs: 500, retryMs: 50 });
+    } catch (err) {
+      if (!(err instanceof LockTimeoutError)) throw err;
+      console.error('Update already in progress (.update-lock is held by a running process).');
+      process.exit(1);
+    }
   }
 
   const backupBranch = process.env.JOBBER_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
@@ -1335,7 +1340,7 @@ async function apply() {
 
   } finally {
     // Remove lock
-    if (!isReexec && existsSync(lockFile)) unlinkSync(lockFile);
+    lock?.release();
   }
 }
 
@@ -1431,7 +1436,7 @@ function rollback() {
 
 function dismiss() {
   writeFileSync(join(ROOT, '.update-dismissed'), new Date().toISOString());
-  console.log('Update check dismissed. Run "node update-system.mjs check" or say "check for updates" to re-enable.');
+  console.log('Update check dismissed. Delete .update-dismissed (in the Jobber folder) to re-enable update checks.');
 }
 
 // ── MAIN ────────────────────────────────────────────────────────
