@@ -1,6 +1,9 @@
 # Personal data (user fills these)
 cv.md
 local/
+# Personal CV/cover-letter working folder (PII of the user and of anyone else
+# whose CV is kept here). Never commit — the repo may be public.
+CVs/
 # Everything under data/ is generated or personal at runtime — only .gitkeep
 # placeholders are tracked (verify with `git ls-files data/`). A blanket rule
 # means a new generated file (e.g. a future log/cache addition) is covered

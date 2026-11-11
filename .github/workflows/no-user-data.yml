@@ -52,6 +52,10 @@ jobs:
               /^output\//,
               /^jds\//,
               /^writing-samples\//,
+              /^documents\//,
+              // Personal CV / cover-letter working folder (not a core Jobber
+              // path, but it held real CVs once — keep it out for good).
+              /^CVs\//,
             ];
             // Tracked scaffolding that legitimately lives under those dirs.
             const isScaffold = (f) => /(^|\/)\.gitkeep$/.test(f) || /(^|\/)README\.md$/.test(f);

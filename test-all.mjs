@@ -1673,6 +1673,15 @@ try {
   } else {
     fail('no-user-data guard has the wrong custom/user-layer paths (#1736)');
   }
+
+  // Personal CV folders must be guarded too: CVs/ once shipped real CVs.
+  // documents/ mirrors USER_PATHS in update-system.mjs.
+  const missingGuards = ['/^CVs\\//', '/^documents\\//'].filter((p) => !guardedPaths.includes(p));
+  if (missingGuards.length === 0) {
+    pass('no-user-data guard covers personal CV folders (CVs/, documents/)');
+  } else {
+    fail(`no-user-data guard is missing: ${missingGuards.join(', ')}`);
+  }
 } catch (e) {
   fail(`custom instructions test crashed: ${e.message}`);
 }
