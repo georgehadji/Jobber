@@ -128,6 +128,13 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   const [aiTrace, setAiTrace] = useState<AiTraceChunk[]>([]);
   const [aiCost, setAiCost] = useState<AiCost>({ searches: 0, candidates: 0, fetches: 0 });
   const runningRef = useRef(false);
+  // The "revealing" -> "results" hand-off timer. Kept so a stale one can never land on a newer run.
+  const revealTimer = useRef<number | undefined>(undefined);
+  const clearReveal = useCallback(() => {
+    window.clearTimeout(revealTimer.current);
+    revealTimer.current = undefined;
+  }, []);
+  useEffect(() => clearReveal, [clearReveal]);
   const aiIntentRef = useRef(aiIntent);
   aiIntentRef.current = aiIntent;
   const filtersRef = useRef(filters);
@@ -148,6 +155,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
     if (runningRef.current) return;
     const f = filtersRef.current;
     runningRef.current = true;
+    clearReveal();
     setPhase("casting");
     setOffers([]);
     setMatchCount(0);
@@ -263,7 +271,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
       setMatchCount(acc.length);
       setPhase("revealing");
       setStatus(`${acc.length} fresh role${acc.length === 1 ? "" : "s"} found — free.`);
-      window.setTimeout(() => setPhase("results"), 850);
+      revealTimer.current = window.setTimeout(() => setPhase("results"), 850);
     } else if (sawError) {
       setError(sawError);
       setPhase("failed");
@@ -276,7 +284,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
     } else {
       setPhase(isBroadSearch(f) ? "empty-current" : "empty-loose");
     }
-  }, []);
+  }, [clearReveal]);
 
   const addToPipeline = useCallback(async (list: DiscoveredOffer[]) => {
     const fresh = list.filter((o) => !added.has(o.url));
@@ -321,6 +329,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
 
   const reset = useCallback(() => {
     runningRef.current = false;
+    clearReveal();
     setPhase("idle");
     setOffers([]);
     setSources({});
@@ -336,7 +345,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [clearReveal]);
 
   // AI search — orchestrate modes/discover.md via the user's CLI, streamed.
   const discoverAI = useCallback(async () => {
@@ -354,6 +363,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     runningRef.current = true;
+    clearReveal();
     setPhase("casting");
     setOffers([]);
     setMatchCount(0);
@@ -429,14 +439,14 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
       setMatchCount(acc.length);
       setPhase("revealing");
       setStatus(`${acc.length} candidate${acc.length === 1 ? "" : "s"} found.`);
-      window.setTimeout(() => setPhase("results"), 850);
+      revealTimer.current = window.setTimeout(() => setPhase("results"), 850);
     } else if (sawError) {
       setError(sawError);
       setPhase("failed");
     } else {
       setPhase("empty-loose");
     }
-  }, []);
+  }, [clearReveal]);
 
   // Switch surface but PRESERVE the current results + filters — toggling scan↔AI must
   // not throw away a completed search (disc#5). A new search (discover/discoverAI)
