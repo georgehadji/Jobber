@@ -338,7 +338,7 @@ Six rules, each from a defect this suite actually shipped (see `docs/DEFECT-HUNT
 
 ### Canonical States (applications.md)
 
-**Source of truth:** `templates/states.yml`
+**Source of truth:** `templates/states.yml`. State lists live in `templates/states.yml` and `templates/machines/`. Never restate them; use `node machines.mjs describe <id>` (ids: `node machines.mjs list`) and `node machines.mjs check <id> <from> <to>`.
 
 | State | When to use |
 |-------|-------------|

@@ -13,6 +13,7 @@ import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'pat
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import * as yaml from 'js-yaml';
+import { findState, isForwardEdge } from './lib/state-machine.mjs';
 
 /**
  * Rebuild a markdown table row from the cells produced by `line.split('|')`.
@@ -355,7 +356,7 @@ export function loadStateTransitions(statesPath) {
  * @returns {boolean} True when `toId` is an allowed target of `fromId`.
  */
 export function canTransition(transitions, fromId, toId) {
-  return Array.isArray(transitions[fromId]) && transitions[fromId].includes(toId);
+  return isForwardEdge(transitions, fromId, toId);
 }
 
 /**
@@ -372,14 +373,7 @@ export function canTransition(transitions, fromId, toId) {
  * @returns {string|null} Canonical label (e.g. "Applied"), or null when unknown.
  */
 export function resolveCanonicalState(input, states) {
-  const clean = String(input ?? '').replace(/\*\*/g, '').trim().toLowerCase();
-  if (!clean) return null;
-  for (const s of states) {
-    if (s.label.toLowerCase() === clean) return s.label;
-    if (s.id.toLowerCase() === clean) return s.label;
-    if (s.aliases.some(a => a.toLowerCase() === clean)) return s.label;
-  }
-  return null;
+  return findState(states, input)?.label ?? null;
 }
 
 // ── Report-number reservation sentinel GC (shared) ─────────────────────────
