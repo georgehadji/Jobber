@@ -1,0 +1,372 @@
+spelling	states_yml	merge_tracker	normalize_statuses	verify_pipeline	stats	web_format	go_dashboard	conflict	note
+evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	dashboard i18n catalog label
+EVALUATED	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	uppercase variant; dashboard i18n catalog label
+Evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	dashboard i18n catalog label
+evaluada	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	dashboard i18n catalog label
+EVALUADA	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	uppercase variant; dashboard i18n catalog label
+Evaluada	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	dashboard i18n catalog label
+applied	applied	applied	applied	applied	applied	applied	applied	no	dashboard i18n catalog label
+APPLIED	applied	applied	applied	applied	applied	applied	applied	no	uppercase variant; dashboard i18n catalog label
+Applied	applied	applied	applied	applied	applied	applied	applied	no	dashboard i18n catalog label
+aplicado	applied	applied	applied	applied	applied	applied	applied	no	
+APLICADO	applied	applied	applied	applied	applied	applied	applied	no	uppercase variant
+Aplicado	applied	applied	applied	applied	applied	applied	applied	no	
+enviada	applied	applied	applied	applied	applied	applied	applied	no	
+ENVIADA	applied	applied	applied	applied	applied	applied	applied	no	uppercase variant
+Enviada	applied	applied	applied	applied	applied	applied	applied	no	
+aplicada	applied	applied	applied	applied	applied	applied	applied	no	dashboard i18n catalog label
+APLICADA	applied	applied	applied	applied	applied	applied	applied	no	uppercase variant; dashboard i18n catalog label
+Aplicada	applied	applied	applied	applied	applied	applied	applied	no	dashboard i18n catalog label
+sent	applied	applied	applied	applied	applied	applied	applied	no	
+SENT	applied	applied	applied	applied	applied	applied	applied	no	uppercase variant
+Sent	applied	applied	applied	applied	applied	applied	applied	no	
+responded	responded	responded	responded	responded	responded	responded	responded	no	dashboard i18n catalog label
+RESPONDED	responded	responded	responded	responded	responded	responded	responded	no	uppercase variant; dashboard i18n catalog label
+Responded	responded	responded	responded	responded	responded	responded	responded	no	dashboard i18n catalog label
+respondido	responded	responded	responded	responded	responded	responded	responded	no	
+RESPONDIDO	responded	responded	responded	responded	responded	responded	responded	no	uppercase variant
+Respondido	responded	responded	responded	responded	responded	responded	responded	no	
+interview	interview	interview	interview	interview	interview	interview	interview	no	dashboard i18n catalog label
+INTERVIEW	interview	interview	interview	interview	interview	interview	interview	no	uppercase variant; dashboard i18n catalog label
+Interview	interview	interview	interview	interview	interview	interview	interview	no	dashboard i18n catalog label
+entrevista	interview	interview	interview	interview	interview	interview	interview	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+ENTREVISTA	interview	interview	interview	interview	interview	interview	interview	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Entrevista	interview	interview	interview	interview	interview	interview	interview	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+offer	offer	offer	offer	offer	offer	offer	offer	no	dashboard i18n catalog label
+OFFER	offer	offer	offer	offer	offer	offer	offer	no	uppercase variant; dashboard i18n catalog label
+Offer	offer	offer	offer	offer	offer	offer	offer	no	dashboard i18n catalog label
+oferta	offer	offer	offer	offer	offer	offer	offer	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+OFERTA	offer	offer	offer	offer	offer	offer	offer	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Oferta	offer	offer	offer	offer	offer	offer	offer	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+rejected	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
+REJECTED	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	uppercase variant; dashboard i18n catalog label
+Rejected	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
+rechazado	rejected	rejected	-	rejected	rejected	rejected	rejected	no	
+RECHAZADO	rejected	rejected	-	rejected	rejected	rejected	rejected	no	uppercase variant
+Rechazado	rejected	rejected	-	rejected	rejected	rejected	rejected	no	
+rechazada	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
+RECHAZADA	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	uppercase variant; dashboard i18n catalog label
+Rechazada	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
+discarded	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	dashboard i18n catalog label
+DISCARDED	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	uppercase variant; dashboard i18n catalog label
+Discarded	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	dashboard i18n catalog label
+descartado	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	
+DESCARTADO	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	uppercase variant
+Descartado	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	
+descartada	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+DESCARTADA	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Descartada	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+cerrada	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	
+CERRADA	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	uppercase variant
+Cerrada	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	
+cancelada	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	
+CANCELADA	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	uppercase variant
+Cancelada	discarded	discarded	discarded	discarded	discarded	discarded	discarded	no	
+skip	skip	skip	skip	skip	skip	skip	skip	no	dashboard i18n catalog label
+SKIP	skip	skip	skip	skip	skip	skip	skip	no	uppercase variant; dashboard i18n catalog label
+Skip	skip	skip	skip	skip	skip	skip	skip	no	dashboard i18n catalog label
+no_aplicar	skip	skip	skip	skip	skip	skip	skip	no	
+NO_APLICAR	skip	skip	skip	skip	skip	skip	skip	no	uppercase variant
+No_aplicar	skip	skip	skip	skip	skip	skip	skip	no	
+no aplicar	skip	skip	skip	skip	skip	skip	skip	no	
+NO APLICAR	skip	skip	skip	skip	skip	skip	skip	no	uppercase variant
+No aplicar	skip	skip	skip	skip	skip	skip	skip	no	
+monitor	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip merge_tracker=skip normalize_statuses=skip verify_pipeline=skip stats=skip web_format=skip go_dashboard=evaluated; known conflict: states.yml/merge/normalize/verify/stats/web say skip, Go says evaluated
+MONITOR	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip merge_tracker=skip normalize_statuses=skip verify_pipeline=skip stats=skip web_format=skip go_dashboard=evaluated; uppercase variant; known conflict: states.yml/merge/normalize/verify/stats/web say skip, Go says evaluated
+Monitor	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip merge_tracker=skip normalize_statuses=skip verify_pipeline=skip stats=skip web_format=skip go_dashboard=evaluated; known conflict: states.yml/merge/normalize/verify/stats/web say skip, Go says evaluated
+hired	hired	hired	hired	hired	hired	hired	hired	no	dashboard i18n catalog label
+HIRED	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; dashboard i18n catalog label
+Hired	hired	hired	hired	hired	hired	hired	hired	no	dashboard i18n catalog label
+contratado	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+CONTRATADO	hired	hired	hired	hired	-	hired	hired	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Contratado	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+contratada	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+CONTRATADA	hired	hired	hired	hired	-	hired	hired	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Contratada	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+accepted	hired	hired	hired	hired	-	hired	hired	no	
+ACCEPTED	hired	hired	hired	hired	-	hired	hired	no	uppercase variant
+Accepted	hired	hired	hired	hired	-	hired	hired	no	
+accept	hired	hired	hired	hired	-	hired	hired	no	
+ACCEPT	hired	hired	hired	hired	-	hired	hired	no	uppercase variant
+Accept	hired	hired	hired	hired	-	hired	hired	no	
+condicional	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+CONDICIONAL	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); uppercase variant; non-YAML evaluated alias (Go accepts too)
+Condicional	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+hold	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+HOLD	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); uppercase variant; non-YAML evaluated alias (Go accepts too)
+Hold	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+evaluar	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+EVALUAR	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); uppercase variant; non-YAML evaluated alias (Go accepts too)
+Evaluar	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+verificar	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+VERIFICAR	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); uppercase variant; non-YAML evaluated alias (Go accepts too)
+Verificar	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
+geo blocker	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias)
+GEO BLOCKER	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); uppercase variant
+Geo blocker	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias)
+evaluado	-	-	-	-	-	evaluated	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias)
+EVALUADO	-	-	-	-	-	evaluated	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant
+Evaluado	-	-	-	-	-	evaluated	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias)
+respondida	-	-	-	-	-	responded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+RESPONDIDA	-	-	-	-	-	responded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+Respondida	-	-	-	-	-	responded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+contestada	-	-	-	-	-	responded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias)
+CONTESTADA	-	-	-	-	-	responded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant
+Contestada	-	-	-	-	-	responded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias)
+duplicado	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+DUPLICADO	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); uppercase variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Duplicado	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+repost	-	discarded	discarded	-	-	discarded	-	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+REPOST	-	discarded	discarded	-	-	discarded	-	no	not in states.yml (non-YAML alias); uppercase variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Repost	-	discarded	discarded	-	-	discarded	-	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Değerlendirildi	-	-	-	-	-	-	evaluated	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+değerlendirildi	-	-	-	-	-	-	evaluated	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+DEĞERLENDIRILDI	-	-	-	-	-	-	evaluated	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+Başvuruldu	-	-	-	-	-	-	applied	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+başvuruldu	-	-	-	-	-	-	applied	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+BAŞVURULDU	-	-	-	-	-	-	applied	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+Yanıt Verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); mixed case; dashboard i18n catalog label
+yanıt verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+YANIT VERILDI	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Yanıt verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+Mülakat	-	-	-	-	-	-	interview	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+mülakat	-	-	-	-	-	-	interview	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+MÜLAKAT	-	-	-	-	-	-	interview	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+Teklif	-	-	-	-	-	-	offer	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+teklif	-	-	-	-	-	-	offer	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+TEKLIF	-	-	-	-	-	-	offer	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+Reddedildi	-	-	-	-	-	-	rejected	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+reddedildi	-	-	-	-	-	-	rejected	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+REDDEDILDI	-	-	-	-	-	-	rejected	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+İptal Edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+i̇ptal edildi	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; dashboard i18n catalog label
+İPTAL EDILDI	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+İptal edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+Uygun Değil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); mixed case; dashboard i18n catalog label
+uygun değil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+UYGUN DEĞIL	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; dashboard i18n catalog label
+Uygun değil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+İşe Alındı	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+i̇şe alındı	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; dashboard i18n catalog label
+İŞE ALINDI	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant
+İşe alındı	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); dashboard i18n catalog label
+OMITIR	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; dashboard i18n catalog label
+omitir	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; dashboard i18n catalog label
+Omitir	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; dashboard i18n catalog label
+dup	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+DUP	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); uppercase variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Dup	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+geo-blocker	-	-	skip	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+GEO-BLOCKER	-	-	skip	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+Geo-blocker	-	-	skip	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+geo_blocker	-	-	skip	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+GEO_BLOCKER	-	-	skip	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+Geo_blocker	-	-	skip	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+Repost #123	-	discarded	discarded	-	-	-	-	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+repost #123	-	discarded	discarded	-	-	-	-	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+REPOST #123	-	discarded	discarded	-	-	-	-	no	not in states.yml (non-YAML alias); uppercase variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Dup #45	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+dup #45	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+DUP #45	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); uppercase variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Duplicado 2026-01-01	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+duplicado 2026-01-01	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+DUPLICADO 2026-01-01	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; uppercase variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Rechazado 2026-02-01	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
+rechazado 2026-02-01	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
+RECHAZADO 2026-02-01	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date); uppercase variant
+Aplicado 2026-03-12	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+aplicado 2026-03-12	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+APLICADO 2026-03-12	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date); uppercase variant
+Hired (2026-01-05)	-	hired	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
+hired (2026-01-05)	-	hired	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
+HIRED (2026-01-05)	-	hired	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date); uppercase variant
+Applied (2026-01-05)	-	applied	-	-	-	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+applied (2026-01-05)	-	applied	-	-	-	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+APPLIED (2026-01-05)	-	applied	-	-	-	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date); uppercase variant
+Applied 2026-01-05	-	applied	-	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+applied 2026-01-05	-	applied	-	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+APPLIED 2026-01-05	-	applied	-	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date); uppercase variant
+Applied  2026-01-05	-	applied	-	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date); whitespace variant
+applied  2026-01-05	-	applied	-	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date); whitespace variant
+APPLIED  2026-01-05	-	applied	-	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date); whitespace variant; uppercase variant
+—	-	-	discarded	-	-	discarded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias)
+–	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime
+-	-	-	discarded	-	-	discarded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias)
+<empty>	-	-	discarded	-	-	discarded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); blank status: merge_tracker/verify/stats/go = unknown; normalize/web = discarded; not in states.yml (non-YAML alias)
+<space>	-	-	discarded	-	-	discarded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); blank status: merge_tracker/verify/stats/go = unknown; normalize/web = discarded; not in states.yml (non-YAML alias); whitespace variant
+no  aplicar	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; whitespace variant
+NO  APLICAR	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; whitespace variant; uppercase variant
+No  aplicar	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; whitespace variant
+Geo Blocker	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); mixed case
+kabul edildi	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+KABUL EDILDI	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Kabul edildi	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+kabul_edildi	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+KABUL_EDILDI	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Kabul_edildi	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+işe alındı	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+IŞE ALINDI	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant
+Işe alındı	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+ise alindi	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+ISE ALINDI	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Ise alindi	-	-	-	-	-	-	hired	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+uygun_değil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+UYGUN_DEĞIL	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Uygun_değil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+uygun degil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+UYGUN DEGIL	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Uygun degil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+uygun_degil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+UYGUN_DEGIL	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Uygun_degil	-	-	-	-	-	-	skip	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+mulakat	-	-	-	-	-	-	interview	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+MULAKAT	-	-	-	-	-	-	interview	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Mulakat	-	-	-	-	-	-	interview	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+yanıt_verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+YANIT_VERILDI	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Yanıt_verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+yanit verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+Yanit verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+yanit_verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+Yanit_verildi	-	-	-	-	-	-	responded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+basvuruldu	-	-	-	-	-	-	applied	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+BASVURULDU	-	-	-	-	-	-	applied	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Basvuruldu	-	-	-	-	-	-	applied	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+degerlendirildi	-	-	-	-	-	-	evaluated	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+DEGERLENDIRILDI	-	-	-	-	-	-	evaluated	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Degerlendirildi	-	-	-	-	-	-	evaluated	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+iptal edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+IPTAL EDILDI	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Iptal edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+iptal_edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+IPTAL_EDILDI	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); uppercase variant; Go-only literal (career.go)
+Iptal_edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+ıptal edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+ıptal_edildi	-	-	-	-	-	-	discarded	no	merge_tracker falls back to Evaluated with a warning (shown as -); not in states.yml (non-YAML alias); Go-only literal (career.go)
+candidatado	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+CANDIDATADO	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Candidatado	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+candidatada	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+CANDIDATADA	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Candidatada	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+avaliada	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+AVALIADA	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Avaliada	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+avaliado	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+AVALIADO	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Avaliado	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+rejeitado	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+REJEITADO	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Rejeitado	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+rejeitada	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+REJEITADA	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Rejeitada	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+não aplicar	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+NÃO APLICAR	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Não aplicar	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+nao aplicar	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+NAO APLICAR	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+Nao aplicar	-	-	-	-	-	-	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); not recognised by any runtime; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
+ Evaluated 	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); tracker.mjs=evaluated (strips bold/date); whitespace variant
+Evaluated  	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); tracker.mjs=evaluated (strips bold/date); whitespace variant
+**Evaluated**	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); tracker.mjs=evaluated (strips bold/date); markdown bold variant
+Evaluated 2026-01-05	-	evaluated	-	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=evaluated (strips bold/date)
+Evaluated (2026-01-05)	-	evaluated	-	-	-	-	evaluated	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=evaluated (strips bold/date)
+ Applied 	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); whitespace variant
+Applied  	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); whitespace variant
+**Applied**	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); markdown bold variant
+ Responded 	-	responded	responded	responded	responded	-	responded	no	not in states.yml (non-YAML alias); tracker.mjs=responded (strips bold/date); whitespace variant
+Responded  	-	responded	responded	responded	responded	-	responded	no	not in states.yml (non-YAML alias); tracker.mjs=responded (strips bold/date); whitespace variant
+**Responded**	-	responded	responded	responded	responded	-	responded	no	not in states.yml (non-YAML alias); tracker.mjs=responded (strips bold/date); markdown bold variant
+Responded 2026-01-05	-	responded	-	responded	responded	-	responded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=responded (strips bold/date)
+Responded (2026-01-05)	-	responded	-	-	-	-	responded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=responded (strips bold/date)
+ Interview 	-	interview	interview	interview	interview	-	interview	no	not in states.yml (non-YAML alias); tracker.mjs=interview (strips bold/date); whitespace variant
+Interview  	-	interview	interview	interview	interview	-	interview	no	not in states.yml (non-YAML alias); tracker.mjs=interview (strips bold/date); whitespace variant
+**Interview**	-	interview	interview	interview	interview	-	interview	no	not in states.yml (non-YAML alias); tracker.mjs=interview (strips bold/date); markdown bold variant
+Interview 2026-01-05	-	interview	-	interview	interview	-	interview	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=interview (strips bold/date)
+Interview (2026-01-05)	-	interview	-	-	-	-	interview	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=interview (strips bold/date)
+ Offer 	-	offer	offer	offer	offer	-	offer	no	not in states.yml (non-YAML alias); tracker.mjs=offer (strips bold/date); whitespace variant
+Offer  	-	offer	offer	offer	offer	-	offer	no	not in states.yml (non-YAML alias); tracker.mjs=offer (strips bold/date); whitespace variant
+**Offer**	-	offer	offer	offer	offer	-	offer	no	not in states.yml (non-YAML alias); tracker.mjs=offer (strips bold/date); markdown bold variant
+Offer 2026-01-05	-	offer	-	offer	offer	-	offer	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=offer (strips bold/date)
+Offer (2026-01-05)	-	offer	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=offer (strips bold/date)
+ Hired 	-	hired	hired	hired	hired	-	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant
+Hired  	-	hired	hired	hired	hired	-	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant
+**Hired**	-	hired	hired	hired	hired	-	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); markdown bold variant
+Hired 2026-01-05	-	hired	-	hired	hired	-	hired	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
+ Rejected 	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant
+Rejected  	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant
+**Rejected**	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); markdown bold variant
+Rejected 2026-01-05	-	rejected	-	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
+Rejected (2026-01-05)	-	rejected	-	-	-	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
+ Discarded 	-	discarded	discarded	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); whitespace variant
+Discarded  	-	discarded	discarded	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); whitespace variant
+**Discarded**	-	discarded	discarded	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); markdown bold variant
+Discarded 2026-01-05	-	discarded	-	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=discarded (strips bold/date)
+Discarded (2026-01-05)	-	discarded	-	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=discarded (strips bold/date)
+ Skip 	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); tracker.mjs=skip (strips bold/date); whitespace variant
+Skip  	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); tracker.mjs=skip (strips bold/date); whitespace variant
+**Skip**	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); tracker.mjs=skip (strips bold/date); markdown bold variant
+Skip 2026-01-05	-	skip	-	skip	skip	-	skip	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=skip (strips bold/date)
+Skip (2026-01-05)	-	skip	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=skip (strips bold/date)
+ Condicional 	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+Condicional  	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+**Condicional**	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); markdown bold variant
+Condicional 2026-01-05	-	evaluated	-	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+Condicional (2026-01-05)	-	evaluated	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+ Hold 	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+Hold  	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+**Hold**	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); markdown bold variant
+Hold 2026-01-05	-	evaluated	-	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+Hold (2026-01-05)	-	evaluated	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+ Evaluar 	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+Evaluar  	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+**Evaluar**	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); markdown bold variant
+Evaluar 2026-01-05	-	evaluated	-	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+Evaluar (2026-01-05)	-	evaluated	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+ Verificar 	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+Verificar  	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); whitespace variant
+**Verificar**	-	evaluated	evaluated	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); markdown bold variant
+Verificar 2026-01-05	-	evaluated	-	evaluated	evaluated	-	evaluated	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+Verificar (2026-01-05)	-	evaluated	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs
+ Geo blocker 	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); whitespace variant; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+Geo blocker  	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); whitespace variant; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+**Geo blocker**	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); markdown bold variant; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+Geo blocker 2026-01-05	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+Geo blocker (2026-01-05)	-	skip	skip	-	-	-	skip	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; geo blocker spelling variant: only normalize_statuses regex (geo.?blocker) accepts it
+ Aplicado 	-	applied	applied	applied	applied	applied	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); whitespace variant
+Aplicado  	-	applied	applied	applied	applied	applied	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); whitespace variant
+**Aplicado**	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); markdown bold variant
+Aplicado 2026-01-05	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+Aplicado (2026-01-05)	-	applied	-	-	-	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
+ Rechazado 	-	rejected	-	rejected	rejected	rejected	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant
+Rechazado  	-	rejected	-	rejected	rejected	rejected	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant
+**Rechazado**	-	rejected	-	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); markdown bold variant
+Rechazado 2026-01-05	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
+Rechazado (2026-01-05)	-	rejected	-	-	-	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
+ Descartado 	-	discarded	discarded	discarded	discarded	discarded	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); whitespace variant
+Descartado  	-	discarded	discarded	discarded	discarded	discarded	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); whitespace variant
+**Descartado**	-	discarded	discarded	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); markdown bold variant
+Descartado 2026-01-05	-	discarded	-	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=discarded (strips bold/date)
+Descartado (2026-01-05)	-	discarded	-	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=discarded (strips bold/date)
+ Contratado 	-	hired	hired	hired	-	hired	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant
+Contratado  	-	hired	hired	hired	-	hired	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant
+**Contratado**	-	hired	hired	hired	-	-	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); markdown bold variant
+Contratado 2026-01-05	-	hired	-	hired	-	-	hired	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
+Contratado (2026-01-05)	-	hired	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
+ Duplicado 	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); whitespace variant
+Duplicado  	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); whitespace variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+**Duplicado**	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); markdown bold variant
+Duplicado 2026-01-05	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Duplicado (2026-01-05)	-	discarded	discarded	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+ Repost 	-	discarded	discarded	-	-	discarded	-	no	not in states.yml (non-YAML alias); whitespace variant
+Repost  	-	discarded	discarded	-	-	discarded	-	no	not in states.yml (non-YAML alias); whitespace variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+**Repost**	-	discarded	discarded	-	-	-	-	no	not in states.yml (non-YAML alias); markdown bold variant
+Repost 2026-01-05	-	discarded	discarded	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+Repost (2026-01-05)	-	discarded	discarded	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; repost/dup prefix: merge_tracker and normalize_statuses match by prefix
+ No aplicar 	-	skip	skip	skip	skip	skip	skip	no	not in states.yml (non-YAML alias); tracker.mjs=skip (strips bold/date); whitespace variant
+No aplicar  	-	skip	skip	skip	skip	skip	skip	no	not in states.yml (non-YAML alias); tracker.mjs=skip (strips bold/date); whitespace variant
+**No aplicar**	-	skip	skip	skip	skip	-	skip	no	not in states.yml (non-YAML alias); tracker.mjs=skip (strips bold/date); markdown bold variant
+No aplicar 2026-01-05	-	skip	-	skip	skip	-	skip	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=skip (strips bold/date)
+No aplicar (2026-01-05)	-	skip	-	-	-	-	skip	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=skip (strips bold/date)
+<nbsp>	-	-	discarded	-	-	discarded	-	no	merge_tracker falls back to Evaluated with a warning (shown as -); blank status: merge_tracker/verify/stats/go = unknown; normalize/web = discarded; not in states.yml (non-YAML alias); whitespace variant
