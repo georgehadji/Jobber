@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { CANONICAL_STATES } from "@/lib/format";
+import { postStatus } from "@/lib/status-write";
 
 // Status writeback control. Updates the existing tracker row (status cell) via
 // /api/status — never adds rows. Reverts on failure; confirms with the
@@ -12,6 +13,7 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
   const [status, setStatus] = useState(current);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -19,21 +21,17 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
     const prev = status;
     setStatus(next);
     setBusy(true);
-    try {
-      const res = await fetch("/api/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ n, status: next }),
-      });
-      if (!res.ok) throw new Error("write failed");
+    setError(null);
+    const r = await postStatus(n, next);
+    if (r.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       router.refresh();
-    } catch {
-      setStatus(prev); // revert on failure
-    } finally {
-      setBusy(false);
+    } else {
+      setStatus(prev); // revert on failure, and say why
+      setError(r.error);
     }
+    setBusy(false);
   }
 
   const known = (CANONICAL_STATES as readonly string[]).includes(status);
@@ -53,6 +51,11 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
           </option>
         ))}
       </select>
+      {error && (
+        <span role="alert" className="text-xs text-red-600 dark:text-red-400">
+          {error}
+        </span>
+      )}
       {saved && (
         <span className="animate-terminal-popup inline-flex items-center gap-1 text-xs font-medium text-brand">
           <Check className="size-3" /> saved

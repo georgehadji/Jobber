@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { dispatch, type ActionCtx, type DoneInfo } from "@/app/actions/registry";
 import { scoreNum } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { postStatus } from "@/lib/status-write";
 
 // ── message model: messages are PART arrays so a live worker card can render
 // inline next to text, both fed by the single JobsProvider store ──────────────
@@ -24,7 +25,7 @@ type Part =
   | { type: "note"; text: string }
   | { type: "card"; jobId: string }
   | { type: "batch"; batchId: string; jobIds: string[] }
-  | { type: "confirm"; cid: string; summary: string; state: "pending" | "done" | "cancelled" };
+  | { type: "confirm"; cid: string; summary: string; state: "pending" | "done" | "cancelled" | "failed"; error?: string };
 type Msg = { role: "user" | "assistant"; parts: Part[] };
 
 const CONFIG_KEY = "jobber:config";
@@ -151,7 +152,7 @@ export function AssistantConsole() {
   const exploreRef = useRef(explore);
   exploreRef.current = explore;
   const handledRef = useRef<Set<string>>(new Set());
-  const confirmRuns = useRef<Map<string, () => DoneInfo>>(new Map());
+  const confirmRuns = useRef<Map<string, () => DoneInfo | Promise<DoneInfo>>>(new Map());
 
   // selected CLI from Config (reacts to changes in other tabs)
   useEffect(() => {
@@ -249,17 +250,13 @@ export function AssistantConsole() {
           body: JSON.stringify({ fact }),
         }).catch(() => {});
       },
-      writeStatus: (n, status) => {
-        fetch("/api/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ n, status }),
-        })
-          .then(() => {
-            router.refresh();
-            pipelineRef.current.refetch();
-          })
-          .catch(() => {});
+      writeStatus: async (n, status) => {
+        const r = await postStatus(n, status);
+        if (r.ok) {
+          router.refresh();
+          pipelineRef.current.refetch();
+        }
+        return r;
       },
       setApplyField: (idOrLabel, value) => applyRef.current.setAnswer(idOrLabel, value),
       startApply: (u) => {
@@ -290,15 +287,19 @@ export function AssistantConsole() {
     }
   }
 
-  function resolveConfirm(cid: string, accept: boolean) {
+  async function resolveConfirm(cid: string, accept: boolean) {
     const run = confirmRuns.current.get(cid);
     confirmRuns.current.delete(cid);
-    const info = accept && run ? run() : null;
+    const info = accept && run ? await run() : null;
     setMessages((ms) =>
       ms.map((m) => {
         if (!m.parts.some((p) => p.type === "confirm" && p.cid === cid)) return m;
         const parts: Part[] = m.parts.map((p) =>
-          p.type === "confirm" && p.cid === cid ? { ...p, state: accept ? "done" : "cancelled" } : p,
+          p.type === "confirm" && p.cid === cid
+            ? info?.error
+              ? { ...p, state: "failed" as const, error: info.error }
+              : { ...p, state: accept ? ("done" as const) : ("cancelled" as const) }
+            : p,
         );
         if (info?.jobIds?.length) {
           if (info.batchId && info.jobIds.length > 1) parts.push({ type: "batch", batchId: info.batchId, jobIds: info.jobIds });
@@ -677,7 +678,9 @@ function PartView({
             </button>
           </div>
         ) : (
-          <div className="mt-1 text-xs text-faint">{part.state === "done" ? "✓ started" : "cancelled"}</div>
+          <div className={cn("mt-1 text-xs", part.state === "failed" ? "text-red-600 dark:text-red-400" : "text-faint")}>
+            {part.state === "done" ? "✓ started" : part.state === "failed" ? `✗ ${part.error}` : "cancelled"}
+          </div>
         )}
       </div>
     );

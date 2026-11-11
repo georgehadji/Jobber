@@ -10,6 +10,7 @@
 
 import type { Application, InboxJob } from "@/lib/jobber";
 import type { Job } from "@/components/jobs/job-store";
+import type { StatusResult } from "@/lib/status-write";
 
 export const AUTO_FIRE_MAX = 3; // fire ≤3 evaluations silently; confirm above that
 export const BATCH_CAP = 12; // hard ceiling on a single fan-out
@@ -39,7 +40,7 @@ export type ActionCtx = {
   applications: Application[]; // tracker snapshot — resolve #n → company/role for confirms
   jobForUrl: (url: string) => Job | undefined; // skip-if-done / retry logic
   rememberFact: (fact: string) => void;
-  writeStatus: (n: string, status: string) => void; // UPDATE-only writeback via /api/status
+  writeStatus: (n: string, status: string) => Promise<StatusResult>; // UPDATE-only writeback via /api/status
   setApplyField: (idOrLabel: string, value: string) => void; // edit an apply-proxy answer
   startApply: (url: string) => void; // open the apply form-proxy for a posting URL
   applyExplore?: (patch: Record<string, unknown>, opts?: { merge?: boolean; run?: boolean }) => void; // build a FREE discovery search
@@ -76,11 +77,11 @@ function coerceProfile(raw: Record<string, unknown>): ProfilePatch {
   return out;
 }
 
-export type DoneInfo = { jobIds?: string[]; batchId?: string; note?: string };
+export type DoneInfo = { jobIds?: string[]; batchId?: string; note?: string; error?: string };
 export type DispatchResult =
   | ({ status: "done" } & DoneInfo)
   | { status: "ignored"; note?: string }
-  | { status: "confirm"; summary: string; run: () => DoneInfo };
+  | { status: "confirm"; summary: string; run: () => DoneInfo | Promise<DoneInfo> };
 
 // ── helpers ──────────────────────────────────────────────────────────────
 const isStr = (v: unknown): v is string => typeof v === "string" && v.length > 0;
@@ -263,9 +264,9 @@ const ACTIONS: Record<string, ActionDef> = {
       return {
         status: "confirm",
         summary: `Mark ${label} → ${canon}?`,
-        run: () => {
-          ctx.writeStatus(n, canon);
-          return { note: `Marked #${n} as ${canon}.` };
+        run: async () => {
+          const r = await ctx.writeStatus(n, canon);
+          return r.ok ? { note: `Marked #${n} as ${canon}.` } : { error: `Could not mark #${n} as ${canon}: ${r.error}` };
         },
       };
     },
