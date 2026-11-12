@@ -98,7 +98,7 @@ export function readLockStrict(root) {
  * lock is refused, never replaced by a one-entry file that drops every other pin)
  * and written atomically (tmp + rename in the same dir, tmp removed on failure).
  * @param {string} root
- * @param {(lock: {lockfileVersion:number, plugins:Record<string,any>}) => boolean} mutate return false for "no change"
+ * @param {(lock: {lockfileVersion:number, plugins:Record<string,any>}) => (boolean|void)} mutate return false for "no change"; any other result (incl. undefined) writes
  */
 function updateLock(root, mutate) {
   const file = lockPath(root);
