@@ -237,12 +237,13 @@ const SOURCES = {
     const s = read('verify-pipeline.mjs');
     return [...registryPairs(s, 'verify-pipeline.mjs', { extras: true }), ...lineTargets(s)];
   },
-  // stats.mjs keeps its own canonical list and delegates aliasing to
-  // followup-cadence.mjs (`import { normalizeStatus }`), so both feed its set.
-  'stats.mjs': () => {
-    const s = read('stats.mjs');
-    return [...identity(block(s, 'const CANONICAL_STATUSES = [', '];')), ...registryPairs(read('followup-cadence.mjs'), 'followup-cadence.mjs', { extras: true })];
-  },
+  // stats.mjs resolves labels through the registry itself and delegates aliasing to
+  // followup-cadence.mjs (`import { normalizeStatus }`, which adds the extra-alias table),
+  // so both feed its set.
+  'stats.mjs': () => [
+    ...registryPairs(read('stats.mjs'), 'stats.mjs'),
+    ...registryPairs(read('followup-cadence.mjs'), 'followup-cadence.mjs', { extras: true }),
+  ],
   'followup-cadence.mjs': () => registryPairs(read('followup-cadence.mjs'), 'followup-cadence.mjs', { extras: true }),
   'analyze-patterns.mjs': () => {
     const s = read('analyze-patterns.mjs');
