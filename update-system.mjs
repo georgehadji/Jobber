@@ -187,6 +187,7 @@ const SYSTEM_PATHS = [
   'set-status.mjs',
   'machines.mjs',
   'gen-machine-docs.mjs',
+  'validate-state-machines.mjs',
   'lib/machine-blocks.mjs',
   'lib/state-machine.mjs',
   'lib/status-gate.mjs',

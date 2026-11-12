@@ -98,34 +98,5 @@
       "evaluated,hired,offer"
     ]
   },
-  "rule2": {
-    "dashboard/internal/data/career.go": [
-      "data/applications.md"
-    ],
-    "dedup-tracker.mjs": [
-      "data/applications.md"
-    ],
-    "generate-pdf.mjs": [
-      "data/pdf-index.tsv"
-    ],
-    "merge-tracker.mjs": [
-      "data/status-log.tsv"
-    ],
-    "normalize-statuses.mjs": [
-      "data/applications.md"
-    ],
-    "openrouter-runner.mjs": [
-      "data/scan-history.tsv"
-    ],
-    "reply-watch.mjs": [
-      "data/status-log.tsv"
-    ],
-    "set-status.mjs": [
-      "data/applications.md",
-      "data/status-log.tsv"
-    ],
-    "tracker-utils.mjs": [
-      "data/status-log.tsv"
-    ]
-  }
+  "rule2": {}
 }

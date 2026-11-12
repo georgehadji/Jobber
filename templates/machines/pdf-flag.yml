@@ -38,4 +38,4 @@ policy:
   backward_between_live: forbidden
   unknown_input: flag
   exit_terminal: forbidden
-writers: [merge-tracker.mjs, sync-pdf-flags.mjs, batch/batch-prompt.md, tracker.mjs]
+writers: [merge-tracker.mjs, sync-pdf-flags.mjs, batch/batch-prompt.md, tracker.mjs, generate-pdf.mjs]

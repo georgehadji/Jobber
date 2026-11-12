@@ -78,4 +78,4 @@ policy:
   backward_between_live: correction
   unknown_input: flag   # today ANY unrecognised non-added string is deduped like a skipped_* row (never rejected)
   exit_terminal: force
-writers: [scan.mjs, scan-ats-full.mjs, scan-interamt.mjs]
+writers: [scan.mjs, scan-ats-full.mjs, scan-interamt.mjs, openrouter-runner.mjs]

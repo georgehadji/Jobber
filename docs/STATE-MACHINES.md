@@ -56,7 +56,7 @@ stateDiagram-v2
 - **Id:** `application-status`
 - **Persisted in:** `data/applications.md (Status column) + data/status-log.tsv`
 - **Initial state:** `Evaluated`
-- **Writers:** (not declared)
+- **Writers:** `set-status.mjs`, `tracker-utils.mjs`, `reply-watch.mjs`, `merge-tracker.mjs`, `dedup-tracker.mjs`, `normalize-statuses.mjs`, `dashboard/internal/data/career.go`
 - **Policy:** `backward_between_live=correction`, `exit_terminal=force`, `unknown_input=reject`
 
 ### States
@@ -359,7 +359,7 @@ stateDiagram-v2
 - **Id:** `pdf-flag`
 - **Persisted in:** `data/applications.md (PDF column) ; source of truth for "generated" is data/pdf-index.tsv`
 - **Initial state:** `Missing`
-- **Writers:** `merge-tracker.mjs`, `sync-pdf-flags.mjs`, `batch/batch-prompt.md`, `tracker.mjs`
+- **Writers:** `merge-tracker.mjs`, `sync-pdf-flags.mjs`, `batch/batch-prompt.md`, `tracker.mjs`, `generate-pdf.mjs`
 - **Policy:** `backward_between_live=forbidden`, `exit_terminal=forbidden`, `unknown_input=flag`
 
 ### States
@@ -610,7 +610,7 @@ stateDiagram-v2
 - **Id:** `scan-history`
 - **Persisted in:** `data/scan-history.tsv (status column, col 6)`
 - **Initial state:** `added`
-- **Writers:** `scan.mjs`, `scan-ats-full.mjs`, `scan-interamt.mjs`
+- **Writers:** `scan.mjs`, `scan-ats-full.mjs`, `scan-interamt.mjs`, `openrouter-runner.mjs`
 - **Policy:** `backward_between_live=correction`, `exit_terminal=force`, `unknown_input=flag`
 
 ### States

@@ -29,6 +29,9 @@ function mkRoot(files = {}) {
   mkdirSync(join(dir, 'templates'), { recursive: true });
   cpSync(join(ROOT, 'templates', 'states.yml'), join(dir, 'templates', 'states.yml'));
   cpSync(join(ROOT, 'templates', 'machines'), join(dir, 'templates', 'machines'), { recursive: true });
+  // rule 3 also checks the generated whole-file doc (5.2); a bare temp root must carry a fresh copy
+  mkdirSync(join(dir, 'docs'), { recursive: true });
+  cpSync(join(ROOT, 'docs', 'STATE-MACHINES.md'), join(dir, 'docs', 'STATE-MACHINES.md'));
   for (const [f, text] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, f)), { recursive: true });
     writeFileSync(join(dir, f), text);
