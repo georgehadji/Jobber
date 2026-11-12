@@ -6,6 +6,7 @@ import { jobberRoot, readMemory } from "@/lib/jobber";
 import { validateRun } from "@/lib/core/run-input";
 import { claudeToolArgs, untrusted } from "@/lib/agent-policy";
 import { runOutcome } from "@/lib/core/run-outcome";
+import { classifyStderrLine, makeLineSplitter } from "@/lib/core/stderr-class";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
 
 export const runtime = "nodejs";
@@ -155,7 +156,10 @@ export async function POST(req: Request) {
     start(controller) {
       let buf = "";
       let emittedText = false; // any assistant text delta → the CLI actually ran
-      let sawError = false;
+      let fatalMsg: string | null = null; // first stderr line that reports a real failure
+      let lastWarning: string | null = null; // last other noteworthy stderr line (context only)
+      let warningsShown = 0;
+      let warningsHidden = 0;
       let timedOut = false; // the kill timer fired → report a timeout, not a generic failure
       let lastTokens = 0; // per-run token cost from the Claude result event (#6) — local only
       let lastCostUsd: number | null = null;
@@ -216,21 +220,41 @@ export async function POST(req: Request) {
           }
         }
       });
-      child.stderr.on("data", (d: Buffer) => {
-        const s = d.toString();
-        // Widened: auth/login/quota failures are the most common real error and
-        // the old narrow regex missed them (silent false "success").
-        if (/error|denied|fatal|not found|unauthorized|forbidden|auth|login|credential|api[ -]?key|quota|rate limit|not authenticated/i.test(s)) {
-          sawError = true;
-          send({ type: "error", msg: s.trim().slice(0, 200) });
+      // stderr never ends the run mid-flight. Each line is classified (stderr-class.ts):
+      // "fatal" lines (bad credentials, auth refusal, exhausted quota — failures a CLI may
+      // report while still exiting 0) fail the run at close; "warning" lines are only shown.
+      // Both appear as status steps so the user sees them as they happen. The single
+      // terminal event (done/error) is still decided once, on close, by runOutcome.
+      const MAX_WARNINGS_SHOWN = 5;
+      const stderrLines = makeLineSplitter((raw) => {
+        const kind = classifyStderrLine(raw);
+        if (!kind) return;
+        const msg = raw.trim().slice(0, 200);
+        if (kind === "fatal") {
+          if (fatalMsg === null) {
+            fatalMsg = msg;
+            send({ type: "status", label: `Problem: ${msg}` });
+          }
+          return;
+        }
+        lastWarning = msg;
+        if (warningsShown < MAX_WARNINGS_SHOWN) {
+          warningsShown++;
+          send({ type: "status", label: `Warning: ${msg}` });
+        } else {
+          warningsHidden++;
         }
       });
+      child.stderr.on("data", (d: Buffer) => stderrLines.push(d.toString()));
       child.on("error", (e) => { send({ type: "error", msg: e.message }); close(); });
       child.on("close", (code) => {
+        stderrLines.flush();
+        if (warningsHidden > 0) send({ type: "status", label: `…and ${warningsHidden} more warning${warningsHidden === 1 ? "" : "s"}` });
         // Honesty gate (#9, see run-outcome.ts): a green "done" requires a CLEAN exit, real
-        // output, AND (for evaluations) a report actually written; a timeout kill gets its own message.
+        // output, no fatal stderr line, AND (for evaluations) a report actually written;
+        // a timeout kill gets its own message. Warnings alone never fail a run.
         send(runOutcome({
-          emittedText, sawError, persists, tokens: lastTokens, costUsd: lastCostUsd, timedOut, killMs,
+          emittedText, fatalMsg, lastWarning, persists, tokens: lastTokens, costUsd: lastCostUsd, timedOut, killMs,
           cleanExit: code === 0, // non-zero OR null (killed/signal) = NOT clean
           wroteReport: countReports() > reportsBefore,
         }));
