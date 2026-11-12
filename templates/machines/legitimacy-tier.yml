@@ -1,0 +1,80 @@
+# Jobber — posting legitimacy tier vocabulary (STATE-MACHINES-PLAN M32, Phase 4.5).
+# Declared as a SUPERSET of every spelling the repo uses today; this file changes no
+# behaviour. No analyzer, writer or mode reads it yet (declaring is behaviour-neutral).
+#
+# Canonical ids = the English Block G tiers (modes/oferta.md Block G, modes/_shared.md
+# "Posting Legitimacy"). Aliases cover, per state:
+#   - snake_case used by `risk_summary.legitimacy` (batch/batch-prompt.md)
+#   - translated labels in modes/{tr,ua,zh,zh-TW,ar}/_shared.md and their evaluation modes
+# Not expressible by exact-match aliases (see tests/legitimacy-interview-machines.test.mjs):
+#   - rendered rows `✅ High Confidence` / `⚠️ {tier} — {reason}` (prefix + suffix around a tier)
+#   - web/src/lib/format.ts legitimacyTone(), which matches SUBSTRINGS (also Spanish
+#     confian/precau/sospech, plus scam/fake) rather than exact labels
+#   - JSON null (batch-prompt failure record) and the empty string (lib/score-summary.mjs
+#     parse() when LEGITIMACY: is absent). Both are "no tier", not a spelling.
+# Transitions: a tier is re-derived per evaluation, so any tier -> any tier is a
+# "correction" by policy; the only declared edges are unconfirmed -> an assessed tier.
+id: legitimacy-tier
+persisted_in: "reports/*.md (**Legitimacy:** header + Machine Summary legitimacy_tier / risk_summary.legitimacy)"
+initial: unconfirmed
+states:
+  - id: unconfirmed
+    label: Unconfirmed
+    aliases: [unknown]
+    terminal: false
+    description: >-
+      NOT a tier. Fallback written when no tier was assessed. Code treats the two
+      spellings as DISTINCT strings today: `unconfirmed` is openrouter-runner.mjs:673
+      (LLM output lacked a **Legitimacy:** line); `unknown` is eval-runner.mjs:52,
+      the parseScoreSummary fallback and the miss value of its per-key extract (no
+      SCORE_SUMMARY block or no LEGITIMACY: line). analyze-patterns.mjs stores the
+      string as-is, so the two currently group separately. Declared as one state
+      so a future reader can treat "no tier" uniformly; folding them is a decision
+      for the owner, not done here. modes/oferta.md says "default to Proceed with
+      Caution" when posting age is unknown — that is a TIER decision and does not
+      use this state.
+  - id: high-confidence
+    label: High Confidence
+    aliases:
+      - high_confidence
+      - Güvenilir                  # tr/_shared.md:52, tr/is-ilani.md:118,213
+      - Висока впевненість         # ua/_shared.md:62
+      - 高置信度                    # zh/_shared.md:52, zh/oferta.md:231
+      - 高信心                      # zh-TW/_shared.md:52, zh-TW/oferta.md:247
+      - ثقة عالية                   # ar/_shared.md:55
+    terminal: false
+    description: Real, active opening (most signals positive). Block G tier.
+  - id: proceed-with-caution
+    label: Proceed with Caution
+    aliases:
+      - proceed_with_caution
+      - Dikkatli İlerle            # tr/_shared.md:53, tr/is-ilani.md:118,214
+      - Обережно                   # ua/_shared.md:63
+      - 谨慎推进                    # zh/_shared.md:53, zh/oferta.md:231
+      - 審慎推進                    # zh-TW/_shared.md:53, zh-TW/oferta.md:247
+      - تقدم بحذر                   # ar/_shared.md:56
+    terminal: false
+    description: Mixed signals worth noting. Block G tier; also the documented default when posting age is unknown.
+  - id: suspicious
+    label: Suspicious
+    aliases:
+      - Şüpheli                    # tr/_shared.md:54, tr/is-ilani.md:118,215
+      - Підозріло                  # ua/_shared.md:64
+      - 疑似虚假                    # zh/oferta.md:231
+      - 疑似虚假/已过期              # zh/_shared.md:54
+      - 疑似虛假                    # zh-TW/oferta.md:247
+      - 疑似虛假／已過期             # zh-TW/_shared.md:54
+      - مشبوهة                     # ar/_shared.md:57
+    terminal: false
+    description: >-
+      Multiple ghost-job indicators; investigate before investing time. Block G tier.
+      Language drift: the zh and zh-TW _shared.md labels add "/已过期" ("or expired"),
+      so those modes bucket expired postings with suspected ghosts; the English tier
+      is about ghost indicators only.
+transitions:
+  unconfirmed: [high-confidence, proceed-with-caution, suspicious]
+policy:
+  backward_between_live: correction
+  unknown_input: flag
+  exit_terminal: force
+writers: [openrouter-runner.mjs, eval-runner.mjs, gemini-eval.mjs, ollama-eval.mjs, openai-eval.mjs, batch/batch-prompt.md]
