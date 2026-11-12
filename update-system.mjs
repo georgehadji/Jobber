@@ -186,6 +186,8 @@ const SYSTEM_PATHS = [
   'tracker-aliases.json',
   'set-status.mjs',
   'machines.mjs',
+  'gen-machine-docs.mjs',
+  'lib/machine-blocks.mjs',
   'lib/state-machine.mjs',
   'lib/status-gate.mjs',
   'lib/status-extra-aliases.mjs',

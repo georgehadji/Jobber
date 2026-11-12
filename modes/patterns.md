@@ -17,7 +17,7 @@ When interview sessions are available, it also reads *what the candidate actuall
 
 ## Minimum Threshold
 
-Before running analysis, check: does `data/applications.md` have at least 5 entries with status beyond "Evaluated" (i.e., Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP)?
+Before running analysis, check: does `data/applications.md` have at least 5 entries with status beyond "Evaluated" (i.e., <!-- machine:application-status:later begin -->Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP, Hired<!-- machine:application-status:later end -->)?
 
 If not, tell the user:
 > "Not enough data yet -- {N}/5 applications have progressed beyond evaluation. Keep applying and come back when you have more outcomes to analyze."
