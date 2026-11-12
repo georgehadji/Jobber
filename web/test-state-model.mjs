@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import {
   machineFromDoc, findState, resolveCell, canonStatus, displayStates, displayLabels, tabValues, funnelStages,
-  legalMoves, correctionPrompt, statesProse,
+  legalMoves, correctionPrompt, terminalHint, statesProse,
 } from "./src/lib/core/state-model.ts";
 
 const WEB = fileURLToPath(new URL(".", import.meta.url));
@@ -106,17 +106,22 @@ test("findState/resolveCell: aliases, `**`, case, dated cells; unknown stays nul
 });
 
 for (const s of OLD_ORDER) {
-  test(`legalMoves(${s}): forward = declared edges, corrections = every other state, nothing lost or doubled`, () => {
+  test(`legalMoves(${s}): forward = declared edges; corrections = every other state, but only for a live state`, () => {
     const st = M.states.find((x) => x.label === s);
     const mv = legalMoves(M, s);
     assert.equal(mv.current.id, st.id);
     assert.deepEqual(new Set(mv.forward.map((x) => x.id)), new Set(M.transitions[st.id]));
     assert.equal(mv.terminal, st.terminal);
     const all = [mv.current.id, ...mv.forward.map((x) => x.id), ...mv.corrections.map((x) => x.id)];
-    assert.equal(new Set(all).size, M.states.length, "current + forward + corrections partition the states");
+    assert.equal(new Set(all).size, all.length, "no state is offered twice");
+    if (!st.terminal) assert.equal(all.length, M.states.length, "live: current + forward + corrections partition the states");
     assert.ok(!mv.forward.some((x) => x.id === st.id) && !mv.corrections.some((x) => x.id === st.id), "never offers the current state");
-    if (st.terminal) assert.deepEqual(mv.forward, [], "a terminal state offers no direct move");
-    else assert.ok(mv.forward.length > 0);
+    if (st.terminal) {
+      assert.deepEqual(mv.forward, [], "a terminal state offers no direct move");
+      assert.deepEqual(mv.corrections, [], "and no correction: /api/status never passes --force, the server would refuse it");
+    } else {
+      assert.ok(mv.forward.length > 0 && mv.corrections.length > 0);
+    }
   });
 }
 
@@ -135,24 +140,29 @@ test("legalMoves picks the same verdict as the core's check() for every pair (wh
       if (to.id === from.id) continue;
       const kind = core.check(cm, from.label, to.label).kind;
       const where = mv.forward.some((x) => x.id === to.id) ? "forward" : mv.corrections.some((x) => x.id === to.id) ? "correction" : "none";
-      const want = kind === "forward" ? "forward" : kind === "correction" || kind === "terminal-exit" ? "correction" : "none";
+      // terminal-exit needs --force, which the web never sends -> not offered
+      const want = kind === "forward" ? "forward" : kind === "correction" ? "correction" : "none";
       if (where !== want) bad.push(`${from.label}->${to.label}: ui ${where}, core ${kind}`);
     }
   }
   assert.deepEqual(bad, []);
 });
 
-test("a decorated terminal cell still offers corrections only; a dated live cell still offers its forward moves", () => {
+test("a decorated terminal cell offers nothing (hint instead); a dated live cell still offers its moves", () => {
   const rej = legalMoves(M, "Rejected 2026-02-01");
   assert.equal(rej.current.id, "rejected");
   assert.equal(rej.terminal, true);
   assert.deepEqual(rej.forward, []);
-  assert.equal(rej.corrections.length, 8);
+  assert.deepEqual(rej.corrections, []);
+  assert.match(terminalHint(rej, "12"), /Rejected is a final state.*node set-status.mjs 12 <State> --force/);
   const app = legalMoves(M, "Applied 2026-01-05");
   assert.deepEqual(labels(app.forward), ["Responded", "Interview", "Rejected", "Discarded", "SKIP"]);
   assert.deepEqual(labels(app.corrections), ["Evaluated", "Offer", "Hired"]);
   const skip = legalMoves(M, "SKIP");
   assert.deepEqual(labels(skip.forward), ["Evaluated", "Discarded"]);
+  assert.equal(terminalHint(app, "12"), null, "live state: no hint");
+  assert.equal(terminalHint(skip, "12"), null);
+  assert.equal(terminalHint(legalMoves(M, "Banana"), "12"), null, "unknown cell: no hint");
 });
 
 test("an unknown cell is treated as live and offers every state directly (the core's unknown-from)", () => {
@@ -163,23 +173,16 @@ test("an unknown cell is treated as live and offers every state directly (the co
   assert.deepEqual(mv.corrections, []);
 });
 
-test("policy forbidden removes the correction path (control: default policy keeps it)", () => {
+test("policy forbidden removes the live correction path (control: default policy keeps it)", () => {
   assert.ok(legalMoves(M, "Applied").corrections.length > 0);
   const live = machineFromDoc({ ...doc, policy: { backward_between_live: "forbidden" } });
   assert.deepEqual(legalMoves(live, "Applied").corrections, []);
-  assert.ok(legalMoves(live, "Hired").corrections.length > 0, "terminal exit is governed by exit_terminal, not backward_between_live");
-  const term = machineFromDoc({ ...doc, policy: { exit_terminal: "forbidden" } });
-  assert.deepEqual(legalMoves(term, "Hired").corrections, []);
 });
 
-test("correctionPrompt names the move; a terminal source warns that the tracker may refuse", () => {
+test("correctionPrompt names the live move", () => {
   const live = correctionPrompt(legalMoves(M, "Applied"), "Evaluated");
   assert.match(live, /Applied → Evaluated/);
   assert.match(live, /correction/);
-  assert.doesNotMatch(live, /refuse/);
-  const term = correctionPrompt(legalMoves(M, "Rejected"), "Interview");
-  assert.match(term, /Rejected is a final state/);
-  assert.match(term, /may refuse/);
 });
 
 // ── ABSENCE: no hard-coded canonical list outside states.ts ───────────────────────────────────────

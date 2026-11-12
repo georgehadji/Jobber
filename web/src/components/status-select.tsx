@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { useMachine } from "@/components/machine-provider";
-import { correctionPrompt, legalMoves } from "@/lib/core/state-model";
+import { correctionPrompt, legalMoves, terminalHint } from "@/lib/core/state-model";
 import { postStatus } from "@/lib/status-write";
 
 // Status writeback control. Updates the existing tracker row (status cell) via
 // /api/status — never adds rows. Shows the LEGAL moves for the current status first; every other
-// state sits behind an explicit "correction…" choice that asks for confirmation (D1: backward and
-// other moves stay possible). Reverts on failure and shows the server's message.
+// live-state move sits behind an explicit "correction…" choice that asks for confirmation (D1).
+// A TERMINAL status offers nothing (/api/status never passes --force, so the server would refuse):
+// the control is disabled and a hint points at the CLI. Reverts on failure and shows the server's message.
 const CORRECTION = "__correction__";
 
 export function StatusSelect({ n, current }: { n: string; current: string }) {
@@ -22,6 +23,8 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const moves = legalMoves(machine, status);
+  const hint = terminalHint(moves, n);
+  const locked = moves.forward.length === 0 && moves.corrections.length === 0; // terminal: nothing the server will take
 
   async function write(next: string) {
     const prev = status;
@@ -58,7 +61,7 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
   return (
     <span className="inline-flex items-center gap-2">
       <label className="text-xs text-faint">status</label>
-      <select value={correcting ? CORRECTION : status} onChange={onChange} disabled={busy} className={cls}>
+      <select value={correcting ? CORRECTION : status} onChange={onChange} disabled={busy || locked} className={cls}>
         <option value={status}>{status}</option>
         {moves.forward.filter((s) => s.id !== moves.current?.id).map((s) => (
           <option key={s.id} value={s.label}>
@@ -79,6 +82,7 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
           ))}
         </select>
       )}
+      {hint && <span className="text-xs text-faint">{hint}</span>}
       {error && (
         <span role="alert" className="text-xs text-red-600 dark:text-red-400">
           {error}

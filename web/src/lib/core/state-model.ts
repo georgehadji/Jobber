@@ -137,7 +137,9 @@ export type LegalMoves = {
   current: MachineState | null;
   /** moves the server takes without ceremony (declared edges; for an unknown cell, every state) */
   forward: MachineState[];
-  /** every other state: allowed only after an explicit confirm (D1). Empty if policy forbids it. */
+  /** LIVE states only: every other state, allowed after an explicit confirm (D1). Empty if policy
+   *  forbids it. Always empty for a terminal state: /api/status never passes --force, so the
+   *  server would refuse the move (see terminalHint). */
   corrections: MachineState[];
   terminal: boolean;
 };
@@ -150,18 +152,20 @@ export function legalMoves(machine: StateMachineView, currentStatus: string): Le
   if (!cur) return { current: null, forward: order, corrections: [], terminal: false };
   const edges = new Set(machine.transitions[cur.id] ?? []);
   const forward = order.filter((s) => edges.has(s.id));
-  const forbidden = cur.terminal ? machine.policy.exit_terminal === "forbidden" : machine.policy.backward_between_live === "forbidden";
-  const corrections = forbidden ? [] : order.filter((s) => s.id !== cur.id && !edges.has(s.id));
+  const corrections = cur.terminal || machine.policy.backward_between_live === "forbidden" ? [] : order.filter((s) => s.id !== cur.id && !edges.has(s.id));
   return { current: cur, forward, corrections, terminal: cur.terminal };
 }
 
-/** Confirmation text for a correction (a move outside the declared forward edges). Honest about a
- *  terminal source: /api/status never passes --force, so the tracker may still refuse it. */
+/** Confirmation text for a correction of a LIVE status (a move outside the declared forward edges). */
 export function correctionPrompt(moves: LegalMoves, targetLabel: string): string {
   const from = moves.current?.label ?? "this status";
-  return moves.terminal
-    ? `${from} is a final state. Changing it to ${targetLabel} is a correction, and the tracker may refuse it. Continue?`
-    : `${from} → ${targetLabel} is not a regular next step. It will be recorded as a correction. Continue?`;
+  return `${from} → ${targetLabel} is not a regular next step. It will be recorded as a correction. Continue?`;
+}
+
+/** Inline hint for a terminal status (null otherwise): the web cannot change it, the CLI can. */
+export function terminalHint(moves: LegalMoves, n: string): string | null {
+  if (!moves.terminal || !moves.current) return null;
+  return `${moves.current.label} is a final state. To correct it, run: node set-status.mjs ${n} <State> --force`;
 }
 
 /** Prose for the assistant prompt: "Evaluated, Applied, ..." */
