@@ -20,6 +20,7 @@ import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
   openTrackerTransaction, rebuildRow, resolveTrackerPath, appendStatusLog,
 } from './tracker-utils.mjs';
+import { applyStatusChange } from './lib/status-gate.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_CANDIDATES_PATH = path.join(__dirname, 'data', 'reply-candidates.json');
@@ -196,7 +197,12 @@ async function updateTrackerStatuses(updates) {
         continue;
       }
       const parts = lines[i].split('|').map(s => s.trim());
-      parts[colmap.status] = update.newStatus;
+      // Shared transition gate in WARN mode (STATE-MACHINES-PLAN Phase 3.4, constraint 4):
+      // an illegal move (e.g. Hired/Rejected -> Interview) is still applied — behaviour is
+      // unchanged — but is reported on stderr and noted in the ledger so the warnings can be
+      // reviewed before the gate is flipped to enforce.
+      const change = applyStatusChange({ parts, colmap, num: update.num, to: update.newStatus, mode: 'warn' });
+      for (const w of change.warnings) console.error(w);
       lines[i] = rebuildRow(parts);
       applied.add(update.num);
       // Keep the transition ledger complete (#improvement-plan A4(b)): reply-watch
@@ -206,7 +212,7 @@ async function updateTrackerStatuses(updates) {
       try {
         appendStatusLog(APPS_FILE, {
           num: update.num, date: new Date().toISOString().slice(0, 10),
-          from: update.oldStatus, to: update.newStatus, source: 'manual',
+          from: update.oldStatus, to: update.newStatus, source: 'manual', note: change.logNote,
         });
       } catch (err) {
         console.warn(`⚠ status-log append failed for #${update.num}: ${err.message}`);
