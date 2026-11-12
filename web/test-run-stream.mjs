@@ -43,11 +43,18 @@ test("an empty stream (closed immediately) is an error, not done", async () => {
   assert.deepEqual(end, { status: "error", label: "Run ended unexpectedly" });
 });
 
-test("an error event ends error with the server message AND cancels the reader", async () => {
+test("an error event ends error with the server message and does NOT cancel the reader", async () => {
+  // Cancelling makes /api/run SIGTERM the CLI, and the server emits `error` for any
+  // stderr line containing words like "error"/"auth" — so a harmless warning must not
+  // kill a run that may be writing a report or the tracker.
   const r = fakeReader([ev({ type: "error", msg: "boom" }), ev({ type: "done" })]);
   const end = await consumeRunStream(r, () => {});
   assert.deepEqual(end, { status: "error", label: "boom" });
-  assert.equal(r.cancelled, true, "early error must cancel so the server child releases the tracker-write token");
+  assert.equal(r.cancelled, false, "an error event must not cancel the reader (it would kill the CLI)");
+  // control: the spy does detect a cancel, so the assertion above can fail
+  const spy = fakeReader([]);
+  await spy.cancel();
+  assert.equal(spy.cancelled, true);
 });
 
 test("an error event without msg falls back to a generic label", async () => {

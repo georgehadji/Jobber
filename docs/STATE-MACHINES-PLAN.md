@@ -103,7 +103,7 @@ Risk combines likelihood of data loss or corruption, user-visible lies, and drif
 - INFERRED + new detail: the "honesty gate" compares report counts, so concurrent runs can satisfy each other's check. `countReports` also counts `NNN-RESERVED.md` sentinels (`route.ts:134`), so a reserved-but-unwritten run can pass.
 - VERIFIED: a timeout shows a generic error.
 - VERIFIED: `run-registry.ts` is only an in-memory write-token `Set`, not a run registry; job state lives in client React state and is lost on reload.
-- **Phase 2.2 done on branch `fix/web-job-done-explicit`.** Behaviour change to note: the early-error path now cancels the reader, which kills the child, so a benign stderr line stops a run that would previously have finished.
+- **Phase 2.2 done on branch `fix/web-job-done-explicit`.** Behaviour change to note: the early-error path now cancels the reader, which kills the child, so a benign stderr line stops a run that would previously have finished. **Reverted 2026-11-12 (owner decision, option A):** an `error` event ends the run as an error in the UI but no longer cancels the reader. The CLI keeps running and keeps its tracker-write token until it really exits. The root cause (the server treats any stderr line matching `error|auth|…` as an error) is still open.
 
 **M5 — Report-number reservation** (`reserve-report-num.mjs`, `reports/NNN-RESERVED.md`). Risk: **high (two reports can get the same number).** REPORTED:
 - VERIFIED: two garbage-collection (GC) implementations: a locked one in `reserve-report-num.mjs:246-284` (`gcStaleReportReservations`, checks the owner PID) and an **unlocked, age-only** one in `tracker-utils.mjs:403-422` (`gcStaleSentinels`), which `merge-tracker.mjs:143` and `verify-pipeline.mjs:230` call. The 4h constant is duplicated (`reserve-report-num.mjs:34`, `tracker-utils.mjs:393`). The comment at `tracker-utils.mjs:389-391` says "one shared implementation" but covers only those two callers.
@@ -247,7 +247,7 @@ writers: [set-status.mjs]       # the ONLY scripts allowed to write this state (
 ### 4.5 Honest UI (UX)
 
 - Every status write checks `res.ok`, shows the server's message (e.g. *"Rejected is terminal — use correction to change it"*), and never claims success it didn't get. This covers M2 and M3.
-- **Runs (M4):** `done` only on an explicit `done` event. A clean close without one becomes `error: "Run ended unexpectedly"`. Timeouts get their own message. An early client error cancels the reader.
+- **Runs (M4):** `done` only on an explicit `done` event. A clean close without one becomes `error: "Run ended unexpectedly"`. Timeouts get their own message. An early `error` event ends the run for the UI but does **not** cancel the reader, because cancelling would SIGTERM a CLI that may still be writing.
 - **TUI (M3):** one `overlay` enum replaces the boolean flags. The hired celebration runs only after a confirmed write. Write errors show as a flash message, not stderr.
 - **Explore and apply (M9/M10):** each gets one reducer with an explicit union. Timers are cleared on reset and unmount. Callbacks get an in-flight guard. Neither adds a dependency.
 

@@ -3,8 +3,11 @@
 //
 // A run is `done` ONLY on an explicit `done` event. A clean close without one (server
 // crash, dropped connection that looks like EOF) is an error, never a silent success.
-// On an early `error` event the reader is cancelled so the server's cancel() kills the
-// child and releases the tracker-write token instead of holding it until the child ends.
+// On an early `error` event the run ends as an error for the UI, but the reader is
+// deliberately NOT cancelled: /api/run emits `error` for any stderr line matching words
+// such as "error", "auth" or "not found", and cancelling would make the server SIGTERM
+// a CLI that may still be writing a report or the tracker. The child keeps its
+// tracker-write token until it really exits — that is the correct protection.
 export type RunEnd = { status: "done" } | { status: "error"; label: string };
 type Reader = { read(): Promise<{ done: boolean; value?: Uint8Array }>; cancel(): Promise<unknown> };
 
@@ -30,7 +33,6 @@ export async function consumeRunStream(reader: Reader, onEvent: (ev: { type?: st
       onEvent(ev);
       if (ev.type === "done") sawDone = true;
       else if (ev.type === "error") {
-        try { await reader.cancel(); } catch { /* already closed */ }
         return { status: "error", label: (typeof ev.msg === "string" && ev.msg) || "Error" };
       }
     }
