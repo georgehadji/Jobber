@@ -1,27 +1,22 @@
 import Link from "next/link";
 import { pipelineSummary } from "@/lib/jobber";
 import { canonStatus, scoreNum } from "@/lib/format";
+import { readMachine } from "@/lib/core/states";
+import { funnelStages } from "@/lib/core/state-model";
 
 export const dynamic = "force-dynamic";
 
-const STAGES: { key: string; label: string }[] = [
-  { key: "EVALUATED", label: "Evaluated" },
-  { key: "APPLIED", label: "Applied" },
-  { key: "RESPONDED", label: "Responded" },
-  { key: "INTERVIEW", label: "Interview" },
-  { key: "OFFER", label: "Offer" },
-  { key: "HIRED", label: "Hired" },
-  { key: "REJECTED", label: "Rejected" },
-  { key: "DISCARDED", label: "Discarded" },
-];
-
 export default function Analytics() {
   const { applications } = pipelineSummary();
+  const machine = readMachine();
+  // Funnel stages = every state except SKIP (funnelStages(); a shelved row is not a stage).
+  // Counting keeps its historical substring match on the display token, so output is unchanged.
+  const STAGES = funnelStages(machine);
   const total = applications.length;
 
   const stageCounts = STAGES.map((s) => ({
     ...s,
-    n: applications.filter((a) => canonStatus(a.status).includes(s.key)).length,
+    n: applications.filter((a) => canonStatus(machine, a.status).includes(s.key)).length,
   }));
   const maxStage = Math.max(1, ...stageCounts.map((s) => s.n));
 

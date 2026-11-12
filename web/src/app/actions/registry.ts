@@ -11,16 +11,13 @@
 import type { Application, InboxJob } from "@/lib/jobber";
 import type { Job } from "@/components/jobs/job-store";
 import type { StatusResult } from "@/lib/status-write";
+import { displayLabels, tabValues, type StateMachineView } from "@/lib/core/state-model";
 
 export const AUTO_FIRE_MAX = 3; // fire ≤3 evaluations silently; confirm above that
 export const BATCH_CAP = 12; // hard ceiling on a single fan-out
 
-// Canonical states (templates/states.yml) — the web validates against the same set.
-const CANON_STATUS = ["Evaluated", "Applied", "Responded", "Interview", "Offer", "Hired", "Rejected", "Discarded", "SKIP"];
-
-const TAB_VALUES = [
-  "INBOX", "ALL", "EVALUATED", "APPLIED", "RESPONDED", "INTERVIEW", "OFFER", "HIRED", "REJECTED", "DISCARDED", "SKIP",
-] as const;
+// Canonical states and pipeline tabs come from the application-status machine (ctx.machine),
+// never from a list in this file.
 const SORT_VALUES = ["company", "role", "score", "status", "date"] as const;
 
 export type StartJobInput = {
@@ -33,6 +30,7 @@ export type StartJobInput = {
 };
 
 export type ActionCtx = {
+  machine: StateMachineView; // application-status machine (templates/states.yml) — states + pipeline tabs
   push: (path: string) => void; // router.push — section/detail change
   replace: (path: string) => void; // router.replace — incremental filter tweak
   startJob: (opts: StartJobInput) => string | null;
@@ -124,7 +122,7 @@ const ACTIONS: Record<string, ActionDef> = {
     run: (raw, ctx) => {
       const sp = new URLSearchParams();
       const tab = typeof raw.tab === "string" ? raw.tab.toUpperCase() : "";
-      if ((TAB_VALUES as readonly string[]).includes(tab)) sp.set("tab", tab);
+      if (tabValues(ctx.machine).includes(tab)) sp.set("tab", tab);
       const min = typeof raw.min === "number" ? raw.min : parseFloat(String(raw.min ?? ""));
       if (Number.isFinite(min) && min >= 0 && min <= 5) sp.set("min", String(min));
       if (isStr(raw.q)) sp.set("q", String(raw.q).slice(0, 80));
@@ -257,7 +255,7 @@ const ACTIONS: Record<string, ActionDef> = {
     run: (raw, ctx) => {
       const n = String(raw.n ?? "").trim();
       const status = String(raw.status ?? "").trim();
-      const canon = CANON_STATUS.find((s) => s.toLowerCase() === status.toLowerCase());
+      const canon = displayLabels(ctx.machine).find((s) => s.toLowerCase() === status.toLowerCase());
       if (!n || !canon) return { status: "ignored", note: "need an application # and a canonical status" };
       const app = ctx.applications.find((a) => a.n === n);
       const label = app ? `${app.company} · ${app.role}` : `#${n}`;

@@ -7,8 +7,13 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import yaml from "js-yaml";
+import "./alias-hooks.mjs"; // registry.ts imports "@/lib/core/state-model": needs the alias loader (dynamic import below)
+import { machineFromDoc } from "./src/lib/core/state-model.ts";
 import { postStatus } from "./src/lib/status-write.ts";
-import { dispatch } from "./src/app/actions/registry.ts";
+const { dispatch } = await import("./src/app/actions/registry.ts");
+const machine = machineFromDoc(yaml.load(readFileSync(new URL("../templates/states.yml", import.meta.url), "utf8")));
 
 const json = (status, body) => async () => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
@@ -49,7 +54,7 @@ test("a network failure is a failure, not a throw", async () => {
 });
 
 // ── assistant confirm path ────────────────────────────────────────────────────────────────────
-const baseCtx = (writeStatus) => ({ applications: [{ n: "12", company: "Acme", role: "Engineer" }], writeStatus });
+const baseCtx = (writeStatus) => ({ machine, applications: [{ n: "12", company: "Acme", role: "Engineer" }], writeStatus });
 
 async function confirmRun(writeStatus) {
   const res = dispatch("setStatus", { n: "12", status: "applied" }, baseCtx(writeStatus));
@@ -69,4 +74,24 @@ test("confirmed setStatus on a refused write reports the server message and neve
   const info = await confirmRun(async () => ({ ok: false, error: "refused: Hired is terminal" }));
   assert.match(info.error ?? "", /refused: Hired is terminal/);
   assert.doesNotMatch(JSON.stringify(info), /Marked/);
+});
+
+// ── states and tabs come from ctx.machine (no list in registry.ts) ─────────────────────────────────
+test("setStatus accepts every machine state (any case) and ignores a non-state (control)", () => {
+  for (const s of machine.states) {
+    const res = dispatch("setStatus", { n: "12", status: s.label.toUpperCase() }, baseCtx(async () => ({ ok: true })));
+    assert.equal(res.status, "confirm", `${s.label} must be settable`);
+    assert.match(res.summary, new RegExp(`→ ${s.label}\\?$`));
+  }
+  const bad = dispatch("setStatus", { n: "12", status: "Banana" }, baseCtx(async () => ({ ok: true })));
+  assert.equal(bad.status, "ignored");
+});
+
+test("filterPipeline keeps a tab only if the machine has it (control: a bogus tab is dropped)", () => {
+  const seen = [];
+  const ctx = { ...baseCtx(async () => ({ ok: true })), replace: (p) => seen.push(p) };
+  dispatch("filterPipeline", { tab: "hired" }, ctx);
+  dispatch("filterPipeline", { tab: "inbox" }, ctx);
+  dispatch("filterPipeline", { tab: "BANANA" }, ctx);
+  assert.deepEqual(seen, ["/pipeline?tab=HIRED", "/pipeline?tab=INBOX", "/pipeline"]);
 });

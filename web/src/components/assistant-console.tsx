@@ -17,6 +17,7 @@ import { dispatch, type ActionCtx, type DoneInfo } from "@/app/actions/registry"
 import { scoreNum } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { postStatus } from "@/lib/status-write";
+import { useMachine } from "@/components/machine-provider";
 
 // ── message model: messages are PART arrays so a live worker card can render
 // inline next to text, both fed by the single JobsProvider store ──────────────
@@ -135,6 +136,7 @@ export function AssistantConsole() {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const machine = useMachine();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { jobs, startJob } = useJobs();
@@ -234,6 +236,7 @@ export function AssistantConsole() {
 
   function buildCtx(): ActionCtx {
     return {
+      machine,
       push: (p) => router.push(p),
       replace: (p) => router.replace(p),
       startJob,
