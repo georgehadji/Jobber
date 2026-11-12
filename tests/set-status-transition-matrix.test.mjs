@@ -11,8 +11,9 @@
 // NB: SKIP is NOT terminal in states.yml (skip -> evaluated|discarded); only Rejected,
 // Discarded and Hired are. Live states are free-form in both directions (corrections).
 //
-// KNOWN-BUG section (M1): non-canonical live cells (alias `Evaluada`, dated `Applied 2026-01-05`)
-// are refused as terminal today. That is pinned via M1_FIXED below; Phase 3.2 flips it to true.
+// M1 section: non-canonical live cells (alias `Evaluada`, dated `Applied 2026-01-05`) used to be
+// refused as terminal. Phase 3.2 fixed that (M1_FIXED = true): they are live rows, the move is allowed.
+// DATED TERMINALS (`Rejected 2026-02-01`) must stay refused — guarded below, with --force controls.
 import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
 import { spawn } from 'child_process';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'fs';
@@ -22,8 +23,8 @@ import { loadStateTransitions } from '../tracker-utils.mjs';
 
 console.log('\nset-status transition matrix (9x9 x --force, characterization)');
 
-// Phase 3.2 (canonicalize `from` via resolveCanonicalState) flips this to true.
-const M1_FIXED = false;
+// Phase 3.2 (`from` resolved through lib/status-gate.mjs + check()) flipped this to true.
+const M1_FIXED = true;
 
 const STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP', 'Hired'];
 const TERMINAL = new Set(['Rejected', 'Discarded', 'Hired']);
@@ -148,29 +149,53 @@ try {
     pass('invalid target `Bogus`: exit 1, code invalid-state, cell and status-log untouched');
   } else fail(`invalid target: exit ${inv.code}, code ${inv.json?.code}, cell "${inv.cell}", log ${JSON.stringify(inv.log)}`);
 
-  // ── KNOWN-BUG M1: non-canonical live cells (red repro: repro-set-status-noncanonical) ──
-  // Today: refused as terminal without --force (WRONG — they are live rows). With --force the
-  // change goes through and logs the raw cell as `from`. After Phase 3.2 set M1_FIXED = true:
-  // the plain run is then expected to succeed; the --force expectations do not change.
+  // ── M1: non-canonical live cells (more cases: set-status-noncanonical.test.mjs) ──
+  // Before 3.2 the plain run was wrongly refused as terminal (they are live rows); now it
+  // succeeds and the status-log records the raw cell as `from`. --force expectations never changed.
   const m1 = [
     { existing: 'Evaluada', to: 'Applied' },
     { existing: 'Applied 2026-01-05', to: 'Interview' },
   ];
   for (const { existing, to } of m1) {
     const [plain, forced] = await Promise.all([attempt(existing, to, false), attempt(existing, to, true)]);
-    if (!plain || !forced) { warn(`KNOWN-BUG M1 \`${existing}\` -> ${to}: fixture/spawn failed — not verified`); continue; }
+    if (!plain || !forced) { warn(`M1 \`${existing}\` -> ${to}: fixture/spawn failed — not verified`); continue; }
     const plainOk = plain.code === 0 && plain.cell === to && plain.log === logLine(existing, to);
     const plainRefused = plain.code === 1 && plain.json?.code === 'illegal-transition' && plain.cell === existing && plain.log === '';
-    const label = `KNOWN-BUG M1 \`${existing}\` -> ${to} without --force`;
+    const label = `M1 \`${existing}\` -> ${to} without --force`;
     if (M1_FIXED ? plainOk : plainRefused) {
-      pass(`${label}: ${M1_FIXED ? 'allowed (M1 fixed)' : 'wrongly refused as terminal (today; flip M1_FIXED after Phase 3.2)'}`);
+      pass(`${label}: ${M1_FIXED ? 'allowed (M1 fixed)' : 'wrongly refused as terminal (pre-3.2 behaviour)'}`);
     } else {
       fail(`${label}: M1_FIXED=${M1_FIXED} but observed exit ${plain.code}, code ${plain.json?.code}, cell "${plain.cell}", log ${JSON.stringify(plain.log)}`);
     }
     if (forced.code === 0 && forced.cell === to && forced.log === logLine(existing, to)) {
-      pass(`KNOWN-BUG M1 \`${existing}\` -> ${to} with --force: changed, one status-log row`);
-    } else fail(`KNOWN-BUG M1 \`${existing}\` -> ${to} with --force: exit ${forced.code}, cell "${forced.cell}", log ${JSON.stringify(forced.log)}`);
+      pass(`M1 \`${existing}\` -> ${to} with --force: changed, one status-log row`);
+    } else fail(`M1 \`${existing}\` -> ${to} with --force: exit ${forced.code}, cell "${forced.cell}", log ${JSON.stringify(forced.log)}`);
   }
+
+  // ── dated terminals: decorated cell, still terminal (must not regress to "allowed") ──
+  const datedTerminals = [
+    { existing: 'Rejected 2026-02-01', to: 'Interview' },
+    { existing: 'Hired 2026-01-05', to: 'Evaluated' },
+    { existing: 'Hired (2026-01-05)', to: 'Applied' },
+  ];
+  for (const { existing, to } of datedTerminals) {
+    const [plain, forced] = await Promise.all([attempt(existing, to, false), attempt(existing, to, true)]);
+    const tag = `dated terminal \`${existing}\` -> ${to}`;
+    if (!plain || !forced) { warn(`${tag}: fixture/spawn failed — not verified`); continue; }
+    const refused = plain.code === 1 && plain.json?.code === 'illegal-transition' && plain.json?.kind === 'terminal-exit'
+      && plain.cell === existing && plain.log === '';
+    if (refused) pass(`${tag} without --force: refused, cell and status-log untouched`);
+    else fail(`${tag} without --force: exit ${plain.code}, code ${plain.json?.code}, cell "${plain.cell}", log ${JSON.stringify(plain.log)}`);
+    if (forced.code === 0 && forced.cell === to && forced.log === logLine(existing, to)) pass(`${tag} with --force: changed, one status-log row`);
+    else fail(`${tag} with --force: exit ${forced.code}, cell "${forced.cell}", log ${JSON.stringify(forced.log)}`);
+  }
+
+  // ── unknown-from: an unresolvable cell is a live row — allowed, warning visible, never terminal ──
+  const unk = await attempt('Waiting on recruiter', 'Interview', false);
+  if (!unk) warn('unknown-from case: fixture/spawn failed — not verified');
+  else if (unk.code === 0 && unk.cell === 'Interview' && unk.log === logLine('Waiting on recruiter', 'Interview') && /WARN/.test(unk.stderr)) {
+    pass('unknown-from `Waiting on recruiter` -> Interview without --force: allowed with a warning line, one status-log row');
+  } else fail(`unknown-from: exit ${unk.code}, cell "${unk.cell}", log ${JSON.stringify(unk.log)}, stderr ${JSON.stringify(unk.stderr)}`);
   if (process.env.JOBBER_TEST_VERBOSE) console.log(`  tally: ${JSON.stringify(tally)}`);
 } catch (e) {
   warn(`set-status matrix harness error: ${e.message}`);
