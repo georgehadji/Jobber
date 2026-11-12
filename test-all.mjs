@@ -1086,6 +1086,22 @@ for (const f of skillEntrypoints) {
   }
 }
 
+// The state-machine ratchet (STATE-MACHINES-PLAN §4.7): no new hard-coded status
+// list, no unlisted writer of a persisted file, no stale generated block. Run from
+// ROOT for the same git-ls-files reason as the guards above; its own controls live
+// in tests/validate-state-machines.test.mjs.
+{
+  const sm = spawnSync(process.execPath, [join(ROOT, 'validate-state-machines.mjs')], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+  });
+  if (sm.status === 0) {
+    pass('state-machine ratchet clean (validate-state-machines.mjs)');
+  } else {
+    fail(`state-machine ratchet violated:\n${(sm.stderr || sm.stdout || '').trim().slice(0, 2000)}`);
+  }
+}
+
 // The plugin manifest ships in two locations: .claude-plugin/plugin.json is
 // canonical (Claude Code + Copilot CLI both read it), and .github/plugin/
 // plugin.json exists only because the awesome-copilot marketplace validator
