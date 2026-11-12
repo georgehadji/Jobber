@@ -254,7 +254,6 @@ const SOURCES = {
     const s = read('dashboard/internal/data/career.go');
     return [
       ...goNormalizePairs(s),
-      ...goCaseIdentity(s, 'func isCanonicalStatusValue('),
       ...goCaseIdentity(s, 'func StatusPriority('),
     ];
   },

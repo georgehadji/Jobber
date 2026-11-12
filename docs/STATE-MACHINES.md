@@ -56,7 +56,7 @@ stateDiagram-v2
 - **Id:** `application-status`
 - **Persisted in:** `data/applications.md (Status column) + data/status-log.tsv`
 - **Initial state:** `Evaluated`
-- **Writers:** `set-status.mjs`, `tracker-utils.mjs`, `reply-watch.mjs`, `merge-tracker.mjs`, `dedup-tracker.mjs`, `normalize-statuses.mjs`, `dashboard/internal/data/career.go`
+- **Writers:** `set-status.mjs`, `tracker-utils.mjs`, `reply-watch.mjs`, `merge-tracker.mjs`, `dedup-tracker.mjs`, `normalize-statuses.mjs`
 - **Policy:** `backward_between_live=correction`, `exit_terminal=force`, `unknown_input=reject`
 
 ### States

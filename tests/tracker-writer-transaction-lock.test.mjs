@@ -8,9 +8,10 @@
  */
 
 import { readFileSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { pathToFileURL } from 'url';
 import { join } from 'path';
-import { pass, fail, ROOT } from './helpers.mjs';
+import { pass, fail, warn, ROOT } from './helpers.mjs';
 
 function readFile(path) {
   return readFileSync(join(ROOT, path), 'utf-8');
@@ -72,24 +73,21 @@ try {
     fail(`tracker writers bypass shared transaction scope: ${unsafeWriters.join(', ')}`);
   }
 
-  const dashboardWriter = readFile('dashboard/internal/data/career.go');
-  const dashboardStart = dashboardWriter.indexOf('func UpdateApplicationStatusAndNotes(');
-  const dashboardTail = dashboardStart === -1 ? '' : dashboardWriter.slice(dashboardStart);
-  const nextDashboardFunction = dashboardTail.indexOf('\nfunc ', 1);
-  const dashboardBody = nextDashboardFunction === -1
-    ? dashboardTail
-    : dashboardTail.slice(0, nextDashboardFunction);
-  const acquireAt = dashboardBody.indexOf('acquireTrackerLock(');
-  const deferredReleaseAt = dashboardBody.indexOf('defer func()');
-  const readAt = dashboardBody.indexOf('os.ReadFile(filePath)');
-  const replaceAt = dashboardBody.indexOf('writeFileAtomic(filePath');
-  if (acquireAt >= 0 && deferredReleaseAt > acquireAt && readAt > deferredReleaseAt
-      && replaceAt > readAt
-      && !/os\.WriteFile\(filePath,\s*\[\]byte\(strings\.Join\(lines/.test(dashboardBody)) {
-    pass('dashboard tracker update structurally holds the lock across read and atomic replacement');
-  } else {
-    fail('dashboard tracker update escapes the cross-runtime transaction scope');
-  }
+  // The Go dashboard no longer writes the tracker itself (STATE-MACHINES-PLAN 4.2 follow-up):
+  // every status change shells out to set-status.mjs, which holds the shared lock. Absence check,
+  // so a static scan is acceptable; a determined rewrite can still evade it.
+  const goWriterMarkers = (src) => ['func UpdateApplicationStatus', 'acquireTrackerLock(', 'writeFileAtomic(', 'replaceFileAtomic(']
+    .filter(m => src.includes(m));
+  const goFiles = execFileSync('git', ['ls-files', 'dashboard/**/*.go'], { cwd: ROOT, encoding: 'utf-8' })
+    .split(String.fromCharCode(10)).filter(f => f && !f.endsWith('_test.go'));
+  const offenders = goFiles.flatMap(f => goWriterMarkers(readFile(f)).map(m => `${f}: ${m}`));
+  // control: the checker really does flag a direct writer
+  const controlHit = goWriterMarkers('func UpdateApplicationStatus(x) { acquireTrackerLock(p) }');
+  if (controlHit.length !== 2) fail(`dashboard writer control did not flag the markers (got ${JSON.stringify(controlHit)})`);
+  else if (goFiles.length === 0) warn('no dashboard Go files found: dashboard writer check not verified');
+  else if (offenders.length > 0) fail(`dashboard has a direct tracker writer again: ${offenders.join('; ')}`);
+  else if (!/set-status.mjs/.test(readFile('dashboard/internal/data/setstatus.go'))) fail('dashboard setstatus.go does not call set-status.mjs');
+  else pass('dashboard has no direct tracker writer; status changes go through set-status.mjs');
 } catch (e) {
   fail(`tracker writer lock contract tests crashed: ${e.message}`);
 }
