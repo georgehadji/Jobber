@@ -13,36 +13,26 @@
 // sleep keeps us under ~3 req/s. DB resolution is by NAME so no workspace id is
 // ever embedded. Files prefixed with _ are never discovered as plugins.
 
-import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-import * as yaml from 'js-yaml';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from '../../lib/state-machine.mjs';
+import { resolveStatusCell } from '../../lib/status-gate.mjs';
+import { extraStatusId } from '../../lib/status-extra-aliases.mjs';
 
-const DIR = dirname(fileURLToPath(import.meta.url));
-const STATES_PATH = join(DIR, '..', '..', 'templates', 'states.yml');
 const MAX = 1900; // safety margin under Notion's 2000-char rich_text limit
 
-// ── canonical states (templates/states.yml is the source of truth) ──────────
-let _states;
-function loadStates() {
-  if (_states) return _states;
-  const doc = /** @type {any} */ (yaml.load(readFileSync(STATES_PATH, 'utf-8')));
-  const labels = [], aliasMap = {};
-  for (const s of doc.states) {
-    labels.push(s.label);
-    aliasMap[s.label.toLowerCase()] = s.label;
-    for (const a of (s.aliases || [])) aliasMap[String(a).toLowerCase()] = s.label;
-  }
-  _states = { labels, aliasMap };
-  return _states;
-}
-/** Canonical label for a status (case-insensitive, alias-aware), or null. */
+// ── canonical states (the registry, templates/states.yml, is the source of truth) ──
+// Resolved through lib/state-machine like every other script: exact label/alias first, then a
+// dated or **bold** cell (`Rejected 2026-02-01`), then the shared extra spellings (condicional, hold…).
+const machine = () => loadMachine(APPLICATION_STATUS);
+/** Canonical label for a status (case-insensitive, alias-aware, tolerant of dates/bold), or null. */
 export function canonicalStatus(raw) {
   if (!raw) return null;
-  const key = String(raw).replace(/\*\*/g, '').trim().toLowerCase();
-  return loadStates().aliasMap[key] || null;
+  const m = machine();
+  const hit = resolveStatusCell(m, raw);
+  if (hit) return hit.label;
+  const extra = extraStatusId(String(raw).replace(/\*\*/g, '').trim().toLowerCase());
+  return extra ? (m.states.find(st => st.id === extra)?.label ?? null) : null;
 }
-export function statusLabels() { return loadStates().labels.slice(); }
+export function statusLabels() { return machine().states.map(st => st.label); }
 
 // ── text → rich_text for property values (chunk-safe under the 2000-char limit) ──
 export function rich(text) {

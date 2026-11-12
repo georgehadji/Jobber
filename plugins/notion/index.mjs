@@ -69,6 +69,7 @@ export default {
     const apps = await applicationsDb(client);
 
     let pushed = 0;
+    const unknownStatuses = [];
     for (const row of rows) {
       const company = (row.company || '').trim();
       const role = (row.role || '').trim();
@@ -77,6 +78,12 @@ export default {
       const props = { Role: { title: rich(role) }, Company: { rich_text: rich(company) } };
       const status = canonicalStatus(row.status);
       if (status) props.Status = { select: { name: status } };
+      else if ((row.status || '').trim()) {
+        // An unrecognised status is never sent (Notion would mint a stray select option); the row
+        // is still pushed, but the operator is told which one and why its Status stayed unset.
+        unknownStatuses.push(row.status.trim());
+        ctx?.log?.(`warning: ${company} — ${role}: unknown status "${row.status.trim()}", pushed without a Status`);
+      }
       const score = parseScore(row.score);
       if (Number.isFinite(score)) props.Score = { number: score };
 
@@ -89,7 +96,7 @@ export default {
       else await client.createPage(apps, props);
       pushed++;
     }
-    return { pushed };
+    return unknownStatuses.length ? { pushed, unknownStatuses } : { pushed };
   },
 
   /**
