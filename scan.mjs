@@ -48,7 +48,7 @@ import { indexEmployerBoards, crossCheckEmployerBoards } from './lib/employer-bo
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { normalizeCompany } from './tracker-utils.mjs';
 import { normalizeCompanyName } from './lib/company-name.mjs';
-import { withPipelineLock } from './pipeline-lock.mjs';
+import { appendPending } from './lib/pipeline-inbox.mjs';
 import { withPortalHealthLock } from './portal-health-lock.mjs';
 
 try {
@@ -1004,7 +1004,7 @@ export function loadSeenUrls(policy = {}) {
   // pipeline.md — extract URLs from checkbox lines
   if (existsSync(PIPELINE_PATH)) {
     const text = readFileSync(PIPELINE_PATH, 'utf-8');
-    for (const match of text.matchAll(/- \[[ x]\] (https?:\/\/\S+)/g)) {
+    for (const match of text.matchAll(/- \[[ x!]\] (https?:\/\/\S+)/g)) {
       seen.add(normalizeUrlForDedup(match[1]));
     }
   }
@@ -1345,7 +1345,7 @@ export function collectSeenCompanyRoles(sources = {}, policy = {}, canonicalize 
 
   // pipeline.md — "- [ ] {url} | {company} | {title}" plus optional trailing
   // columns (location, compensation, posted:/trust:/note: segments).
-  for (const match of pipelineText.matchAll(/^- \[[ x]\]\s+\S+\s*\|\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*(?:\|[^\n]*)?$/gm)) {
+  for (const match of pipelineText.matchAll(/^- \[[ x!]\]\s+\S+\s*\|\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*(?:\|[^\n]*)?$/gm)) {
     add(match[1], match[2]);
   }
 
@@ -1644,60 +1644,13 @@ export function loadFingerprintHistory(historyPath = SCAN_HISTORY_PATH) {
   return rows;
 }
 
-// Standard skeleton created on fresh install — matches the format documented
-// in modes/pipeline.md and expected by /jobber pipeline.
-const PIPELINE_SKELETON = `# Pipeline — Pending URLs
-
-Paste job URLs below as \`- [ ] {url}\` then run \`/jobber pipeline\`.
-
-## Pending
-
-## Processed
-`;
-
-// Current section names (English). Legacy Spanish names are checked as fallback
-// so existing pipeline.md files created before this change keep working.
-const PENDING_MARKERS = ['## Pending', '## Pendientes'];
-const PROCESSED_MARKERS = ['## Processed', '## Procesadas'];
-
-// Locked (pipeline-lock.mjs) so scan.mjs, scan-ats-full.mjs, and plugins.mjs
-// (pipeline mode) — the three current callers — can never interleave their
-// read-modify-write and silently drop each other's offers.
+// Locked + atomic via lib/pipeline-inbox.mjs (pipeline-lock underneath) so
+// scan.mjs, scan-ats-full.mjs, plugins.mjs (pipeline mode) and every other
+// pipeline.md writer can never interleave their read-modify-write and silently
+// drop each other's offers. Seeds the standard skeleton on a fresh install.
 export async function appendToPipeline(offers) {
   if (offers.length === 0) return;
-
-  await withPipelineLock(PIPELINE_PATH, async () => {
-    // Auto-create with standard skeleton if missing (fresh-install guard).
-    if (!existsSync(PIPELINE_PATH)) {
-      writeFileSync(PIPELINE_PATH, PIPELINE_SKELETON, 'utf-8');
-    }
-
-    let text = readFileSync(PIPELINE_PATH, 'utf-8');
-
-    const marker = PENDING_MARKERS.find(m => text.includes(m)) ?? null;
-    const idx = marker !== null ? text.indexOf(marker) : -1;
-
-    if (idx === -1) {
-      // No Pending section found — insert one before Processed (or at end)
-      const procIdx = PROCESSED_MARKERS.reduce((found, m) => {
-        const i = text.indexOf(m);
-        return (found === -1 || (i !== -1 && i < found)) ? i : found;
-      }, -1);
-      const insertAt = procIdx === -1 ? text.length : procIdx;
-      const block = `\n## Pending\n\n` + offers.map(formatPipelineOffer).join('\n') + '\n\n';
-      text = text.slice(0, insertAt) + block + text.slice(insertAt);
-    } else {
-      // Find the end of existing Pending content (next ## or end)
-      const afterMarker = idx + marker.length;
-      const nextSection = text.indexOf('\n## ', afterMarker);
-      const insertAt = nextSection === -1 ? text.length : nextSection;
-
-      const block = '\n' + offers.map(formatPipelineOffer).join('\n') + '\n';
-      text = text.slice(0, insertAt) + block + text.slice(insertAt);
-    }
-
-    writeFileSync(PIPELINE_PATH, text, 'utf-8');
-  });
+  await appendPending(PIPELINE_PATH, offers.map(formatPipelineOffer));
 }
 
 export function appendToScanHistory(offers, date, status = 'added') {

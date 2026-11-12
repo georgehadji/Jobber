@@ -152,6 +152,7 @@ const SYSTEM_PATHS = [
   'lib/token-tracker.mjs',
   'lib/llm-providers.mjs',
   'lib/file-lock.mjs',
+  'lib/pipeline-inbox.mjs',
   'lib/report-schema.mjs',
   'lib/score-summary.mjs',
   'lib/cv-plaintext.mjs',
