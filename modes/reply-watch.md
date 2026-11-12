@@ -59,6 +59,8 @@ Today: 3 application updates need review
 
 ## Step 2 — Confirm Tracker Updates
 
+Tracker states a suggestion can name: <!-- machine:application-status:inline begin -->`Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` → `Hired` / `Rejected` / `Discarded` / `SKIP`<!-- machine:application-status:inline end -->.
+
 If the script identifies recommended updates (e.g. `Applied` → `Interview`), it lists the changes and prompts for confirmation:
 
 ```text

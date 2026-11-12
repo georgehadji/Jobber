@@ -39,6 +39,7 @@ import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { hasMarkers, sourceShaIgnoringBlocks } from './lib/machine-blocks.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const SOURCE = 'README.md';
@@ -143,6 +144,15 @@ try {
     const t = line.trim();
     if (/^[0-9a-f]{40}$/.test(t)) { currentSha = t; continue; }
     if (t.startsWith('modes/') && t.endsWith('.md') && currentSha && !modeShas.has(t)) modeShas.set(t, currentSha);
+  }
+  // Generated machine blocks (gen-machine-docs.mjs) are not translatable prose: a source file
+  // that carries them is dated by its last commit that changed anything OUTSIDE the blocks.
+  for (const rel of modeShas.keys()) {
+    let src = '';
+    try { src = readFileSync(join(JOBBER, rel), 'utf-8'); } catch { continue; }
+    if (!hasMarkers(src)) continue;
+    const sha = sourceShaIgnoringBlocks(JOBBER, rel);
+    if (sha) modeShas.set(rel, sha);
   }
   modeFindings = checkModeTranslations({ sourceShas: modeShas });
 } catch {
