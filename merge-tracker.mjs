@@ -22,6 +22,8 @@ import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import { parsePdfIndex } from './find.mjs';
 import { LEGACY_COLMAP, detectColumns, resolveScoreStatus, normalizeVia, SEPARATOR_ROW_RE } from './tracker-parse.mjs';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
+import { extraStatusId } from './lib/status-extra-aliases.mjs';
 import { resolveTrackerPath, trackerLockDirFor, acquireTrackerLock, writeFileAtomic, appendStatusLog, normalizeCompany, cell, gcStaleSentinels } from './tracker-utils.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
@@ -159,8 +161,8 @@ try {
   process.exit(1);
 }
 
-// Canonical states and aliases
-const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Hired', 'Rejected', 'Discarded', 'SKIP'];
+// Canonical states and aliases come from the state registry (templates/states.yml).
+const STATUS_MACHINE = loadMachine(APPLICATION_STATUS);
 
 /**
  * Convert raw addition status text into one canonical tracker state.
@@ -184,26 +186,9 @@ function validateStatus(status) {
     .trim();
   const lower = clean.toLowerCase();
 
-  for (const valid of CANONICAL_STATES) {
-    if (valid.toLowerCase() === lower) return valid;
-  }
-
-  // Aliases
-  const aliases = {
-    // Spanish → English
-    'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated', 'evaluar': 'Evaluated', 'verificar': 'Evaluated',
-    'aplicado': 'Applied', 'enviada': 'Applied', 'aplicada': 'Applied', 'applied': 'Applied', 'sent': 'Applied',
-    'respondido': 'Responded',
-    'entrevista': 'Interview',
-    'oferta': 'Offer',
-    'rechazado': 'Rejected', 'rechazada': 'Rejected',
-    'contratado': 'Hired', 'contratada': 'Hired', 'accepted': 'Hired', 'accept': 'Hired',
-    'descartado': 'Discarded', 'descartada': 'Discarded', 'cerrada': 'Discarded', 'cancelada': 'Discarded',
-    'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
-    'geo blocker': 'SKIP',
-  };
-
-  if (aliases[lower]) return aliases[lower];
+  // The registry (templates/states.yml: labels + aliases), then the shared extra spellings (D2).
+  const hit = canonicalize(STATUS_MACHINE, clean) ?? canonicalize(STATUS_MACHINE, extraStatusId(lower));
+  if (hit) return hit.label;
 
   // DUPLICADO/Repost → Discarded
   if (/^(duplicado|dup|repost)/i.test(lower)) return 'Discarded';
