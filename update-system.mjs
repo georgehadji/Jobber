@@ -188,6 +188,7 @@ const SYSTEM_PATHS = [
   'machines.mjs',
   'gen-machine-docs.mjs',
   'validate-state-machines.mjs',
+  'gen-go-states.mjs',
   'lib/machine-blocks.mjs',
   'lib/state-machine.mjs',
   'lib/status-gate.mjs',

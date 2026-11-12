@@ -72,7 +72,7 @@ states:
 # validating. Live states stay free-form in both directions: a backward move
 # such as Applied → Evaluated is a normal ledger CORRECTION (status-log.tsv
 # records it, funnel-velocity.mjs treats it as a correction, not a fresh event)
-# and is not gated. The dashboard does not parse this file: its state aliases are hard-coded in dashboard/internal/data/career.go and must be kept in sync by hand.
+# and is not gated. The Go dashboard does not parse this file at runtime: ids, labels, terminal flags and edges are generated into dashboard/internal/data/states_gen.go (node gen-go-states.mjs; tests/go-states.test.mjs fails when stale). Its NormalizeStatus alias matching stays hand-written and is pinned to the corpus by a Go test.
 transitions:
   evaluated: [applied, responded, rejected, discarded, skip]
   applied:   [responded, interview, rejected, discarded, skip]
