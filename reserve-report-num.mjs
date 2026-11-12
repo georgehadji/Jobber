@@ -18,7 +18,7 @@
 
 import {
   existsSync, mkdirSync, readFileSync, readdirSync, realpathSync,
-  statSync, unlinkSync, writeFileSync,
+  unlinkSync, writeFileSync,
 } from 'fs';
 import { randomUUID } from 'crypto';
 import { dirname, join, resolve } from 'path';
@@ -28,10 +28,10 @@ import {
 } from './tracker-parse.mjs';
 import {
   acquireTrackerLock, canonicalizeTrackerPath, resolveTrackerPath, trackerLockDirFor,
+  gcStaleReportSentinels, readSentinelOwner, SENTINEL_MAX_AGE_MS,
 } from './tracker-utils.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const MAX_SENTINEL_AGE_MS = 4 * 60 * 60 * 1000;
 const MAX_RETRIES = 50;
 const MAX_COUNT = 50;
 const RESERVATION_TOKEN = Symbol('jobber-report-reservation-token');
@@ -116,14 +116,6 @@ function claimSlot(reportsDir, num, occupied, token) {
   }
 }
 
-function readSentinelOwner(sentinel) {
-  try {
-    return JSON.parse(readFileSync(sentinel, 'utf-8'));
-  } catch {
-    return null;
-  }
-}
-
 function releaseSlot(reportsDir, num, { token, force = false } = {}) {
   const sentinel = sentinelPath(reportsDir, num);
   try {
@@ -133,16 +125,6 @@ function releaseSlot(reportsDir, num, { token, force = false } = {}) {
   } catch (err) {
     if (err?.code === 'ENOENT') return false;
     throw err;
-  }
-}
-
-function processIsAlive(pid) {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err?.code === 'EPERM';
   }
 }
 
@@ -242,43 +224,23 @@ export async function releaseReportNumbers(numbers, options = {}) {
   }
 }
 
-/** Remove reservation sentinels older than the configured TTL. */
+/** Remove reservation sentinels that are stale AND no longer owned (see tracker-utils gcStaleReportSentinels). */
 export async function gcStaleReportReservations(options = {}) {
   const reportsDir = reportsDirFor(options);
-  if (!existsSync(reportsDir)) return 0;
-
-  const trackerPath = trackerPathFor(options);
-  const lock = await acquireTrackerLock(trackerLockDirFor(trackerPath), {
-    timeoutMs: Number(process.env.JOBBER_TRACKER_LOCK_TIMEOUT_MS) || 60_000,
-    retryMs: Number(process.env.JOBBER_TRACKER_LOCK_RETRY_MS) || 75,
-    staleMs: Number(process.env.JOBBER_TRACKER_LOCK_STALE_MS) || 10 * 60_000,
-    tracker: trackerPath,
-    ...options.lockOptions,
+  const removed = await gcStaleReportSentinels({
+    reportsDir,
+    trackerPath: trackerPathFor(options),
+    batchStatePath: options.batchStatePath
+      || process.env.JOBBER_BATCH_STATE
+      || join(options.rootDir || ROOT, 'batch', 'batch-state.tsv'),
+    maxAgeMs: options.maxAgeMs ?? SENTINEL_MAX_AGE_MS,
+    lockOptions: options.lockOptions,
+    log: (name) => process.stderr.write(`reserve-report-num: GC stale sentinel ${name}
+`),
   });
-  const maxAgeMs = options.maxAgeMs ?? MAX_SENTINEL_AGE_MS;
-  const now = Date.now();
-  let removed = 0;
-  try {
-    for (const name of readdirSync(reportsDir)) {
-      if (!/^\d+-RESERVED\.md$/.test(name)) continue;
-      const fullPath = join(reportsDir, name);
-      try {
-        if (now - statSync(fullPath).mtimeMs > maxAgeMs) {
-          const owner = readSentinelOwner(fullPath);
-          if (owner?.pid && processIsAlive(owner.pid)) continue;
-          unlinkSync(fullPath);
-          removed++;
-          process.stderr.write(`reserve-report-num: GC stale sentinel ${name}\n`);
-        }
-      } catch (err) {
-        if (err?.code !== 'ENOENT') throw err;
-      }
-    }
-  } finally {
-    lock.release();
-  }
   if (removed > 0) {
-    process.stderr.write(`reserve-report-num: removed ${removed} stale sentinel(s)\n`);
+    process.stderr.write(`reserve-report-num: removed ${removed} stale sentinel(s)
+`);
   }
   return removed;
 }
