@@ -1,0 +1,91 @@
+# Jobber — portal health machine (STATE-MACHINES-PLAN M12 / 4.5).
+# One row of data/portal-health.tsv (column 3, `status`): the outcome of ONE scan run for ONE
+# tracked company. Declares what the code does TODAY; nothing here is new behaviour and nothing
+# enforces it (warn-first). Parity test: tests/machine-portal-health.test.mjs.
+#
+# FOUR vocabularies describe "is this portal alive" today; this machine is a SUPERSET of all of them
+# (aliases carry the other spellings; the mapping is lossy where noted):
+#   1. data/portal-health.tsv (scan.mjs appendPortalHealth, scan.mjs:~2617-2627): the state ids below,
+#      minus `unprobed`. The kind comes from lib/http-errors.mjs classifyFetchError().
+#   2. verify-portals.mjs (probeSlug / probeProvider): live | empty | missing
+#   3. provider-health.mjs (vendor canary, cached in os.tmpdir): healthy | degraded | down | skipped
+#   4. discover-ats.mjs (probeVendor / resolveFromWebsite): match | empty | error | unverified | none
+#
+# STREAK CLASSES (scan.mjs computeConsecutiveFailures / computePortalSkipTargets, scan.mjs:~1798-1865):
+#   healthy  (reachable, empty): reset the failure streak to 0.
+#   neutral  (rate_limited): "throttled, not dead" -- neither extends nor resets the streak.
+#   failure  (slug_gone, network, auth, server, unknown, AND any string not listed here):
+#            streak + 1. After `portal_health_threshold` (default 3) the portal earns an
+#            exponential skip window (1d, doubling, cap 4d) measured from the last failure.
+#   `unprobed` (aliases skipped/unverified/none) is never written to portal-health.tsv; it means
+#   "no health signal" and is the initial state (a company with no record yet).
+#
+# KNOWN DRIFT (pinned by the parity test, NOT fixed here):
+#   * The failure classification is copy-pasted three times: scan.mjs computeConsecutiveFailures,
+#     scan.mjs computePortalSkipTargets, stats.mjs computePortalStats (stats.mjs:~295).
+#   * stats.mjs does NOT know the neutral class: it counts rate_limited as a failure, so `stats`
+#     can report a portal "persistently dead" that scan.mjs would not skip.
+#   * Unknown strings count as failures everywhere (policy unknown_input: map:unknown).
+#   * The log is append-only and grows without bound.
+id: portal-health
+persisted_in: data/portal-health.tsv (status column; one row per company per scan run)
+initial: unprobed
+states:
+  - id: unprobed
+    label: Unprobed
+    terminal: false
+    aliases: [skipped, unverified, none]
+    description: No health record yet, or a probe that produced no signal (provider-health `skipped`, discover-ats `unverified`/`none`). Never written to portal-health.tsv. Neutral in spirit; a string like this read from the log would count as a failure today
+  - id: reachable
+    label: Reachable
+    terminal: false
+    aliases: [live, healthy, match]
+    description: The board answered and returned jobs. HEALTHY class, resets the streak. Aliases are verify-portals `live` (also its partial:true probes), provider-health `healthy`, discover-ats `match`
+  - id: empty
+    label: Empty
+    terminal: false
+    description: The board answered but lists 0 jobs (scan.mjs:2624 downgrades reachable to empty). HEALTHY class, resets the streak; a live board with no openings is reachable. Same spelling in verify-portals and discover-ats
+  - id: rate_limited
+    label: Rate limited
+    terminal: false
+    description: HTTP 429. NEUTRAL class in scan.mjs (neither extends nor resets the streak) but counted as a FAILURE by stats.mjs (drift, see header)
+  - id: slug_gone
+    label: Slug gone
+    terminal: false
+    aliases: [missing]
+    description: HTTP 404/410, the board slug no longer exists (classifyFetchError). FAILURE class. verify-portals `missing` is the same idea (no board found for the slug)
+  - id: network
+    label: Network error
+    terminal: false
+    aliases: [down]
+    description: Abort, timeout, ECONNREFUSED, ENOTFOUND, ETIMEDOUT, fetch failed. FAILURE class. provider-health `down` (timeout, refused, DNS, no response) is the same idea
+  - id: auth
+    label: Auth blocked
+    terminal: false
+    description: HTTP 401/403, typically a WAF blocking the scanner. FAILURE class; recorded as `auth` (before the fix these were logged as healthy forever)
+  - id: server
+    label: Server error
+    terminal: false
+    aliases: [degraded]
+    description: HTTP 5xx. FAILURE class. LOSSY alias provider-health `degraded` (API answered but slow >= 3s, or non-2xx) -- a slow 2xx is not a server error, but both mean "answering, unhappy" and both would count as a failure here
+  - id: unknown
+    label: Unknown error
+    terminal: false
+    aliases: [error]
+    description: Any error classifyFetchError cannot place. FAILURE class, and also the bucket every unrecognised string falls into today. discover-ats `error` maps here
+transitions:
+  # A new row is appended every scan run; any logged status can follow any other. Nothing is ordered.
+  unprobed: [reachable, empty, rate_limited, slug_gone, network, auth, server, unknown]
+  reachable: [empty, rate_limited, slug_gone, network, auth, server, unknown]
+  empty: [reachable, rate_limited, slug_gone, network, auth, server, unknown]
+  rate_limited: [reachable, empty, slug_gone, network, auth, server, unknown]
+  slug_gone: [reachable, empty, rate_limited, network, auth, server, unknown]
+  network: [reachable, empty, rate_limited, slug_gone, auth, server, unknown]
+  auth: [reachable, empty, rate_limited, slug_gone, network, server, unknown]
+  server: [reachable, empty, rate_limited, slug_gone, network, auth, unknown]
+  unknown: [reachable, empty, rate_limited, slug_gone, network, auth, server]
+policy:
+  backward_between_live: correction
+  unknown_input: map:unknown
+  exit_terminal: force
+writers: [scan.mjs]
