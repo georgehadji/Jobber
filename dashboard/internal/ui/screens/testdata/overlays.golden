@@ -1,8 +1,8 @@
 === base ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE               STATUS           LOCATION             PAY                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -14,16 +14,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer      Rejected         —                                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer     hired            —                                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer     Hired            —                                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === col/open ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE               STATUS           LOCATION             PAY                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -35,7 +35,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer      Rejected         —                                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer     hired            —                                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer     Hired            —                                          
   ─── Columns (SPACE toggle · ESC close) ───                                                                            
   [✓] APPLIED                                                                                                           
   [✓] LOCATION                                                                                                          
@@ -48,9 +48,9 @@
  ↑↓/jk navigate  SPACE toggle  Esc/C close                                                                              
 === col/moved+toggled ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -62,7 +62,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Columns (SPACE toggle · ESC close) ───                                                                            
   [✓] APPLIED                                                                                                           
   [✓] LOCATION                                                                                                          
@@ -75,9 +75,9 @@
  ↑↓/jk navigate  SPACE toggle  Esc/C close                                                                              
 === col/closed-esc ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -89,16 +89,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === col/closed-C ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -110,16 +110,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === status/open ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -131,7 +131,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   Change status:                                                                                                        
    >Interview                                                                                                           
     Evaluated                                                                                                           
@@ -147,9 +147,9 @@
  ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
 === status/moved ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -161,7 +161,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   Change status:                                                                                                        
     Interview                                                                                                           
     Evaluated                                                                                                           
@@ -177,9 +177,9 @@
  ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
 === status/closed-esc ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -191,16 +191,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === status/closed-q ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -212,16 +212,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === search/open ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
   / █  5/5 matching   Enter: keep   Esc: cancel   Ctrl+U: clear                                                         
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
@@ -234,15 +234,15 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  type filter live  Enter keep  Ctrl+U clear  Esc cancel                                                                 
 === search/typed ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  1 shown                                                                               
   / ac█  1/5 matching   Enter: keep   Esc: cancel   Ctrl+U: clear                                                       
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
@@ -253,9 +253,9 @@
  type filter live  Enter keep  Ctrl+U clear  Esc cancel                                                                 
 === search/backspaced ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
   / a█  5/5 matching   Enter: keep   Esc: cancel   Ctrl+U: clear                                                        
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
@@ -268,15 +268,15 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  type filter live  Enter keep  Ctrl+U clear  Esc cancel                                                                 
 === search/committed ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  1 shown                                                                               
   / ac  1/5 matching   Esc: clear   /: edit                                                                             
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
@@ -288,9 +288,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === search/cancelled ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -302,16 +302,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/open ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -323,7 +323,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
     ★ Predicted by agent:                                                                                               
   > ★ salary_too_low                                                                                                    
@@ -342,9 +342,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/moved ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -356,7 +356,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
     ★ Predicted by agent:                                                                                               
     ★ salary_too_low                                                                                                    
@@ -375,9 +375,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/unbound-key ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -389,7 +389,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
     ★ Predicted by agent:                                                                                               
   > ★ salary_too_low                                                                                                    
@@ -408,9 +408,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/at-other ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -422,7 +422,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
     ★ Predicted by agent:                                                                                               
     ★ salary_too_low                                                                                                    
@@ -441,9 +441,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/custom-input-empty ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -455,7 +455,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Reason (type + Enter) ───────────────                                                                             
   > █                                                                                                                   
   Enter: confirm   Esc: back                                                                                            
@@ -465,9 +465,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/custom-input-typed ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -479,7 +479,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Reason (type + Enter) ───────────────                                                                             
   > xy█                                                                                                                 
   Enter: confirm   Esc: back                                                                                            
@@ -489,9 +489,9 @@
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === discard/custom-esc-back-to-list ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -503,7 +503,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
     ★ Predicted by agent:                                                                                               
     ★ salary_too_low                                                                                                    
@@ -645,9 +645,9 @@
                                                                                                                         
 === hired/done ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -659,16 +659,16 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
  columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
 === pdf/open ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -680,7 +680,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   Open CV PDF:                                                                                                          
   > cv-a.pdf                                                                                                            
     cv-b.pdf                                                                                                            
@@ -689,9 +689,9 @@
  ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
 === pdf/moved ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -703,7 +703,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   Open CV PDF:                                                                                                          
     cv-a.pdf                                                                                                            
   > cv-b.pdf                                                                                                            
@@ -712,9 +712,9 @@
  ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
 === flash/pdf-error ===
   CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
-  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
- ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+   ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  OFFER (0)  HIRED (1)  TOP ≥4 (3)  SKIP (0) ›      
+  ━━━━━━━━━──────────────────────────────────────────────────────────────────────────────────────────────────────       
+  Hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
   [Sort: score]  [View: grouped]  5 shown                                                                               
    #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
   ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
@@ -726,7 +726,7 @@
   ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
    #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
   ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
-   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     Hired            —                          
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
   remote                                                                                                                
  PDF regeneration failed: boom                                                                                          

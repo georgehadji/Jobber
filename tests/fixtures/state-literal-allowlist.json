@@ -22,8 +22,7 @@
       "discarded,rejected,skip"
     ],
     "dashboard/internal/i18n/catalog.go": [
-      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
-      "applied,discarded,evaluated,interview,offer,rejected,responded,skip"
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"
     ],
     "dashboard/internal/ui/screens/pipeline.go": [
       "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"

@@ -129,6 +129,8 @@ const (
 	filterApplied   = "applied"
 	filterInterview = "interview"
 	filterResponded = "responded"
+	filterOffer     = "offer"
+	filterHired     = "hired"
 	filterSkip      = "skip"
 	filterRejected  = "rejected"
 	filterDiscarded = "discarded"
@@ -141,17 +143,35 @@ type pipelineTab struct {
 }
 
 func getPipelineTabs() []pipelineTab {
-	return []pipelineTab{
+	return withRegistryTabs([]pipelineTab{
 		{filterAll, i18n.Current.TabAll},
 		{filterEvaluated, i18n.Current.TabEvaluated},
 		{filterInterview, i18n.Current.TabInterview},
 		{filterResponded, i18n.Current.TabResponded},
 		{filterApplied, i18n.Current.TabApplied},
+		{filterOffer, i18n.Current.TabOffer},
+		{filterHired, i18n.Current.TabHired},
 		{filterTop, i18n.Current.TabTop},
 		{filterSkip, i18n.Current.TabSkip},
 		{filterRejected, i18n.Current.TabRejected},
 		{filterDiscarded, i18n.Current.TabDiscarded},
+	}, data.States)
+}
+
+// withRegistryTabs guarantees a tab for every registry state: any state the hand-ordered list
+// does not mention is appended (label = the registry label in capitals), so a state added to
+// templates/states.yml is never unreachable in the TUI. The order above is the UI's choice.
+func withRegistryTabs(tabs []pipelineTab, states []data.State) []pipelineTab {
+	have := map[string]bool{}
+	for _, t := range tabs {
+		have[t.filter] = true
 	}
+	for _, s := range states {
+		if !have[s.ID] {
+			tabs = append(tabs, pipelineTab{s.ID, strings.ToUpper(s.Label)})
+		}
+	}
+	return tabs
 }
 
 var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus, sortLocation, sortPay, sortLast}
@@ -1416,10 +1436,19 @@ func (m PipelineModel) renderTabs() string {
 	var tabs []string
 	var underParts []string
 
-	for i, tab := range getPipelineTabs() {
-		// Count items for this tab
-		count := m.countForFilter(tab.filter)
-		label := fmt.Sprintf(" %s (%d) ", tab.label, count)
+	all := getPipelineTabs()
+	labels := make([]string, len(all))
+	widths := make([]int, len(all))
+	for i, tab := range all {
+		labels[i] = fmt.Sprintf(" %s (%d) ", tab.label, m.countForFilter(tab.filter))
+		widths[i] = lipgloss.Width(labels[i])
+	}
+	// With many tabs the row can be wider than the terminal; show a window around the
+	// active tab, with ‹ › marking what is cut off. A row that fits renders exactly as before.
+	lo, hi := visibleTabRange(widths, m.activeTab, m.width-2)
+
+	for i := lo; i < hi; i++ {
+		label := labels[i]
 
 		if i == m.activeTab {
 			style := lipgloss.NewStyle().
@@ -1438,10 +1467,53 @@ func (m PipelineModel) renderTabs() string {
 	}
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
-	underline := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render(strings.Join(underParts, ""))
+	under := strings.Join(underParts, "")
+	if lo > 0 || hi < len(all) {
+		left, right := " ", " "
+		if lo > 0 {
+			left = "‹"
+		}
+		if hi < len(all) {
+			right = "›"
+		}
+		row = left + row + right
+		under = " " + under + " "
+	}
+	underline := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render(under)
 
 	padStyle := lipgloss.NewStyle().Padding(0, 1)
 	return padStyle.Render(row) + "\n" + padStyle.Render(underline)
+}
+
+// visibleTabRange picks the tabs [lo, hi) to draw in avail columns: all of them when they fit,
+// otherwise a window that always contains the active tab, grown alternately right and left,
+// leaving 2 columns for the ‹ › markers. A single tab wider than avail is still shown alone.
+func visibleTabRange(widths []int, active, avail int) (lo, hi int) {
+	total := 0
+	for _, w := range widths {
+		total += w
+	}
+	if total <= avail || active < 0 || active >= len(widths) {
+		return 0, len(widths)
+	}
+	avail -= 2
+	lo, hi = active, active+1
+	used := widths[active]
+	for {
+		grewRight := hi < len(widths) && used+widths[hi] <= avail
+		if grewRight {
+			used += widths[hi]
+			hi++
+		}
+		grewLeft := lo > 0 && used+widths[lo-1] <= avail
+		if grewLeft {
+			used += widths[lo-1]
+			lo--
+		}
+		if !grewRight && !grewLeft {
+			return lo, hi
+		}
+	}
 }
 
 func (m PipelineModel) countForFilter(filter string) int {

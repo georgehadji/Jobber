@@ -3,6 +3,7 @@ package i18n
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -22,6 +23,8 @@ type Catalog struct {
 	TabApplied   string
 	TabInterview string
 	TabResponded string
+	TabOffer     string
+	TabHired     string
 	TabTop       string
 	TabSkip      string
 	TabRejected  string
@@ -170,29 +173,19 @@ func (c *Catalog) ViewModeLabel(mode string) string {
 	}
 }
 
-// StatusLabel returns the localized display label for a canonical status ID
-// (interview, offer, responded, applied, evaluated, skip, rejected, discarded).
+// StatusLabel returns the localized display label for a canonical status ID. The label is
+// the catalog's Status<Id> field (id "evaluated" -> StatusEvaluated), so a state added to
+// the registry needs only its field here; TestEveryRegistryStateHasLabels pins that. An id
+// with no such field comes back unchanged.
 func (c *Catalog) StatusLabel(norm string) string {
-	switch strings.ToLower(strings.TrimSpace(norm)) {
-	case "interview":
-		return c.StatusInterview
-	case "offer":
-		return c.StatusOffer
-	case "responded":
-		return c.StatusResponded
-	case "applied":
-		return c.StatusApplied
-	case "evaluated":
-		return c.StatusEvaluated
-	case "skip":
-		return c.StatusSkip
-	case "rejected":
-		return c.StatusRejected
-	case "discarded":
-		return c.StatusDiscarded
-	default:
-		return norm
+	id := strings.ToLower(strings.TrimSpace(norm))
+	if id != "" {
+		field := reflect.ValueOf(c).Elem().FieldByName("Status" + strings.ToUpper(id[:1]) + id[1:])
+		if field.IsValid() && field.Kind() == reflect.String {
+			return field.String()
+		}
 	}
+	return norm
 }
 
 // NowFunc allows injecting a mock clock for testing.
@@ -233,6 +226,8 @@ var En = Catalog{
 	TabApplied:   "APPLIED",
 	TabInterview: "INTERVIEW",
 	TabResponded: "RESPONDED",
+	TabOffer:     "OFFER",
+	TabHired:     "HIRED",
 	TabTop:       "TOP ≥4",
 	TabSkip:      "SKIP",
 	TabRejected:  "REJECTED",
@@ -361,6 +356,8 @@ var Tr = Catalog{
 	TabApplied:   "BAŞVURULDU",
 	TabInterview: "MÜLAKAT",
 	TabResponded: "YANIT VERİLDİ",
+	TabOffer:     "TEKLİF",
+	TabHired:     "İŞE ALINDI",
 	TabTop:       "EN İYİ ≥4",
 	TabSkip:      "UYGUN DEĞİL",
 	TabRejected:  "REDDEDİLDİ",
@@ -489,6 +486,8 @@ var Es = Catalog{
 	TabApplied:   "APLICADAS",
 	TabInterview: "ENTREVISTA",
 	TabResponded: "RESPONDIDAS",
+	TabOffer:     "OFERTAS",
+	TabHired:     "CONTRATADAS",
 	TabTop:       "TOP ≥4",
 	TabSkip:      "OMITIR",
 	TabRejected:  "RECHAZADAS",
