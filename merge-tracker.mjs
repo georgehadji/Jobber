@@ -140,7 +140,7 @@ function sleep(ms) {
 // off every lock-waiter's block time.
 // --dry-run must perform zero real writes (every other mutation in this file
 // is gated on !DRY_RUN) — this delete was the one unguarded exception.
-if (!DRY_RUN) gcStaleSentinels(join(REPORTS_ROOT, 'reports'));
+if (!DRY_RUN) await gcStaleSentinels(join(REPORTS_ROOT, 'reports'), { trackerPath: APPS_FILE, batchStatePath: BATCH_STATE_FILE });
 
 let trackerLock;
 try {

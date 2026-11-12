@@ -227,7 +227,7 @@ if (boldScores === 0) ok('No bold in scores');
 // stale; remove them here so they don't skew the next slot allocation.
 // Shared implementation in tracker-utils.mjs (same helper merge-tracker
 // calls pre-merge) so the age constant can never drift between the two.
-const staleSentinels = gcStaleSentinels(REPORTS_DIR, { log: warn });
+const staleSentinels = await gcStaleSentinels(REPORTS_DIR, { log: warn, trackerPath: APPS_FILE });
 if (staleSentinels === 0) ok('No stale reservation sentinels');
 
 // --- Check 9: Duplicate reports for the same company+role (#1425) ---
