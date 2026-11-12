@@ -543,27 +543,32 @@ function pluginSource(manifest, root) {
 
 /**
  * Integrity gate run on an ENABLED plugin before importing it (the rug-pull
- * defense). Returns { load }. Re-pins the lock on the benign cases (silent).
- * Fail-open on the engine itself (a lock-read error never blocks).
+ * defense). Returns { load }. Re-pins the lock on the benign cases (a failed re-pin
+ * is reported on stderr but does not block the load).
+ * Fails CLOSED everywhere else: an unreadable lock, an integrity-check error or an
+ * unrecognised diff status all refuse to load.
+ * `deps` is a test seam (inject a diff result or a failing lock write); production passes nothing.
  */
-export function lockGate(manifest, root) {
+export function lockGate(manifest, root, deps = {}) {
+  const diff = deps.diff ?? diffPlugin;
+  const write = deps.write ?? writeLockEntry;
   const source = pluginSource(manifest, root);
   let lock;
   // Fail closed: an unreadable lock must not read as "nothing pinned" (that would auto-re-pin and load everything).
   try { lock = readLockStrict(root); } catch (err) { warnSkip(manifest.id, err.message); return { load: false }; }
   const entry = lock.plugins?.[manifest.id];
   let d;
-  try { d = diffPlugin(manifest, entry); }
+  try { d = diff(manifest, entry); }
   catch (err) { warnSkip(manifest.id, `integrity check failed — ${err.message}`); return { load: false }; }
 
   const repin = () => {
     try {
       const tree = hashPluginTree(manifest.dir);
-      writeLockEntry(root, manifest.id, {
+      write(root, manifest.id, {
         source, version: manifest.version || '0.0.0',
         integrity: tree.integrity, files: tree.files, consent: consentSurface(manifest),
       });
-    } catch { /* best-effort; never block load on a write failure */ }
+    } catch (err) { console.warn(`⚠️  ${manifest.id}: could not re-pin plugins.lock (${err.message}) — loading anyway; run \`node plugins.mjs trust ${manifest.id}\` to pin it`); } // load is not blocked, but the failure is never silent
   };
 
   switch (d.status) {
@@ -582,7 +587,9 @@ export function lockGate(manifest, root) {
     case 'surface-widened':
       warnSkip(manifest.id, `capability surface expanded since you consented (${[...d.addedHosts, ...d.addedEnv, ...(d.addedHooks || [])].join(', ')}${manifest.allowsLocalhost ? ', localhost' : ''}) — re-consent: \`node plugins.mjs enable ${manifest.id}\``);
       return { load: false };
-    default: return { load: true };
+    default:
+      warnSkip(manifest.id, `unrecognised integrity status ${JSON.stringify(d.status)} — refusing to load`);
+      return { load: false };
   }
 }
 

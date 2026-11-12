@@ -11,9 +11,10 @@
 // mutation, and a community plugin whose files changed since you trusted it
 // WITHOUT a version bump (the postmark-mcp class). Stated plainly in README.
 
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync, readdirSync, lstatSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync, readdirSync, lstatSync, renameSync, rmSync } from 'node:fs';
 import path from 'node:path';
+import { acquireLockSync } from '../lib/file-lock.mjs';
 
 const LOCK_VERSION = 1;
 
@@ -92,17 +93,40 @@ export function readLockStrict(root) {
   return parsed;
 }
 
-/** Merge a single entry into plugins.lock (never clobber other plugins' entries). */
+/**
+ * Read-modify-write plugins.lock under the shared file lock, strict-read (a corrupt
+ * lock is refused, never replaced by a one-entry file that drops every other pin)
+ * and written atomically (tmp + rename in the same dir, tmp removed on failure).
+ * @param {string} root
+ * @param {(lock: {lockfileVersion:number, plugins:Record<string,any>}) => boolean} mutate return false for "no change"
+ */
+function updateLock(root, mutate) {
+  const file = lockPath(root);
+  const guard = acquireLockSync(file, { timeoutMs: 15_000, staleMs: 30_000, kind: 'plugins.lock' });
+  try {
+    let lock;
+    try { lock = readLockStrict(root); }
+    catch (err) { throw new Error(`refusing to update plugins.lock so no other pin is lost: ${err.message}`); }
+    lock.lockfileVersion = LOCK_VERSION;
+    if (mutate(lock) === false) return;
+    const tmp = `${file}.${process.pid}.${randomUUID()}.tmp`;
+    try { writeFileSync(tmp, JSON.stringify(lock, null, 2) + '\n', 'utf8'); renameSync(tmp, file); }
+    catch (err) { rmSync(tmp, { force: true }); throw err; }
+  } finally {
+    guard.release();
+  }
+}
+
+/** Merge a single entry into plugins.lock (never clobber other plugins' entries; throws on a corrupt lock). */
 export function writeLockEntry(root, id, entry) {
-  const lock = readLock(root);
-  lock.lockfileVersion = LOCK_VERSION;
-  lock.plugins[id] = entry;
-  writeFileSync(lockPath(root), JSON.stringify(lock, null, 2) + '\n', 'utf8');
+  updateLock(root, (lock) => { lock.plugins[id] = entry; });
 }
 
 export function removeLockEntry(root, id) {
-  const lock = readLock(root);
-  if (lock.plugins[id]) { delete lock.plugins[id]; writeFileSync(lockPath(root), JSON.stringify(lock, null, 2) + '\n', 'utf8'); }
+  updateLock(root, (lock) => {
+    if (!lock.plugins[id]) return false;
+    delete lock.plugins[id];
+  });
 }
 
 /**
