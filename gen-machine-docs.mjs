@@ -8,14 +8,46 @@
 // content comes from lib/state-machine.mjs describe(). Views: see VIEWS in lib/machine-blocks.mjs.
 // Only the text between markers is rewritten; the file's line endings are preserved.
 // Default scan: root *.md, modes/**/*.md, docs/*.md (only files that contain a marker are touched).
+// Whole-file targets (WHOLE_FILE_DOCS) are generated outright, not by markers: docs/STATE-MACHINES.md
+// is rebuilt from the registry on every write, and --check fails when it differs (LF-normalised).
 // Exit: 0 fresh/written, 1 stale (--check), 2 usage or marker/machine error (nothing written for that file).
-import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, statSync, mkdirSync } from 'fs';
 import { join, dirname, resolve, relative } from 'path';
 import { fileURLToPath } from 'url';
-import { loadMachine, describe } from './lib/state-machine.mjs';
-import { regenerate, hasMarkers, MarkerError } from './lib/machine-blocks.mjs';
+import { listMachines, loadMachine, describe, toMermaid } from './lib/state-machine.mjs';
+import { regenerate, hasMarkers, MarkerError, renderStateMachinesDoc } from './lib/machine-blocks.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+/** Files rebuilt whole from the registry. `render(root)` returns the complete LF text. */
+export const WHOLE_FILE_DOCS = [{
+  file: 'docs/STATE-MACHINES.md',
+  render: root => renderStateMachinesDoc(listMachines({ root }).map(id => {
+    const m = loadMachine(id, { root });
+    return { d: describe(m), mermaid: toMermaid(m) };
+  })),
+}];
+
+/**
+ * Compare (and, unless `check`, rewrite) one whole-file target. Comparison and writing are LF;
+ * a CRLF checkout (core.autocrlf on Windows) is therefore never reported as stale.
+ * @returns {{file:string, stale:boolean, wrote:boolean}}
+ */
+export function processWholeFile(rel, { root = HERE, check = false } = {}) {
+  const spec = WHOLE_FILE_DOCS.find(d => d.file === rel);
+  if (!spec) throw new Error(`${rel}: not a whole-file target`);
+  const file = join(root, rel);
+  const want = spec.render(root);
+  const have = existsSync(file) ? readFileSync(file, 'utf-8').replace(/\r\n/g, '\n') : null;
+  const stale = have !== want;
+  let wrote = false;
+  if (stale && !check) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, want);
+    wrote = true;
+  }
+  return { file: rel, stale, wrote };
+}
 
 function walkMd(dir, recurse) {
   if (!existsSync(dir)) return [];
@@ -62,8 +94,20 @@ function main(argv) {
     console.error(`Usage: node gen-machine-docs.mjs [--check] [--root DIR] [FILE...]${unknown.length ? `\nUnknown flag ${unknown[0]}` : '\n--root needs an existing directory'}`);
     return 2;
   }
-  const targets = files.length ? files.map(f => resolve(root, f)) : defaultTargets(root);
+  const wholeRels = WHOLE_FILE_DOCS.map(d => d.file).filter(rel => !files.length || files.some(f => resolve(root, f) === join(root, rel)));
+  const isWhole = f => wholeRels.some(rel => join(root, rel) === f);
+  const targets = files.length ? files.map(f => resolve(root, f)).filter(f => !isWhole(f)) : defaultTargets(root);
   let staleCount = 0, errors = 0, blocks = 0, written = 0;
+  for (const rel of wholeRels) {
+    try {
+      const r = processWholeFile(rel, { root, check });
+      if (r.wrote) { written++; console.log(`updated ${r.file} (whole file)`); }
+      if (check && r.stale) { staleCount++; console.error(`stale: ${r.file} — generated whole file is out of date — run: node gen-machine-docs.mjs`); }
+    } catch (e) {
+      errors++;
+      console.error(`error: ${rel}: ${e.message}`);
+    }
+  }
   for (const f of targets) {
     if (!existsSync(f) || !statSync(f).isFile()) { console.error(`${f}: no such file`); errors++; continue; }
     try {
