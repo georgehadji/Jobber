@@ -25,6 +25,7 @@ import * as yaml from 'js-yaml';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { readTrackerSafe } from './tracker-utils.mjs';
 import { normalizeStatus, analyzeFromContent } from './followup-cadence.mjs';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = join(ROOT, 'data', 'applications.md');
@@ -34,6 +35,10 @@ const SCAN_RUNS_FILE = join(ROOT, 'data', 'scan-runs.tsv');
 const PORTALS_FILE = join(ROOT, 'portals.yml');
 const PORTAL_HEALTH_FILE = join(ROOT, 'data', 'portal-health.tsv');
 
+const STATUS_MACHINE = loadMachine(APPLICATION_STATUS);
+
+// Bucket display order for byStatus (JSON key order and the summary line); the registry
+// declares Hired last, so this order is kept here. Labels are resolved through the registry.
 const CANONICAL_STATUSES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Hired', 'Rejected', 'Discarded', 'SKIP'];
 
 // In-flight applications. Deliberately NARROWER than the dashboard's
@@ -52,10 +57,7 @@ const pct = (part, total) => (total > 0 ? round1((part / total) * 100) : 0);
 
 /** Canonical display form ("aplicado" → "Applied", "skip" → "SKIP"); unknown → "Unknown" (counted, never dropped). */
 function canonicalStatus(raw) {
-  const norm = normalizeStatus(String(raw ?? ''));
-  if (norm === 'skip') return 'SKIP';
-  const cased = norm.charAt(0).toUpperCase() + norm.slice(1);
-  return CANONICAL_STATUSES.includes(cased) ? cased : 'Unknown';
+  return canonicalize(STATUS_MACHINE, normalizeStatus(String(raw ?? '')))?.label ?? 'Unknown';
 }
 
 // ── Tracker roll-up ─────────────────────────────────────────────────

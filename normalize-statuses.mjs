@@ -18,6 +18,8 @@ import {
   openTrackerTransaction, rebuildRow, resolveTrackerPath,
 } from './tracker-utils.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
+import { extraStatusId } from './lib/status-extra-aliases.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = resolveTrackerPath(JOBBER);
@@ -26,7 +28,11 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // Ensure required directories exist (fresh setup)
 mkdirSync(join(JOBBER, 'data'), { recursive: true });
 
-// Canonical status mapping
+// Canonical status mapping. Exact label/alias spellings resolve through the registry
+// (templates/states.yml), then the shared extra-alias table (D2); the regexes below
+// handle the prefix/dated/placeholder shapes the registry cannot express.
+const STATUS_MACHINE = loadMachine(APPLICATION_STATUS);
+
 function normalizeStatus(raw) {
   // Strip markdown bold
   let s = raw.replace(/\*\*/g, '').trim();
@@ -37,11 +43,8 @@ function normalizeStatus(raw) {
     return { status: 'Discarded', moveToNotes: raw.trim() };
   }
 
-  // CERRADA / Cancelada / Descartada → Discarded
-  if (/^cerrada$/i.test(s)) return { status: 'Discarded' };
+  // Cancelada (and any "cancelada ..." suffix) → Discarded
   if (/^cancelada/i.test(s)) return { status: 'Discarded' };
-  if (/^descartada$/i.test(s)) return { status: 'Discarded' };
-  if (/^descartado$/i.test(s)) return { status: 'Discarded' };
 
   // Rechazada / Rechazado → Rejected
   if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
@@ -49,12 +52,6 @@ function normalizeStatus(raw) {
 
   // Aplicado with date → Applied (strip date)
   if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
-
-  // CONDICIONAL / HOLD / EVALUAR / Verificar → Evaluated
-  if (/^(condicional|hold|evaluar|verificar)$/i.test(s)) return { status: 'Evaluated' };
-
-  // MONITOR → SKIP
-  if (/^monitor$/i.test(s)) return { status: 'SKIP' };
 
   // GEO BLOCKER → SKIP
   if (/geo.?blocker/i.test(s)) return { status: 'SKIP' };
@@ -65,24 +62,9 @@ function normalizeStatus(raw) {
   // "—" (em dash, no status) → Discarded
   if (s === '—' || s === '-' || s === '') return { status: 'Discarded' };
 
-  // Already canonical (English, per states.yml) — just fix casing/bold
-  const canonical = [
-    'Evaluated', 'Applied', 'Responded', 'Interview',
-    'Offer', 'Hired', 'Rejected', 'Discarded', 'SKIP',
-  ];
-  for (const c of canonical) {
-    if (lower === c.toLowerCase()) return { status: c };
-  }
-
-  // Spanish aliases → English canonicals
-  if (['evaluada'].includes(lower)) return { status: 'Evaluated' };
-  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Applied' };
-  if (['respondido'].includes(lower)) return { status: 'Responded' };
-  if (['entrevista'].includes(lower)) return { status: 'Interview' };
-  if (['oferta'].includes(lower)) return { status: 'Offer' };
-  if (['contratado', 'contratada', 'hired', 'accepted', 'accept'].includes(lower)) return { status: 'Hired' };
-  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Discarded' };
-  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'SKIP' };
+  // Canonical labels and aliases (registry), then the extra spellings (condicional, hold, ...)
+  const hit = canonicalize(STATUS_MACHINE, lower) ?? canonicalize(STATUS_MACHINE, extraStatusId(lower));
+  if (hit) return { status: hit.label };
 
   // Unknown — flag it
   return { status: null, unknown: true };
