@@ -28,6 +28,7 @@
 // file does not match its own subject.
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import { load as yamlLoad } from 'js-yaml';
 import { pass, fail, ROOT } from './helpers.mjs';
 
@@ -209,6 +210,27 @@ function jsAliasPairs(src, objectHeader) {
   return [...objectPairs(block(src, objectHeader, '};')), ...lineTargets(src)];
 }
 
+// A script that resolves statuses through the registry (lib/state-machine.mjs canonicalize)
+// accepts every states.yml label/alias by construction, so its pair set is the whole of
+// states.yml plus, only when it imports lib/status-extra-aliases.mjs, that table's
+// spellings (pending decision D2). The extractor asserts the imports are really there:
+// drop the registry call and this throws, so the script cannot pass on yml pairs it no
+// longer uses. A hard-coded mapping added back to the script is still caught by lineTargets.
+const { EXTRA_STATUS_ALIASES } = await import(pathToFileURL(join(ROOT, 'lib/status-extra-aliases.mjs')).href);
+export function registryPairs(src, file, { extras = false } = {}) {
+  if (!/from '\.\/lib\/state-machine\.mjs'/.test(src) || !/\bcanonicalize\(/.test(src)) {
+    throw new Error(`${file} does not resolve statuses through lib/state-machine.mjs canonicalize`);
+  }
+  const pairs = [...ymlMap(yamlLoad(read('templates/states.yml'))).map];
+  if (extras) {
+    if (!/from '\.\/lib\/status-extra-aliases\.mjs'/.test(src) || !/\bextraStatusId\(/.test(src)) {
+      throw new Error(`${file} does not fall back to lib/status-extra-aliases.mjs`);
+    }
+    pairs.push(...Object.entries(EXTRA_STATUS_ALIASES));
+  }
+  return pairs;
+}
+
 const SOURCES = {
   'merge-tracker.mjs': () => {
     const s = read('merge-tracker.mjs');
@@ -231,7 +253,7 @@ const SOURCES = {
   'followup-cadence.mjs': () => jsAliasPairs(read('followup-cadence.mjs'), 'const ALIASES = {'),
   'analyze-patterns.mjs': () => {
     const s = read('analyze-patterns.mjs');
-    return [...identity(block(s, 'const FUNNEL_ORDER = [', '];')), ...jsAliasPairs(s, 'const ALIASES = {')];
+    return [...identity(block(s, 'const FUNNEL_ORDER = [', '];')), ...registryPairs(s, 'analyze-patterns.mjs', { extras: true }), ...lineTargets(s)];
   },
   'dashboard/internal/data/career.go': () => {
     const s = read('dashboard/internal/data/career.go');
@@ -311,6 +333,15 @@ if (judge(planted, []).unpinned.includes('+fake alias=>evaluated')) pass('parity
 else fail('parity self-check: a planted alias was NOT reported — the live comparison would be inert');
 if (judge([], ['+fake alias=>evaluated']).stale.length === 1) pass('parity self-check: a pin with no matching difference is reported stale');
 else fail('parity self-check: a stale pin was NOT reported — the allowlist could grow without bound');
+
+// Control for registryPairs: a script without the registry call must be rejected, one with it accepted.
+const regSrc = "import { canonicalize } from './lib/state-machine.mjs'; canonicalize(m, x);";
+let regRejected = false;
+try { registryPairs('const x = 1;', 'fake.mjs'); } catch { regRejected = true; }
+let regAccepted = false;
+try { regAccepted = registryPairs(regSrc, 'fake.mjs').length > 0; } catch { /* stays false */ }
+if (regRejected && regAccepted) pass('parity self-check: registryPairs rejects a script with no registry call and accepts one with it');
+else fail(`parity self-check: registryPairs control failed (rejected=${regRejected}, accepted=${regAccepted})`);
 
 // ── Live check ──────────────────────────────────────────────────────────────
 for (const file of Object.keys(SOURCES)) {
