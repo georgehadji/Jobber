@@ -233,7 +233,7 @@ acquire_state_lock() {
 
     if [[ ! -d "$STATE_LOCK_DIR" ]]; then
       if (( PARALLEL <= 1 )); then
-        echo "WARN: State lock creation failed. Falling back to lock-free operation (single-worker mode)." >&2
+        echo "WARN: STATE LOCK UNAVAILABLE: could not create $STATE_LOCK_DIR. Continuing WITHOUT a state lock (single-worker mode); batch-state.tsv is not protected against concurrent writers. Fix the directory permissions or stop other runners." >&2
         STATE_LOCK_DISABLED=1
         STATE_LOCK_OWNED=0
         return 0
@@ -382,11 +382,51 @@ log_discard() {
   printf '%s\t%s\t%s\t%s\n' "$ts" "$id" "$url" "$reason" >> "$DISCARD_LOG"
 }
 
+# Batch-job state machine: templates/machines/batch-job.yml is the source of truth.
+# The block below is GENERATED (node batch/gen-states.mjs); tests fail when it is stale.
+# >>> machine:batch-job:begin (generated from templates/machines/batch-job.yml by batch/gen-states.mjs -- do not edit by hand)
+BATCH_STATES="pending processing rate_limited paused_rate_limit failed skipped completed"
+batch_state_is_legal() {
+  case "$1" in
+    pending|processing|rate_limited|paused_rate_limit|failed|skipped|completed) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+# A self-move is a no-op and always fine; any other pair must be a declared edge.
+batch_transition_is_declared() {
+  [[ "$1" == "$2" ]] && return 0
+  case "$1:$2" in
+    pending:processing|pending:failed) return 0 ;;
+    processing:rate_limited|processing:paused_rate_limit|processing:failed|processing:skipped|processing:completed) return 0 ;;
+    rate_limited:processing|rate_limited:paused_rate_limit|rate_limited:failed|rate_limited:skipped|rate_limited:completed) return 0 ;;
+    paused_rate_limit:processing|paused_rate_limit:failed) return 0 ;;
+    failed:processing) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+# <<< machine:batch-job:end
+
+# Warn-only transition check (STATE-MACHINES-PLAN constraint 4: warn first, enforce later).
+# A row with no previous status is "pending"; an unreadable previous status is not judged.
+warn_undeclared_transition() {
+  local id="$1" from="${2%$'\r'}" to="$3"
+  [[ -n "$from" ]] || from="pending"
+  batch_state_is_legal "$from" || return 0
+  batch_transition_is_declared "$from" "$to" && return 0
+  echo "WARN: batch job #$id: undeclared transition $from -> $to (see templates/machines/batch-job.yml); continuing." >&2
+}
 
 # Update or insert state for an offer.
 # Caller must hold STATE_LOCK_DIR while this runs.
 update_state_unlocked() {
   local id="$1" url="$2" status="$3" started="$4" completed="$5" report_num="$6" score="$7" error="$8" retries="$9"
+
+  # Reject a state that is not in the machine BEFORE touching the file: an unknown string
+  # would be written as-is and then counted as "pending" by every reader.
+  if ! batch_state_is_legal "$status"; then
+    echo "ERROR: batch job #$id: unknown state \"$status\"; legal states: ${BATCH_STATES// /, }." >&2
+    return 1
+  fi
 
   # batch-state.tsv is tab-separated with one row per line -- a literal tab,
   # newline, or carriage return inside $error (e.g. from a worker's raw error
@@ -412,6 +452,7 @@ update_state_unlocked() {
   while IFS=$'\t' read -r sid surl sstatus sstarted scompleted sreport sscore serror sretries; do
     [[ "$sid" == "id" ]] && continue  # skip header
     if [[ "$sid" == "$id" ]]; then
+      warn_undeclared_transition "$id" "$sstatus" "$status"
       printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
         "$id" "$url" "$status" "$started" "$completed" "$report_num" "$score" "$error" "$retries" >> "$tmp"
       found=true
@@ -422,6 +463,7 @@ update_state_unlocked() {
   done < "$STATE_FILE"
 
   if [[ "$found" == "false" ]]; then
+    warn_undeclared_transition "$id" "" "$status"
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
       "$id" "$url" "$status" "$started" "$completed" "$report_num" "$score" "$error" "$retries" >> "$tmp"
   fi
@@ -468,7 +510,27 @@ reserve_report_num_unlocked() {
   # 049, report 051) in one batch run for exactly this reason -- routing every
   # caller through the same node script means they all share one real lock.
   local report_num=""
-  report_num=$(node "$PROJECT_DIR/reserve-report-num.mjs" 2>/dev/null | tr -d '[:space:]')
+
+  # A row left in processing / rate_limited / paused_rate_limit never released its number
+  # (only completed/skipped/failed do). Reuse it instead of reserving a second one and
+  # leaving the first sentinel orphaned. Only when the sentinel is still on disk and no real
+  # report has claimed the number -- otherwise fall through to a fresh reservation as before.
+  local prev_status prev_num
+  prev_status=$(get_status "$id")
+  prev_num=$(awk -F'\t' -v id="$id" '$1 == id { print $6 }' "$STATE_FILE" 2>/dev/null | tr -d '[:space:]')
+  case "$prev_status" in
+    processing|rate_limited|paused_rate_limit)
+      if [[ "$prev_num" =~ ^[0-9]{3,}$ && -f "$REPORTS_DIR/${prev_num}-RESERVED.md" ]] \
+         && [[ -z "$(compgen -G "$REPORTS_DIR/${prev_num}-*.md" | grep -v -- '-RESERVED\.md$' || true)" ]]; then
+        report_num="$prev_num"
+        echo "    ♻️  Reusing report number $report_num held by #$id ($prev_status row from an interrupted run)" >&2
+      fi
+      ;;
+  esac
+
+  if [[ -z "$report_num" ]]; then
+    report_num=$(node "$PROJECT_DIR/reserve-report-num.mjs" 2>/dev/null | tr -d '[:space:]')
+  fi
   if [[ -n "$report_num" ]]; then
     update_state_unlocked "$id" "$url" "processing" "$started" "-" "$report_num" "-" "-" "$retries"
   fi
@@ -770,7 +832,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 skipped=0 failed=0 pending=0 stuck=0
+  local total=0 completed=0 skipped=0 failed=0 pending=0 stuck=0 rate_limited=0 paused=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -785,12 +847,14 @@ print_summary() {
         ;;
       skipped) skipped=$((skipped + 1)) ;;
       failed) failed=$((failed + 1)) ;;
-      processing) stuck=$((stuck + 1)); pending=$((pending + 1)) ;;
-      *) pending=$((pending + 1)) ;;
+      processing) stuck=$((stuck + 1)) ;;
+      rate_limited) rate_limited=$((rate_limited + 1)) ;;
+      paused_rate_limit) paused=$((paused + 1)) ;;
+      *) pending=$((pending + 1)) ;; # pending, or an unrecognised value in a hand-edited file
     esac
   done < "$STATE_FILE"
 
-  echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending"
+  echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending | Processing: $stuck | Rate Limited: $rate_limited | Paused: $paused"
   # A worker that died mid-offer leaves its row in `processing`; both that and `failed` make the run unhealthy.
   BATCH_UNHEALTHY=$((failed + stuck))
   if (( stuck > 0 )); then echo "WARN: $stuck offer(s) still marked processing (a worker died?) - re-run with --retry-failed" >&2; fi
@@ -1128,4 +1192,6 @@ main() {
   exit 0
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

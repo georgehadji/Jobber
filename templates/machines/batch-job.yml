@@ -1,0 +1,49 @@
+# Jobber — batch job machine (STATE-MACHINES-PLAN M6 / 4.3).
+# One row of batch/batch-state.tsv (column 3, `status`). Transitions describe what
+# batch/batch-runner.sh does TODAY; nothing here is new behaviour.
+# batch/batch-runner.sh carries a GENERATED copy between the
+# `machine:batch-job:begin/end` markers; regenerate with `node batch/gen-states.mjs`
+# (tests/batch-state-machine.test.mjs fails when the block is stale).
+id: batch-job
+persisted_in: batch/batch-state.tsv (status column)
+initial: pending
+states:
+  - id: pending
+    label: Pending
+    terminal: false
+    description: No row yet (or an explicit pending row); the offer is in batch-input.tsv but not started
+  - id: processing
+    label: Processing
+    terminal: false
+    description: A report number is reserved and a worker is running. A row still here after the runner exited means the worker died
+  - id: rate_limited
+    label: Rate limited
+    terminal: false
+    description: Worker hit a transient rate limit; the runner is sleeping before it retries. Like processing, it keeps its reserved report number
+  - id: paused_rate_limit
+    label: Paused (rate limit)
+    terminal: false
+    description: Worker hit a session/usage limit; the batch stopped scheduling. Resumes only with --resume-paused
+  - id: failed
+    label: Failed
+    terminal: false
+    description: Worker failed or no report was written. Retried by --retry-failed (or a normal run) while retries < max-retries
+  - id: skipped
+    label: Skipped
+    terminal: true
+    description: Report written but the score is below --min-score
+  - id: completed
+    label: Completed
+    terminal: true
+    description: Report written and verified on disk
+transitions:
+  pending: [processing, failed]
+  processing: [rate_limited, paused_rate_limit, failed, skipped, completed]
+  rate_limited: [processing, paused_rate_limit, failed, skipped, completed]
+  paused_rate_limit: [processing, failed]
+  failed: [processing]
+policy:
+  backward_between_live: forbidden
+  unknown_input: reject
+  exit_terminal: forbidden
+writers: [batch/batch-runner.sh]
