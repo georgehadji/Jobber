@@ -26,7 +26,10 @@ LOCK_FILE="$BATCH_DIR/batch-runner.pid"
 PAUSE_FILE="$BATCH_DIR/batch-runner.paused"
 STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
 STATE_LOCK_PID_FILE="$STATE_LOCK_DIR/pid"
-STATE_LOCK_TIMEOUT_SECONDS=30
+STATE_LOCK_RECOVER_DIR="$STATE_LOCK_DIR.recover"
+STATE_LOCK_TIMEOUT_SECONDS="${STATE_LOCK_TIMEOUT_SECONDS:-30}"
+# Age after which a lock with no readable owner pid is stale (lib/file-lock.mjs: staleMs, floored at 1s).
+STATE_LOCK_STALE_SECONDS="${STATE_LOCK_STALE_SECONDS:-30}"
 MAIN_PID="${BASHPID:-$$}"
 
 # Defaults
@@ -211,6 +214,22 @@ init_state() {
   fi
 }
 
+# Same stale rules as lib/file-lock.mjs lockCanRecover: a recorded owner pid decides (dead = recoverable,
+# alive = never, however old); only with no readable owner does directory age decide (floored at 1s).
+state_lock_can_recover() {
+  local dir="$1" pid mtime now limit
+  pid=$(cat "$dir/pid" 2>/dev/null || true)
+  if [[ -n "$pid" ]]; then
+    kill -0 "$pid" 2>/dev/null && return 1
+    return 0
+  fi
+  mtime=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir" 2>/dev/null) || return 0  # vanished
+  now=$(date +%s)
+  limit=$STATE_LOCK_STALE_SECONDS
+  (( limit < 1 )) && limit=1
+  (( now - mtime > limit ))
+}
+
 acquire_state_lock() {
   if [[ "${STATE_LOCK_DISABLED:-0}" -eq 1 ]]; then
     return 0
@@ -242,15 +261,24 @@ acquire_state_lock() {
       return 1
     fi
 
-    if [[ -f "$STATE_LOCK_PID_FILE" ]]; then
-      local lock_pid
-      lock_pid=$(cat "$STATE_LOCK_PID_FILE" 2>/dev/null || true)
-      if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
-        rm -f "$STATE_LOCK_PID_FILE"
-        if rmdir "$STATE_LOCK_DIR" 2>/dev/null; then
-          echo "WARN: Recovered stale state lock (PID $lock_pid not running)." >&2
+    if state_lock_can_recover "$STATE_LOCK_DIR"; then
+      # Reclaim is serialized behind a guard dir (as in lib/file-lock.mjs): two waiters that both judged the
+      # lock stale must not let the second delete a lock the first just re-created.
+      if mkdir "$STATE_LOCK_RECOVER_DIR" 2>/dev/null; then
+        local recovered=0 lock_pid
+        if state_lock_can_recover "$STATE_LOCK_DIR"; then
+          lock_pid=$(cat "$STATE_LOCK_PID_FILE" 2>/dev/null || true)
+          rm -f "$STATE_LOCK_PID_FILE"
+          rmdir "$STATE_LOCK_DIR" 2>/dev/null && recovered=1
+        fi
+        rmdir "$STATE_LOCK_RECOVER_DIR" 2>/dev/null || true
+        if (( recovered )); then
+          echo "WARN: Recovered stale state lock (owner PID ${lock_pid:-unknown} not running or lock abandoned)." >&2
           continue
         fi
+      elif state_lock_can_recover "$STATE_LOCK_RECOVER_DIR"; then
+        # An abandoned guard would disable recovery forever; it normally lives for milliseconds.
+        rmdir "$STATE_LOCK_RECOVER_DIR" 2>/dev/null || true
       fi
     fi
 
