@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { dispatch, type ActionCtx, type DoneInfo } from "@/app/actions/registry";
 import { scoreNum } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { postStatus } from "@/lib/core/status-write";
 
 // ── message model: messages are PART arrays so a live worker card can render
 // inline next to text, both fed by the single JobsProvider store ──────────────
@@ -250,16 +251,14 @@ export function AssistantConsole() {
         }).catch(() => {});
       },
       writeStatus: (n, status) => {
-        fetch("/api/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ n, status }),
-        })
-          .then(() => {
+        postStatus(n, status).then((r) => {
+          if (r.ok) {
             router.refresh();
             pipelineRef.current.refetch();
-          })
-          .catch(() => {});
+          } else {
+            appendParts([{ type: "note", text: `Couldn't mark #${n} as ${status}: ${r.message}` }]);
+          }
+        });
       },
       setApplyField: (idOrLabel, value) => applyRef.current.setAnswer(idOrLabel, value),
       startApply: (u) => {

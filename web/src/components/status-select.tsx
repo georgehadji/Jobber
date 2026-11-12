@@ -4,14 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { CANONICAL_STATES } from "@/lib/format";
+import { postStatus } from "@/lib/core/status-write";
 
 // Status writeback control. Updates the existing tracker row (status cell) via
-// /api/status — never adds rows. Reverts on failure; confirms with the
+// /api/status — never adds rows. Reverts on failure and shows the server's message; confirms with the
 // terminal-popup animation.
 export function StatusSelect({ n, current }: { n: string; current: string }) {
   const [status, setStatus] = useState(current);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   const router = useRouter();
 
   async function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -19,21 +21,17 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
     const prev = status;
     setStatus(next);
     setBusy(true);
-    try {
-      const res = await fetch("/api/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ n, status: next }),
-      });
-      if (!res.ok) throw new Error("write failed");
+    setErr("");
+    const r = await postStatus(n, next);
+    if (r.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       router.refresh();
-    } catch {
-      setStatus(prev); // revert on failure
-    } finally {
-      setBusy(false);
+    } else {
+      setStatus(prev); // revert and say why
+      setErr(r.message);
     }
+    setBusy(false);
   }
 
   const known = (CANONICAL_STATES as readonly string[]).includes(status);
@@ -56,6 +54,11 @@ export function StatusSelect({ n, current }: { n: string; current: string }) {
       {saved && (
         <span className="animate-terminal-popup inline-flex items-center gap-1 text-xs font-medium text-brand">
           <Check className="size-3" /> saved
+        </span>
+      )}
+      {err && (
+        <span role="alert" className="text-xs text-red-500">
+          {err}
         </span>
       )}
     </span>
