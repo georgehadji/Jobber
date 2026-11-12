@@ -42,9 +42,6 @@
     "followup-cadence.mjs": [
       "applied,interview,responded"
     ],
-    "normalize-statuses.mjs": [
-      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"
-    ],
     "stats.mjs": [
       "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
       "applied,hired,interview,offer,rejected,responded",

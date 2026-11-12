@@ -41,9 +41,9 @@ Oferta	offer	offer	offer	offer	offer	offer	offer	no	Portuguese (hand-listed; no 
 rejected	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
 REJECTED	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	uppercase variant; dashboard i18n catalog label
 Rejected	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
-rechazado	rejected	rejected	-	rejected	rejected	rejected	rejected	no	
-RECHAZADO	rejected	rejected	-	rejected	rejected	rejected	rejected	no	uppercase variant
-Rechazado	rejected	rejected	-	rejected	rejected	rejected	rejected	no	
+rechazado	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	D10: normalize-statuses resolves through the registry since Phase 3.3
+RECHAZADO	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	uppercase variant; D10: normalize-statuses resolves through the registry since Phase 3.3
+Rechazado	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	D10: normalize-statuses resolves through the registry since Phase 3.3
 rechazada	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
 RECHAZADA	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	uppercase variant; dashboard i18n catalog label
 Rechazada	rejected	rejected	rejected	rejected	rejected	rejected	rejected	no	dashboard i18n catalog label
@@ -339,9 +339,9 @@ Aplicado  	-	applied	applied	applied	applied	applied	applied	no	not in states.ym
 **Aplicado**	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); tracker.mjs=applied (strips bold/date); markdown bold variant
 Aplicado 2026-01-05	-	applied	applied	applied	applied	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
 Aplicado (2026-01-05)	-	applied	-	-	-	-	applied	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=applied (strips bold/date)
- Rechazado 	-	rejected	-	rejected	rejected	rejected	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant
-Rechazado  	-	rejected	-	rejected	rejected	rejected	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant
-**Rechazado**	-	rejected	-	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); markdown bold variant
+ Rechazado 	-	rejected	rejected	rejected	rejected	rejected	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant; D10: normalize-statuses resolves through the registry since Phase 3.3
+Rechazado  	-	rejected	rejected	rejected	rejected	rejected	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); whitespace variant; D10: normalize-statuses resolves through the registry since Phase 3.3
+**Rechazado**	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); tracker.mjs=rejected (strips bold/date); markdown bold variant; D10: normalize-statuses resolves through the registry since Phase 3.3
 Rechazado 2026-01-05	-	rejected	rejected	rejected	rejected	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
 Rechazado (2026-01-05)	-	rejected	-	-	-	-	rejected	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=rejected (strips bold/date)
  Descartado 	-	discarded	discarded	discarded	discarded	discarded	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); whitespace variant

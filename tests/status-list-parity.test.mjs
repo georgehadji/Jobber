@@ -231,7 +231,8 @@ const SOURCES = {
   },
   'normalize-statuses.mjs': () => {
     const s = read('normalize-statuses.mjs');
-    return [...identity(block(s, 'const canonical = [', '];')), ...lineTargets(s)];
+    // its own regexes (dup/repost/geo blocker/em dash/rechazad(a)) are visible via lineTargets.
+    return [...registryPairs(s, 'normalize-statuses.mjs', { extras: true }), ...lineTargets(s)];
   },
   'verify-pipeline.mjs': () => {
     const s = read('verify-pipeline.mjs');
