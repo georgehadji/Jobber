@@ -447,6 +447,14 @@ try {
       copyFileSync(join(ROOT, 'followup-cadence.mjs'), join(e2eTmp, 'followup-cadence.mjs'));
       copyFileSync(join(ROOT, 'tracker-parse.mjs'), join(e2eTmp, 'tracker-parse.mjs'));
       copyFileSync(join(ROOT, 'tracker-aliases.json'), join(e2eTmp, 'tracker-aliases.json'));
+      // followup-cadence resolves statuses through the state registry (Phase 3.3):
+      // it imports lib/state-machine.mjs + lib/status-extra-aliases.mjs, and the
+      // registry reads templates/states.yml relative to its own location.
+      mkdirSync(join(e2eTmp, 'lib'), { recursive: true });
+      mkdirSync(join(e2eTmp, 'templates'), { recursive: true });
+      for (const rel of ['lib/state-machine.mjs', 'lib/status-extra-aliases.mjs', 'templates/states.yml']) {
+        copyFileSync(join(ROOT, rel), join(e2eTmp, rel));
+      }
       symlinkSync(join(ROOT, 'node_modules'), join(e2eTmp, 'node_modules'), 'dir');
       mkdirSync(join(e2eTmp, 'data'), { recursive: true });
       writeFileSync(join(e2eTmp, 'data', 'applications.md'), [
