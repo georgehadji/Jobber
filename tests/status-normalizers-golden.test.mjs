@@ -19,7 +19,7 @@
 //                       CLI on a temp tracker (JOBBER_TRACKER / JOBBER_ADDITIONS)
 //   normalize-statuses  same; spawned with --dry-run (nothing written) on a temp tracker
 //   verify-pipeline     same; spawned on a temp tracker, accept/reject read from its output
-//   web format.ts       canonStatus imported as TypeScript (Node type stripping); warn+skip
+//   web state-model.ts  canonStatus imported as TypeScript (Node type stripping); warn+skip
 //                       when this Node cannot import .ts
 // NOT covered: analyze-patterns (private normalizeStatus, no tracker env override),
 // dedup-tracker (rank table only, no canonical output), Go NormalizeStatus (Go not installed).
@@ -75,8 +75,13 @@ const WRAPPED = {
   Hired: 'hired', Rejected: 'rejected', Discarded: 'discarded', Skip: 'skip',
   Aplicado: 'applied', Rechazado: 'rejected', Descartado: 'discarded', Contratado: 'hired', 'No aplicar': 'skip',
 };
+const SPANISH_BASES = new Set(['Aplicado', 'Rechazado', 'Descartado', 'Contratado', 'No aplicar']);
 for (const [base, id] of Object.entries(WRAPPED)) {
-  for (const wrapped of [` ${base} `, `${base}  `, `**${base}**`]) CORPUS_BUGS.states_yml[wrapped] = id;
+  for (const wrapped of [` ${base} `, `${base}  `, `**${base}**`]) {
+    CORPUS_BUGS.states_yml[wrapped] = id;
+    // space-wrapped Spanish labels already agreed with the corpus on web (no pin needed)
+    if (!(SPANISH_BASES.has(base) && !wrapped.startsWith('**'))) CORPUS_BUGS.web_format[wrapped] = id;
+  }
 }
 
 // ── adapters: spelling -> real value, in corpus vocabulary ─────────────────
@@ -138,13 +143,19 @@ async function adaptFollowup() {
   }));
 }
 
-// web/src/lib/format.ts canonStatus
+// web canonStatus: lives in web/src/lib/core/state-model.ts (pure, no imports, so Node can load it
+// directly); the machine comes from templates/states.yml via machineFromDoc, as the web app builds it.
 async function adaptWeb() {
-  const mod = await import(pathToFileURL(join(ROOT, 'web/src/lib/format.ts')).href);
+  const mod = await import(pathToFileURL(join(ROOT, 'web/src/lib/core/state-model.ts')).href);
+  const yamlMod = await import('js-yaml');
+  const yaml = yamlMod.default ?? yamlMod;
+  const doc = yaml.load(readFileSync(join(ROOT, 'templates/states.yml'), 'utf-8'));
+  const machine = mod.machineFromDoc(doc);
+  if (!machine) throw new Error('machineFromDoc returned null for templates/states.yml');
   const canon = new Set(CANONICAL.map(c => c.toUpperCase()));
   detail.web = {};
   return new Map(SPELLINGS.map(s => {
-    const v = mod.canonStatus(s);
+    const v = mod.canonStatus(machine, s);
     detail.web[s] = v;
     return [s, canon.has(v) ? v.toLowerCase() : UNKNOWN];
   }));
