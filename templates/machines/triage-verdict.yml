@@ -1,0 +1,28 @@
+# Jobber — triage-verdict machine (STATE-MACHINES-PLAN M21 / 4.5). PROSE ONLY.
+# The verdict keywords live in modes/triage.md (Step 4 table and Step 5 return line).
+# triage returns exactly one verdict per offer and writes no files. Verdicts are terminal
+# outputs, so the machine declares no transitions.
+id: triage-verdict
+persisted_in: "prose only: modes/triage.md"
+states:
+  - id: pass
+    label: PASS
+    terminal: true
+    description: Score at or above triage_threshold (default 3.5). Proceed to the full A-G evaluation. A company on the Priority Override List always gets PASS
+  - id: marginal
+    label: MARGINAL
+    terminal: true
+    description: Score from 3.0 up to threshold minus 0.1. One-liner shown to the user; skip the full evaluation unless the user overrides
+  - id: fail
+    label: FAIL
+    terminal: true
+    description: Score below 3.0. A clear no-go; return the line and stop
+  - id: skip
+    label: SKIP
+    terminal: true
+    description: Posting inaccessible or expired (score N/A). Return the line and stop
+policy:
+  backward_between_live: forbidden
+  unknown_input: reject
+  exit_terminal: forbidden
+writers: [triage]
