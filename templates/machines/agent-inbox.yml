@@ -1,0 +1,35 @@
+# Jobber — agent inbox item machine (STATE-MACHINES-PLAN M16 / 4.5).
+# One checklist line of data/agent-inbox.md. DECLARED FROM TODAY'S CODE (agent-inbox.mjs
+# parseItems/add/resolve); nothing here is enforced. Protocol for the agent: modes/agent-inbox.md.
+#
+#   - [ ] <stamp> — <request>                          pending
+#   - [x] <stamp> — <request> → result: <one line>     resolved (the `→ result:` suffix is optional)
+#
+# KNOWN GAPS (declared, deliberately NOT fixed here):
+#   - `resolve N` addresses the PENDING view by 1-based position. `list` then `resolve N` lines up only
+#     if nothing else resolves or appends in between: resolving item 1 shifts every later item up one,
+#     so a stale number silently resolves a DIFFERENT item;
+#   - no lock and no atomic write (plain readFileSync/writeFileSync), so concurrent add/resolve can lose lines;
+#   - the checkbox is the only state. There is no in-progress, failed or cancelled state; the agent
+#     protocol says items needing live user input are left pending.
+id: agent-inbox
+persisted_in: data/agent-inbox.md (checkbox of each `- [ ]` / `- [x]` line; override path with JOBBER_INBOX)
+initial: pending
+states:
+  - id: pending
+    label: Pending
+    aliases: ["[ ]"]
+    terminal: false
+    description: Unchecked item. Created by `agent-inbox.mjs add`, by hand, or by a dashboard or script appending a line. Shown by `list`; the numbering `resolve N` uses
+  - id: resolved
+    label: Resolved
+    aliases: ["[x]", "x"]
+    terminal: true
+    description: Checked item (the parser accepts x or X). `resolve N` flips [ ] to [x] and appends a `→ result` suffix when --result is given and no result suffix exists. Only `list --all` shows it. A person can still un-check it by hand; the script never does
+transitions:
+  pending: [resolved]
+policy:
+  backward_between_live: forbidden
+  unknown_input: reject
+  exit_terminal: force
+writers: [agent-inbox.mjs]
