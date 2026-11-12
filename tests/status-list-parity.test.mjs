@@ -243,7 +243,7 @@ const SOURCES = {
   },
   'verify-pipeline.mjs': () => {
     const s = read('verify-pipeline.mjs');
-    return [...identity(block(s, 'const CANONICAL_STATUSES = [', '];')), ...jsAliasPairs(s, 'const ALIASES = {')];
+    return [...registryPairs(s, 'verify-pipeline.mjs', { extras: true }), ...lineTargets(s)];
   },
   // stats.mjs keeps its own canonical list and delegates aliasing to
   // followup-cadence.mjs (`import { normalizeStatus }`), so both feed its set.
