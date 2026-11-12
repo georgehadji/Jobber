@@ -382,43 +382,130 @@ export function resolveCanonicalState(input, states) {
   return null;
 }
 
-// ── Report-number reservation sentinel GC (shared) ─────────────────────────
+// ── Report-number reservation sentinel GC (single implementation) ──────────
 // reserve-report-num.mjs drops NNN-RESERVED.md files in reports/ when a
 // number is claimed. If the process crashed before writing the real report
-// and deleting the sentinel, it lingers. Sentinels older than 4h are stale;
-// remove them so they don't skew the next slot allocation. One shared
-// implementation — merge-tracker (pre-merge self-clean) and verify-pipeline
-// (Check 8) both call this, so the age constant can never drift between them.
+// and deleting the sentinel, it lingers. ONE implementation lives here;
+// reserve-report-num (--gc / gcStaleReportReservations), merge-tracker and
+// verify-pipeline (Check 8) all go through it, so the age constant and the
+// "is it still owned?" rules can never drift between them.
+//
+// Runs under the tracker lock (same lock reserve/release take). A stale
+// sentinel is reclaimed only when NOTHING still owns it:
+//   (a) age <= SENTINEL_MAX_AGE_MS  -> kept (fresh);
+//   (b) its stored owner PID is alive -> kept (long-running worker);
+//   (c) batch/batch-state.tsv has a `processing` row for that report number
+//       -> kept. The CLI-reserved batch numbers are claimed by a process that
+//       exits immediately, so the PID alone cannot cover them; this is the
+//       load-bearing rule for batch runs.
 
 export const SENTINEL_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 
+/** Parsed owner record of a reservation sentinel, or null when unreadable. */
+export function readSentinelOwner(sentinel) {
+  try {
+    return JSON.parse(readFileSync(sentinel, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function processIsAlive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err?.code === 'EPERM';
+  }
+}
+
 /**
- * Garbage-collect stale report-number reservation sentinels.
- *
- * @param {string} reportsDir - Path to the reports/ directory.
- * @param {{log?: (msg: string) => void}} [opts] - Optional logging callback
- *   (defaults to console.log) so callers can route messages.
- * @returns {number} Number of stale sentinels removed.
+ * Report numbers that batch-state.tsv marks `processing`. Tolerant: a missing
+ * file, short rows, or non-numeric report numbers simply make no claim.
  */
-export function gcStaleSentinels(reportsDir, { log = console.log } = {}) {
+export function loadProcessingReportNumbers(batchStatePath) {
+  const claimed = new Set();
+  let text;
+  try {
+    text = readFileSync(batchStatePath, 'utf-8');
+  } catch {
+    return claimed;
+  }
+  for (const line of text.split(/\r?\n/)) {
+    const cols = line.split('\t');
+    if (cols.length < 6 || cols[2].trim() !== 'processing') continue;
+    const n = parseInt(cols[5], 10);
+    if (Number.isSafeInteger(n) && n > 0) claimed.add(n);
+  }
+  return claimed;
+}
+
+/**
+ * Garbage-collect stale report-number reservation sentinels, under the
+ * tracker lock, never reclaiming one that is still owned (see rules above).
+ *
+ * @param {object} opts
+ * @param {string} opts.reportsDir
+ * @param {string} opts.trackerPath - Tracker whose lock is taken.
+ * @param {string} [opts.batchStatePath] - Default: JOBBER_BATCH_STATE, else <reports parent>/batch/batch-state.tsv.
+ * @param {number} [opts.maxAgeMs]
+ * @param {object} [opts.lockOptions]
+ * @param {(msg:string)=>void} [opts.log] - Called once per removed sentinel with its file name.
+ * @returns {Promise<number>} Number of sentinels removed.
+ */
+export async function gcStaleReportSentinels({
+  reportsDir, trackerPath, batchStatePath, maxAgeMs = SENTINEL_MAX_AGE_MS,
+  lockOptions, log = () => {},
+}) {
   if (!existsSync(reportsDir)) return 0;
+  const canonicalTracker = canonicalizeTrackerPath(trackerPath);
+  const lock = await acquireTrackerLock(trackerLockDirFor(canonicalTracker), {
+    tracker: canonicalTracker,
+    ...lockOptions,
+  });
   let removed = 0;
-  const now = Date.now();
-  for (const name of readdirSync(reportsDir)) {
-    if (!name.endsWith('-RESERVED.md')) continue;
-    const full = join(reportsDir, name);
-    try {
-      const { mtimeMs } = statSync(full);
-      if (now - mtimeMs > SENTINEL_MAX_AGE_MS) {
+  try {
+    const batchState = batchStatePath || process.env.JOBBER_BATCH_STATE
+      || join(dirname(resolve(reportsDir)), 'batch', 'batch-state.tsv');
+    const processing = loadProcessingReportNumbers(batchState);
+    const now = Date.now();
+    for (const name of readdirSync(reportsDir)) {
+      const m = name.match(/^(\d+)-RESERVED\.md$/);
+      if (!m) continue;
+      const full = join(reportsDir, name);
+      try {
+        if (now - statSync(full).mtimeMs <= maxAgeMs) continue;
+        if (processIsAlive(readSentinelOwner(full)?.pid)) continue;
+        if (processing.has(parseInt(m[1], 10))) continue;
         unlinkSync(full);
-        log(`🧹 Removed stale reservation sentinel: ${name}`);
         removed++;
+        log(name);
+      } catch (err) {
+        if (err?.code !== 'ENOENT') throw err;
       }
-    } catch {
-      // Already gone between readdir and stat — fine.
     }
+  } finally {
+    lock.release();
   }
   return removed;
+}
+
+/**
+ * Thin wrapper kept for merge-tracker / verify-pipeline. Now async (it takes
+ * the lock); callers must await it.
+ *
+ * @param {string} reportsDir - Path to the reports/ directory.
+ * @param {{log?: (msg: string) => void, trackerPath?: string}} [opts]
+ * @returns {Promise<number>} Number of stale sentinels removed.
+ */
+export async function gcStaleSentinels(reportsDir, { log = console.log, trackerPath, ...rest } = {}) {
+  return gcStaleReportSentinels({
+    reportsDir,
+    trackerPath: trackerPath || resolveTrackerPath(dirname(resolve(reportsDir))),
+    log: (name) => log(`🧹 Removed stale reservation sentinel: ${name}`),
+    ...rest,
+  });
 }
 
 // ── Safe tracker reads (T5: reader-writer consistency) ─────────────────────

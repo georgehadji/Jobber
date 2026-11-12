@@ -1,20 +1,14 @@
-// tests/repro-sentinel-gc.test.mjs — KNOWN RED until Phase 3.5.
+// tests/repro-sentinel-gc.test.mjs — regression for M5 (fixed in Phase 3.5).
 //
-// Bug M5 (docs/STATE-MACHINES-PLAN.md): two sentinel GCs exist. The one that
+// Bug M5 (docs/STATE-MACHINES-PLAN.md): two sentinel GCs existed. The one that
 // verify-pipeline (Check 8) and merge-tracker call — gcStaleSentinels in
-// tracker-utils.mjs — is age-only (4h on mtime), unlocked, and ignores the PID
+// tracker-utils.mjs — was age-only (4h on mtime), unlocked, and ignored the PID
 // stored in the sentinel. A sentinel whose owner is STILL ALIVE (e.g. a batch
-// worker running >4h or paused by rate limits) is reclaimed, and the next
-// reserve-report-num.mjs hands the same report number out again.
-// The locked GC in reserve-report-num.mjs does check the PID, so the two
-// implementations disagree (last control below).
-//
-// Only the PID half of the plan's repro is exercised: gc never reads
-// batch/batch-state.tsv, so a `processing` batch row would be equally ignored.
-//
-// Gated behind JOBBER_REPRO=1 (bug case is intentionally red). Default run:
-// skipped visibly, zero counters touched.
-//   JOBBER_REPRO=1 node test-all.mjs --only repro-sentinel-gc
+// worker running >4h or paused by rate limits) was reclaimed, and the next
+// reserve-report-num.mjs handed the same report number out again.
+// Now there is one locked implementation (gcStaleReportSentinels in
+// tracker-utils.mjs); this file keeps the end-to-end PID half as a regression.
+// The batch-state `processing` rule is covered by tests/sentinel-gc-unified.test.mjs.
 import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
 import { spawnSync } from 'child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'fs';
@@ -22,11 +16,9 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 
-console.log('\nrepro: report-number sentinel GC ignores live owner (M5, known red)');
+console.log('\nregression: report-number sentinel GC honours a live owner (M5)');
 
-if (process.env.JOBBER_REPRO !== '1') {
-  console.log('  ⏭️  SKIPPED (known-red repro) — set JOBBER_REPRO=1 to run; stays red until Phase 3.5');
-} else {
+{
   const work = mkdtempSync(join(tmpdir(), 'repro-sentinel-'));
   try {
     const FIVE_HOURS_S = 5 * 60 * 60;
@@ -93,7 +85,7 @@ if (process.env.JOBBER_REPRO !== '1') {
         : fail(`CONTROL locked GC removed=${removed}, sentinel exists=${existsSync(c.sentinel)}`);
     } catch (e) { warn(`locked-GC control not verified: ${e.message}`); }
 
-    // BUG — stale (5h) sentinel, owner PID alive: the shared GC must keep it and
+    // REGRESSION — stale (5h) sentinel, owner PID alive: the shared GC must keep it and
     // reserve must NOT re-issue #1.
     let bug;
     try {
