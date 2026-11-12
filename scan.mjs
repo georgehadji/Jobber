@@ -1004,7 +1004,7 @@ export function loadSeenUrls(policy = {}) {
   // pipeline.md — extract URLs from checkbox lines
   if (existsSync(PIPELINE_PATH)) {
     const text = readFileSync(PIPELINE_PATH, 'utf-8');
-    for (const match of text.matchAll(/- \[[ x]\] (https?:\/\/\S+)/g)) {
+    for (const match of text.matchAll(/- \[[ x!]\] (https?:\/\/\S+)/g)) {
       seen.add(normalizeUrlForDedup(match[1]));
     }
   }
@@ -1345,7 +1345,7 @@ export function collectSeenCompanyRoles(sources = {}, policy = {}, canonicalize 
 
   // pipeline.md — "- [ ] {url} | {company} | {title}" plus optional trailing
   // columns (location, compensation, posted:/trust:/note: segments).
-  for (const match of pipelineText.matchAll(/^- \[[ x]\]\s+\S+\s*\|\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*(?:\|[^\n]*)?$/gm)) {
+  for (const match of pipelineText.matchAll(/^- \[[ x!]\]\s+\S+\s*\|\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*(?:\|[^\n]*)?$/gm)) {
     add(match[1], match[2]);
   }
 
