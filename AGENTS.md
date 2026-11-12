@@ -338,19 +338,21 @@ Six rules, each from a defect this suite actually shipped (see `docs/DEFECT-HUNT
 
 ### Canonical States (applications.md)
 
-**Source of truth:** `templates/states.yml`
+**Source of truth:** `templates/states.yml`. State lists live in `templates/states.yml` and `templates/machines/`. Never restate them; use `node machines.mjs describe <id>` (ids: `node machines.mjs list`) and `node machines.mjs check <id> <from> <to>`.
 
+<!-- machine:application-status:table begin -->
 | State | When to use |
 |-------|-------------|
-| `Evaluated` | Report completed, pending decision |
-| `Applied` | Application sent |
-| `Responded` | Company responded |
-| `Interview` | In interview process |
+| `Evaluated` | Offer evaluated with report, pending decision |
+| `Applied` | Application submitted |
+| `Responded` | Company has responded (not yet interview) |
+| `Interview` | Active interview process |
 | `Offer` | Offer received |
-| `Hired` | Offer accepted — landed the job (terminal success) |
-| `Rejected` | Rejected by company |
-| `Discarded` | Discarded by candidate or offer closed |
+| `Rejected` | Rejected by company (terminal) |
+| `Discarded` | Discarded by candidate or offer closed (terminal) |
 | `SKIP` | Doesn't fit, don't apply |
+| `Hired` | Offer accepted, job landed! (terminal) |
+<!-- machine:application-status:table end -->
 
 **RULES:**
 - No markdown bold (`**`) in status field

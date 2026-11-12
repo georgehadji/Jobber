@@ -5,7 +5,7 @@ import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory } from "@/lib/jobber";
 import { validateRun } from "@/lib/core/run-input";
 import { claudeToolArgs, untrusted } from "@/lib/agent-policy";
-import { timeoutMessage } from "@/lib/core/run-stream";
+import { runOutcome } from "@/lib/core/run-outcome";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
 
 export const runtime = "nodejs";
@@ -156,11 +156,11 @@ export async function POST(req: Request) {
       let buf = "";
       let emittedText = false; // any assistant text delta → the CLI actually ran
       let sawError = false;
+      let timedOut = false; // the kill timer fired → report a timeout, not a generic failure
       let lastTokens = 0; // per-run token cost from the Claude result event (#6) — local only
       let lastCostUsd: number | null = null;
       // pdf-mode tailors a full CV + renders it — give it more headroom.
       const killMs = kind === "pdf" ? 720_000 : 285_000;
-      let timedOut = false;
       killer = setTimeout(() => {
         timedOut = true;
         try { child.kill("SIGTERM"); } catch { /* ignore */ }
@@ -227,29 +227,13 @@ export async function POST(req: Request) {
       });
       child.on("error", (e) => { send({ type: "error", msg: e.message }); close(); });
       child.on("close", (code) => {
-        const wroteReport = countReports() > reportsBefore;
-        const cleanExit = code === 0; // non-zero OR null (killed/signal) = NOT clean
-        // Honesty gate (#9): a green "done" with a parsed score requires a CLEAN exit,
-        // real output, AND (for evaluations) a report actually written. Anything else
-        // is surfaced — an errored run must never be banked as a confident score.
-        if (timedOut) {
-          // Killed by our own timer — say so plainly instead of a generic error.
-          send({ type: "error", msg: timeoutMessage(killMs) });
-        } else if (!emittedText && !sawError && !cleanExit) {
-          send({ type: "error", msg: "The CLI exited with an error — is it installed and authenticated?" });
-        } else if (!emittedText && !sawError) {
-          send({ type: "error", msg: "The CLI produced no output — is it installed and authenticated? (Jobber is best on Claude Code.)" });
-        } else if (persists && !wroteReport) {
-          // The worker ran but never wrote the report/tracker row (e.g. a CLI
-          // without file-write authorization) — surface it instead of a fake score.
-          send({ type: "error", msg: "This evaluation didn't save a report, so it's not in your tracker. Full evaluation is verified on Claude Code." });
-        } else if (!cleanExit || sawError) {
-          // Produced output (maybe even a report) but did NOT finish cleanly — flag it
-          // instead of recording a confident score off a half-finished run.
-          send({ type: "error", msg: "This run hit an error before finishing, so it isn't recorded as a confident result — re-run it to verify." });
-        } else {
-          send({ type: "done", tokens: lastTokens, costUsd: lastCostUsd });
-        }
+        // Honesty gate (#9, see run-outcome.ts): a green "done" requires a CLEAN exit, real
+        // output, AND (for evaluations) a report actually written; a timeout kill gets its own message.
+        send(runOutcome({
+          emittedText, sawError, persists, tokens: lastTokens, costUsd: lastCostUsd, timedOut, killMs,
+          cleanExit: code === 0, // non-zero OR null (killed/signal) = NOT clean
+          wroteReport: countReports() > reportsBefore,
+        }));
         close();
       });
     },

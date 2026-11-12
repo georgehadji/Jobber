@@ -72,8 +72,7 @@ states:
 # validating. Live states stay free-form in both directions: a backward move
 # such as Applied → Evaluated is a normal ledger CORRECTION (status-log.tsv
 # records it, funnel-velocity.mjs treats it as a correction, not a fresh event)
-# and is not gated. Only set-status.mjs reads this table today (the web UI and
-# Go dashboard do not yet — see docs/STATE-MACHINES-PLAN.md).
+# and is not gated. The dashboard does not parse this file: its state aliases are hard-coded in dashboard/internal/data/career.go and must be kept in sync by hand.
 transitions:
   evaluated: [applied, responded, rejected, discarded, skip]
   applied:   [responded, interview, rejected, discarded, skip]

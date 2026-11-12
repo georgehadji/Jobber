@@ -78,7 +78,7 @@ Batch mode reads offers from `batch-input.tsv`, but the `data/pipeline.md` inbox
 
 ## Resumability
 
-`batch-state.tsv` tracks the status of every offer (`pending`, `processing`, `completed`, `failed`, `skipped`, `rate_limited`, `paused_rate_limit`). If the batch is interrupted, re-running `batch-runner.sh` picks up where it left off -- completed offers are skipped automatically. `rate_limited` is a non-completed state used while the runner waits before retrying, so interrupted rate-limited jobs are eligible on the next normal run.
+`batch-state.tsv` tracks the status of every offer (`pending`, `processing`, `completed`, `failed`, `skipped`, `rate_limited`, `paused_rate_limit`). If the batch is interrupted, re-running `batch-runner.sh` picks up where it left off -- completed offers are skipped automatically. `rate_limited` is a non-completed state used while the runner waits before retrying, so interrupted rate-limited jobs are eligible on the next normal run. The state list and legal transitions live in `templates/machines/batch-job.yml` (`node machines.mjs describe batch-job`); `update_state` rejects any other value, and the tables inside `batch-runner.sh` are generated from it with `node batch/gen-states.mjs`.
 
 `paused_rate_limit` is different: it means a worker hit a Claude session/usage limit, so the runner stopped scheduling new offers and preserved the retry count. Resume those rows explicitly after the limit resets:
 

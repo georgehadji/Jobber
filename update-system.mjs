@@ -11,13 +11,12 @@
  *   node update-system.mjs apply      # Apply update (after user confirms)
  *   node update-system.mjs rollback   # Rollback last update
  *   node update-system.mjs dismiss    # Dismiss update check
- *   node update-system.mjs check --force  # Clear dismissal and check again
  *
  * See DATA_CONTRACT.md for the full system/user layer definitions.
  */
 
 import { execFile, execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname, posix as pathPosix } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -153,6 +152,7 @@ const SYSTEM_PATHS = [
   'lib/token-tracker.mjs',
   'lib/llm-providers.mjs',
   'lib/file-lock.mjs',
+  'lib/pipeline-inbox.mjs',
   'lib/report-schema.mjs',
   'lib/score-summary.mjs',
   'lib/cv-plaintext.mjs',
@@ -185,6 +185,13 @@ const SYSTEM_PATHS = [
   'tracker-parse.mjs',
   'tracker-aliases.json',
   'set-status.mjs',
+  'machines.mjs',
+  'gen-machine-docs.mjs',
+  'validate-state-machines.mjs',
+  'lib/machine-blocks.mjs',
+  'lib/state-machine.mjs',
+  'lib/status-gate.mjs',
+  'lib/status-extra-aliases.mjs',
   'sunset.mjs',
   'set-status-tests.mjs',
   'normalize-statuses.mjs',
@@ -284,6 +291,7 @@ const SYSTEM_PATHS = [
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'batch/aggregate-tokens.mjs',
+  'batch/gen-states.mjs',
   'batch/README.md',
   'utils/token-tracker.mjs',
   'batch-tailor.mjs',
@@ -891,15 +899,10 @@ function curlGet(url, extraArgs = []) {
 }
 
 async function check() {
-  // Respect dismiss flag. `check --force` is the documented way back: it
-  // removes the dismissal and then runs a normal check.
-  const dismissFile = join(ROOT, '.update-dismissed');
-  if (existsSync(dismissFile)) {
-    if (!process.argv.includes('--force')) {
-      console.log(JSON.stringify({ status: 'dismissed' }));
-      return;
-    }
-    try { unlinkSync(dismissFile); } catch { /* raced removal is fine */ }
+  // Respect dismiss flag
+  if (existsSync(join(ROOT, '.update-dismissed'))) {
+    console.log(JSON.stringify({ status: 'dismissed' }));
+    return;
   }
 
   const local = localVersion();
@@ -973,58 +976,6 @@ async function check() {
   }));
 }
 
-// ── LOCK ────────────────────────────────────────────────────────
-
-// A legacy lock (bare timestamp / unparsable) has no PID to probe, so only
-// age can condemn it. Conservative: an apply never legitimately runs this long.
-export const LEGACY_LOCK_STALE_MS = 2 * 60 * 60 * 1000;
-
-function pidIsAlive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err?.code === 'EPERM'; // exists, just not signalable by this user
-  }
-}
-
-/**
- * Decide whether an existing lock file is stale. New locks hold JSON
- * `{pid, created_at}`: stale iff the PID is not alive. Legacy locks (a bare
- * ISO timestamp) or unparsable content: stale iff older than
- * LEGACY_LOCK_STALE_MS (timestamp inside, else file mtime).
- */
-export function updateLockIsStale(lockFile, now = Date.now()) {
-  let raw;
-  try { raw = readFileSync(lockFile, 'utf-8'); } catch { return true; } // vanished
-  let meta = null;
-  try { meta = JSON.parse(raw); } catch { /* legacy */ }
-  if (meta && Number.isInteger(meta.pid) && meta.pid > 0) return !pidIsAlive(meta.pid);
-  let created = Date.parse(raw.trim());
-  if (Number.isNaN(created)) created = Date.parse(meta?.created_at);
-  if (Number.isNaN(created)) {
-    try { created = statSync(lockFile).mtimeMs; } catch { return true; }
-  }
-  return now - created > LEGACY_LOCK_STALE_MS;
-}
-
-/** Acquire `.update-lock`, recovering a stale one. Returns false if held. */
-export function acquireUpdateLock(lockFile) {
-  const body = JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() });
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      writeFileSync(lockFile, body, { flag: 'wx' });
-      return true;
-    } catch (err) {
-      if (err?.code !== 'EEXIST') throw err;
-    }
-    if (!updateLockIsStale(lockFile)) return false;
-    console.error('Recovered stale .update-lock from a previous interrupted update.');
-    try { unlinkSync(lockFile); } catch { /* raced removal is fine */ }
-  }
-  return false;
-}
-
 // ── APPLY ───────────────────────────────────────────────────────
 
 async function apply() {
@@ -1032,11 +983,21 @@ async function apply() {
   const initialStatusPaths = new Set(gitStatusEntries().map(entry => entry.path));
   const isReexec = process.env.JOBBER_UPDATE_REEXEC === '1';
 
-  // Check for lock
-  const lockFile = join(ROOT, '.update-lock');
-  if (!isReexec && !acquireUpdateLock(lockFile)) {
-    console.error('Update already in progress (.update-lock exists). If stuck, delete it manually.');
-    process.exit(1);
+  // Cross-process lock via lib/file-lock.mjs (owner-PID liveness stale
+  // recovery, so a SIGKILLed apply no longer blocks forever). Imported lazily:
+  // this file must stay self-loading (see the NOTE at the top). The re-exec
+  // child skips it; its parent still holds the lock.
+  const lockPath = join(ROOT, '.update-lock');
+  let lock = null;
+  if (!isReexec) {
+    const { acquireLock, LockTimeoutError } = await import('./lib/file-lock.mjs');
+    try {
+      lock = await acquireLock(lockPath, { lockDir: lockPath, kind: 'update', timeoutMs: 500, retryMs: 50 });
+    } catch (err) {
+      if (!(err instanceof LockTimeoutError)) throw err;
+      console.error('Update already in progress (.update-lock is held by a running process).');
+      process.exit(1);
+    }
   }
 
   const backupBranch = process.env.JOBBER_UPDATE_BACKUP_BRANCH || updateBackupBranchName(local);
@@ -1388,7 +1349,7 @@ async function apply() {
 
   } finally {
     // Remove lock
-    if (!isReexec && existsSync(lockFile)) unlinkSync(lockFile);
+    lock?.release();
   }
 }
 
@@ -1484,7 +1445,7 @@ function rollback() {
 
 function dismiss() {
   writeFileSync(join(ROOT, '.update-dismissed'), new Date().toISOString());
-  console.log('Update check dismissed. Run "node update-system.mjs check --force" or say "check for updates" to re-enable.');
+  console.log('Update check dismissed. Delete .update-dismissed (in the Jobber folder) to re-enable update checks.');
 }
 
 // ── MAIN ────────────────────────────────────────────────────────

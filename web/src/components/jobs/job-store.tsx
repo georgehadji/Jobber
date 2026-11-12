@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { scoreTone } from "@/lib/format";
-import { finalRunState } from "@/lib/core/run-stream";
+import { consumeRunStream } from "@/lib/core/run-stream";
 
 export type JobStep = { kind: "tool" | "status"; label: string; ts: number };
 export type JobResult = { score: number | null; summary: string; tone: "good" | "warn" | "bad" | "muted" };
@@ -164,56 +164,27 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
             finish("error", e.error || "Failed to start");
             return;
           }
-          const reader = res.body.getReader();
-          let sawDone = false;
-          const dec = new TextDecoder();
-          let buf = "";
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buf += dec.decode(value, { stream: true });
-            let nl: number;
-            while ((nl = buf.indexOf("\n")) !== -1) {
-              const line = buf.slice(0, nl).trim();
-              buf = buf.slice(nl + 1);
-              if (!line) continue;
-              try {
-                const ev = JSON.parse(line);
-                if (ev.type === "tool") {
-                  steps.push({ kind: "tool", label: ev.name, ts: Date.now() });
-                  patch(id, (j) => ({ ...j, steps: [...j.steps, { kind: "tool", label: ev.name, ts: Date.now() }] }));
-                } else if (ev.type === "status") {
-                  steps.push({ kind: "status", label: ev.label, ts: Date.now() });
-                  patch(id, (j) => ({ ...j, steps: [...j.steps, { kind: "status", label: ev.label, ts: Date.now() }] }));
-                } else if (ev.type === "text") {
-                  const full = text + ev.text;
-                  const vm = full.match(/VERDICT:[^\n]*/i);
-                  if (vm) verdictLine = vm[0];
-                  text = full.slice(-8000);
-                  patch(id, (j) => ({ ...j, text }));
-                } else if (ev.type === "done") {
-                  // finish happens on stream-close; capture the per-run cost it carries
-                  sawDone = true;
-                  if (typeof ev.tokens === "number") doneTokens = ev.tokens;
-                  if (typeof ev.costUsd === "number") doneCostUsd = ev.costUsd;
-                } else if (ev.type === "error") {
-                  const fin = finalRunState({ sawDone, sawError: true, errorMessage: ev.msg, closedCleanly: false });
-                  // Deliberately do NOT cancel the reader here: the server emits `error`
-                  // mid-run for any stderr line matching words like "error"/"auth", and
-                  // cancelling would SIGTERM the CLI while it may still be writing a
-                  // report or the tracker. The child keeps its tracker-write token until
-                  // it really exits (run-registry), which is the correct protection.
-                  finish("error", fin.message);
-                  return;
-                }
-              } catch {
-                /* skip */
-              }
+          const end = await consumeRunStream(res.body.getReader(), (ev) => {
+            if (ev.type === "tool") {
+              steps.push({ kind: "tool", label: String(ev.name), ts: Date.now() });
+              patch(id, (j) => ({ ...j, steps: [...j.steps, { kind: "tool", label: String(ev.name), ts: Date.now() }] }));
+            } else if (ev.type === "status") {
+              steps.push({ kind: "status", label: String(ev.label), ts: Date.now() });
+              patch(id, (j) => ({ ...j, steps: [...j.steps, { kind: "status", label: String(ev.label), ts: Date.now() }] }));
+            } else if (ev.type === "text") {
+              const full = text + String(ev.text);
+              const vm = full.match(/VERDICT:[^\n]*/i);
+              if (vm) verdictLine = vm[0];
+              text = full.slice(-8000);
+              patch(id, (j) => ({ ...j, text }));
+            } else if (ev.type === "done") {
+              // capture the per-run cost it carries; consumeRunStream decides done vs error
+              if (typeof ev.tokens === "number") doneTokens = ev.tokens;
+              if (typeof ev.costUsd === "number") doneCostUsd = ev.costUsd;
             }
-          }
-          const fin = finalRunState({ sawDone, sawError: false, closedCleanly: true });
-          if (fin.status === "done") finish("done", "Done");
-          else finish("error", fin.message);
+          });
+          if (end.status === "done") finish("done", "Done");
+          else finish("error", end.label);
         } catch {
           finish("error", "Connection error");
         }

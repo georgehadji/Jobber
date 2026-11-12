@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { inter, instrumentSerif, instrumentSerifItalic } from "@/lib/fonts";
 import { AppShell } from "@/components/app-shell";
+import { MachineProvider } from "@/components/machine-provider";
+import { readMachine } from "@/lib/core/states";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,7 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="font-sans antialiased">
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        <AppShell>{children}</AppShell>
+        <MachineProvider machine={readMachine()}>
+          <AppShell>{children}</AppShell>
+        </MachineProvider>
       </body>
     </html>
   );

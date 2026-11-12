@@ -20,6 +20,7 @@ import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
   openTrackerTransaction, rebuildRow, resolveTrackerPath, appendStatusLog,
 } from './tracker-utils.mjs';
+import { applyStatusChange } from './lib/status-gate.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_CANDIDATES_PATH = path.join(__dirname, 'data', 'reply-candidates.json');
@@ -167,6 +168,9 @@ function groupStatusRecommendations(recommendations) {
   return { updates, conflicts };
 }
 
+// Phase 5.3: enforce by default; `warn` is the documented escape hatch (see updateTrackerStatuses).
+const GATE_MODE = process.env.JOBBER_REPLY_WATCH_GATE === 'warn' ? 'warn' : 'enforce';
+
 async function updateTrackerStatuses(updates) {
   const trackerTransaction = await openTrackerTransaction(APPS_FILE);
 
@@ -179,6 +183,7 @@ async function updateTrackerStatuses(updates) {
     const applied = new Set();
     const alreadyCurrent = new Set();
     const conflicts = new Map();
+    const refused = new Map();
     const missing = new Set(updatesByNum.keys());
 
     for (let i = 0; i < lines.length; i++) {
@@ -196,7 +201,16 @@ async function updateTrackerStatuses(updates) {
         continue;
       }
       const parts = lines[i].split('|').map(s => s.trim());
-      parts[colmap.status] = update.newStatus;
+      // Shared transition gate (STATE-MACHINES-PLAN Phase 5.3). Default ENFORCE: an illegal move
+      // (leaving Hired/Rejected/Discarded) is refused and the row is left untouched; the operator
+      // overrides with `node set-status.mjs <#> <State> --force`. JOBBER_REPLY_WATCH_GATE=warn
+      // restores the Phase 3.4 behaviour (apply anyway, WARN on stderr, note in the ledger).
+      const change = applyStatusChange({ parts, colmap, num: update.num, to: update.newStatus, mode: GATE_MODE });
+      if (!change.allowed) {
+        refused.set(update.num, `${change.gate.from} -> ${change.gate.to}`);
+        continue;
+      }
+      for (const w of change.warnings) console.error(w);
       lines[i] = rebuildRow(parts);
       applied.add(update.num);
       // Keep the transition ledger complete (#improvement-plan A4(b)): reply-watch
@@ -206,7 +220,7 @@ async function updateTrackerStatuses(updates) {
       try {
         appendStatusLog(APPS_FILE, {
           num: update.num, date: new Date().toISOString().slice(0, 10),
-          from: update.oldStatus, to: update.newStatus, source: 'manual',
+          from: update.oldStatus, to: update.newStatus, source: 'manual', note: change.logNote,
         });
       } catch (err) {
         console.warn(`⚠ status-log append failed for #${update.num}: ${err.message}`);
@@ -214,7 +228,7 @@ async function updateTrackerStatuses(updates) {
     }
 
     if (applied.size > 0) trackerTransaction.replace(lines.join('\n'));
-    return { applied, alreadyCurrent, conflicts, missing, recommendationConflicts: grouped.conflicts };
+    return { applied, alreadyCurrent, conflicts, refused, missing, recommendationConflicts: grouped.conflicts };
   } finally {
     trackerTransaction.close();
   }
@@ -318,6 +332,8 @@ async function main() {
           console.log(`Updated #${r.num} to ${r.newStatus}${count}`);
         } else if (result.alreadyCurrent.has(r.num)) {
           console.log(`No change for #${r.num}: already ${r.newStatus}${count}`);
+        } else if (result.refused.has(r.num)) {
+          console.warn(`Refused #${r.num}: illegal transition ${result.refused.get(r.num)} (the application already reached a final state). Override with: node set-status.mjs ${r.num} ${r.newStatus} --force`);
         } else if (result.conflicts.has(r.num)) {
           console.warn(`Skipped #${r.num}: status changed from ${r.oldStatus} to ${result.conflicts.get(r.num)} during review`);
         } else if (result.missing.has(r.num)) {

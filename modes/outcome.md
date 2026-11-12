@@ -18,7 +18,7 @@ Record the outcome of an application conversationally, archive per-application a
 
 - `data/applications.md` — Application tracker
 - `cv.md` — Active CV (submitted CV snapshot)
-- `templates/states.yml` — Canonical tracker states
+- `templates/states.yml` — Canonical tracker states: <!-- machine:application-status:inline begin -->`Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` → `Hired` / `Rejected` / `Discarded` / `SKIP`<!-- machine:application-status:inline end -->
 - User input — Selector (report # or company name), outcome type, stage reached, verbatim feedback, notes
 
 ## Supported Outcomes & Tracker Mapping

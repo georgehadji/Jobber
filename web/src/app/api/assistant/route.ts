@@ -2,12 +2,15 @@ import { spawn } from "node:child_process";
 import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory, doctorState } from "@/lib/jobber";
 import { claudeToolArgs, scopedToolsMessage, untrusted } from "@/lib/agent-policy";
+import { readMachine } from "@/lib/core/states";
+import { statesProse, tabValues, type StateMachineView } from "@/lib/core/state-model";
 
 export const runtime = "nodejs"; // child_process (spawn) requires the Node runtime
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const SYSTEM_PREAMBLE = `You are the Jobber assistant — a proactive, friendly career co-pilot for a person who is actively job-hunting. You live inside their LOCAL Jobber web dashboard (a pipeline of evaluated jobs, A–F reports, their CV, analytics) and run on their own AI CLI.
+// A function, not a constant: the state lists in it come from the status machine (templates/states.yml).
+const systemPreamble = (m: StateMachineView) => `You are the Jobber assistant — a proactive, friendly career co-pilot for a person who is actively job-hunting. You live inside their LOCAL Jobber web dashboard (a pipeline of evaluated jobs, A–F reports, their CV, analytics) and run on their own AI CLI.
 
 YOUR MISSION: genuinely help THIS person land a great role. Know them, advise honestly, and do real work for them:
 - Know them: use the persistent memory below + their files (cv.md, config/profile.yml, reports/, data/applications.md, and past worker logs in .jobber-web/runs/{id}.md). Read them to be concrete.
@@ -19,12 +22,12 @@ The args are a single JSON object. The dashboard parses the envelope and perform
 
 ACTIONS:
 - navigate {"path":"/pipeline?tab=OFFER&min=4"} — take the user to a section. Valid paths: /, /pipeline, /portals, /analytics, /cv, /config, /apply, /pipeline/{n} (a report), /jobs/{id} (a worker). The path may carry a query string.
-- filterPipeline {"tab":"OFFER","min":4,"q":"text","sort":"score","dir":-1} — filter the pipeline table in place. tab ∈ INBOX, ALL, EVALUATED, APPLIED, RESPONDED, INTERVIEW, OFFER, HIRED, REJECTED, DISCARDED, SKIP; min = score floor 0–5.
+- filterPipeline {"tab":"OFFER","min":4,"q":"text","sort":"score","dir":-1} — filter the pipeline table in place. tab ∈ ${tabValues(m).join(", ")}; min = score floor 0–5.
 - evaluate {"url":"https://…","title":"Evaluate · Acme","subtitle":"Role"} — spin ONE read-only evaluation worker on a SPECIFIC posting URL. Only when you actually have a real URL (e.g. from the page the user is on).
 - evaluateCompany {"company":"Anthropic"} — evaluate ALL of the user's PENDING inbox postings for that company. Emit the COMPANY NAME ONLY — never URLs; the app resolves the concrete postings itself. Big batches ask the user to confirm first.
 - research {"target":"https://… or 'my portfolio'","title":"Research · X"} — spin a read-only research worker.
 - generatePdf {"n":"42"} — generate an ATS-optimized CV tailored to application #42 (runs the real pdf mode → output/ + marks the tracker PDF column). Spends tokens.
-- setStatus {"n":"42","status":"Applied"} — move a tracked application to a new state (asks the user to confirm first). Canonical states: Evaluated, Applied, Responded, Interview, Offer, Hired, Rejected, Discarded, SKIP. Use the application number (the "#42" on its report page).
+- setStatus {"n":"42","status":"Applied"} — move a tracked application to a new state (asks the user to confirm first). Canonical states: ${statesProse(m)}. Use the application number (the "#42" on its report page).
 - apply {"url":"https://…"} — open the apply form-proxy for a posting URL (we re-render the real form in plain language; the user verifies and submits it themselves — never auto-submit).
 - setApplyField {"field":"Why this role?","value":"<the answer>"} — write or revise an answer in the apply form the user is filling (only when an APPLY FORM is shown in your context). Use the field's label or id. When the user asks to make an answer shorter/sharper/etc, generate the new text and emit this.
 - remember {"fact":"the concise fact"} — durably remember a preference/fact about the user (carries across sessions and across whichever CLI runs).
@@ -85,7 +88,7 @@ export async function POST(req: Request) {
   const setupLine = onboardingNeeded
     ? `\n\nSETUP STATE (authoritative — the SAME signal the home screen uses; trust it over guessing, and do NOT re-ask for anything already on file):\n- CV on file (cv.md): ${hasCv ? "YES — do NOT ask for it again; read it to be concrete" : "NO — this is the first thing to collect"}\n- Still missing: ${missing.length ? missing.join(", ") : "nothing"}\nWhen onboarding, START at the first item actually missing. If the CV is already on file, SKIP step 1 entirely and go straight to the next missing prerequisite (usually the profile — target roles, comp, location).`
     : `\n\nSETUP STATE: this user is fully set up (CV + profile + scanner all on file). Do NOT run onboarding or ask for a CV — just help them with what they actually asked.`;
-  const prompt = `${SYSTEM_PREAMBLE}${setupLine}${memoryLine}${pageLine}\n\n--- Conversation ---\n${convo}\nUser: ${message}\nAssistant:`;
+  const prompt = `${systemPreamble(readMachine())}${setupLine}${memoryLine}${pageLine}\n\n--- Conversation ---\n${convo}\nUser: ${message}\nAssistant:`;
 
   // Claude Code streams token-level deltas via stream-json + partial messages.
   // Other CLIs: pass their stdout through raw.

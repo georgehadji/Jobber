@@ -1,0 +1,35 @@
+# Jobber — interview round outcome vocabulary (STATE-MACHINES-PLAN M35, Phase 4.5).
+# PROPOSED, PENDING D6 (same decision as interview-round; the outcome set itself is not
+# disputed, only its place in the merged interview vocabulary). Behaviour-neutral: no mode
+# or script reads this file yet.
+# Source: modes/interview/debrief.md:19 and :170 (`pending / moved forward / rejected`), and
+# the mirrors de (weiter / abgelehnt / offen), es (avanzó / rechazado / pendiente),
+# pt (avançou / rejeitado / pendente), fr (avance / rejeté / en attente); zh keeps English.
+# This is the outcome of ONE round. It has no link to the application status
+# (templates/states.yml): a rejected round does not by itself move the tracker row.
+id: interview-round-outcome
+persisted_in: "interview-prep/{company}-{role}.md (debrief **Outcome:** line)"
+initial: pending
+states:
+  - id: pending
+    label: Pending
+    aliases: [offen, pendiente, pendente, en attente]
+    terminal: false
+    description: Outcome of the round not known yet.
+  - id: moved-forward
+    label: Moved forward
+    aliases: [moved forward, weiter, avanzó, avançou, avance]
+    terminal: true
+    description: Candidate advances to the next round.
+  - id: rejected
+    label: Rejected
+    aliases: [abgelehnt, rechazado, rejeitado, rejeté]
+    terminal: true
+    description: Candidate is out of the process.
+transitions:
+  pending: [moved-forward, rejected]
+policy:
+  backward_between_live: correction
+  unknown_input: flag
+  exit_terminal: force
+writers: [modes/interview/debrief.md]

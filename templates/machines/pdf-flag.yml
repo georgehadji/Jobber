@@ -1,0 +1,41 @@
+# Jobber — tracker PDF flag machine (STATE-MACHINES-PLAN M17 / 4.5).
+# The PDF column of data/applications.md. DECLARED FROM TODAY'S CODE; nothing here is enforced.
+# State ids are ascii slugs; the glyphs the tracker actually stores are the ALIASES.
+#
+# Two writers upgrade the flag to generated, with DIFFERENT source states (verified):
+#   - merge-tracker.mjs syncPdfFlags  upgrades ONLY a `❌` cell, when data/pdf-index.tsv lists the row's report
+#     (the same file also sets ✅ on a row it adds/updates when the report is in the index);
+#   - sync-pdf-flags.mjs upgrades ANY cell that is not `✅` (so `—`, `❌`, blank and a path-valued cell too).
+# merge-tracker runs sync-pdf-flags at the end of a full merge, so the gap only shows when merge-tracker
+# exits early (no additions) or when sync-pdf-flags is run alone / skipped.
+#
+# NOT MODELLED: the cell can also hold a PDF path (outcome.mjs reads a path out of it, tolerating a
+# `local:` prefix, and treats `—` and `-` as "no path"). That is legacy free text, not a declared state.
+# Nothing ever writes ✅ -> ❌ or ✅ -> — (one-way).
+id: pdf-flag
+persisted_in: data/applications.md (PDF column) ; source of truth for "generated" is data/pdf-index.tsv
+initial: missing
+states:
+  - id: missing
+    label: Missing
+    aliases: ["❌"]
+    terminal: false
+    description: No PDF generated when the row was written (batch worker with score below the PDF threshold, manual add, or tracker.mjs default for an empty cell)
+  - id: not-applicable
+    label: Not applicable
+    aliases: ["—", "-"]
+    terminal: false
+    description: No PDF expected or no data (backfilled/legacy rows). merge-tracker never upgrades it; sync-pdf-flags does. outcome.mjs treats both the em dash and the hyphen as "no PDF path"
+  - id: generated
+    label: Generated
+    aliases: ["✅"]
+    terminal: true
+    description: A PDF for the row's report exists in data/pdf-index.tsv (written by generate-pdf.mjs). One-way; nothing downgrades it
+transitions:
+  missing: [generated]
+  not-applicable: [generated]
+policy:
+  backward_between_live: forbidden
+  unknown_input: flag
+  exit_terminal: forbidden
+writers: [merge-tracker.mjs, sync-pdf-flags.mjs, batch/batch-prompt.md, tracker.mjs, generate-pdf.mjs]

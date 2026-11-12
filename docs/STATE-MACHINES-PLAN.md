@@ -42,7 +42,7 @@ Phase 0 closes that gap.
 4. **New guards ship as warn first, enforce second.** A new transition check first logs `WARN illegal transition …` and records it in `status-log.tsv`. It refuses only one release later, after the warnings have been reviewed. `--force` always remains the explicit override.
 5. **No new production dependencies.** The README states "four production dependencies by design". The Go dashboard must not gain a YAML library just for this work (§4.4).
 6. **Follow the test rules in `AGENTS.md`** (*Writing Assertions*): run the control case, assert identity rather than count, never assert a reachable runtime guard by matching source text, and keep fixture-setup failures separate from the property under test.
-7. **Baseline:** `node test-all.mjs --quick` currently reports 5473 passed and 3 failed. The 3 failures are pre-existing and unrelated: a DNS-dependent SSRF check, the provider-health `--ci` cached run, and stale translations. Every phase must end at **≥ baseline passes with the same or fewer failures**. GitHub Actions on this repo currently cannot start jobs because of an account billing issue (see PR #85), so local runs are the gate until that is fixed.
+7. **Baseline (measured 2026-11-11 on `main`, Windows):** `node test-all.mjs --quick` reports **5466 passed, 2 failed, 5 warnings**. The 2 failures are pre-existing and unrelated: a `SYSTEM_PATHS` coverage gap (the tracked `CVs/` files from commit b14d354 are in neither `SYSTEM_PATHS` nor `USER_PATHS`) and an `analyze()` appDateSource end-to-end check that dies with `EPERM` creating a symlink on Windows. The earlier figure of 5473 / 3 (DNS SSRF check, provider-health `--ci`, stale translations) did not reproduce on this machine. Every phase must end at **≥ baseline passes with the same or fewer failures**. Go is not installed on this machine, so `go test ./...` cannot run here (see D8). GitHub Actions on this repo currently cannot start jobs because of an account billing issue (see PR #85), so local runs are the gate until that is fixed.
 
 ---
 
@@ -55,28 +55,29 @@ Risk combines likelihood of data loss or corruption, user-visible lies, and drif
 **M1 — Application status lifecycle** (`data/applications.md` + `data/status-log.tsv`; declared in `templates/states.yml`). Risk: **critical.**
 
 - **VERIFIED** — `set-status.mjs:386-404` gates only exits *from terminal states*. Forward edges in the `transitions:` table are documentation, not enforcement. The `states.yml` comment says this on purpose: live states are free-form so that corrections stay possible.
-- **VERIFIED by reading, not yet executed** — `set-status.mjs:387,390`: `oldId` is looked up by exact label. If the existing cell is non-canonical (e.g. `Evaluada`, `Applied 2026-01-05`), `oldId` is `undefined`. Then `transitions[undefined] ?? []` is empty, so the row is treated as **terminal** and the change is refused without `--force`. A live row looks frozen.
+- **REPRODUCED (Phase 0.3, executed)** — `set-status.mjs:371,386-390`: `oldId` is looked up by exact label. If the existing cell is non-canonical (e.g. `Evaluada`, `Applied 2026-01-05`), `oldId` is `undefined`. Then `transitions[undefined] ?? []` is empty, so the row is treated as **terminal** and the change is refused without `--force`: `Evaluada is a terminal state … Legal moves from Evaluada: .` Controls pass (`Evaluated`→Applied works; `Rejected`→Interview is still refused). Test: `tests/repro-set-status-noncanonical.test.mjs` (run with `JOBBER_REPRO=1`; kept red until Phase 3.2).
 - **VERIFIED** — `tracker-utils.mjs:357` exports `canTransition()`, but nothing outside that file calls it.
 - **VERIFIED** — the `states.yml` comment says *"The dashboard reads this table too."* This is false: no Go file parses YAML (`dashboard/go.mod` has no YAML dependency), and none references `transitions`.
-- **REPORTED** — the canonical list is hard-coded **≈20 times**:
+- **VERIFIED (Phase 0.2, by reading)** — the canonical list is hard-coded in **≥14 full copies plus several subsets and maps** (`company-history`, `funnel-velocity` hold stage subsets; `outcome.mjs` is an outcome→state map; `reply-matcher` emits classifier outputs; `lib/sunset-policy.mjs:13` is only a comment; `dedup-tracker` and the `*-eval.mjs` prompts are UNCLEAR). Candidate sites, original list:
   - **root scripts:** `merge-tracker.mjs:163,193-208`, `normalize-statuses.mjs:69-90`, `verify-pipeline.mjs:47` (declares `STATES_FILE` but uses its own list), `followup-cadence.mjs:~80,100`, `analyze-patterns.mjs:~85,113,118,122`, `stats.mjs:37,43,48`, `dedup-tracker.mjs`, `lib/sunset-policy.mjs:16`, `outcome.mjs:53`, `reply-matcher.mjs:392-414`, `company-history.mjs:68`, `funnel-velocity.mjs:63`, and the `*-eval.mjs` prompts
   - **web:** `lib/format.ts:41-51`, `app/actions/registry.ts:18`, `components/pipeline-view.tsx:15-26`, `app/analytics/page.tsx:7-16` (**omits SKIP**, uses substring matching), `api/assistant/route.ts:27`
   - **Go:** `career.go:508,872,903`, `pipeline.go:128-154,203-213,252`
   - **VERIFIED** — parity tests (`test-all.mjs` 55.3/55.3b) cover **only the web lists**.
 - **REPORTED** — alias drift:
-  - `condicional|hold|evaluar|verificar|geo blocker` are accepted by four root scripts but are not in `states.yml`, so strict `set-status` rejects them.
-  - `monitor` is `skip` in YAML but `evaluated` in Go: a **real conflict**.
-  - Go adds Turkish aliases that YAML lacks.
-- **REPORTED** — unknown status is handled six different ways:
+  - **VERIFIED:** `condicional|hold|evaluar|verificar|geo blocker` are accepted by **five** root scripts (`analyze-patterns`, `followup-cadence`, `verify-pipeline`, `merge-tracker`, `normalize-statuses`) but are not in `states.yml`, so strict `set-status` rejects them (`invalid-state`). Web has the first three; Go has all five.
+  - **VERIFIED:** `monitor` is `skip` in YAML, `merge-tracker`, `normalize-statuses`, `verify-pipeline`, `stats` and web, but `evaluated` in Go (`career.go:536`): a **real conflict**, and Go is the lone outlier (alias corpus, Phase 0.4).
+  - **VERIFIED:** Go adds Turkish aliases that YAML lacks (`career.go:521,536`).
+  - **VERIFIED (corpus):** `-` and the empty string map to `discarded` in `normalize-statuses` and web, but are unknown in `merge-tracker`, `verify-pipeline`, `stats` and Go. Date suffixes are accepted unevenly (`Hired (2026-01-05)` only by `merge-tracker`; `Rechazado 2026-02-01` by everything except web).
+- **VERIFIED** — unknown status is handled six different ways (a seventh: `tracker.mjs:396` rejects unknown input on its set path):
   - mapped to `Evaluated` with a warning (`merge-tracker`)
   - mapped to `Evaluated` with a `[sync: …]` note (`tracker.mjs`)
   - flagged and left alone (`normalize-statuses`)
   - an error (`verify-pipeline`)
   - counted as `Unknown` (`stats`)
   - `—` mapped to `Discarded` (`normalize-statuses`)
-- **REPORTED** — writers that bypass the gate:
-  - `reply-watch.mjs:170-215` can move Hired/Rejected → Responded/Interview
-  - `normalize-statuses` writes directly
+- **VERIFIED** — writers that bypass the gate:
+  - `reply-watch.mjs:170-221` has no terminal-state guard, so it can move Hired/Rejected → Responded/Interview. It does run under the tracker lock and **does** append to `status-log.tsv` (`source=manual`, `:207-213`). Its only guards are "row unchanged since review" and operator approval
+  - `normalize-statuses.mjs:176-181` writes directly under the tracker lock with a `.bak`; no gate, no log. A spelling fix is not a lifecycle move, so whether it should log is a DECISION, not a bug
   - **VERIFIED** — the **Go TUI** writes `applications.md` directly (`career.go:671,684`). It never calls `set-status.mjs` and never appends to `status-log.tsv` (only `web/src/app/api/status/route.ts` and Node scripts reference the log). So the TUI can do Rejected → Interview, and `funnel-velocity` loses those events.
   - The good paths: `outcome.mjs` and `sunset.mjs --apply` delegate to `set-status`.
 - **VERIFIED** — `modes/tracker.md:21` lists the lifecycle **without `Hired`**.
@@ -84,28 +85,31 @@ Risk combines likelihood of data loss or corruption, user-visible lies, and drif
 **M2 — Web status-write UX** (`web/src/components/*`, `/api/status`). Risk: **high (the UI misleads the user).**
 
 - **VERIFIED** — `home/decision-card.tsx:23-24` calls `fetch('/api/status')` and then `setDone(status)` without checking `res.ok`. A 409/404/423 still makes the card disappear as if the change succeeded.
-- **REPORTED:**
-  - `assistant-console.tsx:252-262` ignores the response and says "Marked #n" even when the write failed.
-  - `status-select.tsx:28-39` offers all 9 states regardless of the current one. On a 409 it reverts silently and drops the server's explanation.
-  - `registry.ts:262` validates again against its own hard-coded list.
+- **VERIFIED (Phase 0.2):**
+  - `assistant-console.tsx:252-263` ignores the response; the "Marked #n" text is returned synchronously by `registry.ts:268` right after a fire-and-forget write, so it cannot reflect the outcome.
+  - `status-select.tsx:23-37,50-54` offers all 9 states regardless of the current one. On a 409 it reverts silently and drops the message `api/status/route.ts:52-60` builds.
+  - `registry.ts:18` (list) and `:259` (check) validate again against a hard-coded list; the route validates a third time (`route.ts:28`).
+  - **Phase 2.1 done on branch `fix/web-status-write-honest`** (see §5).
 
 **M3 — Dashboard TUI pipeline screen** (`dashboard/internal/ui/screens/pipeline.go`). Risk: **high.** All items REPORTED:
-- Overlay mode is a set of booleans plus `hiredStep`, with no single enum, so two overlays can be open at once.
-- The "hired" celebration runs even if the write failed; write errors only go to stderr behind the TUI.
+- Overlay state is independent flags (`statusPicker`, `discardPicker`, `pdfPicker`, `searchInput`, `colPicker`, `hiredStep`) with priority dispatch (`pipeline.go:447-465`). No single enum. VERIFIED that no path opens two at once (openers clear the previous flag, `:800`), so this is a representability problem, not a live bug.
+- The "hired" celebration runs even if the write failed, on the pipeline status-picker path only (`pipeline.go:804-813`); the report-viewer path checks the error first (`main.go:130-136`). Write errors on both paths go only to stderr behind the TUI (`main.go:86,95,133,151`).
 - There are no `Offer`/`Hired` tabs, although the web app has them.
 - `Esc` in the discard picker commits the status without a reason (documented behaviour).
 
 **M4 — Web agent-run lifecycle** (`api/run/route.ts`, `components/jobs/job-store.tsx`, `lib/core/run-registry.ts`). Risk: **high (false "done").** REPORTED:
-- The client marks a job `done` whenever the stream closes cleanly, even with no `done` event.
-- On an early `finish('error')` the reader is not cancelled, so the server child keeps holding the tracker-write token.
-- The "honesty gate" compares report counts, so concurrent runs can satisfy each other's check (INFERRED).
-- A timeout shows a generic error.
-- The run registry lives only in memory and is lost on server restart.
+- VERIFIED: the client marks a job `done` whenever the stream closes cleanly, even with no `done` event. The server always sends `done` or `error` first, so this fires only on abrupt truncation: a latent hole, not a common one.
+- VERIFIED: on an early `finish('error')` the reader is not cancelled, so the server child keeps holding the tracker-write token. The trigger is a mid-run stderr line matching `/error|denied|fatal|auth|login|…/` (`route.ts:216-224`), which a benign warning can satisfy. The run can still finish and write a report while the UI says "error".
+- INFERRED + new detail: the "honesty gate" compares report counts, so concurrent runs can satisfy each other's check. `countReports` also counts `NNN-RESERVED.md` sentinels (`route.ts:134`), so a reserved-but-unwritten run can pass.
+- VERIFIED: a timeout shows a generic error.
+- VERIFIED: `run-registry.ts` is only an in-memory write-token `Set`, not a run registry; job state lives in client React state and is lost on reload.
+- **Phase 2.2 done on branch `fix/web-job-done-explicit`.** Behaviour change to note: the early-error path now cancels the reader, which kills the child, so a benign stderr line stops a run that would previously have finished.
 
 **M5 — Report-number reservation** (`reserve-report-num.mjs`, `reports/NNN-RESERVED.md`). Risk: **high (two reports can get the same number).** REPORTED:
-- There are two garbage-collection (GC) implementations: a locked one in `reserve-report-num.mjs:~250-281` and an **unlocked** one in `tracker-utils.mjs:403`, which `merge-tracker` and `verify-pipeline` call. The 4h constant is duplicated, and a comment claims there is "one shared implementation", which is false.
-- GC uses age only and ignores the stored PID. A batch worker running longer than 4h, or one paused by rate limits, can lose its number, which is then issued again.
-- No test exists by name.
+- VERIFIED: two garbage-collection (GC) implementations: a locked one in `reserve-report-num.mjs:246-284` (`gcStaleReportReservations`, checks the owner PID) and an **unlocked, age-only** one in `tracker-utils.mjs:403-422` (`gcStaleSentinels`), which `merge-tracker.mjs:143` and `verify-pipeline.mjs:230` call. The 4h constant is duplicated (`reserve-report-num.mjs:34`, `tracker-utils.mjs:393`). The comment at `tracker-utils.mjs:389-391` says "one shared implementation" but covers only those two callers.
+- **REPRODUCED (Phase 0.3):** a 5h-old sentinel whose owner PID is alive is reclaimed by `verify-pipeline`'s GC, and `reserve-report-num.mjs` then issues the same number (`001`). The locked GC keeps it, so the two implementations disagree. Test: `tests/repro-sentinel-gc.test.mjs` (`JOBBER_REPRO=1`). The batch-row (`processing`) half is not built.
+- A PID check alone will **not** protect batch workers: `batch-runner.sh:471` reserves through a short-lived `node reserve-report-num.mjs` process, so the stored PID is dead within milliseconds. The batch-row `processing` check is the load-bearing part (INFERRED). `docs/DEFECT-HUNT-LEDGER.md` already lists the missing PID check as SUSPECTED "B1-C2".
+- No test covers `gcStaleReportReservations` or the live-owner case (a `>4h` test for `gcStaleSentinels` exists).
 
 ### 2.2 Medium
 
@@ -113,7 +117,7 @@ Risk combines likelihood of data loss or corruption, user-visible lies, and drif
 |---|---|---|---|
 | M6 | Batch job state | `batch/batch-runner.sh`, `batch/batch-state.tsv` | 7 states inlined in ≥3 places (one summary function lumps `rate_limited` into pending); `update_state` accepts any string; a crashed `processing` row re-runs with a **new** report number, leaving an orphan sentinel; retries don't count `processing`/`rate_limited`; a silent lock-free fallback if `mkdir` of the lock fails (`:236`) |
 | M7 | `pipeline.md` URL inbox | `scan.mjs`, `reconcile-pipeline.mjs`, `openrouter-runner.mjs`, `archive-posting.mjs` | Two incompatible `[x]` encodings (one moves the row to Processed, one flips it in place); `reconcile-pipeline` and `openrouter-runner` write **without** `pipeline-lock`, so they can lose scanner appends; `[!]` error state is documented but never written; errored URLs stay pending forever |
-| M8 | Plugin integrity | `plugins/_engine.mjs:570-585`, `plugins/_lock.mjs:97-115` | **Security:** the `lockGate` switch's `default` is `{load:true}`, so an unknown integrity status fails **open**; lock-file writes are unlocked and non-atomic; first use is trusted silently |
+| M8 | Plugin integrity | `plugins/_engine.mjs:547-586`, `plugins/_lock.mjs:96-141`, `plugins.mjs:254-286` | **Security (VERIFIED, narrower than first reported):** the `lockGate` `default` is `{load:true}` but is **unreachable today** (`diffPlugin` returns 5 statuses, all handled); a lock read error fails closed (`:553`). Real holes: (1) `writeLockEntry`/`removeLockEntry` read with the lenient `readLock`, so a corrupt `plugins.lock` followed by `plugins.mjs trust X` overwrites it with one entry and drops every other pin, after which those plugins read as `unpinned`; (2) `unpinned` loads and silently re-pins whenever *this plugin's* entry is missing, even if the lock file exists (`:570`), contradicting `docs/AUDIT-FIX-PLAN.md:313`; (3) writes are unlocked, truncating in place; (4) `repin()` swallows write errors (`:566`); (5) stale comment at `:547` says "fail-open" against `:553`. Also bundled plugins with changed files and no version bump are re-pinned and loaded (`:579`, see M29) |
 | M9 | Apply/prefill flow | `web/src/components/apply/apply-provider.tsx`, `lib/apply/*` | `status` plus a separate `error` string that can coexist; no in-flight guard in callbacks (only buttons are disabled); abandoned server sessions with headed Chrome live until the next `open`. The never-auto-submit guard (`submit-guard.ts`) is sound: **keep it unchanged** |
 | M10 | Explore scan phases | `web/src/components/explore/explore-provider.tsx` | 11-phase union, but bare 850 ms `setTimeout`s are never cleared, so a late `results` can overwrite a newer run (INFERRED race); `runningRef` duplicates `phase` |
 | M11 | Update system | `update-system.mjs` | **VERIFIED:** `dismiss` prints *"Run check … to re-enable"* (`:1434`), but `check` returns `dismissed` while the flag file exists (`:894`), so the advice is wrong. **REPORTED:** `.update-lock` has no stale recovery, so after a SIGKILL `apply` refuses forever |
@@ -132,6 +136,33 @@ Risk combines likelihood of data loss or corruption, user-visible lies, and drif
 | M18 | Web onboarding banner | `/api/doctor` errors are swallowed, so the banner hides with no retry |
 | M19 | Inbox/Today triage | localStorage-backed; undo is lost on reload; acceptable |
 | M22 | Locks (cross-cutting) | Five lock implementations: `lib/file-lock.mjs`, the `followup-seed` copy, bash in `batch-runner`, `.update-lock`, and none for `plugins.lock` |
+
+### 2.3b Added by Phase 0.1 (areas the first scouts missed)
+
+Labels: VERIFIED = lines read by the scout; "grep" = a grep negative or pattern match only. Rows are **not yet independently re-checked** by a second reader.
+
+| ID | Machine / drift | Where | Key problems | Risk |
+|---|---|---|---|---|
+| M23 | Provider run outcome (ok / partial / outage), implied by counters + `errors[]` | Family A (throw only if the first request fails): `providers/meituan.mjs:123,149-151`, `tencent.mjs:106,122-124`, `alibaba.mjs:136,164-166`. Family B (throw only if all keywords fail): `eures`, `freehire`, `apec`, `arbetsformedlingen`, `jobs-ac-uk`, `trudvsem`, `vdab`, `arbeitsagentur` (4 of these by grep only) | Two undocumented outcome semantics copied about 11 times. Family A returns from inside the keyword loop on a mid-run error, so remaining keywords never run and the caller sees success. Family B drops partial failures silently | med-high |
+| M24 | Pagination stop reason, carried as a tag on the returned array | `providers/workday.mjs:256-340`, `icims.mjs:117-134`; silent caps in `justjoin.mjs:12,113-125`, `eightfold.mjs:156` | Tags (`workdayTruncated`, `icimsTruncated`) are consumed only by `scan-ats-full.mjs:760-765,814`; plain `scan.mjs` has no consumer. justjoin and eightfold cap with no tag | med |
+| M25 | Retry / backoff policy (per call) | `workday.mjs:84-110` and `oraclecloud.mjs:91-110` (near-verbatim copies), `ashby.mjs:178-190`, `eightfold.mjs:128-135`, `freehire.mjs:410-421`, `meituan.mjs:130-160` | Retryable set differs per provider; "no HTTP status" is treated as retryable | low |
+| M26 | Avature pagination-key self-heal latch | `providers/avature.mjs:180-212` | One-way latch; `fresh === 0` stands for repeat, empty and end-of-board | low |
+| M27 | Gmail processed-id cursor | `plugins/gmail/index.mjs:53-67,99,123,139,144` | A corrupt file loads as an empty `Set` (`:57-58`) and is then overwritten, so every old lead is re-ingested; save failure only warns; no lock, no atomic write; the set grows without bound | med |
+| M28 | Apify run lifecycle | `plugins/apify/_apify.mjs:26,144-170,200-214` | A 4xx during polling throws without aborting, so the remote run keeps running and billing; abort is fire-and-forget | low-med |
+| M29 | Plugin trust gate, bundled drift (extends M8) | `plugins/_engine.mjs:575,579`, `plugins/_registry.mjs:82` | Bundled plugins with changed files and no version bump are silently re-pinned and loaded ("reviewed-by-construction" is an assumption); two taxonomies (5 lock statuses, 4 source badges) | med (security) — **DECISION D9** |
+| M30 | Notion status canonicalisation (third canonical loader) | `plugins/notion/_notion.mjs:22-45`, `index.mjs:78-79` | Unknown status returns null and the row is pushed with no Status and no warning; upsert takes `dupes[0]` with no lock | low-med |
+| M31 | Status vocabulary in language-mode READMEs | `modes/de/README.md:69`, `es:59`, `fr:59`, `pt:69`, `tr:75` | Each lists 5 of 9 states (no Responded, Discarded, SKIP, Hired), so an agent in a language mode never offers them | med |
+| M32 | Legitimacy tier labels (extends M21) | Translated in `modes/{tr,ua,zh-TW,zh,ar}/_shared.md`; English hard-coded in `modes/tr/is-ilani.md:250`; writers `openrouter-runner.mjs:670-671`, `eval-runner.mjs:52,67`; reader `lib/report-schema.mjs:101-102`; `analyze-patterns.mjs:292,302` | No enum anywhere. Four vocabularies (English tier, translated tier, `unknown`/`unconfirmed`, snake_case). Grouping by tier splits across languages | med-high for analytics |
+| M33 | Archetype names in language tables | canonical `modes/_shared.md:153-160`; translated variants in about 15 `_shared.md`; consumer `eval-golden.mjs:263` (exact match), `lib/score-summary.mjs:39` | A model that emits a translated archetype scores a MISS and breaks grouping silently (gate effect INFERRED from code) | med |
+| M34 | Interview round enum (extends M21) | audience set `modes/interview-prep.md:122-127,144`; round set `modes/interview/debrief.md:206`, `practice.md:144`; mapping `debrief.md:223`, `practice.md:161`; mirrored in de, es, pt, zh, fr | `peer-tech` and `panel-mixed` map to nothing; `recruiter-screen` maps only to `screen`. No code consumer (grep). Written into `round:` frontmatter | low-med |
+| M35 | Round-outcome vocabulary in debriefs | `modes/interview/debrief.md:19` and de, es, pt copies | `moved forward / rejected / pending`, translated, no canonical target and no link to tracker status | low-med |
+| M36 | Localised pipeline section headers | `modes/{de,es,fr,pt,tr}/pipeline.md:9-15` vs `modes/pipeline.md:31-38` | No code matches the literals, so section moves are agent prose only; overlaps M7 | low |
+| M37 | Language folders lack triage and Block G | no `modes/<lang>/triage.md`; no Block G in `de/angebot`, `es/oferta`, `fr/offre`, `pt/oferta` | A language-mode report has no legitimacy tier, so it falls back to `unconfirmed`/`unknown` | med |
+| M38 | Ledger-bot signature flow | `.github/workflows/ledger-bot.yml:11-314` | `human-review` and `queued-manual` have no persisted label and the trigger does not subscribe to edits, so they can be stuck unseen; a no-token PR is left open with no feedback | low-med |
+| M39 | Issue label flows | `.github/workflows/stale.yml:27-34`, `auto-triage-scan-output.yml:19,81,86` | Two writers of issue state with no shared vocabulary; exempt lists differ | low |
+| M40 | Eval golden set | `evals/golden/*.json`, `eval-golden.mjs` | Legitimacy is never checked; one golden archetype label is outside the canonical six | low-med |
+
+**Checked, no machine found:** `scaffolder/` (linear init script), circuit-breaker / cooldown / quarantine in providers or plugins (none), persisted rate-limit state (none). **Not covered:** `ashby.mjs` after line 190, `eightfold.mjs` before 128, the plugin install path, `plugins/_template`, and the workflows `test`, `web-ci`, `release`, `sbom`, `codeql`, `welcome`, `dependency-review`, `plugin-registry-validate`, `gh-events-feed` (grep only).
 
 ### 2.4 Reference design — copy this one
 
@@ -210,7 +241,7 @@ writers: [set-status.mjs]       # the ONLY scripts allowed to write this state (
   - **Recommended:** writes shell out to `node set-status.mjs <n> <state> --json`. That gives one gate, the status-log append, and the same error texts. Node is always present wherever Jobber runs.
   - Reads use a **generated** `dashboard/internal/data/states_gen.go`, produced by `node scripts/gen-states.mjs` from `states.yml`. A parity test fails if it is stale. No new Go dependency.
 - **Markdown (modes, for agents):** replace hand-restated lists with **generated blocks**:
-  `<!-- machine:application-status:begin --> … <!-- machine:application-status:end -->`
+  a `machine:application-status` begin/end comment pair (the marker syntax is described in `lib/machine-blocks.mjs`; it is not written out here because the block scanner would read it)
   The generator rewrites only the content between the markers, and a test fails if a block is stale. Agents keep reading the list inline (no extra tool call, same token cost), and drift becomes impossible.
 
 ### 4.5 Honest UI (UX)
@@ -278,11 +309,6 @@ Each phase is a small PR. **Subagent models:** Haiku 5.5 for the easiest, mechan
 
 Each item needs a test that fails before the fix and passes after it (control case included).
 
-**Phase 2 status (2026-11-12): 2.1–2.6 done.** Follow-ups found while doing it (not yet fixed):
-- *Run stream, pre-existing:* `/api/run` emits an `error` event for **any** stderr line matching words such as `error|auth|login`. The client stops at the first one and shows an error while the CLI keeps running and may finish successfully. Fix this with Phase 4: distinguish warnings from fatal errors on the server, so the client can keep reading until the real terminal event. The client deliberately does **not** cancel the stream on that event: cancelling would SIGTERM a CLI that may be writing a report or the tracker.
-- *Assistant confirm card:* it still shows "✓ started" as soon as the user confirms a status change; a refusal arrives afterwards as a note. A real fix needs `writeStatus` in `web/src/app/actions/registry.ts` to become async and return the result (the `DoneInfo` contract).
-- *Explore:* `setMode()` clears `runningRef` mid-stream without cancelling the stream, and a stale stream can still make direct `setPhase` calls after `reset()` (only the delayed transition is guarded). Fold this into the M10 reducer work in Phase 4.
-
 ### Phase 3 — The registry and the gate
 
 | # | Task | Model |
@@ -291,9 +317,9 @@ Each item needs a test that fails before the fix and passes after it (control ca
 | 3.2 | Fix `set-status` by canonicalizing `from` through `check()`; the 0.3 repro test turns green; the matrix test from 1.3 is updated for exactly this one change | Sonnet |
 | 3.3 | Move root scripts to `canonicalize()`, one script per commit, golden tests green after each: `verify-pipeline`, `stats`, `analyze-patterns`, `followup-cadence`, `dedup-tracker`, `normalize-statuses`, `merge-tracker` | Sonnet (Haiku may do the simpler swaps such as `stats` and `analyze-patterns` once the pattern exists) |
 | 3.4 | Route `reply-watch` and `normalize-statuses` writes through `applyStatusChange()`, **warn mode** | Sonnet |
-| 3.5 | Unify sentinel GC into one locked implementation that is PID- and batch-aware (never reclaim a sentinel whose batch row is `processing`); the M5 repro turns green | Sonnet |
+| 3.5 | Unify sentinel GC into one locked implementation that is batch-aware first (never reclaim a sentinel whose batch row is `processing`) and PID-aware second (PID alone does not cover CLI-reserved batch numbers); the M5 repro turns green | Sonnet |
 | 3.6 | `pipeline.md`: one locked writer; tolerant reader for both `[x]` encodings; actually write `[!]` for errors | Sonnet |
-| 3.7 | Plugin `lockGate`: an unknown status **fails closed** with a clear message; atomic, locked lock-file writes (security; treat as a must-fix once 0.2 confirms it) | Sonnet |
+| 3.7 | Plugin lock (security): `writeLockEntry`/`removeLockEntry` use `readLockStrict` and refuse on a corrupt lock; atomic, locked lock-file writes; non-bundled `unpinned` requires consent instead of silent re-pin (reconcile with `docs/AUDIT-FIX-PLAN.md:313`); `repin()` failure is reported; the `default` branch fails closed as defensive hardening only. Bundled-drift re-pin is DECISION D9 | Sonnet |
 
 ### Phase 4 — Derive every runtime from the registry
 
@@ -316,6 +342,88 @@ Each item needs a test that fails before the fix and passes after it (control ca
 
 ---
 
+### Progress log (2026-11-11)
+
+Phase 0 and Phase 2 were run by parallel subagents; each branch was reviewed by the main session and merged into a throwaway `integration/phase-0-2` worktree. Nothing is on `main`, nothing is pushed.
+
+| Item | Branch | State |
+|---|---|---|
+| 0.1 | — | done: §2.3b |
+| 0.2 | — | done: corrections applied above; M8 narrowed, M1/M2/M3/M4/M5 line numbers fixed |
+| 0.3 | `test/repro-m1-m5-known-red` | both bugs **reproduced**; tests gated by `JOBBER_REPRO=1`; 3 of 9 assertions red (2 M1, 1 M5) |
+| 0.4 | `test/status-alias-corpus-phase-0-4` | 371 rows; one conflict (`monitor`); Go column is a hand port (see D8) |
+| 2.1 | `fix/web-status-write-honest` | done; component edits covered by `tsc` and review only (no DOM test tooling) |
+| 2.2 | `fix/web-job-done-explicit` | done; small server change (`timedOut` flag) |
+| 2.3 | `fix/update-dismiss-lock-recovery` | done; no real `apply` or SIGKILL run |
+| 2.4 + 2.6 | `docs/tracker-hired-states` | done |
+| 2.5 | `fix/explore-phase-timers` | race reproduced and fixed |
+
+**Phase 0 + 2 are merged into `main` (fast-forward, 2026-11-11, not pushed).**
+
+**Phase 1 (characterization, no behaviour change)** — three branches, merged into `integration/phase-1`, gate `test-all --quick` **5532 passed / 2 failed** (same two pre-existing failures; +58 passes). Not yet on `main`.
+
+| Item | Branch | What it pins |
+|---|---|---|
+| 1.1 | `test/status-normalizers-golden` | real `resolveCanonicalState`, `computeTrackerStats`, followup-cadence, merge-tracker, normalize-statuses, verify-pipeline and web `canonStatus` over all 371 corpus rows + a `zzz-not-a-status` probe. **Skipped:** analyze-patterns (private function, script runs on import, hard-coded `data/applications.md`), dedup-tracker (no status table), Go (not installed) |
+| 1.2 | `test/status-list-parity-phase-1-2` | each hard-coded list in six root scripts and the Go sources vs `states.yml`, with a 79-entry allowlist that fails on a new difference and on a stale entry |
+| 1.3 | `test/set-status-transition-matrix` | all 162 (from, to, `--force`) cells of `set-status` plus status-log content; `M1_FIXED = false` pins the non-canonical bug and is flipped in Phase 3.2 |
+
+New facts from Phase 1: (a) **`SKIP` is not terminal** — only Rejected, Discarded and Hired refuse without `--force`; the `transitions:` table is documentation, so Interview→Hired and Offer→Evaluated succeed unforced. (b) A forced terminal exit writes the same `status-log.tsv` row as any change, so overrides are invisible to `funnel-velocity`. (c) `stats.mjs` and `followup-cadence.mjs` lack the `hired` aliases that `states.yml` has (`accept`, `accepted`, `contratado`, `contratada`). (d) `merge-tracker`'s CLI treats `DUP`, `—`, `-`, `N/A` in the status column as score sentinels and skips the whole row (`tracker-parse` `looksLikeScoreCell`), so the corpus's per-spelling cells for those three are wrong. (e) 42 corpus cells for whitespace/bold-wrapped spellings were wrong: real `resolveCanonicalState` trims and strips `**`.
+
+**Phase 1 is merged into `main` (fast-forward, not pushed).**
+
+**Phase 3 (registry and gate), partly done** — six branches merged into `integration/phase-3`, gate `test-all --quick` **5684 passed / 2 failed** (same two pre-existing failures). Not yet on `main`. Plus one fix commit on the integration branch: `lib/status-gate.mjs` was missing from `SYSTEM_PATHS`, so `update-system` would not have shipped it and `set-status` would crash after an update.
+
+| Item | Branch | State |
+|---|---|---|
+| 3.1 | `feat/state-machine-runtime` | done: `lib/state-machine.mjs`, `machines.mjs` (`list`/`describe`/`check`), `tracker-utils` wrappers, AGENTS.md pointer |
+| 3.2 + 3.4 | `feat/set-status-gate` | done: `set-status` decides through `check()`; M1 bug fixed; dated terminals (`Rejected 2026-02-01`) stay refused; `reply-watch` in warn mode (applies the move, logs `WARN illegal transition`); repro tests became regression tests; `M1_FIXED = true` |
+| 3.3 | `refactor/scripts-use-state-registry` | **partial**: `analyze-patterns`, `merge-tracker`, `verify-pipeline` use the registry plus `lib/status-extra-aliases.mjs`. **Blocked:** `stats`, `followup-cadence`, `normalize-statuses`, because deriving from the registry gains spellings the golden test pins as unknown (`contratado`, `contratada`, `accept`, `accepted` in stats/followup-cadence; `rechazado` in normalize-statuses). Needs a named behaviour change (D10) |
+| 3.5 | `fix/sentinel-gc-unified` | done: one locked GC; keeps a sentinel on live PID or a `processing` batch row; repro green and un-gated. `gcStaleSentinels` is now async |
+| 3.6 | `fix/pipeline-inbox-single-writer` | done: `lib/pipeline-inbox.mjs`, all pipeline.md writers locked and atomic; OpenRouter rows now move to Processed; `[!]` written only on an OpenRouter evaluation error. Not wired: `cmdEvaluate` null results, non-English/Spanish section headers (D11) |
+| 3.7 | `fix/plugin-lock-hardening` | done: corrupt `plugins.lock` refused, atomic locked writes, `repin()` failures reported, `default` fails closed. `unpinned` auto-pin and bundled drift untouched (D9). New `acquireLockSync` in `lib/file-lock.mjs` |
+
+New decisions: **D10** may `stats`, `followup-cadence` and `normalize-statuses` gain the spellings `states.yml` already accepts (a named behaviour change with updated golden pins)? Recommendation: yes. **D11** should a failed `cmdEvaluate` mark `[!]`, and should code learn the other localized pipeline headers? Open flake to watch: one `--quick` run on 3.5 showed 3 failures that never reproduced (provider-health `--ci` cached run; passes alone).
+
+**Phase 3 is merged into `main` (not pushed).**
+
+**Phase 4 (consumers), partly done** — `integration/phase-4` holds three branches. Gate: `web` `npm test` 118/118, `tsc --noEmit` clean, `next build` OK, `test-all --quick` **5745 passed / 2 failed** (same two pre-existing failures). Not yet on `main`.
+
+| Item | Branch | State |
+|---|---|---|
+| 4.1 | `feat/web-state-registry` | done: `state-model.ts` (pure), `states.ts` reads `states.yml`, `MachineProvider`, `GET /api/machines/application-status`, `StatusSelect` shows legal moves first; a terminal cell is disabled with a CLI hint (corrections only offered for live states, because the server refuses terminal exits with 409) |
+| 4.2 | (none) | **deferred**: Go dashboard blocked on D8 (no Go) and D3 |
+| 4.3 | `feat/batch-state-machine` | done: `templates/machines/batch-job.yml`, generated block in `batch-runner.sh` via `batch/gen-states.mjs`, `tests/batch-state-machine.test.mjs` |
+| 4.4 | `feat/machine-doc-blocks` | done: `gen-machine-docs.mjs` (`--check`), `lib/machine-blocks.mjs`, generated blocks in AGENTS.md and `modes/{tracker,patterns,outcome,followup,reply-watch}.md`; translated modes not yet covered |
+| 4.5 | 4 branches on `integration/phase-4-5` | **done (declarations only, no code swaps, nothing enforced)**: `portal-health`, `scan-history`, `reply-candidate`, `agent-inbox`, `pdf-flag`, `apply-gate`, `triage-verdict`, `red-flag-level`, `legitimacy-tier`, `interview-round`, `interview-round-outcome` — 11 machines, 13 total with `application-status` and `batch-job`. Gate `test-all --quick` **6058 passed / 2 failed** (same two pre-existing). Not yet on `main` |
+
+**Phase 4.5 is merged into `main` (not pushed).**
+
+**Phase 5 (enforce and ratchet), partly done** — three branches plus one integration fix on `integration/phase-5`. Gate `test-all --quick` **6117 passed / 2 failed** (same two pre-existing); `validate-state-machines` and `gen-machine-docs --check` pass. Not yet on `main`.
+
+| Item | Branch | State |
+|---|---|---|
+| 5.1 | `feat/validate-state-machines` | done: `validate-state-machines.mjs` (registered in `SYSTEM_PATHS`) wired into `test-all`; rule 1 (49 allowlisted hard-coded state lists in 29 files, shrink-only, stale entries also fail), rule 2 (writers), rule 3 (generated blocks, calls the existing `--check`s), rule 4 left to the existing parity tests (they execute on import, nothing callable). Known blind spots (wrappers, object-field paths, regex literals with quotes) are in its header |
+| 5.2 | `feat/state-machines-doc` | done: generated `docs/STATE-MACHINES.md` (13 machines, Mermaid), `gen-machine-docs --check` verifies it, LF-normalised so CRLF checkouts are not stale |
+| 5.3 | (none) | **not started: needs the owner (D7) and a release of reviewed warnings** |
+| 5.4 | `feat/lock-consolidation` | done: `followup-seed` onto `lib/file-lock.mjs` (owner key `startedAt` → `started_at`); `agent-inbox` add/resolve now locked and atomic (positional `resolve N` unchanged); `plugins.lock` and `.update-lock` already on the shared lock; `batch-runner.sh` state lock adopts the same stale rules (dead pid recovers, live pid never, ownerless recovers by age, guard dir serialises reclaim). The M6 "silent lock-free fallback" no longer exists: the code already warns loudly (plan note was stale); parallel mode errors out when the lock is unavailable |
+
+**Phase 5 is merged into `main` (not pushed).** The plan file itself is committed (a literal block marker in it had to be reworded because the scanner read it as malformed).
+
+**3.3 remainder, done on `refactor/scripts-registry-d10` (D10 taken as recommended: yes).** `followup-cadence`, `stats` and `normalize-statuses` now resolve statuses through the registry. Named behaviour change: `stats` and `followup-cadence` gain `contratado`, `contratada`, `accept`, `accepted` (unknown → hired, 16 spellings incl. case and wrapped variants); `normalize-statuses` gains `rechazado` (unknown → Rejected, 6 spellings). No other golden cell changed. Parity allowlist 79 → 71. Side effect: input like `constructor` is now unknown instead of resolving to an object-prototype function (old `ALIASES[clean]` bug). `stats` keeps its own bucket display order, because registry order would move Hired. `rate_limited` in `stats` untouched (D12). Gate `test-all --quick` **6117 passed / 2 failed** (same two).
+
+**5.3 (enforce flip), done on `feat/reply-watch-enforce` at the owner's instruction, WITHOUT the planned release of warn-mode evidence.** The only guard still in warn mode was `reply-watch` (`set-status` has enforced since 3.2). `data/status-log.tsv` held 3 rows and no `WARN illegal transition` note, so there were no warnings to review; the flip rests on the owner's go-ahead and on D1(a) (live-to-live backward moves stay free, only leaving Hired/Rejected/Discarded is refused). Behaviour change: when an operator-approved reply classification would leave a terminal state (e.g. a later "interview" email on a Rejected row), `reply-watch` now REFUSES it, leaves the row and ledger untouched and prints `Refused #N: illegal transition X -> Y ... node set-status.mjs N <State> --force`. Before, it applied the move and logged a WARN. Escape hatch: `JOBBER_REPLY_WATCH_GATE=warn` restores the 3.4 behaviour. Test `tests/reply-watch-warn.test.mjs` became `tests/reply-watch-gate.test.mjs` and pins both modes (7 enforce cells, 7 warn cells). Gate `test-all --quick` **6124 passed / 2 failed** (same two). Not yet on `main`. Not covered: `normalize-statuses` was meant to route through the gate in 3.4 but never did (it is a bulk normaliser with its own D4 flag-and-keep rule); `modes/reply-watch.md` and its translations do not yet mention the refusal.
+
+Rule-2 drift found by 5.1 and fixed at integration (documentary, no behaviour): `application-status` declared no `writers`, so it now lists `set-status`, `tracker-utils`, `reply-watch`, `merge-tracker`, `dedup-tracker`, `normalize-statuses` and `career.go`; `pdf-flag` gained `generate-pdf.mjs`; `scan-history` gained `openrouter-runner.mjs`. The rule-2 allowlist is now empty.
+
+Behaviour changes in 5.4 to name: `add` on the agent inbox waits up to 60 s for a held lock and leaves a transient `data/agent-inbox.md.lock`; an ownerless, old batch state lock is now recovered instead of timing out after 30 s; `STATE_LOCK_TIMEOUT_SECONDS` is env-overridable and `STATE_LOCK_STALE_SECONDS` is new. Known gap: bash `kill -0` treats a pid owned by another user as dead, where the Node lib treats `EPERM` as alive.
+
+Findings from 4.5 (all pinned in tests, none changed): (1) **M13 correction:** a false `skipped_expired` is permanent *even with* `recheck_after_days` — `shouldDedupScanHistoryRow` (`scan.mjs:911-923`) returns true for every non-`added` status before it reads the recheck setting; only `added` rows are rechecked. (2) `stats.mjs:295` counts `rate_limited` as a failure while `scan.mjs` skips it as "throttled, not dead", so `stats` can call a portal dead that `scan` would still scan; the classification is copy-pasted 3×. Fixing needs a decision (**D12**). (3) pdf-flag: `merge-tracker` upgrades only `❌`, `sync-pdf-flags` upgrades anything not `✅`; a full merge hides the gap because it calls sync at the end. The PDF cell can also hold a file path. (4) legitimacy-tier: `unconfirmed` (openrouter-runner) and `unknown` (eval-runner) are distinct strings in code today and group separately in analytics; declared as one extra state `unconfirmed` (alias `unknown`), departing from "English tiers only" (**D13**: fold or keep?). zh/zh-TW label the 3rd tier "suspected fake / EXPIRED" while English means ghost indicators only; ru/de/es/fr/pt emit no tier at all (M37). Web `legitimacyTone()` matches substrings, so every translated tier label renders "muted". (5) interview-round: a third vocabulary exists (`screening / technical / design-case-study / behavioral`); `peer-tech → technical` is lossy and `panel-mixed → onsite` is a reading — **D6 still open**, yml marked "proposed, pending D6". (6) apply-gate has only `filled` and `submitted`; the plan's `not-started` and "awaiting user review" appear nowhere in the docs and were not invented. (7) reply-candidate has no lifecycle field: `pending` is "exists in the file", classification is recomputed every run, `paste-reply` synthesizes a new `message_id` per paste. (8) agent-inbox `resolve N` positional hazard pinned by a test.
+
+Named behaviour change from 4.1: web `canonStatus` now trims whitespace and strips `**`, so wrapped spellings (`**Applied**`, ` Applied `) resolve like the CLI instead of passing through unknown. 4.1 also silently disabled the Phase 1 web golden check (`format.ts` imports `@/lib`, so the adapter warned and skipped); fixed by pointing the adapter at `state-model.ts` and pinning the 32 spellings that differ from the corpus. Lesson: a golden adapter that warns-and-skips on import failure hides regressions; consider making that a failure in Phase 5.
+
+Gates on the Phase 0 + 2 integration branch: `web` `npm test` 93/93, `tsc --noEmit` clean, `test-all --quick` **5474 passed / 2 failed** (the same two pre-existing failures as `main`, +8 net passes from new tests). `go test` not run (Go not installed).
+
 ## 6. Decisions the owner must make (the plan will not guess)
 
 | # | Question | Options | Recommendation and why |
@@ -327,6 +435,8 @@ Each item needs a test that fails before the fix and passes after it (control ca
 | **D5** | Should the TUI get `Offer` and `Hired` tabs? | yes · no | **Yes**, for parity with the web app; it's cheap |
 | **D6** | One interview-round vocabulary? | the debrief/practice set · the interview-prep set · a merged set | **Merged set with aliases** (e.g. `recruiter-screen` ≈ `screen`), so existing prep files remain valid |
 | **D7** | Should old warn-mode guards become enforcing (Phase 5.3)? | after one release · never · per guard | **Per guard, after reviewing the warning log** |
+| **D8** | Go is not installed on the dev machine used so far, so `go test ./...` and the real `NormalizeStatus` output cannot be run. How do we close that? | install Go · run the Go gate in CI/another machine · skip Go phases | **Install Go** before Phase 1.1/4.2. The alias corpus's Go column is a hand port, not real output |
+| **D9** | Bundled plugins whose files changed without a version bump are re-pinned and loaded silently (`_engine.mjs:579`). Keep that trust assumption? | keep · warn · require consent | **Warn at least**; consent is stricter than the "reviewed-by-construction" comment justifies |
 
 ---
 

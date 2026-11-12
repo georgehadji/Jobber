@@ -53,6 +53,7 @@ import { join, dirname, basename, resolve, isAbsolute, relative, sep } from 'pat
 import { fileURLToPath, pathToFileURL } from 'url';
 import { createHash, randomUUID } from 'crypto';
 import { tmpdir } from 'os';
+import { acquireLock, LockTimeoutError, OWNERLESS_GRACE_MS } from './lib/file-lock.mjs';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import {
   resolveCadenceConfig,
@@ -75,11 +76,7 @@ export const FOLLOWUPS_HEADER = [
 
 const FOLLOWUPS_LOCK_PREFIX = 'jobber-followups-';
 
-/**
- * Minimum age before directory age alone may condemn an ownerless lock.
- * See `lockCanRecover` for why the age check needs a floor.
- */
-export const OWNERLESS_GRACE_MS = 1_000;
+export { OWNERLESS_GRACE_MS };
 
 /** Structured error carrying an exit-code-mapping `code`. */
 export class SeedError extends Error {
@@ -237,156 +234,34 @@ function resolveLockDir(explicitLockDir, followupsPath) {
   return resolveFollowupsLockDir(process.env.JOBBER_FOLLOWUPS_LOCK, lockKey);
 }
 
-function sleep(ms) {
-  return new Promise(res => setTimeout(res, ms));
-}
-
-function processIsAlive(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err?.code === 'EPERM';
-  }
-}
-
-function readLockOwner(lockDir) {
-  try {
-    return JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf-8'));
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Decide whether an existing lock can be safely recovered. Owner-PID liveness
- * wins; directory age is only consulted when the metadata is missing.
- *
- * That age fallback needs a floor. A lock is ownerless by construction — not
- * by accident — for the instant between its `mkdirSync` and its `owner.json`
- * write. Judging it on `age > staleMs` alone lets a caller with an aggressive
- * staleMs delete a lock created microseconds ago, stealing it from a winner
- * still inside its acquisition window and putting two writers into the
- * read-check-append critical section. OWNERLESS_GRACE_MS is a lower bound on
- * that patience, never a cap: a larger caller staleMs still wins, and a
- * genuinely abandoned lock still ages out.
- *
- * @param {string} lockDir - Directory that represents the active lock.
- * @param {number} staleMs - Age threshold for metadata-free lock recovery, floored at OWNERLESS_GRACE_MS.
- * @returns {boolean} True when the caller may remove and recreate the lock.
- */
-/**
- * Resolve the ownerless-lock grace floor.
- *
- * Overridable because the floor is a *wall-clock* window, and a test that
- * stamps a lock N ms old then asserts it is still respected only holds if the
- * child process boots and checks within the remaining budget. Node startup on
- * a loaded machine can exceed the 1s default on its own, which made that
- * assertion track machine load rather than lock semantics. Tests widen the
- * floor instead of racing it; the production default is unchanged.
- *
- * @returns {number} Grace floor in milliseconds.
- */
-function ownerlessGraceMs() {
-  return envInt('JOBBER_FOLLOWUPS_LOCK_GRACE_MS', OWNERLESS_GRACE_MS);
-}
-
-function lockCanRecover(lockDir, staleMs) {
-  const owner = readLockOwner(lockDir);
-  if (owner?.pid) return !processIsAlive(owner.pid);
-  try {
-    return Date.now() - statSync(lockDir).mtimeMs > Math.max(staleMs, ownerlessGraceMs());
-  } catch {
-    return true;
-  }
-}
-
-/**
- * Acquire an exclusive filesystem lock covering the read-check-append
- * critical section for data/follow-ups.md. Mirrors merge-tracker.mjs's
- * tracker lock: atomic `mkdirSync`, an `owner.json` with pid/timestamp,
- * pid-alive detection, stale-lock recovery, and retry/backoff.
+ * Acquire the follow-ups lock via the shared lib/file-lock.mjs (same lock
+ * directory as before; the shared implementation owns stale recovery).
+ * JOBBER_FOLLOWUPS_LOCK_GRACE_MS is folded into staleMs: the shared ownerless
+ * floor is max(staleMs, OWNERLESS_GRACE_MS), so widening staleMs is equivalent.
  *
  * @param {string} lockDir
  * @param {string} followupsPath - Recorded in owner.json for diagnostics.
- * @param {{timeoutMs?: number, retryMs?: number, staleMs?: number}} [options] - `staleMs` is floored at OWNERLESS_GRACE_MS.
+ * @param {{timeoutMs?: number, retryMs?: number, staleMs?: number}} [options]
  * @returns {Promise<{release: Function}>}
  */
 async function acquireFollowupsLock(lockDir, followupsPath, options = {}) {
-  const timeoutMs = options.timeoutMs ?? 60_000;
-  const retryMs = options.retryMs ?? 75;
-  const staleMs = options.staleMs ?? 10 * 60_000;
-  const recoverGuardDir = `${lockDir}.recover`;
-  const token = randomUUID();
-  const startedAt = Date.now();
-
-  while (Date.now() - startedAt < timeoutMs) {
-    try {
-      mkdirSync(lockDir);
-      try {
-        writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({
-          pid: process.pid,
-          token,
-          startedAt: new Date().toISOString(),
-          followups: followupsPath,
-        }, null, 2));
-      } catch (writeErr) {
-        // We own the directory but could not record the owner: remove it, or every other writer
-        // waits out the ownerless-lock grace window behind a lock nobody holds.
-        rmSync(lockDir, { recursive: true, force: true });
-        throw writeErr;
-      }
-
-      let released = false;
-      return {
-        release() {
-          if (released) return;
-          released = true;
-          const owner = readLockOwner(lockDir);
-          if (owner?.token === token) {
-            rmSync(lockDir, { recursive: true, force: true });
-          }
-        },
-      };
-    } catch (err) {
-      if (err?.code !== 'EEXIST') throw err;
-
-      let hasRecoverGuard = false;
-      try {
-        mkdirSync(recoverGuardDir);
-        hasRecoverGuard = true;
-      } catch (guardErr) {
-        if (guardErr?.code !== 'EEXIST') throw guardErr;
-        // A process killed between creating the guard and its cleanup leaves
-        // the guard behind forever, permanently disabling stale-lock recovery
-        // for every future writer. The guard normally lives for milliseconds,
-        // so an old one is judged stale by the same age rule as a
-        // metadata-free lock and removed; the next loop iteration can then
-        // take the guard and run recovery. Removing it unconditionally would
-        // instead let two writers recover the same lock at once, which is
-        // exactly what the guard exists to prevent.
-        if (lockCanRecover(recoverGuardDir, staleMs)) {
-          rmSync(recoverGuardDir, { recursive: true, force: true });
-        }
-      }
-
-      if (hasRecoverGuard) {
-        try {
-          if (lockCanRecover(lockDir, staleMs)) {
-            rmSync(lockDir, { recursive: true, force: true });
-            continue;
-          }
-        } finally {
-          rmSync(recoverGuardDir, { recursive: true, force: true });
-        }
-      }
-
-      await sleep(retryMs);
+  const staleMs = Math.max(options.staleMs ?? 10 * 60_000, envInt('JOBBER_FOLLOWUPS_LOCK_GRACE_MS', 0));
+  try {
+    return await acquireLock(followupsPath, {
+      lockDir,
+      timeoutMs: options.timeoutMs,
+      retryMs: options.retryMs,
+      staleMs,
+      kind: 'follow-ups',
+      owner: { followups: followupsPath },
+    });
+  } catch (err) {
+    if (err instanceof LockTimeoutError) {
+      throw new SeedError('LOCK_TIMEOUT', `Timed out waiting for follow-ups lock at ${lockDir}`);
     }
+    throw err;
   }
-
-  throw new SeedError('LOCK_TIMEOUT', `Timed out waiting for follow-ups lock at ${lockDir}`);
 }
 
 // --- Atomic write (mirrors writeFileAtomic in tracker.mjs / merge-tracker.mjs) --

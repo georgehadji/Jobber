@@ -1,0 +1,28 @@
+# Jobber — red-flag-level machine (STATE-MACHINES-PLAN M21 / 4.5). PROSE ONLY.
+# The warning levels live in modes/interview-redflag.md (Step 4 table). The report line is
+# `**Warning level:** {emoji} {label}`, where {label} is the table's Label column; the level
+# names are the states. Levels are assigned once per company from the red-flag score.
+id: red-flag-level
+persisted_in: "prose only: modes/interview-redflag.md"
+states:
+  - id: none
+    label: None
+    aliases: [No structural red flags detected]
+    terminal: true
+    description: Red-flag score 0-1. No structural red flags detected
+  - id: caution
+    label: Caution
+    aliases: [Enter with eyes open]
+    terminal: true
+    description: Red-flag score 2-3. Shown as the emoji plus "Enter with eyes open"
+  - id: warning
+    label: Warning
+    aliases: [Reconsider]
+    terminal: true
+    description: Red-flag score 4 or more. Shown as the emoji plus "Reconsider"; the blacklist-suggestion sub-block applies
+transitions: {}
+policy:
+  backward_between_live: forbidden
+  unknown_input: reject
+  exit_terminal: forbidden
+writers: [interview-redflag]

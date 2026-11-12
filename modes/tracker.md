@@ -18,17 +18,19 @@ With the optional Via column (intermediary channel, #1596) after Company:
 - **Unknown end employer** (recruiter hasn't named the client yet): Company = `?` (the structural marker — never the word "Confidential", which is locale-dependent and collides with real firm names), Via = the agency, and a distinguishing descriptor in Notes (e.g. `fintech, Leeds`). Display it to the user as "Confidential (via {Via})".
 - The row's identity is its `#` (report number) — Company is display data and changes at most once, at reveal.
 
-Possible states: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` → `Hired` / `Rejected` / `Discarded` / `SKIP`
+Possible states: <!-- machine:application-status:inline begin -->`Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` → `Hired` / `Rejected` / `Discarded` / `SKIP`<!-- machine:application-status:inline end -->
 
-- `Evaluated` = offer evaluated with report, pending decision
-- `Applied` = the candidate submitted their application
+<!-- machine:application-status:list begin -->
+- `Evaluated` = Offer evaluated with report, pending decision
+- `Applied` = Application submitted
 - `Responded` = Company has responded (not yet interview)
-- `Interview` = active interview process
-- `Offer` = job offer received
-- `Hired` = offer accepted, job landed (terminal success)
-- `Rejected` = rejected by company
-- `Discarded` = discarded by candidate or offer closed
-- `SKIP` = doesn't fit, don't apply
+- `Interview` = Active interview process
+- `Offer` = Offer received
+- `Rejected` = Rejected by company (terminal)
+- `Discarded` = Discarded by candidate or offer closed (terminal)
+- `SKIP` = Doesn't fit, don't apply
+- `Hired` = Offer accepted, job landed! (terminal)
+<!-- machine:application-status:list end -->
 
 If the user asks to update a state, use the canonical CLI — `node set-status.mjs <report#|company> <state>` — rather than hand-editing the row: it validates the state, holds the tracker lock, and appends the transition to `data/status-log.tsv` (the ledger `funnel-velocity.mjs` reads). When the user states the real event date ("they replied on Tuesday", "rejected me last week"), pass `--on YYYY-MM-DD` so the ledger records when it actually happened, not when it was typed in. Hand-edit only what set-status can't express (non-status cells).
 

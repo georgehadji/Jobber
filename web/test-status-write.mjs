@@ -1,64 +1,97 @@
-// Interpreting POST /api/status responses so the UI never claims a refused write succeeded.
-// Run: node --test test-status-write.mjs
-// Before: decision-card ignored res.ok (card vanished on 409), assistant-console ignored the response
-// ("Marked #n"), status-select reverted silently. Now all three go through postStatus().
+// Status writes must report failure honestly (STATE-MACHINES-PLAN M2 / Phase 2.1).
+// postStatus() is the single response->result mapping used by decision-card, status-select and the
+// assistant console; dispatch(setStatus) is the assistant's confirm path. No DOM is available (no
+// new deps), so we drive the shared logic with a mocked fetch / ctx instead of rendering.
+//
+// Run:  node --test test-status-write.mjs
+
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readStatusWriteResult, postStatus } from "./src/lib/core/status-write.ts";
+import { readFileSync } from "node:fs";
+import yaml from "js-yaml";
+import "./alias-hooks.mjs"; // registry.ts imports "@/lib/core/state-model": needs the alias loader (dynamic import below)
+import { machineFromDoc } from "./src/lib/core/state-model.ts";
+import { postStatus } from "./src/lib/status-write.ts";
+const { dispatch } = await import("./src/app/actions/registry.ts");
+const machine = machineFromDoc(yaml.load(readFileSync(new URL("../templates/states.yml", import.meta.url), "utf8")));
 
-const json = (obj, status) => new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
+const json = (status, body) => async () => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-test("200 { ok: true } is a success (control)", async () => {
-  assert.deepEqual(await readStatusWriteResult(json({ ok: true, status: "Applied" }, 200)), { ok: true });
+test("control: a 200 response is a success and posts {n,status} to /api/status", async () => {
+  let seen;
+  const r = await postStatus("12", "Applied", async (url, init) => {
+    seen = { url, method: init.method, body: JSON.parse(init.body) };
+    return new Response(JSON.stringify({ ok: true, status: "Applied" }), { status: 200 });
+  });
+  assert.deepEqual(r, { ok: true });
+  assert.deepEqual(seen, { url: "/api/status", method: "POST", body: { n: "12", status: "Applied" } });
 });
 
-test("409 terminal-state refusal keeps the server message verbatim", async () => {
-  const msg = "#12 is Rejected (terminal); legal moves: Evaluated, Applied. Use --force to override.";
-  assert.deepEqual(await readStatusWriteResult(json({ error: msg }, 409)), { ok: false, status: 409, message: msg });
+for (const [code, msg] of [
+  [409, "refused: Hired is terminal"],
+  [404, "no tracker row #12"],
+  [423, "tracker is locked"],
+]) {
+  test(`${code} is a failure carrying the server's own message`, async () => {
+    const r = await postStatus("12", "Applied", json(code, { error: msg }));
+    assert.equal(r.ok, false, `HTTP ${code} must not be reported as success`);
+    assert.equal(r.error, msg);
+  });
+}
+
+test("a non-JSON error body still fails, with the HTTP code in the message", async () => {
+  const r = await postStatus("12", "Applied", async () => new Response("<html>boom</html>", { status: 500 }));
+  assert.equal(r.ok, false);
+  assert.match(r.error, /500/);
 });
 
-test("404 not found and 423 lock timeout carry their own status and message", async () => {
-  assert.deepEqual(await readStatusWriteResult(json({ error: "no tracker row 999" }, 404)), { ok: false, status: 404, message: "no tracker row 999" });
-  assert.deepEqual(await readStatusWriteResult(json({ error: "tracker is locked" }, 423)), { ok: false, status: 423, message: "tracker is locked" });
+test("a network failure is a failure, not a throw", async () => {
+  const r = await postStatus("12", "Applied", async () => {
+    throw new TypeError("fetch failed");
+  });
+  assert.equal(r.ok, false);
+  assert.match(r.error, /network/i);
 });
 
-test("non-JSON body falls back to a generic message naming the HTTP status", async () => {
-  const r = await readStatusWriteResult(new Response("<html>Bad Gateway</html>", { status: 502 }));
-  assert.deepEqual(r, { ok: false, status: 502, message: "Status update failed (HTTP 502)." });
+// ── assistant confirm path ────────────────────────────────────────────────────────────────────
+const baseCtx = (writeStatus) => ({ machine, applications: [{ n: "12", company: "Acme", role: "Engineer" }], writeStatus });
+
+async function confirmRun(writeStatus) {
+  const res = dispatch("setStatus", { n: "12", status: "applied" }, baseCtx(writeStatus));
+  assert.equal(res.status, "confirm", "setStatus must ask for confirmation first");
+  return res.run();
+}
+
+test("control: confirmed setStatus claims 'Marked' only when the write succeeded", async () => {
+  const calls = [];
+  const info = await confirmRun(async (n, s) => (calls.push([n, s]), { ok: true }));
+  assert.deepEqual(calls, [["12", "Applied"]]);
+  assert.equal(info.note, "Marked #12 as Applied.");
+  assert.equal(info.error, undefined);
 });
 
-test("empty body falls back to the generic message", async () => {
-  const r = await readStatusWriteResult(new Response("", { status: 409 }));
-  assert.deepEqual(r, { ok: false, status: 409, message: "Status update failed (HTTP 409)." });
+test("confirmed setStatus on a refused write reports the server message and never says 'Marked'", async () => {
+  const info = await confirmRun(async () => ({ ok: false, error: "refused: Hired is terminal" }));
+  assert.match(info.error ?? "", /refused: Hired is terminal/);
+  assert.doesNotMatch(JSON.stringify(info), /Marked/);
 });
 
-test("JSON without a string error field falls back to the generic message", async () => {
-  assert.deepEqual(await readStatusWriteResult(json({ error: 5 }, 409)), { ok: false, status: 409, message: "Status update failed (HTTP 409)." });
-  assert.deepEqual(await readStatusWriteResult(json(null, 409)), { ok: false, status: 409, message: "Status update failed (HTTP 409)." });
-});
-
-test("postStatus: fetch rejection resolves to a network failure, never throws", async () => {
-  const orig = globalThis.fetch;
-  globalThis.fetch = async () => { throw new TypeError("fetch failed"); };
-  try {
-    assert.deepEqual(await postStatus("12", "Applied"), { ok: false, status: 0, message: "Couldn't reach the server. Status not changed." });
-  } finally {
-    globalThis.fetch = orig;
+// ── states and tabs come from ctx.machine (no list in registry.ts) ─────────────────────────────────
+test("setStatus accepts every machine state (any case) and ignores a non-state (control)", () => {
+  for (const s of machine.states) {
+    const res = dispatch("setStatus", { n: "12", status: s.label.toUpperCase() }, baseCtx(async () => ({ ok: true })));
+    assert.equal(res.status, "confirm", `${s.label} must be settable`);
+    assert.match(res.summary, new RegExp(`→ ${s.label}\\?$`));
   }
+  const bad = dispatch("setStatus", { n: "12", status: "Banana" }, baseCtx(async () => ({ ok: true })));
+  assert.equal(bad.status, "ignored");
 });
 
-test("postStatus: sends {n,status} and maps a 409 end to end; a 200 is ok (control)", async () => {
-  const orig = globalThis.fetch;
+test("filterPipeline keeps a tab only if the machine has it (control: a bogus tab is dropped)", () => {
   const seen = [];
-  globalThis.fetch = async (url, init) => {
-    seen.push([url, init.method, init.body]);
-    return seen.length === 1 ? json({ error: "refused: terminal" }, 409) : json({ ok: true, status: "Applied" }, 200);
-  };
-  try {
-    assert.deepEqual(await postStatus("7", "Applied"), { ok: false, status: 409, message: "refused: terminal" });
-    assert.deepEqual(await postStatus("7", "Applied"), { ok: true });
-    assert.deepEqual(seen[0], ["/api/status", "POST", JSON.stringify({ n: "7", status: "Applied" })]);
-  } finally {
-    globalThis.fetch = orig;
-  }
+  const ctx = { ...baseCtx(async () => ({ ok: true })), replace: (p) => seen.push(p) };
+  dispatch("filterPipeline", { tab: "hired" }, ctx);
+  dispatch("filterPipeline", { tab: "inbox" }, ctx);
+  dispatch("filterPipeline", { tab: "BANANA" }, ctx);
+  assert.deepEqual(seen, ["/pipeline?tab=HIRED", "/pipeline?tab=INBOX", "/pipeline"]);
 });

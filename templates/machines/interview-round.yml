@@ -1,0 +1,69 @@
+# Jobber — interview round vocabulary (STATE-MACHINES-PLAN M34, Phase 4.5).
+# PROPOSED, PENDING D6: the merged set below is the plan's recommendation (§6 D6,
+# "merged set with aliases"); the owner has not decided yet. It is a SUPERSET: it
+# changes no behaviour, and no mode or script reads it yet.
+#
+# Three vocabularies exist today for the same idea:
+#   1. `round:` frontmatter enum (modes/interview/debrief.md:206, practice.md:144, and the
+#      de/es/fr/pt/zh mirrors): screen | hiring-manager | technical | system-design | behavioral | onsite | final
+#   2. "Audience" set (modes/interview-prep.md:126-129): recruiter-screen | hiring-manager | peer-tech | panel-mixed
+#   3. `Round type:` template line (debrief.md:169, practice.md:117 and mirrors):
+#      screening | technical | design-case-study | behavioral
+# Canonical ids = set 1 (the only one written into frontmatter). The rest are aliases:
+#   recruiter-screen, screening   -> screen
+#   design-case-study             -> system-design
+#   peer-tech                     -> technical   (LOSSY: peer-tech also covers system design and
+#                                                 take-home review, interview-prep.md:128; D6 should confirm)
+#   panel-mixed                   -> onsite      (JUDGEMENT: "Onsite / loop with multiple interviewer
+#                                                 types", interview-prep.md:129)
+# The round-outcome vocabulary lives in templates/machines/interview-round-outcome.yml.
+# Transitions are ADVISORY (typical process order); the vocabulary is the point. Rounds are not
+# strictly ordered in practice, so backward moves stay free corrections.
+id: interview-round
+persisted_in: "interview-prep/sessions/*.md (round: frontmatter) + interview-prep/{company}-{role}.md (Audience Map)"
+initial: screen
+states:
+  - id: screen
+    label: Screen
+    aliases: [recruiter-screen, screening]
+    terminal: false
+    description: First call, recruiter / HR / TA (15-30 min). Fit gate - motivation, comp, location/visa, timeline.
+  - id: hiring-manager
+    label: Hiring manager
+    terminal: false
+    description: Manager or skip-level conversation (30-45 min). Why this role, scope alignment, leadership signals.
+  - id: technical
+    label: Technical
+    aliases: [peer-tech]
+    terminal: false
+    description: IC technical round (live coding, domain depth, take-home review). `peer-tech` is the interview-prep audience spelling.
+  - id: system-design
+    label: System design
+    aliases: [design-case-study]
+    terminal: false
+    description: Design / case-study round.
+  - id: behavioral
+    label: Behavioral
+    terminal: false
+    description: Behavioral round.
+  - id: onsite
+    label: Onsite
+    aliases: [panel-mixed]
+    terminal: false
+    description: Onsite / loop with several interviewer types in one block. `panel-mixed` is the interview-prep audience spelling.
+  - id: final
+    label: Final
+    terminal: true
+    description: Final round.
+transitions:
+  screen: [hiring-manager, technical]
+  hiring-manager: [technical, onsite, final]
+  technical: [system-design, behavioral, hiring-manager, onsite, final]
+  system-design: [behavioral, onsite, final]
+  behavioral: [onsite, final]
+  onsite: [final]
+policy:
+  backward_between_live: correction
+  unknown_input: flag
+  exit_terminal: force
+writers: [modes/interview/debrief.md, modes/interview/practice.md, modes/interview-prep.md]

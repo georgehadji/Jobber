@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { CompanyLogo } from "@/components/company-logo";
 import { scoreNum, scoreTone } from "@/lib/format";
 import type { Application } from "@/lib/jobber";
-import { postStatus } from "@/lib/core/status-write";
+import { postStatus } from "@/lib/status-write";
 
 // Awaiting-decision row: a scored role with no terminal status. One-tap Apply /
 // Skip writes back through the EXISTING /api/status (UPDATE-only, canonical states).
@@ -15,19 +15,19 @@ export function DecisionCard({ app }: { app: Application }) {
   const router = useRouter();
   const [busy, setBusy] = useState<"" | "Applied" | "Discarded">("");
   const [done, setDone] = useState<string | null>(null);
-  const [err, setErr] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const score = scoreNum(app.score);
   const tone = scoreTone(app.score);
 
   const setStatus = async (status: "Applied" | "Discarded") => {
     setBusy(status);
-    setErr("");
-    const r = await postStatus(String(app.n), status);
+    setError(null);
+    const r = await postStatus(app.n, status);
     if (r.ok) {
       setDone(status);
       router.refresh();
     } else {
-      setErr(r.message); // keep the card; the server refused
+      setError(r.error); // keep the card: the row did not change
     }
     setBusy("");
   };
@@ -78,9 +78,9 @@ export function DecisionCard({ app }: { app: Application }) {
           <FileText className="size-4" />
         </a>
       </div>
-      {err && (
-        <p role="alert" className="text-xs text-red-500">
-          {err}
+      {error && (
+        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
+          {error}
         </p>
       )}
     </div>

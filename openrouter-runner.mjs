@@ -29,6 +29,7 @@ import {
 } from './reserve-report-num.mjs';
 import { TokenAccumulator, formatBreakdown, normalizeOpenAIUsage } from './lib/token-tracker.mjs';
 import { baseUrlFor, apiKeyFor, pinnedModelFor, MAX_OUTPUT_TOKENS } from './lib/llm-providers.mjs';
+import { appendPending, markProcessed, markError } from './lib/pipeline-inbox.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const tracker = new TokenAccumulator();
@@ -491,21 +492,19 @@ function readPipeline() {
   return pending;
 }
 
-function markPipelineDone(url) {
-  let content = readFile('data/pipeline.md') ?? '';
-  const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  content = content.replace(
-    new RegExp(`^(- \\[ \\] ${escaped}.*)$`, 'm'),
-    (ln) => ln.replace('- [ ]', '- [x]')
-  );
-  writeFile('data/pipeline.md', content);
+const PIPELINE_PATH = path.join(__dirname, 'data', 'pipeline.md');
+
+// Every pipeline.md mutation goes through lib/pipeline-inbox.mjs (pipeline-lock
+// + atomic write): the row moves to the Processed section, never flipped in place.
+async function markPipelineDone(url, reportRelPath) {
+  const num = path.basename(reportRelPath ?? '').match(/^(\d+)-/)?.[1];
+  await markProcessed(PIPELINE_PATH, url, { ref: num ? `#${num}` : '#--' });
 }
 
-function addToPipeline(entries) {
+async function addToPipeline(entries) {
   const history = readFile('data/scan-history.tsv') ?? 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\n';
   const seenUrls = new Set(history.split('\n').slice(1).map(l => l.split('\t')[0]).filter(Boolean));
 
-  const existingPipeline = readFile('data/pipeline.md') ?? '# Pipeline\n\n## Pending\n';
   const existingApps     = readFile('data/applications.md') ?? '';
   // extract URLs already tracked in applications.md (mirrors scan.mjs dedup logic)
   const appliedUrls = new Set(
@@ -514,26 +513,29 @@ function addToPipeline(entries) {
       .filter(Boolean).map(m => m[0])
   );
 
-  const newEntries = entries.filter(e => {
-    if (seenUrls.has(e.url)) return false;
-    if (appliedUrls.has(e.url)) return false;
-    // skip if already queued in pipeline
-    if (existingPipeline.includes(e.url)) return false;
-    return true;
+  // Dedup against the pipeline text read INSIDE the lock, then append to the
+  // Pending section in the same locked, atomic write.
+  let newEntries = [];
+  await appendPending(PIPELINE_PATH, (existingPipeline) => {
+    newEntries = entries.filter(e => {
+      if (seenUrls.has(e.url)) return false;
+      if (appliedUrls.has(e.url)) return false;
+      // skip if already queued in pipeline
+      if (existingPipeline.includes(e.url)) return false;
+      return true;
+    });
+    return newEntries.map(e => `- [ ] ${e.url} | ${e.company} | ${e.role}`);
   });
 
   if (newEntries.length === 0) return 0;
 
   const today = new Date().toISOString().split('T')[0];
-  let pipeline = existingPipeline;
   let hist = history;
 
   for (const e of newEntries) {
-    pipeline += `- [ ] ${e.url} | ${e.company} | ${e.role}\n`;
     hist     += `${e.url}\t${today}\tscan\t${e.role}\t${e.company}\tadded\t${e.location ?? ''}\n`;
   }
 
-  writeFile('data/pipeline.md', pipeline);
   writeFile('data/scan-history.tsv', hist);
   return newEntries.length;
 }
@@ -593,7 +595,7 @@ async function cmdScan() {
     }
   }
 
-  const added = addToPipeline(found);
+  const added = await addToPipeline(found);
   console.log(`\n✅ Scan complete. ${found.length} matches, ${added} new entries added to pipeline.md.`);
   if (added > 0) {
     console.log('\n→  node openrouter-runner.mjs pipeline\n   to evaluate pending listings.\n');
@@ -708,11 +710,23 @@ async function cmdPipeline(ctx) {
   for (let i = 0; i < pending.length; i++) {
     const item = pending[i];
     console.log(`\n[${i + 1}/${pending.length}] ${item.company} — ${item.role}`);
+    let report = null;
+    let evalError = null;
     try {
-      const report = await cmdEvaluate(item.url, ctx);
-      if (report) markPipelineDone(item.url);
+      report = await cmdEvaluate(item.url, ctx);
     } catch (e) {
+      evalError = e;
       console.error(`  Error: ${e.message}`);
+    }
+    // A thrown evaluation is an unambiguous error outcome with a reason: mark
+    // the row `[!]` instead of leaving it pending forever. A bare `null` return
+    // (fetch failed / provider error / no report number) stays pending: it
+    // carries no reason and can be transient (owner decision, see report).
+    try {
+      if (evalError) await markError(PIPELINE_PATH, item.url, evalError.message);
+      else if (report) await markPipelineDone(item.url, report);
+    } catch (e) {
+      console.error(`  Could not update pipeline.md: ${e.message}`);
     }
     if (i < pending.length - 1) {
       await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY_MS));

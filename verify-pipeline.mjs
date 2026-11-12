@@ -24,6 +24,8 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { looksLikeScoreCell, isSeparatorRow, isHeaderRow, resolveColumns } from './tracker-parse.mjs';
 import { gcStaleSentinels } from './tracker-utils.mjs';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
+import { extraStatusId } from './lib/status-extra-aliases.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original).
@@ -44,22 +46,9 @@ const STATES_FILE = existsSync(join(JOBBER, 'templates/states.yml'))
 mkdirSync(join(JOBBER, 'data'), { recursive: true });
 mkdirSync(REPORTS_DIR, { recursive: true });
 
-const CANONICAL_STATUSES = [
-  'evaluated', 'applied', 'responded', 'interview',
-  'offer', 'rejected', 'discarded', 'skip', 'hired',
-];
-
-const ALIASES = {
-  'evaluada': 'evaluated', 'condicional': 'evaluated', 'hold': 'evaluated', 'evaluar': 'evaluated', 'verificar': 'evaluated',
-  'aplicado': 'applied', 'enviada': 'applied', 'aplicada': 'applied', 'applied': 'applied', 'sent': 'applied',
-  'respondido': 'responded',
-  'entrevista': 'interview',
-  'oferta': 'offer',
-  'rechazado': 'rejected', 'rechazada': 'rejected',
-  'descartado': 'discarded', 'descartada': 'discarded', 'cerrada': 'discarded', 'cancelada': 'discarded',
-  'no aplicar': 'skip', 'no_aplicar': 'skip', 'monitor': 'skip', 'geo blocker': 'skip',
-  'contratado': 'hired', 'contratada': 'hired', 'hired': 'hired', 'accepted': 'hired', 'accept': 'hired',
-};
+// Canonical statuses and aliases come from the state registry (templates/states.yml),
+// plus the shared extra spellings (pending decision D2).
+const STATUS_MACHINE = loadMachine(APPLICATION_STATUS);
 
 let errors = 0;
 let warnings = 0;
@@ -122,7 +111,7 @@ for (const e of entries) {
   // Strip trailing dates
   const statusOnly = clean.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
 
-  if (!CANONICAL_STATUSES.includes(statusOnly) && !ALIASES[statusOnly]) {
+  if (!canonicalize(STATUS_MACHINE, statusOnly) && extraStatusId(statusOnly) === null) {
     error(`#${e.num}: Non-canonical status "${e.status}"`);
     badStatuses++;
   }
@@ -227,7 +216,7 @@ if (boldScores === 0) ok('No bold in scores');
 // stale; remove them here so they don't skew the next slot allocation.
 // Shared implementation in tracker-utils.mjs (same helper merge-tracker
 // calls pre-merge) so the age constant can never drift between the two.
-const staleSentinels = gcStaleSentinels(REPORTS_DIR, { log: warn });
+const staleSentinels = await gcStaleSentinels(REPORTS_DIR, { log: warn, trackerPath: APPS_FILE });
 if (staleSentinels === 0) ok('No stale reservation sentinels');
 
 // --- Check 9: Duplicate reports for the same company+role (#1425) ---

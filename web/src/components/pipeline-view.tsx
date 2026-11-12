@@ -10,22 +10,11 @@ import { CompanyLogo } from "@/components/company-logo";
 import { canonStatus, scoreNum, scoreTone, statusDot } from "@/lib/format";
 import { InboxTriage } from "@/components/inbox/inbox-triage";
 import { cn } from "@/lib/cn";
+import { useMachine } from "@/components/machine-provider";
+import { tabValues } from "@/lib/core/state-model";
 
-// INBOX (the triage queue) is the default tab; the rest filter the tracker.
-const TABS = [
-  "INBOX",
-  "ALL",
-  "EVALUATED",
-  "APPLIED",
-  "RESPONDED",
-  "INTERVIEW",
-  "OFFER",
-  "HIRED",
-  "REJECTED",
-  "DISCARDED",
-  "SKIP",
-] as const;
-type Tab = (typeof TABS)[number];
+// INBOX (the triage queue) is the default tab; the rest filter the tracker. The tab list is
+// derived from the status machine (INBOX, ALL, then every state) — see tabValues().
 
 const SORT_KEYS = ["company", "role", "score", "status", "date"] as const;
 type SortKey = (typeof SORT_KEYS)[number];
@@ -40,12 +29,14 @@ export function PipelineView({
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const machine = useMachine();
+  const TABS = useMemo(() => tabValues(machine), [machine]);
 
   // The URL is the SINGLE source of truth for tab/min/sort/dir, so the home stat
   // tiles' deep links AND the assistant's filterPipeline/navigate actions drive
   // the table identically (no useState mirror → no desync).
   const pTab = (params.get("tab") ?? "").toUpperCase();
-  const tab: Tab = (TABS as readonly string[]).includes(pTab) ? (pTab as Tab) : "INBOX";
+  const tab: string = TABS.includes(pTab) ? pTab : "INBOX";
   const pMin = parseFloat(params.get("min") ?? "");
   const minFilter: number | null = Number.isFinite(pMin) ? pMin : null;
   const pSort = params.get("sort") ?? "";
@@ -93,7 +84,7 @@ export function PipelineView({
   const filtered = useMemo(() => {
     if (tab === "INBOX") return [];
     let rows = applications;
-    if (tab !== "ALL") rows = rows.filter((r) => canonStatus(r.status).includes(tab));
+    if (tab !== "ALL") rows = rows.filter((r) => canonStatus(machine, r.status).includes(tab));
     if (minFilter != null) {
       rows = rows.filter((r) => {
         const n = scoreNum(r.score);
@@ -148,7 +139,7 @@ export function PipelineView({
               ? pendingInbox.length
               : t === "ALL"
                 ? applications.length
-                : applications.filter((r) => canonStatus(r.status).includes(t)).length;
+                : applications.filter((r) => canonStatus(machine, r.status).includes(t)).length;
           return (
             <button
               key={t}
@@ -225,7 +216,7 @@ export function PipelineView({
                   </td>
                   <td className="px-4 py-3 text-muted">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className={cn("size-1.5 shrink-0 rounded-full", statusDot(r.status))} />
+                      <span className={cn("size-1.5 shrink-0 rounded-full", statusDot(machine, r.status))} />
                       {r.status}
                     </span>
                   </td>

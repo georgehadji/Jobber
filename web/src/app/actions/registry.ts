@@ -10,16 +10,14 @@
 
 import type { Application, InboxJob } from "@/lib/jobber";
 import type { Job } from "@/components/jobs/job-store";
+import type { StatusResult } from "@/lib/status-write";
+import { displayLabels, tabValues, type StateMachineView } from "@/lib/core/state-model";
 
 export const AUTO_FIRE_MAX = 3; // fire ≤3 evaluations silently; confirm above that
 export const BATCH_CAP = 12; // hard ceiling on a single fan-out
 
-// Canonical states (templates/states.yml) — the web validates against the same set.
-const CANON_STATUS = ["Evaluated", "Applied", "Responded", "Interview", "Offer", "Hired", "Rejected", "Discarded", "SKIP"];
-
-const TAB_VALUES = [
-  "INBOX", "ALL", "EVALUATED", "APPLIED", "RESPONDED", "INTERVIEW", "OFFER", "HIRED", "REJECTED", "DISCARDED", "SKIP",
-] as const;
+// Canonical states and pipeline tabs come from the application-status machine (ctx.machine),
+// never from a list in this file.
 const SORT_VALUES = ["company", "role", "score", "status", "date"] as const;
 
 export type StartJobInput = {
@@ -32,6 +30,7 @@ export type StartJobInput = {
 };
 
 export type ActionCtx = {
+  machine: StateMachineView; // application-status machine (templates/states.yml) — states + pipeline tabs
   push: (path: string) => void; // router.push — section/detail change
   replace: (path: string) => void; // router.replace — incremental filter tweak
   startJob: (opts: StartJobInput) => string | null;
@@ -39,7 +38,7 @@ export type ActionCtx = {
   applications: Application[]; // tracker snapshot — resolve #n → company/role for confirms
   jobForUrl: (url: string) => Job | undefined; // skip-if-done / retry logic
   rememberFact: (fact: string) => void;
-  writeStatus: (n: string, status: string) => void; // UPDATE-only writeback via /api/status
+  writeStatus: (n: string, status: string) => Promise<StatusResult>; // UPDATE-only writeback via /api/status
   setApplyField: (idOrLabel: string, value: string) => void; // edit an apply-proxy answer
   startApply: (url: string) => void; // open the apply form-proxy for a posting URL
   applyExplore?: (patch: Record<string, unknown>, opts?: { merge?: boolean; run?: boolean }) => void; // build a FREE discovery search
@@ -76,11 +75,11 @@ function coerceProfile(raw: Record<string, unknown>): ProfilePatch {
   return out;
 }
 
-export type DoneInfo = { jobIds?: string[]; batchId?: string; note?: string };
+export type DoneInfo = { jobIds?: string[]; batchId?: string; note?: string; error?: string };
 export type DispatchResult =
   | ({ status: "done" } & DoneInfo)
   | { status: "ignored"; note?: string }
-  | { status: "confirm"; summary: string; run: () => DoneInfo };
+  | { status: "confirm"; summary: string; run: () => DoneInfo | Promise<DoneInfo> };
 
 // ── helpers ──────────────────────────────────────────────────────────────
 const isStr = (v: unknown): v is string => typeof v === "string" && v.length > 0;
@@ -123,7 +122,7 @@ const ACTIONS: Record<string, ActionDef> = {
     run: (raw, ctx) => {
       const sp = new URLSearchParams();
       const tab = typeof raw.tab === "string" ? raw.tab.toUpperCase() : "";
-      if ((TAB_VALUES as readonly string[]).includes(tab)) sp.set("tab", tab);
+      if (tabValues(ctx.machine).includes(tab)) sp.set("tab", tab);
       const min = typeof raw.min === "number" ? raw.min : parseFloat(String(raw.min ?? ""));
       if (Number.isFinite(min) && min >= 0 && min <= 5) sp.set("min", String(min));
       if (isStr(raw.q)) sp.set("q", String(raw.q).slice(0, 80));
@@ -256,16 +255,16 @@ const ACTIONS: Record<string, ActionDef> = {
     run: (raw, ctx) => {
       const n = String(raw.n ?? "").trim();
       const status = String(raw.status ?? "").trim();
-      const canon = CANON_STATUS.find((s) => s.toLowerCase() === status.toLowerCase());
+      const canon = displayLabels(ctx.machine).find((s) => s.toLowerCase() === status.toLowerCase());
       if (!n || !canon) return { status: "ignored", note: "need an application # and a canonical status" };
       const app = ctx.applications.find((a) => a.n === n);
       const label = app ? `${app.company} · ${app.role}` : `#${n}`;
       return {
         status: "confirm",
         summary: `Mark ${label} → ${canon}?`,
-        run: () => {
-          ctx.writeStatus(n, canon);
-          return { note: `Marked #${n} as ${canon}.` };
+        run: async () => {
+          const r = await ctx.writeStatus(n, canon);
+          return r.ok ? { note: `Marked #${n} as ${canon}.` } : { error: `Could not mark #${n} as ${canon}: ${r.error}` };
         },
       };
     },

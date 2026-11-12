@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
 import { jobberRoot } from "@/lib/jobber";
+import { machineFromDoc, type StateMachineView } from "@/lib/core/state-model";
 
 /**
  * ACL for templates/states.yml — the SINGLE SOURCE OF TRUTH for canonical
@@ -9,6 +10,10 @@ import { jobberRoot } from "@/lib/jobber";
  * web↔core contract we READ it live and never hardcode the list (the maintainer
  * once mis-listed it from memory — the file had one more). The FALLBACK below is
  * only a last resort if the file is unreadable, and is kept identical to the file.
+ *
+ * THIS FILE IS THE ONLY place the web app gets the state list, aliases and transitions
+ * (STATE-MACHINES-PLAN §4.4). Server code imports it; client components get the
+ * machine from <MachineProvider> and interpret it with lib/core/state-model.ts (pure).
  */
 export type CanonicalState = {
   id: string;
@@ -30,7 +35,34 @@ const FALLBACK: CanonicalState[] = [
   { id: "hired", label: "Hired", aliases: ["contratado", "contratada", "hired", "accepted", "accept"], description: "Offer accepted, job landed!", group: "hired" },
 ];
 
+// Forward edges + the rest of the document, mirrored for the unreadable-file path only.
+const FALLBACK_TRANSITIONS: Record<string, string[]> = {
+  evaluated: ["applied", "responded", "rejected", "discarded", "skip"],
+  applied: ["responded", "interview", "rejected", "discarded", "skip"],
+  responded: ["interview", "rejected", "discarded", "skip"],
+  interview: ["offer", "rejected", "discarded", "hired"],
+  offer: ["hired", "rejected", "discarded"],
+  rejected: [],
+  discarded: [],
+  skip: ["evaluated", "discarded"],
+  hired: [],
+};
+
 let cache: CanonicalState[] | null = null;
+let machineCache: StateMachineView | null = null;
+
+/** The application-status machine (states, aliases, transitions, terminal set, policy), read live. */
+export function readMachine(): StateMachineView {
+  if (machineCache) return machineCache;
+  try {
+    const raw = fs.readFileSync(path.join(jobberRoot(), "templates", "states.yml"), "utf8");
+    const m = machineFromDoc(yaml.load(raw));
+    if (m) return (machineCache = m);
+  } catch {
+    /* fall through to fallback */
+  }
+  return (machineCache = machineFromDoc({ states: FALLBACK, transitions: FALLBACK_TRANSITIONS })!);
+}
 
 export function readCanonicalStates(): CanonicalState[] {
   if (cache) return cache;

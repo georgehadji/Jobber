@@ -1,29 +1,39 @@
-// Pure terminal-state decision for a /api/run NDJSON stream (no React, no fetch).
-// The server emits exactly one `done` or `error` event; a stream that closes with
-// neither (crash, proxy cut) must NOT be banked as a success.
+// Consumes the NDJSON stream from POST /api/run. Pure (no React, no fetch) so the
+// done/error/cancel rules are unit-testable.
+//
+// A run is `done` ONLY on an explicit `done` event. A clean close without one (server
+// crash, dropped connection that looks like EOF) is an error, never a silent success.
+// On an early `error` event the reader is cancelled so the server's cancel() kills the
+// child and releases the tracker-write token instead of holding it until the child ends.
+export type RunEnd = { status: "done" } | { status: "error"; label: string };
+type Reader = { read(): Promise<{ done: boolean; value?: Uint8Array }>; cancel(): Promise<unknown> };
 
-export const UNEXPECTED_END_MESSAGE = "The run ended unexpectedly before finishing.";
-
-export function timeoutMessage(ms: number): string {
-  const minutes = Math.max(1, Math.round(ms / 60_000));
-  return `The run timed out after ${minutes} minute${minutes === 1 ? "" : "s"} and was stopped.`;
-}
-
-export type RunStreamFacts = {
-  sawDone: boolean;
-  sawError: boolean;
-  errorMessage?: string;
-  closedCleanly: boolean;
-  timedOut?: boolean;
-};
-
-export type RunFinal = { status: "done" | "error"; message?: string };
-
-// Precedence: an error event always wins over a done event (conservative: never
-// bank a run the server also flagged). `done` requires a seen `done` event.
-export function finalRunState(f: RunStreamFacts): RunFinal {
-  if (f.sawError) return { status: "error", message: f.errorMessage || "Error" };
-  if (f.timedOut) return { status: "error", message: "The run timed out and was stopped." };
-  if (f.sawDone) return { status: "done" };
-  return { status: "error", message: UNEXPECTED_END_MESSAGE };
+export async function consumeRunStream(reader: Reader, onEvent: (ev: { type?: string; [k: string]: unknown }) => void): Promise<RunEnd> {
+  const dec = new TextDecoder();
+  let buf = "";
+  let sawDone = false;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) !== -1) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      let ev: { type?: string; [k: string]: unknown };
+      try {
+        ev = JSON.parse(line);
+      } catch {
+        continue; // partial/garbled line
+      }
+      onEvent(ev);
+      if (ev.type === "done") sawDone = true;
+      else if (ev.type === "error") {
+        try { await reader.cancel(); } catch { /* already closed */ }
+        return { status: "error", label: (typeof ev.msg === "string" && ev.msg) || "Error" };
+      }
+    }
+  }
+  return sawDone ? { status: "done" } : { status: "error", label: "Run ended unexpectedly" };
 }

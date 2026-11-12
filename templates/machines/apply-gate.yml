@@ -1,0 +1,24 @@
+# Jobber — apply-gate machine (STATE-MACHINES-PLAN M21 / 4.5). PROSE ONLY.
+# The vocabulary lives in modes/apply.md (Step 8 and Step 9): the `**State:**` line of the
+# `## Application Answers` section of a report. No code writes it; the agent follows the mode.
+# Declaring is behaviour-neutral. The hard rule: the agent NEVER submits an application.
+# The `submitted` move is performed by the user, who clicks Submit in the ATS form.
+id: apply-gate
+persisted_in: "prose only: modes/apply.md"
+initial: filled
+states:
+  - id: filled
+    label: filled
+    terminal: false
+    description: Answers were written into the report's Application Answers section (State filled) and handed to the candidate for copy-paste or entered into the form. Nothing has been submitted. The agent stops here and waits for the candidate
+  - id: submitted
+    label: submitted
+    terminal: true
+    description: The candidate confirmed that they submitted the application. The user performs the submit action in the ATS, never the agent. Only then does the agent set the section to State submitted and run set-status Applied
+transitions:
+  filled: [submitted]
+policy:
+  backward_between_live: forbidden
+  unknown_input: reject
+  exit_terminal: forbidden
+writers: [apply]

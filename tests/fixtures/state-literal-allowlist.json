@@ -1,0 +1,98 @@
+{
+  "_comment": [
+    "Shrink-only allowlist for validate-state-machines.mjs (STATE-MACHINES-PLAN 4.7). Do NOT add entries to make a new site pass; derive from the registry instead.",
+    "rule1: file -> signatures of hard-coded canonical-state lists (sorted distinct labels, one entry per site). Delete an entry when its site is gone or derives from the registry.",
+    "rule2: file -> persisted files it writes although no machine lists it under writers:. Delete when the machine yml declares the writer or the write is removed.",
+    "A stale entry (matches nothing) fails the validator."
+  ],
+  "rule1": {
+    "analyze-patterns.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,hired,interview,offer,rejected,responded",
+      "applied,hired,interview,offer,responded",
+      "hired,interview,offer,responded"
+    ],
+    "company-history.mjs": [
+      "interview,offer,rejected,responded",
+      "interview,offer,rejected,responded"
+    ],
+    "dashboard/internal/data/career.go": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,evaluated,interview,offer,rejected,responded,skip",
+      "discarded,offer,rejected,skip",
+      "discarded,rejected,skip"
+    ],
+    "dashboard/internal/i18n/catalog.go": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,evaluated,interview,offer,rejected,responded,skip"
+    ],
+    "dashboard/internal/ui/screens/pipeline.go": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "discarded,hired,skip",
+      "discarded,rejected,skip"
+    ],
+    "dashboard/main.go": [
+      "discarded,hired,skip"
+    ],
+    "dedup-tracker.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"
+    ],
+    "followup-cadence.mjs": [
+      "applied,interview,responded"
+    ],
+    "stats.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,hired,interview,offer,rejected,responded",
+      "applied,interview,offer,responded"
+    ],
+    "test-all.mjs": [
+      "applied,discarded,evaluated,interview,offer,rejected"
+    ],
+    "tests/machine-docs.test.mjs": [
+      "applied,discarded,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,hired,interview,offer,rejected,responded,skip"
+    ],
+    "tests/set-status-transition-matrix.test.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "discarded,hired,rejected"
+    ],
+    "tests/state-machine.test.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "discarded,hired,rejected"
+    ],
+    "tests/stats.test.mjs": [
+      "applied,evaluated,interview"
+    ],
+    "tests/status-list-parity.test.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"
+    ],
+    "tests/status-normalizers-golden.test.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"
+    ],
+    "tests/tracker-writer-transaction-lock.test.mjs": [
+      "applied,evaluated,interview"
+    ],
+    "web/src/lib/core/state-model.ts": [
+      "discarded,evaluated,responded"
+    ],
+    "web/src/lib/core/states.ts": [
+      "applied,discarded,rejected,responded,skip",
+      "discarded,hired,offer,rejected",
+      "discarded,hired,rejected",
+      "discarded,interview,rejected,responded,skip",
+      "discarded,interview,rejected,skip"
+    ],
+    "web/test-state-model.mjs": [
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
+      "discarded,hired,rejected",
+      "discarded,interview,rejected,responded,skip",
+      "discarded,interview,rejected,responded,skip",
+      "evaluated,hired,offer"
+    ]
+  },
+  "rule2": {}
+}

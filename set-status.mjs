@@ -55,9 +55,11 @@ import { extractTrackerReportNumbers, resolveColumns, parseTrackerRow } from './
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import {
   rebuildRow, resolveTrackerPath, trackerLockDirFor, acquireTrackerLock,
-  writeFileAtomic, appendStatusLog, loadCanonicalStates, loadStateTransitions,
+  writeFileAtomic, appendStatusLog, loadCanonicalStates,
   resolveCanonicalState, normalizeCompany, cell,
 } from './tracker-utils.mjs';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
+import { applyStatusChange } from './lib/status-gate.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const STATES_FILE = join(JOBBER, 'templates/states.yml');
@@ -193,13 +195,11 @@ if (!newStatus) {
   const valid = states.map(s => s.label).join(' · ');
   failWith(EXIT_USAGE, 'invalid-state', `"${stateInput}" is not a canonical state. Valid states: ${valid}`);
 }
-// Legal-transition table from the same file that defines the states — a new
-// state or edge lands in one place and every writer follows (#improvement-plan
-// A4(a)). Loaded here (before the tracker touch) so a malformed table aborts
-// before anything is written.
-let transitions;
+// The gate's machine is loaded before the tracker is touched, so a malformed
+// states.yml aborts before anything is written.
+let machine;
 try {
-  transitions = loadStateTransitions(STATES_FILE);
+  machine = loadMachine(APPLICATION_STATUS);
 } catch (err) {
   failWith(EXIT_USAGE, 'states-error', `Cannot load status transitions from ${STATES_FILE}: ${err.message}`);
 }
@@ -371,48 +371,37 @@ if (flags.role && !flags.force && !roleMatchesTarget) {
 const oldStatus = target.status;
 const note = flags.note != null ? cell(flags.note) : null;
 
-// State-machine gate (#improvement-plan A4(a)): map both labels to their ids
-// (normalized the same way resolveCanonicalState does). The lifecycle is a DAG
-// read from states.yml. A state with an empty transition list is TERMINAL —
-// rejected/discarded/hired — and may never move again (no-op excepted): it is
-// the funnel's end, and letting it flap back into a live state would corrupt
-// every denominator behind it. Escaping a terminal state — Rejected → Interview,
-// Hired → Evaluated — fails closed unless --force records an explicit override,
-// the same escape hatch --force already provides for report-link mismatches.
-// Live states stay free-form both forward and backward: a move like
-// Applied → Evaluated is a normal ledger CORRECTION (status-log.tsv records it
-// with a correction context and funnel-velocity treats it as a correction, not
-// a fresh pipeline event), so it is not gated.
-const labelToId = new Map(states.map(s => [s.label.toLowerCase(), s.id]));
-const oldId = labelToId.get(String(oldStatus).replace(/\*\*/g, '').trim().toLowerCase());
-const newId = labelToId.get(String(newStatus).replace(/\*\*/g, '').trim().toLowerCase());
-const statusChanged = oldStatus !== newStatus;
-const oldIsTerminal = !statusChanged ? false : (transitions[oldId] ?? []).length === 0;
-if (statusChanged && oldIsTerminal && !flags.force) {
-  const legal = new Set([
-    ...(transitions[oldId] ?? []),
-    oldId, // staying put is always legal (a no-op transition must not be refused)
-  ]);
-  const legalLabels = states.filter(s => legal.has(s.id)).map(s => s.label).join(' · ');
-  failWith(
-    EXIT_USAGE,
-    'illegal-transition',
-    `Illegal status transition: ${oldStatus} → ${newStatus}. ${oldStatus} is a terminal state ` +
-      `(${STATES_FILE} gives it no forward edges) — changing it is a correction that must be explicit. ` +
-      `Legal moves from ${oldStatus}: ${legalLabels}. Re-run with --force to override.`,
-    { from: oldStatus, to: newStatus, terminal: true, legal: [...legal] },
-  );
-}
-
-// Rebuild only the matched line: change the Status cell, append the note, keep
-// every other cell exactly as parsed.
+// State-machine gate (STATE-MACHINES-PLAN Phase 3.2): lib/status-gate.mjs decides the move
+// through lib/state-machine.mjs check(). The existing cell is resolved tolerantly first
+// (aliases, `**`, trailing/parenthesised dates), so a decorated terminal such as
+// `Rejected 2026-02-01` is still a terminal and a decorated/aliased LIVE cell
+// (`Evaluada`, `Applied 2026-01-05`) is no longer mistaken for one (bug M1). A cell that
+// still resolves to nothing is `unknown-from`: allowed, with a warning, never terminal.
+// Terminal -> anything else fails closed unless --force; live states stay free in both
+// directions (D1(a): a backward move is a ledger CORRECTION, not gated).
+// Rebuild only the matched line: change the Status cell, append the note, keep every
+// other cell exactly as parsed.
 const parts = lines[target.lineIdx].split('|').map(s => s.trim());
 while (parts.length <= Math.max(colmap.status, colmap.notes ?? 0)) parts.push('');
 
-// statusChanged is set by the state-machine gate above (oldStatus !== newStatus);
-// the cell always round-trips to the same value it came from, so this is the
-// same signal the write loop has always used.
-parts[colmap.status] = newStatus;
+const change = applyStatusChange({ parts, colmap, num: target.num, to: newStatus, force: flags.force, machine });
+if (!change.allowed) {
+  const g = change.gate;
+  const srcId = canonicalize(machine, g.from)?.id;
+  const decorated = g.fromVia === 'stripped' ? ` (Status cell "${oldStatus}" read as ${g.from}.)` : '';
+  failWith(
+    EXIT_USAGE,
+    'illegal-transition',
+    `Illegal status transition: ${oldStatus} → ${newStatus}. ${g.message}${decorated} Re-run with --force to override.`,
+    {
+      from: oldStatus, to: newStatus, terminal: g.kind === 'terminal-exit',
+      legal: srcId ? [...(machine.transitions[srcId] ?? []), srcId] : [],
+      kind: g.kind, legalLabels: g.legal, fromResolved: g.from, reason: g.message,
+    },
+  );
+}
+const statusChanged = oldStatus !== newStatus;
+for (const w of change.warnings) console.error(`⚠ ${w}`);
 
 let noteChanged = false;
 if (note) {
@@ -484,6 +473,7 @@ const result = {
   // to seed a duplicate follow-up.
   ...(statusChanged && newStatus === 'Applied' ? { followupSeedCandidate: true } : {}),
   ...(statusChanged && !flags.dryRun ? { statusLogged } : {}),
+  ...(change.warnings.length ? { warnings: change.warnings } : {}),
   tracker: APPS_FILE,
 };
 

@@ -1086,6 +1086,22 @@ for (const f of skillEntrypoints) {
   }
 }
 
+// The state-machine ratchet (STATE-MACHINES-PLAN §4.7): no new hard-coded status
+// list, no unlisted writer of a persisted file, no stale generated block. Run from
+// ROOT for the same git-ls-files reason as the guards above; its own controls live
+// in tests/validate-state-machines.test.mjs.
+{
+  const sm = spawnSync(process.execPath, [join(ROOT, 'validate-state-machines.mjs')], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+  });
+  if (sm.status === 0) {
+    pass('state-machine ratchet clean (validate-state-machines.mjs)');
+  } else {
+    fail(`state-machine ratchet violated:\n${(sm.stderr || sm.stdout || '').trim().slice(0, 2000)}`);
+  }
+}
+
 // The plugin manifest ships in two locations: .claude-plugin/plugin.json is
 // canonical (Claude Code + Copilot CLI both read it), and .github/plugin/
 // plugin.json exists only because the awesome-copilot marketplace validator
@@ -2851,22 +2867,14 @@ try {
     fail(`templates/states.yml lost canonical status id(s): ${missingStates.join(', ')} — BREAKING for the web status mapping`);
   }
 
-  // 55.3b Every web status list must carry every canonical state. states.yml is
-  // the source of truth; the web keeps SIX hardcoded copies (title-case canonical
-  // lists + UPPERCASE tab/stage lists). `Hired` (#2050) had silently drifted out
-  // of ALL of them — a landed job was unsettable, uncounted in the funnel, and a
-  // gray "unknown" dot (#2249). Cross-check each so a future core state can't
-  // vanish from the dashboard again. The analytics funnel intentionally omits
-  // SKIP (not a funnel stage), so it's excluded there.
+  // 55.3b The web used to keep SIX hardcoded copies of the state list (title-case canonical
+  // lists + UPPERCASE tab/stage lists); `Hired` (#2050) silently drifted out of ALL of them
+  // (#2249). Phase 4.1 (STATE-MACHINES-PLAN §4.4) derives every one from states.yml through
+  // web/src/lib/core/states.ts, so the only copy left is states.ts's degraded-path FALLBACK,
+  // which must mirror states.yml (jobber-ui's find, #2282). web/test-state-model.mjs asserts the
+  // derivation and that no other web file hard-codes the list; here we keep the FALLBACK check.
   const stateLabels = [...statesSrc.matchAll(/^\s+label:\s*"?([A-Za-z]+)"?\s*$/gm)].map((m) => m[1]);
   const webStatusLists = [
-    { file: 'web/src/lib/format.ts', re: /CANONICAL_STATES\s*=\s*\[([\s\S]*?)\]/, upper: false, exclude: [] },
-    { file: 'web/src/app/actions/registry.ts', re: /CANON_STATUS\s*=\s*\[([\s\S]*?)\]/, upper: false, exclude: [] },
-    { file: 'web/src/app/actions/registry.ts', re: /TAB_VALUES\s*=\s*\[([\s\S]*?)\]/, upper: true, exclude: [] },
-    { file: 'web/src/components/pipeline-view.tsx', re: /TABS\s*=\s*\[([\s\S]*?)\]/, upper: true, exclude: [] },
-    { file: 'web/src/app/analytics/page.tsx', re: /STAGES[^=]*=\s*\[([\s\S]*?)\];/, upper: true, exclude: ['SKIP'] },
-    // 55.3b+ the degraded-path FALLBACK in the states ACL (jobber-ui's find, #2282):
-    // it promises to mirror states.yml and drifted to 8 states while the live path had 9.
     { file: 'web/src/lib/core/states.ts', re: /const FALLBACK[^=]*=\s*\[([\s\S]*?)\n\];/, upper: false, exclude: [] },
   ];
   if (stateLabels.length > 0) {
@@ -2886,26 +2894,20 @@ try {
       fail(`web status list(s) missing canonical state(s) — dashboard can't set/count them (#2249): ${drift.join(' | ')}`);
     }
 
-    // The assistant preamble also enumerates the states in PROSE (the setStatus
-    // list + the filterPipeline tab enum). Those drift the same way — the AI
-    // couldn't offer to set/filter by Hired — so check them too (#2249).
+    // The assistant preamble enumerates the states in PROSE (the setStatus list + the
+    // filterPipeline tab enum). They are now interpolated from the machine (statesProse /
+    // tabValues, asserted in web/test-state-model.mjs), so here we only guard that nobody puts a
+    // literal list back (#2249): the interpolations must be there, and no label run may follow
+    // either lead-in. Static text check — a determined rewrite evades it.
     const assistantPath = join(ROOT, 'web', 'src', 'app', 'api', 'assistant', 'route.ts');
     if (existsSync(assistantPath)) {
       const src = readFileSync(assistantPath, 'utf-8');
-      const proseChecks = [
-        { name: 'setStatus canonical-states list', text: src.match(/Canonical states:\s*([^.]*)\./)?.[1] ?? '', upper: false },
-        { name: 'filterPipeline tab enum', text: src.match(/tab ∈\s*([^;]*);/)?.[1] ?? '', upper: true },
-      ];
-      const proseDrift = [];
-      for (const { name, text, upper } of proseChecks) {
-        const want = upper ? stateLabels.map((l) => l.toUpperCase()) : stateLabels;
-        const missing = want.filter((l) => !new RegExp(`\\b${l}\\b`).test(text));
-        if (missing.length) proseDrift.push(`${name} (${missing.join(', ')})`);
-      }
-      if (proseDrift.length === 0) {
-        pass('assistant preamble prose enumerates every canonical state (#2249)');
+      const derived = /Canonical states:\s*\$\{statesProse\(/.test(src) && /tab ∈\s*\$\{tabValues\(/.test(src);
+      const literal = stateLabels.some((l) => new RegExp(`(Canonical states|tab ∈)[^;.$]*\\b${l}\\b`).test(src));
+      if (derived && !literal) {
+        pass('assistant preamble derives its state lists from the machine (#2249)');
       } else {
-        fail(`assistant preamble missing canonical state(s) in prose (#2249): ${proseDrift.join(' | ')}`);
+        fail(`assistant preamble must interpolate statesProse()/tabValues() and not hard-code states (#2249) [derived=${derived}, literal=${literal}]`);
       }
     }
   }
