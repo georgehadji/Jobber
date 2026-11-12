@@ -22,7 +22,8 @@
 //   web state-model.ts  canonStatus imported as TypeScript (Node type stripping); warn+skip
 //                       when this Node cannot import .ts
 // NOT covered: analyze-patterns (private normalizeStatus, no tracker env override),
-// dedup-tracker (rank table only, no canonical output), Go NormalizeStatus (Go not installed).
+// dedup-tracker (rank table only, no canonical output). Go NormalizeStatus (the go_dashboard
+// column) is gated by dashboard/internal/data/status_corpus_test.go, run by `go test ./...`.
 import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
