@@ -1,0 +1,77 @@
+# Jobber — reply-watch candidate machine (STATE-MACHINES-PLAN M15 / 4.5).
+# One entry of data/reply-candidates.json. DECLARED FROM TODAY'S CODE; nothing here is enforced
+# and no code changes behaviour because of this file.
+#
+# Reality check: the JSON entry itself carries NO lifecycle field. Its shape is
+#   {message_id, from, subject, body_snippet, signal}
+# where `signal` is null (paste-reply.mjs always writes null), or one of
+# interview_invite | offer | rejection | update (Gmail plugin / hand-written files).
+# The "state" below is therefore DERIVED each time reply-watch.mjs runs:
+#   reply-matcher.mjs classifyReply(cand).type  -> one of the classified states
+# and `applied` is the operator-approved tracker write (reply-watch.mjs updateTrackerStatuses).
+# State ids are slugs of the classifier's `type` string; labels are the exact `type` strings.
+#
+# KNOWN GAPS (declared, deliberately NOT fixed here):
+#   - no consumed/seen state: an entry is never marked processed, so it stays in the file forever;
+#   - no message_id dedupe: paste-reply.mjs synthesizes `pasted-<ts>-<rand>` ids and appendCandidate
+#     pushes unconditionally; reply-watch looks candidates up by message_id, so duplicate ids
+#     collapse onto the first entry;
+#   - the WHOLE file is re-classified on every run (classified/applied never persist, so every run
+#     starts again at pending);
+#   - tracker writes go through applyStatusChange in warn mode, not the enforcing gate (see M1).
+id: reply-candidate
+persisted_in: data/reply-candidates.json (entry exists = pending; classification and applied are never persisted)
+initial: pending
+states:
+  - id: pending
+    label: Pending
+    terminal: false
+    description: Entry present in data/reply-candidates.json, not yet classified in this run. EVERY entry is back here on every run (no persisted state). Optional `signal` on the entry - interview_invite, offer, rejection, update, or null - is a classifier hint only. Matching to a tracker row (reply-matcher matchCandidates) is a separate, unpersisted step with its own outcomes (confidence high/medium/low, no-match, ambiguous-match).
+  - id: noise
+    label: Noise
+    terminal: false
+    description: classifyReply type Noise (job alerts, newsletters, invitations to apply). Suggested tracker update `none`; checked before every other type
+  - id: rejected
+    label: Rejected
+    terminal: false
+    description: classifyReply type Rejected (signal rejection or rejection wording). Decided before Offer so "unable to offer" cannot become an Offer. Suggests tracker status Rejected
+  - id: offer
+    label: Offer
+    terminal: false
+    description: classifyReply type Offer (signal offer or specific offer phrases). Suggests tracker status Offer
+  - id: auto-confirmation
+    label: Auto-confirmation
+    terminal: false
+    description: classifyReply type Auto-confirmation (application received, automatic reply). Suggested tracker update `none`
+  - id: need-action
+    label: Need Action
+    terminal: false
+    description: classifyReply type Need Action (assessment, form, deadline). Suggests tracker status Interview when scheduling wording is present, otherwise Responded
+  - id: interview
+    label: Interview
+    terminal: false
+    description: classifyReply type Interview (signal interview_invite or interview wording). Suggests tracker status Interview
+  - id: responded
+    label: Responded
+    terminal: false
+    description: classifyReply type Responded (signal update or generic "would like to chat" wording). Suggests tracker status Responded
+  - id: unknown
+    label: Unknown
+    terminal: false
+    description: classifyReply type Unknown. Suggested tracker update is the literal `Needs Review`, which is NOT a tracker status and is never applied
+  - id: applied
+    label: Applied
+    terminal: true
+    description: The operator answered y to the review prompt and updateTrackerStatuses wrote the suggested status to the tracker (and the status ledger). Nothing is recorded on the candidate, so the next run re-classifies it; it is a no-op then only because the tracker row already holds the status
+transitions:
+  pending: [noise, rejected, offer, auto-confirmation, need-action, interview, responded, unknown]
+  rejected: [applied]
+  offer: [applied]
+  need-action: [applied]
+  interview: [applied]
+  responded: [applied]
+policy:
+  backward_between_live: correction
+  unknown_input: flag
+  exit_terminal: force
+writers: [reply-watch.mjs, paste-reply.mjs]
