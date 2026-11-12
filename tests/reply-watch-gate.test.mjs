@@ -1,11 +1,15 @@
-// tests/reply-watch-warn.test.mjs — reply-watch tracker writes go through the shared
-// transition gate in WARN mode (STATE-MACHINES-PLAN Phase 3.4, constraint 4: warn first,
-// enforce a release later).
+// tests/reply-watch-gate.test.mjs — reply-watch tracker writes go through the shared transition
+// gate (STATE-MACHINES-PLAN Phase 3.4 warn mode, flipped to ENFORCE by default in Phase 5.3).
 //
 // Contract pinned here (spawned end to end, never by matching source text):
-//   legal move   -> applied, no WARN on stderr, status-log note column empty
-//   illegal move -> STILL applied (behaviour unchanged), `WARN illegal transition <from> -> <to> (row N)`
-//                   on stderr, and the same text recorded in the status-log note column
+//   ENFORCE (default)
+//     legal move   -> applied, no output about the gate, status-log note column empty
+//     illegal move -> REFUSED: the cell is left exactly as it was, stderr says
+//                     `Refused #N: illegal transition <from> -> <to>` plus the
+//                     `node set-status.mjs N <State> --force` override, nothing is written to the ledger
+//   JOBBER_REPLY_WATCH_GATE=warn (escape hatch, the Phase 3.4 behaviour)
+//     illegal move -> STILL applied, `WARN illegal transition <from> -> <to> (row N)` on stderr,
+//                     and the same text recorded in the status-log note column
 // An illegal move is one that leaves a terminal state (Hired/Rejected/Discarded), including a
 // DECORATED terminal cell such as `Rejected 2026-02-01`.
 import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
@@ -14,7 +18,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-console.log('\nreply-watch warn-mode transition gate (phase 3.4)');
+console.log('\nreply-watch transition gate: enforce by default (5.3), warn escape hatch (3.4)');
 
 const work = mkdtempSync(join(tmpdir(), 'rw-warn-'));
 let caseN = 0;
@@ -27,7 +31,7 @@ const REPLIES = {
 
 // One reply-watch run (answering "y" at the apply prompt) on a fresh one-row tracker.
 // Resolves null when the fixture could not be built or the child could not run.
-function run(existingStatus, reply) {
+function run(existingStatus, reply, gateEnv) {
   return new Promise(resolve => {
     let dir, tracker, candidates, logPath;
     try {
@@ -47,7 +51,7 @@ function run(existingStatus, reply) {
     } catch { return resolve(null); }
     // cwd = temp dir so reply-watch's best-effort `node tracker.mjs sync` cannot touch the repo DB.
     const child = spawn(NODE, [join(ROOT, 'reply-watch.mjs'), candidates], {
-      cwd: dir, env: { ...process.env, JOBBER_TRACKER: tracker }, stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: dir, env: { ...process.env, JOBBER_TRACKER: tracker, JOBBER_REPLY_WATCH_GATE: gateEnv || '' }, stdio: ['pipe', 'pipe', 'pipe'],
     });
     let stdout = '', stderr = '';
     child.stdout.on('data', d => { stdout += d; });
@@ -79,14 +83,38 @@ try {
     ['CONTROL legal `Applied` -> Rejected', 'Applied', 'rejection', 'Rejected', 'Applied', false],
     ['CONTROL live backward correction `Offer` -> Interview', 'Offer', 'interview', 'Interview', 'Offer', false],
   ];
-  const results = await Promise.all(cases.map(c => run(c[1], REPLIES[c[2]])));
+  const enforce = await Promise.all(cases.map(c => run(c[1], REPLIES[c[2]])));
+  const warnRuns = await Promise.all(cases.map(c => run(c[1], REPLIES[c[2]], 'warn')));
+
   cases.forEach(([label, existing, , to, fromCanon, illegal], i) => {
-    const res = results[i];
-    if (!res) { warn(`${label}: fixture/spawn failed — not verified`); return; }
+    const res = enforce[i];
+    if (!res) { warn(`ENFORCE ${label}: fixture/spawn failed — not verified`); return; }
+    const problems = [];
+    const refusedLines = res.stderr.split('\n').filter(l => /^Refused #/.test(l));
+    if (illegal) {
+      if (res.cell !== existing) problems.push(`cell "${res.cell}" (want it untouched: "${existing}")`);
+      const wantStart = `Refused #1: illegal transition ${fromCanon} -> ${to}`;
+      if (refusedLines.length !== 1 || !refusedLines[0].startsWith(wantStart)) problems.push(`stderr Refused lines ${JSON.stringify(refusedLines)} (want one starting ${JSON.stringify(wantStart)})`);
+      if (!refusedLines[0]?.includes(`node set-status.mjs 1 ${to} --force`)) problems.push('refusal does not name the set-status --force override');
+      if (res.log !== '') problems.push(`status-log should be empty, got ${JSON.stringify(res.log)}`);
+      if (/WARN illegal transition/.test(res.stderr)) problems.push('unexpected WARN in enforce mode');
+    } else {
+      if (res.cell !== to) problems.push(`cell "${res.cell}" (want ${to})`);
+      if (refusedLines.length !== 0 || /WARN illegal transition/.test(res.stderr)) problems.push(`unexpected gate output ${JSON.stringify(res.stderr)}`);
+      if (res.log !== logRow(existing, to, '')) problems.push(`status-log ${JSON.stringify(res.log)}`);
+    }
+    if (problems.length) fail(`ENFORCE ${label}: ${problems.join('; ')}`);
+    else pass(`ENFORCE ${label}: ${illegal ? 'refused, row and ledger untouched, override named' : 'applied, no gate output, empty ledger note'}`);
+  });
+
+  cases.forEach(([label, existing, , to, fromCanon, illegal], i) => {
+    const res = warnRuns[i];
+    if (!res) { warn(`WARN-MODE ${label}: fixture/spawn failed — not verified`); return; }
     const want = `WARN illegal transition ${fromCanon} -> ${to} (row 1)`;
     const warnLines = res.stderr.split('\n').filter(l => /WARN illegal transition/.test(l));
     const problems = [];
     if (res.cell !== to) problems.push(`cell "${res.cell}" (want ${to}: applied in warn mode either way)`);
+    if (/^Refused #/m.test(res.stderr)) problems.push('warn mode must not refuse');
     if (illegal) {
       if (warnLines.length !== 1 || warnLines[0].trim() !== want) problems.push(`stderr WARN lines ${JSON.stringify(warnLines)} (want exactly ${JSON.stringify(want)})`);
       if (res.log !== logRow(existing, to, `WARN illegal transition ${fromCanon} -> ${to}`)) problems.push(`status-log ${JSON.stringify(res.log)}`);
@@ -94,11 +122,11 @@ try {
       if (warnLines.length !== 0) problems.push(`unexpected WARN ${JSON.stringify(warnLines)}`);
       if (res.log !== logRow(existing, to, '')) problems.push(`status-log ${JSON.stringify(res.log)}`);
     }
-    if (problems.length) fail(`${label}: ${problems.join('; ')}`);
-    else pass(`${label}: applied, ${illegal ? 'WARN on stderr + note in status-log' : 'no warning, empty status-log note'}`);
+    if (problems.length) fail(`WARN-MODE ${label}: ${problems.join('; ')}`);
+    else pass(`WARN-MODE ${label}: applied, ${illegal ? 'WARN on stderr + note in status-log' : 'no warning, empty status-log note'}`);
   });
 } catch (e) {
-  warn(`reply-watch warn harness error: ${e.message}`);
+  warn(`reply-watch gate harness error: ${e.message}`);
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
