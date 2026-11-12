@@ -234,7 +234,8 @@ export function registryPairs(src, file, { extras = false } = {}) {
 const SOURCES = {
   'merge-tracker.mjs': () => {
     const s = read('merge-tracker.mjs');
-    return [...identity(block(s, 'const CANONICAL_STATES = [', '];')), ...jsAliasPairs(s, 'const aliases = {')];
+    // dup/duplicado/repost are its own regex extras (visible via lineTargets).
+    return [...registryPairs(s, 'merge-tracker.mjs', { extras: true }), ...lineTargets(s)];
   },
   'normalize-statuses.mjs': () => {
     const s = read('normalize-statuses.mjs');
