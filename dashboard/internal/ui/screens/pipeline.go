@@ -266,13 +266,14 @@ type PipelineModel struct {
 	theme         theme.Theme
 	jobberPath string
 	reportCache   map[string]reportSummary
+	// overlay is the ONE overlay currently open (or overlayNone). Key dispatch, rendering and
+	// the help bar all switch on it, so two overlays can never be open at once.
+	overlay overlayKind
 	// Status picker sub-state
-	statusPicker bool
 	statusCursor int
 	// Discard reason picker sub-state (Issue 1380) — opens when status
 	// transitions to Discarded or SKIP, pre-populated from the report's
 	// predicted discard_reasons, plus canonical fallback options.
-	discardPicker         bool
 	discardCursor         int
 	discardOptions        []string                // predicted + canonical options shown to user
 	discardCustomInput    bool                    // true when "Other…" is selected and user is typing
@@ -283,28 +284,53 @@ type PipelineModel struct {
 
 	// PDF picker sub-state — shown when one application matches several
 	// generated CVs (role variants from the same company).
-	pdfPicker  bool
 	pdfCursor  int
 	pdfChoices []string // root-relative paths, newest first
 	// flash is a one-shot notice rendered in place of the help bar; any
 	// keypress clears it.
 	flash string
 	// Search sub-state — narrows the active tab by substring on company/role/notes.
-	searchInput bool   // true while the user is typing the query
+	// (the query is being typed while overlay == overlaySearch)
 	searchQuery string // committed (or in-progress) lowercased query
 	// Column picker sub-state — opened with C, closed with esc.
-	colPicker    bool
 	colPickerIdx int
 	visibleCols  map[ColumnID]bool
 
 	// Hired win flow sub-state (Issue 1447)
 	hiredApp  model.CareerApplication
-	hiredStep int // 0 = inactive, 1 = celebration, 2 = story invite, 3 = anonymous stat
+	hiredStep int // step within overlayHired: 1 = celebration, 2 = story invite, 3 = anonymous stat
 }
+
+// overlayKind names the overlay that owns the keyboard and the screen. At most one is open.
+type overlayKind int
+
+const (
+	overlayNone    overlayKind = iota
+	overlayHired               // celebration flow (hiredStep says which screen)
+	overlayColumns             // column picker (C)
+	overlayStatus              // status picker (c)
+	overlayDiscard             // discard reason picker (Issue 1380)
+	overlayPDF                 // PDF choice picker
+	overlaySearch              // search input (/)
+)
+
+// truncateFlash squeezes a message onto one help-bar line of the given width (one row, so
+// a long error never pushes the screen taller than the terminal).
+func truncateFlash(s string, width int) string {
+	s = strings.Join(strings.Fields(s), " ")
+	r := []rune(s)
+	if limit := width - 4; limit > 1 && len(r) > limit {
+		return string(r[:limit-1]) + "…"
+	}
+	return s
+}
+
+// SetFlash shows a one-line notice in place of the help bar until the next keypress.
+func (m *PipelineModel) SetFlash(s string) { m.flash = truncateFlash(s, m.width) }
 
 // IsTextInputActive returns true if the search or any other text input is currently focused
 func (m PipelineModel) IsTextInputActive() bool {
-	return m.searchInput || m.discardCustomInput
+	return m.overlay == overlaySearch || m.discardCustomInput
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -383,7 +409,11 @@ func (m PipelineModel) WithReloadedData(apps []model.CareerApplication, metrics 
 	// Preserve search state across refresh — otherwise pressing `r` silently drops a
 	// committed query and the user loses their place mid-investigation.
 	reloaded.searchQuery = m.searchQuery
-	reloaded.searchInput = m.searchInput
+	// Only the search input, the discard reason picker and the hired flow survive a reload
+	// (below); the status, column and PDF pickers close, as they always have.
+	if m.overlay == overlaySearch || m.overlay == overlayDiscard || m.overlay == overlayHired {
+		reloaded.overlay = m.overlay
+	}
 	// Preserve user's column visibility choices across refresh.
 	reloaded.visibleCols = m.visibleCols
 	// Preserve in-progress interactive flows. The viewer status path starts
@@ -393,7 +423,6 @@ func (m PipelineModel) WithReloadedData(apps []model.CareerApplication, metrics 
 	// silently never asked for a reason and never wrote the status.
 	reloaded.hiredApp = m.hiredApp
 	reloaded.hiredStep = m.hiredStep
-	reloaded.discardPicker = m.discardPicker
 	reloaded.discardCursor = m.discardCursor
 	reloaded.discardOptions = m.discardOptions
 	reloaded.discardCustomInput = m.discardCustomInput
@@ -445,22 +474,18 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		m.flash = ""
-		if m.hiredStep > 0 {
+		switch m.overlay {
+		case overlayHired:
 			return m.handleHiredFlow(msg)
-		}
-		if m.colPicker {
+		case overlayColumns:
 			return m.handleColPicker(msg)
-		}
-		if m.statusPicker {
+		case overlayStatus:
 			return m.handleStatusPicker(msg)
-		}
-		if m.discardPicker {
+		case overlayDiscard:
 			return m.handleDiscardPicker(msg)
-		}
-		if m.pdfPicker {
+		case overlayPDF:
 			return m.handlePDFPicker(msg)
-		}
-		if m.searchInput {
+		case overlaySearch:
 			return m.handleSearchInput(msg)
 		}
 		return m.handleKey(msg)
@@ -495,7 +520,7 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 			}
 		}
 		opts = append(opts, "Other…")
-		m.discardPicker = true
+		m.overlay = overlayDiscard
 		m.discardCursor = 0
 		m.discardOptions = opts
 		m.discardPredictedCount = numPredicted
@@ -528,7 +553,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 
 	case "/":
 		// Open search input. Pre-fill with the current query so refining is one keystroke away.
-		m.searchInput = true
+		m.overlay = overlaySearch
 		return m, nil
 
 	case "down", "j":
@@ -667,13 +692,13 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		return m, func() tea.Msg { return PipelineRefreshMsg{} }
 
 	case "C":
-		m.colPicker = true
+		m.overlay = overlayColumns
 		m.colPickerIdx = 0
 		return m, nil
 
 	case "c":
 		if len(m.filtered) > 0 {
-			m.statusPicker = true
+			m.overlay = overlayStatus
 			m.statusCursor = 0
 		}
 
@@ -735,7 +760,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
-		m.searchInput = false
+		m.overlay = overlayNone
 		m.searchQuery = ""
 		m.applyFilterAndSort()
 		m.cursor = 0
@@ -743,7 +768,7 @@ func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 		return m, m.loadCurrentReport()
 
 	case "enter":
-		m.searchInput = false
+		m.overlay = overlayNone
 		// Query already applied during typing; load the preview for the
 		// committed first match (skipped during typing for perf).
 		return m, m.loadCurrentReport()
@@ -782,7 +807,7 @@ func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc", "q":
-		m.statusPicker = false
+		m.overlay = overlayNone
 		return m, nil
 
 	case "down", "j":
@@ -798,21 +823,12 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 		}
 
 	case "enter":
-		m.statusPicker = false
+		m.overlay = overlayNone
 		if app, ok := m.CurrentApp(); ok {
 			newStatus := m.currentStatusPairs()[m.statusCursor].Canonical
 			norm := data.NormalizeStatus(newStatus)
-			if norm == "hired" {
-				m.hiredApp = app
-				m.hiredStep = 1
-				return m, func() tea.Msg {
-					return PipelineUpdateStatusMsg{
-						JobberPath: m.jobberPath,
-						App:           app,
-						NewStatus:     newStatus,
-					}
-				}
-			}
+			// Hired is NOT celebrated here: the celebration starts only once the write is
+			// confirmed (main.go starts it after a successful PipelineUpdateStatusMsg).
 			if data.AsksDiscardReason(norm) {
 				return m, func() tea.Msg {
 					return m.startDiscardFlow(app, newStatus)
@@ -855,7 +871,7 @@ type pipelineStartDiscardPickerMsg struct {
 func (m PipelineModel) handlePDFPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc", "q":
-		m.pdfPicker = false
+		m.overlay = overlayNone
 		return m, nil
 
 	case "down", "j":
@@ -871,7 +887,7 @@ func (m PipelineModel) handlePDFPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 		}
 
 	case "enter", "d":
-		m.pdfPicker = false
+		m.overlay = overlayNone
 		if m.pdfCursor >= 0 && m.pdfCursor < len(m.pdfChoices) {
 			return m, m.openPDFCmd(m.pdfChoices[m.pdfCursor])
 		}
@@ -918,7 +934,7 @@ func (m PipelineModel) handleDiscardPicker(msg tea.KeyMsg) (PipelineModel, tea.C
 	switch msg.String() {
 	case "esc":
 		// Skip reason tagging — still commit the status change.
-		m.discardPicker = false
+		m.overlay = overlayNone
 		return m, func() tea.Msg {
 			return PipelineUpdateStatusMsg{
 				JobberPath: m.jobberPath,
@@ -957,6 +973,7 @@ func (m PipelineModel) handleDiscardPicker(msg tea.KeyMsg) (PipelineModel, tea.C
 func (m PipelineModel) StartHiredFlow(app model.CareerApplication) (PipelineModel, tea.Cmd) {
 	m.hiredApp = app
 	m.hiredStep = 1
+	m.overlay = overlayHired
 	return m, nil
 }
 
@@ -979,7 +996,7 @@ func (m PipelineModel) StartDiscardReasonFlow(app model.CareerApplication, statu
 		}
 	}
 	opts = append(opts, "Other…")
-	m.discardPicker = true
+	m.overlay = overlayDiscard
 	m.discardCursor = 0
 	m.discardOptions = opts
 	m.discardPredictedCount = numPredicted
@@ -1014,8 +1031,10 @@ func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 				m.flash = "Could not record anonymous stat: " + err.Error()
 			}
 			m.hiredStep = 0
+			m.overlay = overlayNone
 		case "n", "N", "enter", "esc":
 			m.hiredStep = 0
+			m.overlay = overlayNone
 		}
 	}
 	return m, nil
@@ -1024,7 +1043,7 @@ func (m PipelineModel) handleHiredFlow(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 // commitDiscardReason closes the picker and emits PipelineUpdateStatusAndNotesMsg
 // to atomically persist the new status plus a DISCARD/SKIP tag in Notes.
 func (m PipelineModel) commitDiscardReason(reason string) (PipelineModel, tea.Cmd) {
-	m.discardPicker = false
+	m.overlay = overlayNone
 	m.discardCustomInput = false
 	app := m.discardPendingApp
 	newStatus := m.discardPendingStatus
@@ -1063,7 +1082,7 @@ func (m PipelineModel) calculateWeeksToHire() int {
 func (m PipelineModel) handleColPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc", "q", "C":
-		m.colPicker = false
+		m.overlay = overlayNone
 		return m, nil
 
 	case "down", "j":
@@ -1230,7 +1249,7 @@ func workModeRank(mode string) int {
 // when active). Shared by View() and adjustScroll() so additions stay in sync.
 func (m PipelineModel) chromeRowsFixed() int {
 	rows := 8 // header + tabs(2) + metrics + sortbar + column header + help + preview baseline
-	if m.searchInput || m.searchQuery != "" {
+	if m.overlay == overlaySearch || m.searchQuery != "" {
 		rows++
 	}
 	return rows
@@ -1286,7 +1305,7 @@ func (m PipelineModel) cursorLineEstimate() int {
 
 // View renders the pipeline screen.
 func (m PipelineModel) View() string {
-	if m.hiredStep > 0 {
+	if m.overlay == overlayHired {
 		return m.overlayHiredFlow()
 	}
 
@@ -1316,23 +1335,15 @@ func (m PipelineModel) View() string {
 	}
 	body = strings.Join(bodyLines, "\n")
 
-	// Column picker overlay
-	if m.colPicker {
+	// The open overlay (hired is handled above; search renders as the search bar)
+	switch m.overlay {
+	case overlayColumns:
 		body = m.overlayColPicker(body)
-	}
-
-	// Status picker overlay
-	if m.statusPicker {
+	case overlayStatus:
 		body = m.overlayStatusPicker(body)
-	}
-
-	// PDF picker overlay
-	if m.pdfPicker {
+	case overlayPDF:
 		body = m.overlayPDFPicker(body)
-	}
-
-	// Discard reason picker overlay
-	if m.discardPicker {
+	case overlayDiscard:
 		body = m.overlayDiscardPicker(body)
 	}
 
@@ -1348,7 +1359,8 @@ func (m PipelineModel) View() string {
 // search; otherwise it renders a vim-style status line showing the query and the
 // match count. While in input mode, a trailing cursor is appended.
 func (m PipelineModel) renderSearchBar() string {
-	if !m.searchInput && m.searchQuery == "" {
+	searching := m.overlay == overlaySearch
+	if !searching && m.searchQuery == "" {
 		return ""
 	}
 
@@ -1362,7 +1374,7 @@ func (m PipelineModel) renderSearchBar() string {
 	hintStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
 
 	display := queryStyle.Render(m.searchQuery)
-	if m.searchInput {
+	if searching {
 		display += lipgloss.NewStyle().Foreground(m.theme.Blue).Render("█")
 	}
 
@@ -1370,7 +1382,7 @@ func (m PipelineModel) renderSearchBar() string {
 	matchInfo := hintStyle.Render(fmt.Sprintf(i18n.Current.SearchMatching, len(m.filtered), tabFiltered))
 
 	hint := ""
-	if m.searchInput {
+	if searching {
 		hint = hintStyle.Render(i18n.Current.SearchHintInput)
 	} else {
 		hint = hintStyle.Render(i18n.Current.SearchHintNormal)
@@ -1871,21 +1883,21 @@ func (m PipelineModel) renderHelp() string {
 		return flashStyle.Render(m.flash)
 	}
 
-	if m.colPicker {
+	if m.overlay == overlayColumns {
 		return style.Render(
 			keyStyle.Render("↑↓/jk") + descStyle.Render(i18n.Current.HelpNavigate) +
 				keyStyle.Render("SPACE") + descStyle.Render(i18n.Current.HelpToggle) +
 				keyStyle.Render("Esc/C") + descStyle.Render(i18n.Current.HelpClose))
 	}
 
-	if m.statusPicker || m.pdfPicker {
+	if m.overlay == overlayStatus || m.overlay == overlayPDF {
 		return style.Render(
 			keyStyle.Render("↑↓/jk") + descStyle.Render(i18n.Current.HelpNavigate) +
 				keyStyle.Render("Enter") + descStyle.Render(i18n.Current.HelpConfirm) +
 				keyStyle.Render("Esc") + descStyle.Render(i18n.Current.HelpCancel))
 	}
 
-	if m.searchInput {
+	if m.overlay == overlaySearch {
 		return style.Render(
 			keyStyle.Render("type") + descStyle.Render(i18n.Current.HelpFilterLive) +
 				keyStyle.Render("Enter") + descStyle.Render(i18n.Current.HelpKeep) +

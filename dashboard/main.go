@@ -46,6 +46,50 @@ func (m appModel) Init() tea.Cmd {
 	return nil
 }
 
+// setStatus is the status write (set-status.mjs); a variable so tests can fake it.
+var setStatus = data.SetStatus
+
+// statusWrittenMsg is the outcome of one status write.
+type statusWrittenMsg struct {
+	app        model.CareerApplication
+	newStatus  string
+	res        data.SetStatusResult
+	err        error
+	fromViewer bool // the write was requested from the report viewer
+}
+
+// writeStatusCmd runs the write off the UI goroutine (set-status can wait on the tracker lock).
+func writeStatusCmd(jobberPath string, app model.CareerApplication, newStatus, note string, fromViewer bool) tea.Cmd {
+	return func() tea.Msg {
+		res, err := setStatus(jobberPath, app, newStatus, note)
+		return statusWrittenMsg{app: app, newStatus: newStatus, res: res, err: err, fromViewer: fromViewer}
+	}
+}
+
+// finishStatusWrite applies the real outcome of a status write: reload from disk, then either
+// show why nothing changed, or (success only) update the viewer and start the hired celebration.
+func (m appModel) finishStatusWrite(msg statusWrittenMsg) appModel {
+	m.reloadPipelineData()
+	if msg.err != nil {
+		text := "Status not changed: " + msg.err.Error()
+		if msg.fromViewer {
+			m.viewer.SetFlash(text)
+		} else {
+			m.pipeline.SetFlash(text)
+		}
+		return m
+	}
+	if msg.fromViewer {
+		m.viewer.UpdateAppStatus(msg.newStatus)
+	}
+	// Celebrate only a confirmed change into Hired (a no-op re-select is not a new hire).
+	if msg.res.Changed && data.NormalizeStatus(msg.newStatus) == "hired" {
+		m.state = viewPipeline
+		m.pipeline, _ = m.pipeline.StartHiredFlow(msg.app)
+	}
+	return m
+}
+
 // Update manages global app state and routes incoming messages to active screens.
 func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
@@ -80,22 +124,14 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineUpdateStatusMsg:
-		_, err := data.SetStatus(msg.JobberPath, msg.App, msg.NewStatus, "")
-		if err != nil {
-			// Log the error but still reload data to keep UI consistent
-			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
-		}
-		m.reloadPipelineData()
-		return m, nil
+		return m, writeStatusCmd(msg.JobberPath, msg.App, msg.NewStatus, "", false)
 
 	case screens.PipelineUpdateStatusAndNotesMsg:
 		// Issue 1380: atomic status + notes write from the discard reason picker.
-		_, err := data.SetStatus(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "WARN: status+notes update failed: %v\n", err)
-		}
-		m.reloadPipelineData()
-		return m, nil
+		return m, writeStatusCmd(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend, false)
+
+	case statusWrittenMsg:
+		return m.finishStatusWrite(msg), nil
 
 	case screens.PipelineRefreshMsg:
 		m.reloadPipelineData()
@@ -126,33 +162,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case screens.ViewerUpdateStatusMsg:
-		normalized := data.NormalizeStatus(msg.NewStatus)
-		if normalized == "hired" {
-			_, err := data.SetStatus(m.jobberPath, msg.App, msg.NewStatus, "")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
-				m.reloadPipelineData()
-				return m, nil
-			}
-			m.state = viewPipeline
-			m.pipeline, _ = m.pipeline.StartHiredFlow(msg.App)
-			m.reloadPipelineData()
-			return m, nil
-		}
-		if data.AsksDiscardReason(normalized) {
+		if data.AsksDiscardReason(data.NormalizeStatus(msg.NewStatus)) {
 			m.state = viewPipeline
 			m.pipeline, _ = m.pipeline.StartDiscardReasonFlow(msg.App, msg.NewStatus)
 			m.reloadPipelineData()
 			return m, nil
 		}
-
-		_, err := data.SetStatus(m.jobberPath, msg.App, msg.NewStatus, "")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
-		}
-		m.viewer.UpdateAppStatus(msg.NewStatus)
-		m.reloadPipelineData()
-		return m, nil
+		// Everything else (hired included) is written first; finishStatusWrite updates the
+		// viewer, starts the hired celebration, or shows the error, from the real outcome.
+		return m, writeStatusCmd(m.jobberPath, msg.App, msg.NewStatus, "", true)
 
 	case screens.PipelineOpenProgressMsg:
 		m.progress = screens.NewProgressModel(

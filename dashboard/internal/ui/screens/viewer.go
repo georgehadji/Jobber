@@ -43,7 +43,12 @@ type ViewerModel struct {
 	coverLetterPath string
 	statusPicker    bool
 	statusCursor    int
+	// flash is a one-shot notice shown in the footer; any keypress clears it.
+	flash string
 }
+
+// SetFlash shows a one-line notice in the footer until the next keypress.
+func (m *ViewerModel) SetFlash(s string) { m.flash = truncateFlash(s, m.width) }
 
 // NewViewerModel creates a new file viewer for the given path.
 func NewViewerModel(t theme.Theme, jobberPath, path, title string, width, height int, app model.CareerApplication) ViewerModel {
@@ -129,6 +134,7 @@ func (m *ViewerModel) Resize(width, height int) {
 func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		m.flash = ""
 		if m.statusPicker {
 			return m.handleStatusPicker(msg)
 		}
@@ -709,6 +715,10 @@ func (m ViewerModel) renderFooter() string {
 
 	keyStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Text)
 	descStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
+
+	if m.flash != "" {
+		return style.Foreground(m.theme.Yellow).Render(m.flash)
+	}
 
 	if m.statusPicker {
 		return style.Render(

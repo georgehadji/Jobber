@@ -196,7 +196,7 @@ func TestSearchEnterCommitsAndEscClearsCommittedQuery(t *testing.T) {
 
 	// Open input and type "stripe".
 	pm, _ = pm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
-	if !pm.searchInput {
+	if pm.overlay != overlaySearch {
 		t.Fatal("expected `/` to open search input")
 	}
 	for _, r := range "stripe" {
@@ -211,7 +211,7 @@ func TestSearchEnterCommitsAndEscClearsCommittedQuery(t *testing.T) {
 
 	// Enter commits — input closes, query stays.
 	pm, _ = pm.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if pm.searchInput {
+	if pm.overlay == overlaySearch {
 		t.Fatal("expected Enter to close input")
 	}
 	if pm.searchQuery != "stripe" {
@@ -239,7 +239,7 @@ func TestSearchEscInInputCancelsAndClears(t *testing.T) {
 	}
 
 	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
-	pm.searchInput = true
+	pm.overlay = overlaySearch
 	pm.searchQuery = "stri"
 	pm.applyFilterAndSort()
 	if len(pm.filtered) != 1 {
@@ -247,7 +247,7 @@ func TestSearchEscInInputCancelsAndClears(t *testing.T) {
 	}
 
 	pm, _ = pm.Update(tea.KeyMsg{Type: tea.KeyEsc})
-	if pm.searchInput {
+	if pm.overlay == overlaySearch {
 		t.Fatal("expected Esc in input mode to close input")
 	}
 	if pm.searchQuery != "" {
@@ -428,7 +428,7 @@ func TestEscWithoutQueryIsNoOp(t *testing.T) {
 			t.Fatalf("expected Esc with no query to return nil cmd, got %T", msg)
 		}
 	}
-	if pm.searchInput {
+	if pm.overlay == overlaySearch {
 		t.Fatal("Esc with no query should not toggle searchInput")
 	}
 }
@@ -445,7 +445,7 @@ func TestSearchTypingDoesNotLoadReports(t *testing.T) {
 	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
 
 	pm, _ = pm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
-	if !pm.searchInput {
+	if pm.overlay != overlaySearch {
 		t.Fatal("expected `/` to open search input")
 	}
 
@@ -661,13 +661,11 @@ func TestWithReloadedDataPreservesDiscardAndHiredFlow(t *testing.T) {
 	pm.discardCursor = 2
 	pm.discardCustomInput = true
 	pm.discardCustomText = "typed"
-	pm.hiredApp = apps[0]
-	pm.hiredStep = 1
 
 	reloaded := pm.WithReloadedData(apps, model.PipelineMetrics{Total: len(apps)})
 
-	if !reloaded.discardPicker {
-		t.Fatal("discardPicker = false, want true (reason picker must survive reload)")
+	if reloaded.overlay != overlayDiscard {
+		t.Fatalf("overlay = %v, want overlayDiscard (reason picker must survive reload)", reloaded.overlay)
 	}
 	if reloaded.discardPendingStatus != "SKIP" {
 		t.Fatalf("discardPendingStatus = %q, want SKIP", reloaded.discardPendingStatus)
@@ -685,8 +683,20 @@ func TestWithReloadedDataPreservesDiscardAndHiredFlow(t *testing.T) {
 	if reloaded.discardPredictedCount != pm.discardPredictedCount {
 		t.Fatalf("discardPredictedCount = %d, want %d", reloaded.discardPredictedCount, pm.discardPredictedCount)
 	}
-	if reloaded.hiredStep != 1 || reloaded.hiredApp.Company != "Acme" {
-		t.Fatalf("hired flow lost: step=%d app=%+v", reloaded.hiredStep, reloaded.hiredApp)
+
+	// The hired flow survives a reload too. (It used to be tested together with the discard
+	// picker; one overlay at a time is now a type-level fact, so each gets its own model.)
+	hired, _ := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40).StartHiredFlow(apps[0])
+	hiredReloaded := hired.WithReloadedData(apps, model.PipelineMetrics{Total: len(apps)})
+	if hiredReloaded.overlay != overlayHired || hiredReloaded.hiredStep != 1 || hiredReloaded.hiredApp.Company != "Acme" {
+		t.Fatalf("hired flow lost: overlay=%v step=%d app=%+v", hiredReloaded.overlay, hiredReloaded.hiredStep, hiredReloaded.hiredApp)
+	}
+
+	// Control: the status picker is NOT preserved across a reload (it never was).
+	picker := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
+	picker.overlay = overlayStatus
+	if got := picker.WithReloadedData(apps, model.PipelineMetrics{Total: len(apps)}).overlay; got != overlayNone {
+		t.Fatalf("status picker overlay after reload = %v, want overlayNone", got)
 	}
 }
 

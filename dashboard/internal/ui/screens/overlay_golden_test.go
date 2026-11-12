@@ -10,6 +10,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/santifer/jobber/dashboard/internal/data"
 	"github.com/santifer/jobber/dashboard/internal/model"
 	"github.com/santifer/jobber/dashboard/internal/theme"
 )
@@ -32,7 +33,11 @@ func goldenModel() PipelineModel {
 		{Number: 4, Company: "Delta", Role: "Data Engineer", Status: "Rejected", Score: 3.1, Date: "2026-06-04", Notes: "no budget"},
 		{Number: 5, Company: "Epsilon", Role: "Staff Engineer", Status: "Hired", Score: 4.8, Date: "2026-05-20"},
 	}
-	return NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps), ByStatus: map[string]int{"interview": 1, "applied": 1, "evaluated": 1, "rejected": 1, "hired": 1}}, "..", 120, 40)
+	byStatus := map[string]int{}
+	for _, a := range apps {
+		byStatus[data.NormalizeStatus(a.Status)]++
+	}
+	return NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps), ByStatus: byStatus}, "..", 120, 40)
 }
 
 func key(m PipelineModel, ks ...string) PipelineModel {

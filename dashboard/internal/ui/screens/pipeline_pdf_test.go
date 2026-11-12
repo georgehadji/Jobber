@@ -57,7 +57,7 @@ func TestPDFKeyFlashesWhenNoPDFExists(t *testing.T) {
 	if updated.flash == "" {
 		t.Fatal("expected a flash notice when no PDF matches")
 	}
-	if updated.pdfPicker {
+	if updated.overlay != overlayNone {
 		t.Fatal("expected no picker when no PDF matches")
 	}
 }
@@ -72,7 +72,7 @@ func TestPDFKeyOpensSingleMatchDirectly(t *testing.T) {
 	pm := newPDFTestModel(t, root, apps)
 	updated, cmd := pm.Update(keyMsg("d"))
 
-	if updated.pdfPicker {
+	if updated.overlay != overlayNone {
 		t.Fatal("expected no picker for a single match")
 	}
 	if cmd == nil {
@@ -100,7 +100,7 @@ func TestPDFKeyOpensNewestForMultipleMatches(t *testing.T) {
 	updated, cmd := pm.Update(keyMsg("d"))
 
 	// Multiple candidates → open the newest one immediately, no picker.
-	if updated.pdfPicker {
+	if updated.overlay != overlayNone {
 		t.Fatal("expected no picker — newest match should be opened directly")
 	}
 	if cmd == nil {
