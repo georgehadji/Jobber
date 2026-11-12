@@ -77,18 +77,18 @@ Monitor	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip mer
 hired	hired	hired	hired	hired	hired	hired	hired	no	dashboard i18n catalog label
 HIRED	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; dashboard i18n catalog label
 Hired	hired	hired	hired	hired	hired	hired	hired	no	dashboard i18n catalog label
-contratado	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
-CONTRATADO	hired	hired	hired	hired	-	hired	hired	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
-Contratado	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
-contratada	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
-CONTRATADA	hired	hired	hired	hired	-	hired	hired	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
-Contratada	hired	hired	hired	hired	-	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo)
-accepted	hired	hired	hired	hired	-	hired	hired	no	
-ACCEPTED	hired	hired	hired	hired	-	hired	hired	no	uppercase variant
-Accepted	hired	hired	hired	hired	-	hired	hired	no	
-accept	hired	hired	hired	hired	-	hired	hired	no	
-ACCEPT	hired	hired	hired	hired	-	hired	hired	no	uppercase variant
-Accept	hired	hired	hired	hired	-	hired	hired	no	
+contratado	hired	hired	hired	hired	hired	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo); D10: stats and followup-cadence resolve through the registry since Phase 3.3
+CONTRATADO	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo); D10: stats and followup-cadence resolve through the registry since Phase 3.3
+Contratado	hired	hired	hired	hired	hired	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo); D10: stats and followup-cadence resolve through the registry since Phase 3.3
+contratada	hired	hired	hired	hired	hired	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo); D10: stats and followup-cadence resolve through the registry since Phase 3.3
+CONTRATADA	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo); D10: stats and followup-cadence resolve through the registry since Phase 3.3
+Contratada	hired	hired	hired	hired	hired	hired	hired	no	Portuguese (hand-listed; no pt catalog or pt modes status vocabulary exists in repo); D10: stats and followup-cadence resolve through the registry since Phase 3.3
+accepted	hired	hired	hired	hired	hired	hired	hired	no	D10: stats and followup-cadence resolve through the registry since Phase 3.3
+ACCEPTED	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; D10: stats and followup-cadence resolve through the registry since Phase 3.3
+Accepted	hired	hired	hired	hired	hired	hired	hired	no	D10: stats and followup-cadence resolve through the registry since Phase 3.3
+accept	hired	hired	hired	hired	hired	hired	hired	no	D10: stats and followup-cadence resolve through the registry since Phase 3.3
+ACCEPT	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; D10: stats and followup-cadence resolve through the registry since Phase 3.3
+Accept	hired	hired	hired	hired	hired	hired	hired	no	D10: stats and followup-cadence resolve through the registry since Phase 3.3
 condicional	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
 CONDICIONAL	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); uppercase variant; non-YAML evaluated alias (Go accepts too)
 Condicional	-	evaluated	evaluated	evaluated	evaluated	evaluated	evaluated	no	not in states.yml (non-YAML alias); non-YAML evaluated alias (Go accepts too)
@@ -349,10 +349,10 @@ Descartado  	-	discarded	discarded	discarded	discarded	discarded	discarded	no	no
 **Descartado**	-	discarded	discarded	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); tracker.mjs=discarded (strips bold/date); markdown bold variant
 Descartado 2026-01-05	-	discarded	-	discarded	discarded	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=discarded (strips bold/date)
 Descartado (2026-01-05)	-	discarded	-	-	-	-	discarded	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=discarded (strips bold/date)
- Contratado 	-	hired	hired	hired	-	hired	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant
-Contratado  	-	hired	hired	hired	-	hired	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant
-**Contratado**	-	hired	hired	hired	-	-	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); markdown bold variant
-Contratado 2026-01-05	-	hired	-	hired	-	-	hired	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
+ Contratado 	-	hired	hired	hired	hired	hired	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant; D10: stats and followup-cadence resolve through the registry since Phase 3.3
+Contratado  	-	hired	hired	hired	hired	hired	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); whitespace variant; D10: stats and followup-cadence resolve through the registry since Phase 3.3
+**Contratado**	-	hired	hired	hired	hired	-	hired	no	not in states.yml (non-YAML alias); tracker.mjs=hired (strips bold/date); markdown bold variant; D10: stats and followup-cadence resolve through the registry since Phase 3.3
+Contratado 2026-01-05	-	hired	-	hired	hired	-	hired	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date); D10: stats and followup-cadence resolve through the registry since Phase 3.3
 Contratado (2026-01-05)	-	hired	-	-	-	-	-	no	not in states.yml (non-YAML alias); date-suffixed: per-runtime date stripping differs; tracker.mjs=hired (strips bold/date)
  Duplicado 	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); whitespace variant
 Duplicado  	-	discarded	discarded	-	-	discarded	discarded	no	not in states.yml (non-YAML alias); whitespace variant; repost/dup prefix: merge_tracker and normalize_statuses match by prefix

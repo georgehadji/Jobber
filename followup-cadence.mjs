@@ -16,6 +16,8 @@ import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import * as yaml from 'js-yaml';
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
+import { extraStatusId } from './lib/status-extra-aliases.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(JOBBER, 'data/applications.md'))
@@ -82,27 +84,16 @@ export function resolveCadenceConfig({ profilePath = PROFILE_FILE, appliedDays =
 
 const CADENCE = resolveCadenceConfig();
 
-// --- Status normalization (mirrors verify-pipeline.mjs) ---
-const ALIASES = {
-  'evaluada': 'evaluated', 'condicional': 'evaluated', 'hold': 'evaluated',
-  'evaluar': 'evaluated', 'verificar': 'evaluated',
-  'aplicado': 'applied', 'enviada': 'applied', 'aplicada': 'applied',
-  'applied': 'applied', 'sent': 'applied',
-  'respondido': 'responded',
-  'entrevista': 'interview',
-  'oferta': 'offer',
-  'rechazado': 'rejected', 'rechazada': 'rejected',
-  'descartado': 'discarded', 'descartada': 'discarded',
-  'cerrada': 'discarded', 'cancelada': 'discarded',
-  'no aplicar': 'skip', 'no_aplicar': 'skip', 'monitor': 'skip', 'geo blocker': 'skip',
-};
+// --- Status normalization: the registry (templates/states.yml) first, then the shared
+// extra-alias table (spellings this script always accepted that states.yml lacks, D2). ---
+const STATUS_MACHINE = loadMachine(APPLICATION_STATUS);
 
 const ACTIONABLE_STATUSES = ['applied', 'responded', 'interview'];
 
 export function normalizeStatus(raw) {
   const clean = raw.replace(/\*\*/g, '').trim().toLowerCase()
     .replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
-  return ALIASES[clean] || clean;
+  return canonicalize(STATUS_MACHINE, clean)?.id ?? extraStatusId(clean) ?? clean;
 }
 
 // --- Date helpers ---
