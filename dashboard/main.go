@@ -139,7 +139,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.reloadPipelineData()
 			return m, nil
 		}
-		if normalized == "discarded" || normalized == "skip" {
+		if data.AsksDiscardReason(normalized) {
 			m.state = viewPipeline
 			m.pipeline, _ = m.pipeline.StartDiscardReasonFlow(msg.App, msg.NewStatus)
 			m.reloadPipelineData()

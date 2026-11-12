@@ -261,7 +261,8 @@ const SOURCES = {
   'dashboard/internal/ui/screens/pipeline.go': () => {
     const s = read('dashboard/internal/ui/screens/pipeline.go');
     const pairs = [...s.matchAll(/\{i18n\.Current\.\w+,\s*"([^"]+)"\}/g)].map((m) => [m[1].toLowerCase(), m[1].toLowerCase()]);
-    const order = block(s, 'statusGroupOrder = []string{', '}');
+    // statusGroupOrder = hired + data.PriorityOrder() now; the rest is pinned by dashboard/internal/data/states_test.go.
+    const order = block(s, 'statusGroupOrder = append([]string{', '}');
     pairs.push(...identity(order));
     for (const m of s.matchAll(/^\s*filter\w+\s*=\s*"([^"]+)"/gm)) pairs.push([m[1].toLowerCase(), m[1].toLowerCase()]);
     return pairs;

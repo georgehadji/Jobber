@@ -248,8 +248,9 @@ func (m PipelineModel) currentStatusPairs() []StatusPair {
 	return getStatusPairs("")
 }
 
-// statusGroupOrder defines display order for grouped view.
-var statusGroupOrder = []string{"hired", "interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+// statusGroupOrder defines display order for grouped view: hired first, then the
+// dashboard's priority order (data.PriorityOrder, pinned to the registry by a test).
+var statusGroupOrder = append([]string{"hired"}, data.PriorityOrder()...)
 
 // PipelineModel implements the career pipeline dashboard screen.
 type PipelineModel struct {
@@ -812,7 +813,7 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 					}
 				}
 			}
-			if norm == "discarded" || norm == "skip" {
+			if data.AsksDiscardReason(norm) {
 				return m, func() tea.Msg {
 					return m.startDiscardFlow(app, newStatus)
 				}
@@ -1841,9 +1842,7 @@ func (m PipelineModel) renderPreview() string {
 // status (which often carries the decision date, e.g. "descartado 2026-03-12")
 // plus the tracker notes holding the reason. Returns "" for apps still in play.
 func previewOutcome(app model.CareerApplication) string {
-	switch data.NormalizeStatus(app.Status) {
-	case "discarded", "skip", "rejected":
-	default:
+	if !data.IsClosedStatus(data.NormalizeStatus(app.Status)) {
 		return ""
 	}
 	outcome := strings.TrimSpace(strings.ReplaceAll(app.Status, "**", ""))

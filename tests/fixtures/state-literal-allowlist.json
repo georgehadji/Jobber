@@ -18,9 +18,7 @@
     ],
     "dashboard/internal/data/career.go": [
       "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
-      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
       "applied,discarded,evaluated,interview,offer,rejected,responded,skip",
-      "discarded,offer,rejected,skip",
       "discarded,rejected,skip"
     ],
     "dashboard/internal/i18n/catalog.go": [
@@ -28,13 +26,7 @@
       "applied,discarded,evaluated,interview,offer,rejected,responded,skip"
     ],
     "dashboard/internal/ui/screens/pipeline.go": [
-      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
-      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip",
-      "discarded,hired,skip",
-      "discarded,rejected,skip"
-    ],
-    "dashboard/main.go": [
-      "discarded,hired,skip"
+      "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"
     ],
     "dedup-tracker.mjs": [
       "applied,discarded,evaluated,hired,interview,offer,rejected,responded,skip"

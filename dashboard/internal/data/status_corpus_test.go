@@ -22,8 +22,8 @@ func TestNormalizeStatusMatchesCorpus(t *testing.T) {
 		t.Fatalf("alias corpus missing or unreadable (%s): %v", path, err)
 	}
 	canonical := map[string]bool{}
-	for _, c := range []string{"evaluated", "applied", "responded", "interview", "offer", "hired", "rejected", "discarded", "skip"} {
-		canonical[c] = true
+	for _, s := range States {
+		canonical[s.ID] = true
 	}
 	placeholders := map[string]string{"<empty>": "", "<space>": " ", "<nbsp>": " "}
 

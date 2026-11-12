@@ -491,7 +491,7 @@ func ComputeMetrics(apps []model.CareerApplication) model.PipelineMetrics {
 		if app.HasPDF {
 			m.WithPDF++
 		}
-		if status != "skip" && status != "rejected" && status != "discarded" {
+		if !IsClosedStatus(status) {
 			m.Actionable++
 		}
 	}
@@ -870,11 +870,7 @@ func statusCellIndex(cells []string, canonicalIdx int, want string) int {
 // known tracker statuses (in any accepted spelling/language), i.e. whether it
 // is safe to treat the cell as the Status column.
 func isCanonicalStatusValue(cell string) bool {
-	switch NormalizeStatus(cell) {
-	case "evaluated", "applied", "responded", "interview", "offer", "hired", "rejected", "discarded", "skip":
-		return true
-	}
-	return false
+	return IsStateID(NormalizeStatus(cell))
 }
 
 // spliceCellValue swaps a cell's inner value while preserving its surrounding
@@ -899,28 +895,34 @@ func cleanTableCell(s string) string {
 	return strings.TrimSpace(s)
 }
 
+// priorityOrder is the dashboard's sort order for grouped view (first = shown first).
+// It is a UI choice, not a registry fact; Hired is deliberately absent and sorts last
+// via the default (see StatusPriority). TestPriorityOrderCoversRegistry pins it to the
+// registry, so a new state fails there until it is placed here.
+var priorityOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+
+// PriorityOrder returns a copy of the grouped-view sort order (everything but hired).
+func PriorityOrder() []string {
+	return append([]string(nil), priorityOrder...)
+}
+
+// IsClosedStatus reports whether a normalized status is one the dashboard counts as
+// no longer in play (skip, rejected, discarded). Hired is terminal in the registry but
+// deliberately not closed here: a hire is a live success, not a dropped lead.
+func IsClosedStatus(norm string) bool {
+	return norm == "skip" || norm == "rejected" || norm == "discarded"
+}
+
 // StatusPriority returns the sort priority for a status (lower = higher priority).
+// Hired and unknown statuses sort last.
 func StatusPriority(status string) int {
-	switch NormalizeStatus(status) {
-	case "interview":
-		return 0
-	case "offer":
-		return 1
-	case "responded":
-		return 2
-	case "applied":
-		return 3
-	case "evaluated":
-		return 4
-	case "skip":
-		return 5
-	case "rejected":
-		return 6
-	case "discarded":
-		return 7
-	default:
-		return 8
+	norm := NormalizeStatus(status)
+	for i, id := range priorityOrder {
+		if id == norm {
+			return i
+		}
 	}
+	return len(priorityOrder)
 }
 
 // ComputeProgressMetrics computes progress-oriented analytics from applications.
@@ -947,7 +949,7 @@ func ComputeProgressMetrics(apps []model.CareerApplication) model.ProgressMetric
 		if norm == "offer" {
 			pm.TotalOffers++
 		}
-		if norm != "skip" && norm != "rejected" && norm != "discarded" {
+		if !IsClosedStatus(norm) {
 			pm.ActiveApps++
 		}
 	}
