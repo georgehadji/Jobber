@@ -668,6 +668,10 @@ func resolveTrackerColumns(lines []string) map[string]int {
 }
 
 // UpdateApplicationStatus updates the status of an application in applications.md.
+//
+// Deprecated: writes the tracker directly, bypassing the state-machine gate and the
+// status-log ledger. The TUI uses SetStatus (set-status.mjs) instead. Kept, with its tests,
+// until a follow-up removes it.
 func UpdateApplicationStatus(jobberPath string, app model.CareerApplication, newStatus string) error {
 	return UpdateApplicationStatusAndNotes(jobberPath, app, newStatus, "")
 }
@@ -681,6 +685,8 @@ func UpdateApplicationStatus(jobberPath string, app model.CareerApplication, new
 // notesAppend is appended (with a space separator if notes are non-empty) to
 // whatever the Notes cell already contains. Pass an empty string to leave
 // notes unchanged.
+//
+// Deprecated: see UpdateApplicationStatus. Use SetStatus with a note.
 func UpdateApplicationStatusAndNotes(jobberPath string, app model.CareerApplication, newStatus, notesAppend string) (returnErr error) {
 	filePath := filepath.Join(jobberPath, "applications.md")
 	if _, err := os.Stat(filePath); err != nil {

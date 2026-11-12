@@ -80,7 +80,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineUpdateStatusMsg:
-		err := data.UpdateApplicationStatus(msg.JobberPath, msg.App, msg.NewStatus)
+		_, err := data.SetStatus(msg.JobberPath, msg.App, msg.NewStatus, "")
 		if err != nil {
 			// Log the error but still reload data to keep UI consistent
 			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
@@ -90,7 +90,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case screens.PipelineUpdateStatusAndNotesMsg:
 		// Issue 1380: atomic status + notes write from the discard reason picker.
-		err := data.UpdateApplicationStatusAndNotes(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend)
+		_, err := data.SetStatus(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: status+notes update failed: %v\n", err)
 		}
@@ -128,7 +128,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.ViewerUpdateStatusMsg:
 		normalized := data.NormalizeStatus(msg.NewStatus)
 		if normalized == "hired" {
-			err := data.UpdateApplicationStatus(m.jobberPath, msg.App, msg.NewStatus)
+			_, err := data.SetStatus(m.jobberPath, msg.App, msg.NewStatus, "")
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
 				m.reloadPipelineData()
@@ -146,7 +146,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		err := data.UpdateApplicationStatus(m.jobberPath, msg.App, msg.NewStatus)
+		_, err := data.SetStatus(m.jobberPath, msg.App, msg.NewStatus, "")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
 		}
