@@ -1,0 +1,81 @@
+# Jobber — scan-history machine (STATE-MACHINES-PLAN M13 / 4.5).
+# The `status` column (6th) of data/scan-history.tsv: how a scanned URL was dispositioned. The file is
+# append-only, so a "transition" is a LATER row for the same URL, which only happens when dedup lets
+# the URL through again. Declares what the code does TODAY; nothing is enforced (warn-first).
+# Parity test: tests/machine-scan-history.test.mjs.
+#
+# Writers (scan.mjs appendToScanHistory, status default 'added'): scan.mjs, scan-ats-full.mjs
+# (default `added`), scan-interamt.mjs (own skipped_title/location/date/dup), and the agent-run
+# scan mode (modes/scan.md writes added/skipped_dup/skipped_title/skipped_expired by hand).
+# Readers: scan.mjs shouldDedupScanHistoryRow (dedup), stats.mjs, detect-reposts.mjs (only `added`).
+# A missing/blank status reads as `added` everywhere (`status = 'added'` defaults).
+#
+# Liveness -> status mapping (scan.mjs verifyOffers + main, scan.mjs:~1935-1994, ~2457-2498):
+#   liveness-core classifyLiveness() result `active`                      -> added
+#   `uncertain` (bot_challenge/access_blocked/redirected_off_posting/navigation error) -> added (retry next scan)
+#   `expired`  (http_gone/expired_url/expired_body/listing_page/insufficient_content)   -> skipped_expired
+#   `uncertain` + code no_apply_control                                   -> skipped_no_apply_control
+#   guard codes blocked_host -> skipped_blocked_host; invalid_url|unsupported_protocol -> skipped_invalid_url
+#   --rediscover-404 migrated offers: the OLD url is written skipped_expired, the new one added.
+#
+# KNOWN PROBLEM (pinned by the parity test, NOT fixed here): a FALSE `skipped_expired` is permanent.
+# shouldDedupScanHistoryRow returns true for every status except `added` BEFORE it consults
+# scan_history.recheck_after_days, so recheck_after_days only ever re-opens `added` rows; an expired
+# (or no_apply_control, or any other skipped_*) URL is deduped forever, even with the recheck set.
+# (STATE-MACHINES-PLAN M13 says "unless recheckAfterDays is set"; the code does not do that.)
+# PERMANENT_SCAN_HISTORY_STATUSES in scan.mjs (invalid_url, blocked_host) is therefore redundant with
+# the `status !== 'added'` rule. Only `cooldown:` rows lapse, by their own date.
+id: scan-history
+persisted_in: data/scan-history.tsv (status column, col 6)
+initial: added
+states:
+  - id: added
+    label: added
+    terminal: false
+    description: The URL was surfaced to pipeline.md. The ONLY status that can lapse, and only when scan_history.recheck_after_days is set and the row is older than that. Blank/missing status reads as this
+  - id: skipped_expired
+    label: skipped_expired
+    terminal: true
+    description: --verify (or the scan agent) judged the posting dead, or its URL was migrated by --rediscover-404. Deduped permanently, even with recheck_after_days set. A false positive here never self-heals
+  - id: skipped_no_apply_control
+    label: skipped_no_apply_control
+    terminal: true
+    description: --verify loaded the page but found no Apply control. Dropped from pipeline.md; deduped permanently (same flaw as skipped_expired)
+  - id: skipped_invalid_url
+    label: skipped_invalid_url
+    terminal: true
+    description: URL guard rejection (invalid_url or unsupported_protocol). Deduped permanently
+  - id: skipped_blocked_host
+    label: skipped_blocked_host
+    terminal: true
+    description: URL guard rejection (private or blocked host). Deduped permanently
+  - id: skipped_title
+    label: skipped_title
+    terminal: true
+    description: Filtered by the title filter. Written by scan-interamt.mjs and the scan agent mode, not by scan.mjs. Deduped permanently
+  - id: skipped_location
+    label: skipped_location
+    terminal: true
+    description: Filtered by location. Written by scan-interamt.mjs only. Deduped permanently
+  - id: skipped_date
+    label: skipped_date
+    terminal: true
+    description: Published before the last scan. Written by scan-interamt.mjs only. Deduped permanently
+  - id: skipped_dup
+    label: skipped_dup
+    terminal: true
+    description: Duplicate offer. Written by scan-interamt.mjs and the scan agent mode. Deduped permanently
+  - id: cooldown
+    label: cooldown
+    terminal: false
+    description: Written as the PATTERN `cooldown:<company>:<YYYY-MM-DD>` (scan.mjs:~780,798, grouped at ~2462), never the bare word; the registry cannot match a pattern, so canonicalize the text before the first colon. Deduped only while today is before the date, then the URL is eligible again
+transitions:
+  # `added` can only change when recheck_after_days lapses and the URL is dispositioned again.
+  added: [skipped_expired, skipped_no_apply_control, skipped_invalid_url, skipped_blocked_host, cooldown]
+  # a lapsed cooldown re-opens the URL: the next scan dispositions it afresh.
+  cooldown: [added, skipped_expired, skipped_no_apply_control, skipped_invalid_url, skipped_blocked_host]
+policy:
+  backward_between_live: correction
+  unknown_input: flag   # today ANY unrecognised non-added string is deduped like a skipped_* row (never rejected)
+  exit_terminal: force
+writers: [scan.mjs, scan-ats-full.mjs, scan-interamt.mjs]
