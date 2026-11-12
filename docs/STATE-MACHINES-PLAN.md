@@ -278,6 +278,11 @@ Each phase is a small PR. **Subagent models:** Haiku 5.5 for the easiest, mechan
 
 Each item needs a test that fails before the fix and passes after it (control case included).
 
+**Phase 2 status (2026-11-12): 2.1–2.6 done.** Follow-ups found while doing it (not yet fixed):
+- *Run stream, pre-existing:* `/api/run` emits an `error` event for **any** stderr line matching words such as `error|auth|login`. The client stops at the first one and shows an error while the CLI keeps running and may finish successfully. Fix this with Phase 4: distinguish warnings from fatal errors on the server, so the client can keep reading until the real terminal event. The client deliberately does **not** cancel the stream on that event: cancelling would SIGTERM a CLI that may be writing a report or the tracker.
+- *Assistant confirm card:* it still shows "✓ started" as soon as the user confirms a status change; a refusal arrives afterwards as a note. A real fix needs `writeStatus` in `web/src/app/actions/registry.ts` to become async and return the result (the `DoneInfo` contract).
+- *Explore:* `setMode()` clears `runningRef` mid-stream without cancelling the stream, and a stale stream can still make direct `setPhase` calls after `reset()` (only the delayed transition is guarded). Fold this into the M10 reducer work in Phase 4.
+
 ### Phase 3 — The registry and the gate
 
 | # | Task | Model |
