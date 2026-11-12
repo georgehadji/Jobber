@@ -7,7 +7,7 @@
 # (aliases carry the other spellings; the mapping is lossy where noted):
 #   1. data/portal-health.tsv (scan.mjs appendPortalHealth, scan.mjs:~2617-2627): the state ids below,
 #      minus `unprobed`. The kind comes from lib/http-errors.mjs classifyFetchError().
-#   2. verify-portals.mjs (probeSlug / probeProvider): live | empty | missing
+#   2. verify-portals.mjs (probeSlug / probeProvider): live | empty | missing | skipped (no provider claims it)
 #   3. provider-health.mjs (vendor canary, cached in os.tmpdir): healthy | degraded | down | skipped
 #   4. discover-ats.mjs (probeVendor / resolveFromWebsite): match | empty | error | unverified | none
 #
