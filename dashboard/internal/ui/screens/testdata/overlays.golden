@@ -1,0 +1,732 @@
+=== base ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE               STATUS           LOCATION             PAY                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer   Interview        —                                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer  Applied          —                                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                Evaluated        —                                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer      Rejected         —                                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer     hired            —                                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== col/open ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE               STATUS           LOCATION             PAY                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer   Interview        —                                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer  Applied          —                                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                Evaluated        —                                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer      Rejected         —                                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer     hired            —                                          
+  ─── Columns (SPACE toggle · ESC close) ───                                                                            
+  [✓] APPLIED                                                                                                           
+  [✓] LOCATION                                                                                                          
+  [✓] PAY                                                                                                               
+  [ ] RPT  ✓/—                                                                                                          
+  [ ] PDF  ✓/—                                                                                                          
+  [ ] LAST                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk navigate  SPACE toggle  Esc/C close                                                                              
+=== col/moved+toggled ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Columns (SPACE toggle · ESC close) ───                                                                            
+  [✓] APPLIED                                                                                                           
+  [✓] LOCATION                                                                                                          
+  [ ] PAY                                                                                                               
+  [ ] RPT  ✓/—                                                                                                          
+  [ ] PDF  ✓/—                                                                                                          
+  [ ] LAST                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk navigate  SPACE toggle  Esc/C close                                                                              
+=== col/closed-esc ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== col/closed-C ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== status/open ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  Change status:                                                                                                        
+   >Interview                                                                                                           
+    Evaluated                                                                                                           
+    Applied                                                                                                             
+    Responded                                                                                                           
+    Offer                                                                                                               
+    Hired                                                                                                               
+    Rejected                                                                                                            
+    Discarded                                                                                                           
+    SKIP                                                                                                                
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
+=== status/moved ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  Change status:                                                                                                        
+    Interview                                                                                                           
+    Evaluated                                                                                                           
+   >Applied                                                                                                             
+    Responded                                                                                                           
+    Offer                                                                                                               
+    Hired                                                                                                               
+    Rejected                                                                                                            
+    Discarded                                                                                                           
+    SKIP                                                                                                                
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
+=== status/closed-esc ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== status/closed-q ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== search/open ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+  / █  5/5 matching   Enter: keep   Esc: cancel   Ctrl+U: clear                                                         
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ type filter live  Enter keep  Ctrl+U clear  Esc cancel                                                                 
+=== search/typed ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  1 shown                                                                               
+  / ac█  1/5 matching   Enter: keep   Esc: cancel   Ctrl+U: clear                                                       
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ type filter live  Enter keep  Ctrl+U clear  Esc cancel                                                                 
+=== search/backspaced ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+  / a█  5/5 matching   Enter: keep   Esc: cancel   Ctrl+U: clear                                                        
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ type filter live  Enter keep  Ctrl+U clear  Esc cancel                                                                 
+=== search/committed ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  1 shown                                                                               
+  / ac  1/5 matching   Esc: clear   /: edit                                                                             
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== search/cancelled ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/open ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
+    ★ Predicted by agent:                                                                                               
+  > ★ salary_too_low                                                                                                    
+    ★ custom_reason                                                                                                     
+    ── Other options:                                                                                                   
+    hybrid_required                                                                                                     
+    tech_stack_mismatch                                                                                                 
+    seniority_mismatch                                                                                                  
+    geo_restriction                                                                                                     
+    size_mismatch                                                                                                       
+    company_culture                                                                                                     
+    Other…                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/moved ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
+    ★ Predicted by agent:                                                                                               
+    ★ salary_too_low                                                                                                    
+    ★ custom_reason                                                                                                     
+    ── Other options:                                                                                                   
+  > hybrid_required                                                                                                     
+    tech_stack_mismatch                                                                                                 
+    seniority_mismatch                                                                                                  
+    geo_restriction                                                                                                     
+    size_mismatch                                                                                                       
+    company_culture                                                                                                     
+    Other…                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/unbound-key ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
+    ★ Predicted by agent:                                                                                               
+  > ★ salary_too_low                                                                                                    
+    ★ custom_reason                                                                                                     
+    ── Other options:                                                                                                   
+    hybrid_required                                                                                                     
+    tech_stack_mismatch                                                                                                 
+    seniority_mismatch                                                                                                  
+    geo_restriction                                                                                                     
+    size_mismatch                                                                                                       
+    company_culture                                                                                                     
+    Other…                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/at-other ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
+    ★ Predicted by agent:                                                                                               
+    ★ salary_too_low                                                                                                    
+    ★ custom_reason                                                                                                     
+    ── Other options:                                                                                                   
+    hybrid_required                                                                                                     
+    tech_stack_mismatch                                                                                                 
+    seniority_mismatch                                                                                                  
+    geo_restriction                                                                                                     
+    size_mismatch                                                                                                       
+    company_culture                                                                                                     
+  > Other…                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/custom-input-empty ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Reason (type + Enter) ───────────────                                                                             
+  > █                                                                                                                   
+  Enter: confirm   Esc: back                                                                                            
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/custom-input-typed ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Reason (type + Enter) ───────────────                                                                             
+  > xy█                                                                                                                 
+  Enter: confirm   Esc: back                                                                                            
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== discard/custom-esc-back-to-list ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ─── Discard reason (↑↓ navigate · Enter confirm · Esc skip) ─                                                         
+    ★ Predicted by agent:                                                                                               
+    ★ salary_too_low                                                                                                    
+    ★ custom_reason                                                                                                     
+    ── Other options:                                                                                                   
+    hybrid_required                                                                                                     
+    tech_stack_mismatch                                                                                                 
+    seniority_mismatch                                                                                                  
+    geo_restriction                                                                                                     
+    size_mismatch                                                                                                       
+    company_culture                                                                                                     
+  > Other…                                                                                                              
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== hired/step1 ===
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                             ╔═══════════════════════════════════════════════════════════╗                              
+                             ║                                                           ║                              
+                             ║                   🎉 CONGRATULATIONS! 🎉                  ║                              
+                             ║                                                           ║                              
+                             ║                    You landed the job!                    ║                              
+                             ║                  Staff Engineer @ Epsilon                 ║                              
+                             ║                                                           ║                              
+                             ║  This moment belongs entirely to you. Celebrate the win!  ║                              
+                             ║                                                           ║                              
+                             ║               Press [ Enter ] to continue...              ║                              
+                             ║                                                           ║                              
+                             ╚═══════════════════════════════════════════════════════════╝                              
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+=== hired/step2 ===
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                          ╔═════════════════════════════════════════════════════════════════╗                           
+                          ║                                                                 ║                           
+                          ║                       Share your story? 🚀                      ║                           
+                          ║                                                                 ║                           
+                          ║             We'd love to hear your story on GitHub!             ║                           
+                          ║  Your story helps others in the community see what's possible.  ║                           
+                          ║                                                                 ║                           
+                          ║     Press [ Y ] to open template in browser / [ N ] to skip     ║                           
+                          ║                                                                 ║                           
+                          ╚═════════════════════════════════════════════════════════════════╝                           
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+=== hired/step3 ===
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                              ╔══════════════════════════════════════════════════════════╗                              
+                              ║                                                          ║                              
+                              ║                 Opt-in Anonymous Stat? 📊                ║                              
+                              ║                                                          ║                              
+                              ║    Help us count community hires in the public README:   ║                              
+                              ║                  - Role: Staff Engineer                  ║                              
+                              ║                    - Weeks to hire: 25                   ║                              
+                              ║                                                          ║                              
+                              ║    No names, no companies, and no salaries are shared.   ║                              
+                              ║                                                          ║                              
+                              ║  Press [ Y ] to opt-in / [ N ] to keep completely local  ║                              
+                              ║                                                          ║                              
+                              ╚══════════════════════════════════════════════════════════╝                              
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+=== hired/done ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk nav  ←→/hl tabs  / search  s sort  r refresh  Enter report  o open URL  d open PDF  D regen PDF  c change  C     
+ columns  v view  p progress  t lang  m manifesto  q quit built on the Jobber Manifesto · Jobber by santifer.io         
+=== pdf/open ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  Open CV PDF:                                                                                                          
+  > cv-a.pdf                                                                                                            
+    cv-b.pdf                                                                                                            
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
+=== pdf/moved ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  Open CV PDF:                                                                                                          
+    cv-a.pdf                                                                                                            
+  > cv-b.pdf                                                                                                            
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ ↑↓/jk navigate  Enter confirm  Esc cancel                                                                              
+=== flash/pdf-error ===
+  CAREER PIPELINE                                                                                 5 offers | Avg 0.0/5  
+  ALL (5)  EVALUATED (1)  INTERVIEW (1)  RESPONDED (0)  APPLIED (1)  TOP ≥4 (3)  SKIP (0)  REJECTED (1)  DISCARDED (0)  
+ ━━━━━━━━━───────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+  hired:1  Interview:1  Applied:1  Evaluated:1  Rejected:1                                                              
+  [Sort: score]  [View: grouped]  5 shown                                                                               
+   #     FIT APPLIED    COMPANY          ROLE                               STATUS           LOCATION                   
+  ── INTERVIEW (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #1    4.6 2026-06-01 Acme             Backend Engineer                   Interview        —                          
+  ── APPLIED (1) ───────────────────────────────────────────────────────────────────────────────────                    
+   #2    4.2 2026-06-02 Beta             Platform Engineer                  Applied          —                          
+  ── EVALUATED (1) ─────────────────────────────────────────────────────────────────────────────────                    
+   #3    3.9 2026-06-03 Gamma            SRE                                Evaluated        —                          
+  ── REJECTED (1) ──────────────────────────────────────────────────────────────────────────────────                    
+   #4    3.1 2026-06-04 Delta            Data Engineer                      Rejected         —                          
+  ── HIRED (1) ─────────────────────────────────────────────────────────────────────────────────────                    
+   #5    4.8 2026-05-20 Epsilon          Staff Engineer                     hired            —                          
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+  remote                                                                                                                
+ PDF regeneration failed: boom                                                                                          
