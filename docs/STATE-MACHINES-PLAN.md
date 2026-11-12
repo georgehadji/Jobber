@@ -241,7 +241,7 @@ writers: [set-status.mjs]       # the ONLY scripts allowed to write this state (
   - **Recommended:** writes shell out to `node set-status.mjs <n> <state> --json`. That gives one gate, the status-log append, and the same error texts. Node is always present wherever Jobber runs.
   - Reads use a **generated** `dashboard/internal/data/states_gen.go`, produced by `node scripts/gen-states.mjs` from `states.yml`. A parity test fails if it is stale. No new Go dependency.
 - **Markdown (modes, for agents):** replace hand-restated lists with **generated blocks**:
-  `<!-- machine:application-status:begin --> … <!-- machine:application-status:end -->`
+  a `machine:application-status` begin/end comment pair (the marker syntax is described in `lib/machine-blocks.mjs`; it is not written out here because the block scanner would read it)
   The generator rewrites only the content between the markers, and a test fails if a block is stale. Agents keep reading the list inline (no extra tool call, same token cost), and drift becomes impossible.
 
 ### 4.5 Honest UI (UX)
