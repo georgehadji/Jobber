@@ -20,6 +20,7 @@ import {
 import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
 import { extraStatusId } from './lib/status-extra-aliases.mjs';
+import { applyStatusChange } from './lib/status-gate.mjs';
 
 const JOBBER = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = resolveTrackerPath(JOBBER);
@@ -32,6 +33,12 @@ mkdirSync(join(JOBBER, 'data'), { recursive: true });
 // (templates/states.yml), then the shared extra-alias table (D2); the regexes below
 // handle the prefix/dated/placeholder shapes the registry cannot express.
 const STATUS_MACHINE = loadMachine(APPLICATION_STATUS);
+
+// Phase 5.3: rewriting a spelling must never move a row OUT of a final state. The shared
+// transition gate runs in ENFORCE mode by default (a refused row is kept as-is and listed);
+// JOBBER_NORMALIZE_GATE=warn applies the change anyway with a WARN. Cells that resolve to no
+// state (junk such as DUPLICADO or a bare dash) are this tool's job to fix and always pass.
+const GATE_MODE = process.env.JOBBER_NORMALIZE_GATE === 'warn' ? 'warn' : 'enforce';
 
 function normalizeStatus(raw) {
   // Strip markdown bold
@@ -94,6 +101,7 @@ const lines = content.split('\n');
 
 let changes = 0;
 let unknowns = [];
+let kept = [];
 
 // Map columns by header name (tracker-parse.mjs, #954/#1596). Fixed indices
 // assumed the original 9-column layout, so a customized tracker — an inserted
@@ -119,9 +127,15 @@ for (let i = 0; i < lines.length; i++) {
 
   if (result.status === rawStatus) continue; // Already canonical
 
-  // Apply change
+  // Apply change (through the shared gate)
   const oldStatus = rawStatus;
-  parts[COLS.status] = result.status;
+  const change = applyStatusChange({ parts, colmap: COLS, num, to: result.status, mode: GATE_MODE, machine: STATUS_MACHINE });
+  if (!change.allowed) {
+    kept.push({ num, rawStatus, to: result.status, from: change.gate.from, line: i + 1 });
+    continue;
+  }
+  // unknown-from is expected here (junk cells are what this tool fixes); only illegal-move warnings matter
+  for (const w of change.warnings) if (!w.startsWith('WARN row ')) console.error(w);
 
   // Move DUPLICADO info to notes if needed. A layout without a Notes column
   // has nowhere to put it — dropping the provenance beats appending a cell the
@@ -150,6 +164,13 @@ if (unknowns.length > 0) {
   console.log(`\n⚠️  ${unknowns.length} unknown statuses:`);
   for (const u of unknowns) {
     console.log(`  #${u.num} (line ${u.line}): "${u.rawStatus}"`);
+  }
+}
+
+if (kept.length > 0) {
+  console.log(`\n⛔ ${kept.length} kept (change would leave a final state):`);
+  for (const k of kept) {
+    console.log(`  #${k.num} (line ${k.line}): "${k.rawStatus}" stays — ${k.from} -> ${k.to} is an illegal transition. Override with: node set-status.mjs ${k.num} ${k.to} --force`);
   }
 }
 
