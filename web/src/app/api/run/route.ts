@@ -5,6 +5,7 @@ import { resolveCli } from "@/lib/clis";
 import { jobberRoot, readMemory } from "@/lib/jobber";
 import { validateRun } from "@/lib/core/run-input";
 import { claudeToolArgs, untrusted } from "@/lib/agent-policy";
+import { timeoutMessage } from "@/lib/core/run-stream";
 import { acquireTrackerWrite, releaseTrackerWrite } from "@/lib/core/run-registry";
 
 export const runtime = "nodejs";
@@ -159,7 +160,9 @@ export async function POST(req: Request) {
       let lastCostUsd: number | null = null;
       // pdf-mode tailors a full CV + renders it — give it more headroom.
       const killMs = kind === "pdf" ? 720_000 : 285_000;
+      let timedOut = false;
       killer = setTimeout(() => {
+        timedOut = true;
         try { child.kill("SIGTERM"); } catch { /* ignore */ }
       }, killMs);
       const send = (obj: unknown) => {
@@ -229,7 +232,10 @@ export async function POST(req: Request) {
         // Honesty gate (#9): a green "done" with a parsed score requires a CLEAN exit,
         // real output, AND (for evaluations) a report actually written. Anything else
         // is surfaced — an errored run must never be banked as a confident score.
-        if (!emittedText && !sawError && !cleanExit) {
+        if (timedOut) {
+          // Killed by our own timer — say so plainly instead of a generic error.
+          send({ type: "error", msg: timeoutMessage(killMs) });
+        } else if (!emittedText && !sawError && !cleanExit) {
           send({ type: "error", msg: "The CLI exited with an error — is it installed and authenticated?" });
         } else if (!emittedText && !sawError) {
           send({ type: "error", msg: "The CLI produced no output — is it installed and authenticated? (Jobber is best on Claude Code.)" });

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { scoreTone } from "@/lib/format";
+import { finalRunState } from "@/lib/core/run-stream";
 
 export type JobStep = { kind: "tool" | "status"; label: string; ts: number };
 export type JobResult = { score: number | null; summary: string; tone: "good" | "warn" | "bad" | "muted" };
@@ -164,6 +165,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
             return;
           }
           const reader = res.body.getReader();
+          let sawDone = false;
           const dec = new TextDecoder();
           let buf = "";
           for (;;) {
@@ -191,10 +193,17 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
                   patch(id, (j) => ({ ...j, text }));
                 } else if (ev.type === "done") {
                   // finish happens on stream-close; capture the per-run cost it carries
+                  sawDone = true;
                   if (typeof ev.tokens === "number") doneTokens = ev.tokens;
                   if (typeof ev.costUsd === "number") doneCostUsd = ev.costUsd;
                 } else if (ev.type === "error") {
-                  finish("error", ev.msg || "Error");
+                  const fin = finalRunState({ sawDone, sawError: true, errorMessage: ev.msg, closedCleanly: false });
+                  // Deliberately do NOT cancel the reader here: the server emits `error`
+                  // mid-run for any stderr line matching words like "error"/"auth", and
+                  // cancelling would SIGTERM the CLI while it may still be writing a
+                  // report or the tracker. The child keeps its tracker-write token until
+                  // it really exits (run-registry), which is the correct protection.
+                  finish("error", fin.message);
                   return;
                 }
               } catch {
@@ -202,7 +211,9 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
               }
             }
           }
-          finish("done", "Done");
+          const fin = finalRunState({ sawDone, sawError: false, closedCleanly: true });
+          if (fin.status === "done") finish("done", "Done");
+          else finish("error", fin.message);
         } catch {
           finish("error", "Connection error");
         }
