@@ -26,8 +26,10 @@
  *   node agent-inbox.mjs resolve 1 [--result "scored 4.3 — report 012"]
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync, rmSync } from 'fs';
+import { dirname, basename, join } from 'path';
+import { randomUUID } from 'crypto';
+import { acquireLockSync } from './lib/file-lock.mjs';
 
 const PATH = process.env.JOBBER_INBOX || 'data/agent-inbox.md';
 
@@ -77,11 +79,31 @@ function oneLine(s) {
   return String(s ?? '').replace(/\s*\n\s*/g, ' ').trim();
 }
 
+// tmp + rename, so a crash never leaves a truncated inbox (same recipe as lib/pipeline-inbox.mjs).
+function writeAtomic(content) {
+  const tmp = join(dirname(PATH), `.${basename(PATH)}.${process.pid}.${randomUUID()}.tmp`);
+  try {
+    writeFileSync(tmp, content);
+    renameSync(tmp, PATH);
+  } catch (err) {
+    rmSync(tmp, { force: true });
+    throw err;
+  }
+}
+
+// Shared advisory lock around a read-modify-write. fn must not call fail()/exit:
+// return a message instead and let the caller fail after the lock is released.
+function locked(fn) {
+  mkdirSync(dirname(PATH), { recursive: true });
+  const lock = acquireLockSync(PATH, { kind: 'agent-inbox', staleMs: 30_000 });
+  try { return fn(); } finally { lock.release(); }
+}
+
 function ensureFile() {
   if (existsSync(PATH)) return;
   ensureGitignored();
   mkdirSync(dirname(PATH), { recursive: true });
-  writeFileSync(PATH, HEADER);
+  writeAtomic(HEADER);
 }
 
 // Parse the checklist into items, in file order.
@@ -105,9 +127,11 @@ function opt(name, def = '') {
 function add() {
   const text = oneLine(process.argv.slice(3).join(' '));
   if (!text) fail('add needs a request, e.g. node agent-inbox.mjs add "evaluate https://..."');
-  ensureFile();
-  const body = readFileSync(PATH, 'utf8').replace(/\s+$/, '');
-  writeFileSync(PATH, `${body}\n- [ ] ${stamp()} — ${text}\n`);
+  locked(() => {
+    ensureFile();
+    const body = readFileSync(PATH, 'utf8').replace(/\s+$/, '');
+    writeAtomic(`${body}\n- [ ] ${stamp()} — ${text}\n`);
+  });
   process.stdout.write(`Queued: ${text}\n`);
 }
 
@@ -123,17 +147,21 @@ function list() {
 function resolve() {
   const n = Number(process.argv[3]);
   if (!Number.isInteger(n) || n < 1) fail('resolve needs a 1-based item number (see `list`)');
-  // Number against the pending view, so `list` then `resolve N` line up.
-  const pending = parseItems().filter((it) => !it.done);
-  const target = pending[n - 1];
-  if (!target) fail(`no pending item #${n} (${pending.length} pending)`);
   const result = oneLine(opt('result'));
-  const lines = readFileSync(PATH, 'utf8').split('\n');
-  let updated = lines[target.line].replace('[ ]', '[x]');
-  if (result && !/→ result:/.test(updated)) updated += ` → result: ${result}`;
-  lines[target.line] = updated;
-  writeFileSync(PATH, lines.join('\n'));
-  process.stdout.write(`Resolved #${n}: ${target.text}\n`);
+  const out = existsSync(PATH) ? locked(() => {
+    // Number against the pending view, so `list` then `resolve N` line up.
+    const pending = parseItems().filter((it) => !it.done);
+    const target = pending[n - 1];
+    if (!target) return { err: `no pending item #${n} (${pending.length} pending)` };
+    const lines = readFileSync(PATH, 'utf8').split('\n');
+    let updated = lines[target.line].replace('[ ]', '[x]');
+    if (result && !/→ result:/.test(updated)) updated += ` → result: ${result}`;
+    lines[target.line] = updated;
+    writeAtomic(lines.join('\n'));
+    return { text: target.text };
+  }) : { err: `no pending item #${n} (0 pending)` };
+  if (out.err) fail(out.err);
+  process.stdout.write(`Resolved #${n}: ${out.text}\n`);
 }
 
 function fail(msg) {
