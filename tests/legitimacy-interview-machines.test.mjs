@@ -116,9 +116,11 @@ parity('modes/tr/is-ilani.md bold tier bullets', LEG, [...read('modes/tr/is-ilan
 parity('analyze-patterns.mjs plain legitimacy values', LEG, plainTokens(read('analyze-patterns.mjs')).filter((t, i, a) => a.indexOf(t) === i), ['High Confidence', 'high_confidence']);
 { // writers' fallbacks, by RUNTIME where possible
   const evalFallback = parseScoreSummary('no summary block here at all').legitimacy;
-  eq('eval-runner.mjs fallback (no SCORE_SUMMARY block) is `unknown`, an alias of unconfirmed', [evalFallback, canonicalize(LEG, evalFallback)?.id], ['unknown', 'unconfirmed']);
+  eq('eval-runner.mjs fallback (no SCORE_SUMMARY block) is `unconfirmed` (D13: was `unknown`)', [evalFallback, canonicalize(LEG, evalFallback)?.id], ['unconfirmed', 'unconfirmed']);
   const missingKey = parseScoreSummary('---SCORE_SUMMARY---\nCOMPANY: A\nROLE: B\nSCORE: 4.0\nARCHETYPE: x\n---END_SUMMARY---').legitimacy;
-  eq('eval-runner.mjs per-key miss (block present, LEGITIMACY: absent) is also `unknown`', [missingKey, canonicalize(LEG, missingKey)?.id], ['unknown', 'unconfirmed']);
+  eq('eval-runner.mjs per-key miss (block present, LEGITIMACY: absent) is also `unconfirmed` (D13)', [missingKey, canonicalize(LEG, missingKey)?.id], ['unconfirmed', 'unconfirmed']);
+  const missingOther = parseScoreSummary('---SCORE_SUMMARY---\nCOMPANY: A\nROLE: B\nSCORE: 4.0\nLEGITIMACY: High Confidence\n---END_SUMMARY---').archetype;
+  eq('control: a missing non-legitimacy key still falls back to `unknown` (only LEGITIMACY changed)', missingOther, 'unknown');
   const tier = parseScoreSummary('---SCORE_SUMMARY---\nCOMPANY: A\nROLE: B\nSCORE: 4.0\nARCHETYPE: x\nLEGITIMACY: Proceed with Caution\n---END_SUMMARY---').legitimacy;
   eq('control: eval-runner.mjs passes a real tier through unchanged and it resolves to its own state', [tier, canonicalize(LEG, tier)?.id], ['Proceed with Caution', 'proceed-with-caution']);
   // openrouter-runner.mjs cannot be imported without running it: source-text, with a control
@@ -126,7 +128,8 @@ parity('analyze-patterns.mjs plain legitimacy values', LEG, plainTokens(read('an
   const orFallback = [...OR.matchAll(/'\*\*Legitimacy:\*\*\s*([^']+)'/g)].map(m => m[1].trim());
   eq('openrouter-runner.mjs fallback literal is `unconfirmed` (the canonical Unconfirmed state)', [orFallback, orFallback.map(t => canonicalize(LEG, t)?.id)], [['unconfirmed'], ['unconfirmed']]);
   eq('control: the openrouter extractor does not match a different quoted header', [...'x = \'**Other:** unconfirmed\''.matchAll(/'\*\*Legitimacy:\*\*\s*([^']+)'/g)].length, 0);
-  eq('the two fallbacks are DISTINCT strings in code today but ONE declared state', [evalFallback !== orFallback[0], canonicalize(LEG, evalFallback)?.id === canonicalize(LEG, orFallback[0])?.id], [true, true]);
+  eq('the two writers now emit the SAME fallback string (D13), so analyze-patterns groups them together', [evalFallback === orFallback[0], missingKey === orFallback[0]], [true, true]);
+  eq('control: the legacy spelling `unknown` is still a declared alias of the same state (old reports keep resolving)', canonicalize(LEG, 'unknown')?.id, 'unconfirmed');
 }
 // Strings the machine CANNOT express — pinned so a future fix is noticed rather than silent.
 {

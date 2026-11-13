@@ -1,5 +1,5 @@
 # Jobber — posting legitimacy tier vocabulary (STATE-MACHINES-PLAN M32, Phase 4.5).
-# Declared as a SUPERSET of every spelling the repo uses today; this file changes no
+# Declared as a SUPERSET of every spelling the repo uses today. D13 (the `unconfirmed` / `unknown` fold) is decided; this file changes no
 # behaviour. No analyzer, writer or mode reads it yet (declaring is behaviour-neutral).
 #
 # Canonical ids = the English Block G tiers (modes/oferta.md Block G, modes/_shared.md
@@ -23,14 +23,13 @@ states:
     aliases: [unknown]
     terminal: false
     description: >-
-      NOT a tier. Fallback written when no tier was assessed. Code treats the two
-      spellings as DISTINCT strings today: `unconfirmed` is openrouter-runner.mjs:673
-      (LLM output lacked a **Legitimacy:** line); `unknown` is eval-runner.mjs:52,
-      the parseScoreSummary fallback and the miss value of its per-key extract (no
-      SCORE_SUMMARY block or no LEGITIMACY: line). analyze-patterns.mjs stores the
-      string as-is, so the two currently group separately. Declared as one state
-      so a future reader can treat "no tier" uniformly; folding them is a decision
-      for the owner, not done here. modes/oferta.md says "default to Proceed with
+      NOT a tier. Fallback written when no tier was assessed. Since D13 every writer
+      emits `unconfirmed`: openrouter-runner.mjs (LLM output lacked a **Legitimacy:**
+      line) and eval-runner.mjs parseScoreSummary (no SCORE_SUMMARY block, or no
+      LEGITIMACY: line). `unknown` was eval-runner's old spelling; it stays a declared
+      alias so reports written before D13 still resolve. analyze-patterns.mjs stores
+      the string as-is, so old `unknown` reports still group apart from new ones.
+      modes/oferta.md says "default to Proceed with
       Caution" when posting age is unknown — that is a TIER decision and does not
       use this state.
   - id: high-confidence

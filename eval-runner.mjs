@@ -49,22 +49,22 @@ export function readContextFile(path, label) {
  * @returns {{company: string, role: string, score: string, archetype: string, legitimacy: string}}
  */
 export function parseScoreSummary(text) {
-  const fallback = { company: 'unknown', role: 'unknown', score: '?', archetype: 'unknown', legitimacy: 'unknown' };
+  const fallback = { company: 'unknown', role: 'unknown', score: '?', archetype: 'unknown', legitimacy: 'unconfirmed' };
   const match = text.match(/---SCORE_SUMMARY---\s*([\s\S]*?)---END_SUMMARY---/);
   if (!match) return fallback;
   const block = match[1];
-  const extract = (key) => {
+  const extract = (key, miss = 'unknown') => {
     const lineMatch = block.split('\n').map(l => l.trimStart()).find(l => l.startsWith(`${key}:`));
     if (lineMatch) return lineMatch.slice(key.length + 1).trim();
     const regexMatch = block.match(new RegExp(`${key}:\\s*(.+)`));
-    return regexMatch ? regexMatch[1].trim() : 'unknown';
+    return regexMatch ? regexMatch[1].trim() : miss;
   };
   return {
     company: extract('COMPANY'),
     role: extract('ROLE'),
     score: extract('SCORE'),
     archetype: extract('ARCHETYPE'),
-    legitimacy: extract('LEGITIMACY'),
+    legitimacy: extract('LEGITIMACY', 'unconfirmed'),
   };
 }
 
