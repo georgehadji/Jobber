@@ -14,6 +14,10 @@
 //   JOBBER_HASH_SECRET       long random string; keeps visitor hashes stable across restarts
 //   JOBBER_DAILY_LIMIT       checks per visitor per UTC day (positive integer)
 //   JOBBER_DAILY_BUDGET_USD  global spend cap per UTC day for paid (LLM) tasks
+// Score task (off unless OPENROUTER_API_KEY is set; then all of these are required except ZDR):
+//   OPENROUTER_API_KEY, JOBBER_SCORE_MODEL (e.g. a model slug from openrouter.ai/models),
+//   JOBBER_SCORE_MAX_PRICE_PROMPT / JOBBER_SCORE_MAX_PRICE_COMPLETION  price ceilings, USD per million tokens
+//   JOBBER_OPENROUTER_ZDR=1  also require zero-data-retention endpoints (stricter; may leave no provider for a model)
 // Optional: PORT (8787), JOBBER_RESULT_TTL_MS (30 min), JOBBER_DB (server/data/limits.db),
 //   JOBBER_KILL_FILE (if this file exists every request is refused with 503),
 //   JOBBER_TRUST_PROXY=1 (read the client IP from the last X-Forwarded-For entry; set only behind Caddy)
@@ -26,6 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { readCv, MAX_CV_BYTES } from './cv.mjs';
 import { runGap } from './gap.mjs';
 import { createLimits } from './limits.mjs';
+import { createScoreTask, TaskError } from './score.mjs';
 import { createStore, TOKEN_RE } from './store.mjs';
 import { createTurnstile } from './turnstile.mjs';
 
@@ -33,10 +38,10 @@ const SITE_DIR = resolve(fileURLToPath(new URL('../site/', import.meta.url)));
 const MAX_BODY = MAX_CV_BYTES + 256 * 1024; // CV + job text + multipart framing
 const MIN_JOB = 80;
 const MAX_JOB = 50_000;
-// Each task returns {result, costUsd}. score, pdf and scan are added in later steps.
-const TASKS = { gap: async (cv, job) => ({ result: runGap(cv, job), costUsd: 0 }) };
-// Worst-case cost reserved against the daily budget before a task runs.
-const MAX_COST_USD = { gap: 0 };
+// A task is {check?(cv, job) -> error text|null, maxCostUsd(cv, job), run(cv, job) -> {result, costUsd}}.
+// maxCostUsd is reserved against the daily budget before run() starts and settled to the real cost after.
+// pdf and scan are added in later steps; score is added when OpenRouter is configured.
+export const GAP_TASK = { maxCostUsd: () => 0, run: async (cv, job) => ({ result: runGap(cv, job), costUsd: 0 }) };
 const KNOWN_TASKS = new Set(['score', 'gap', 'pdf', 'scan']);
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -86,7 +91,7 @@ function clientIp(req, trustProxy) {
   return req.socket.remoteAddress || '';
 }
 
-async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFile }) {
+async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFile, tasks }) {
   if (killFile && existsSync(killFile)) return refuse(req, res, 503, 'Jobber is switched off for now. Try again later.');
   const type = req.headers['content-type'] || '';
   if (!/^multipart\/form-data;/i.test(type)) return fail(res, 400, 'Send your CV as a file upload.');
@@ -100,7 +105,7 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
 
   const task = String(form.get('task') ?? '');
   if (!KNOWN_TASKS.has(task)) return fail(res, 400, 'Choose what you want to do.');
-  if (!TASKS[task]) return fail(res, 503, 'That option is not available yet. Try “Check the skill gap”.');
+  if (!tasks[task]) return fail(res, 503, 'That option is not available yet. Try “Check the skill gap”.');
 
   const job = String(form.get('job') ?? '').trim();
   if (job.length < MIN_JOB) return fail(res, 400, 'Paste the full job description. It looks too short to use.');
@@ -120,25 +125,35 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
     }
   }
 
-  // From here to the result, everything up to the awaited task is synchronous,
-  // so concurrent requests cannot both slip under a limit.
+  // From here until the task starts everything is synchronous, so concurrent
+  // requests cannot both slip under a limit or the budget.
   const ip = clientIp(req, trustProxy);
-  const spend = limits.reserve(MAX_COST_USD[task]);
+  const tooMany = 'You have used today’s free checks. Come back tomorrow.';
+  if (limits.isOver(ip)) return fail(res, 429, tooMany);
+  const cv = readCv(bytes, file.name);
+  if (!cv.ok) return fail(res, cv.status, cv.error); // a rejected upload does not use a check
+  const tooBig = tasks[task].check?.(cv.text, job);
+  if (tooBig) return fail(res, 400, tooBig);
+
+  const spend = limits.reserve(tasks[task].maxCostUsd(cv.text, job));
   if (!spend) return fail(res, 503, 'The free service has reached its budget for today. Try again tomorrow.');
   let costUsd = 0;
+  let consumed = false;
   try {
-    const tooMany = 'You have used today’s free checks. Come back tomorrow.';
-    if (limits.isOver(ip)) return fail(res, 429, tooMany);
-    const cv = readCv(bytes, file.name);
-    if (!cv.ok) return fail(res, cv.status, cv.error); // a rejected upload does not use a check
     if (!limits.tryConsume(ip)) return fail(res, 429, tooMany);
+    consumed = true;
 
-    const out = await TASKS[task](cv.text, job);
+    const out = await tasks[task].run(cv.text, job);
     costUsd = out.costUsd;
     const token = store.put(out.result);
     if (!token) return fail(res, 503, 'The service is busy right now. Try again in a few minutes.');
+    consumed = false; // delivered: the check stays used
     sendJson(res, 200, { resultUrl: `/result.html#${token}` });
+  } catch (err) {
+    if (err instanceof TaskError) return fail(res, err.status, err.message);
+    throw err;
   } finally {
+    if (consumed) limits.refund(ip); // no result was delivered, so give the check back
     spend.settle(costUsd);
   }
 }
@@ -159,8 +174,9 @@ async function serveStatic(pathname, res) {
  */
 export function createApp({
   store = createStore(), limits = createLimits(), verifyBot = null, trustProxy = false, killFile = null,
+  tasks = { gap: GAP_TASK },
 } = {}) {
-  const ctx = { store, limits, verifyBot, trustProxy, killFile };
+  const ctx = { store, limits, verifyBot, trustProxy, killFile, tasks };
   const server = createServer(async (req, res) => {
     const started = Date.now();
     const { pathname } = new URL(req.url, 'http://x');
@@ -212,6 +228,19 @@ export function readConfig(env) {
     if (!Number.isInteger(limit) || limit < 1) errors.push('JOBBER_DAILY_LIMIT must be a positive integer');
     if (!(budget > 0)) errors.push('JOBBER_DAILY_BUDGET_USD must be a number above 0');
   }
+  const tasks = { gap: GAP_TASK };
+  if (env.OPENROUTER_API_KEY) {
+    const pp = Number(env.JOBBER_SCORE_MAX_PRICE_PROMPT);
+    const pc = Number(env.JOBBER_SCORE_MAX_PRICE_COMPLETION);
+    if (!env.JOBBER_SCORE_MODEL) errors.push('JOBBER_SCORE_MODEL is not set (OPENROUTER_API_KEY is)');
+    if (!(pp > 0) || !(pc > 0)) errors.push('JOBBER_SCORE_MAX_PRICE_PROMPT and JOBBER_SCORE_MAX_PRICE_COMPLETION must be numbers above 0 (US dollars per million tokens)');
+    if (!errors.length) {
+      tasks.score = createScoreTask({
+        apiKey: env.OPENROUTER_API_KEY, model: env.JOBBER_SCORE_MODEL,
+        maxPricePerM: { prompt: pp, completion: pc }, zdr: env.JOBBER_OPENROUTER_ZDR === '1',
+      });
+    }
+  }
   if (errors.length) return { errors };
 
   const dbPath = env.JOBBER_DB || fileURLToPath(new URL('./data/limits.db', import.meta.url));
@@ -229,6 +258,7 @@ export function readConfig(env) {
       verifyBot: env.TURNSTILE_SECRET ? createTurnstile({ secret: env.TURNSTILE_SECRET }) : null,
       trustProxy: env.JOBBER_TRUST_PROXY === '1',
       killFile: env.JOBBER_KILL_FILE || null,
+      tasks,
     },
   };
 }

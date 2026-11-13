@@ -39,7 +39,7 @@
         <h1 id="h-hero">Know which jobs are worth your time.</h1>
         <p class="lede">Upload your CV and paste a job. Jobber scores the fit against what your CV really says, checks the posting for scams and ghost jobs, and tells you plainly when not to apply.</p>
         <p class="lede-2">It is built for finding the few roles worth applying to out of hundreds. It never applies for you.</p>
-        <p class="lede-privacy"><strong>About your CV.</strong> Your CV file is deleted as soon as your result is ready. Your result is kept for 30 minutes, and your CV’s text is sent to a third-party AI model provider to do the work.</p>
+        <p class="lede-privacy"><strong>About your CV.</strong> Your CV file is deleted as soon as your result is ready. Your result is kept for 30 minutes, and for the two AI options your CV’s text is sent to an AI model provider to do the work.</p>
       </div>
 
       <form class="panel" id="start" method="post" action="/api/evaluate" enctype="multipart/form-data" novalidate aria-labelledby="h-start">
@@ -145,7 +145,7 @@
       <ul class="facts">
         <li><strong>CV deleted, result kept briefly.</strong> Your CV file is deleted as soon as your result is ready. The result, which contains parts of your CV, is kept for 30 minutes so you can reopen it, then deleted. Anyone with the link can read it until then, so do not share the link. You can delete it earlier.</li>
         <li><strong>No account.</strong> There is nothing to sign up for and no profile to delete. To enforce the daily limit, we keep a one-way hash of your IP address for that day only. It changes every day and is not your IP address.</li>
-        <li><strong>Sent to an AI provider.</strong> To do the work, the text of your CV and the job is sent to a third-party AI model provider. Do not upload anything you are not comfortable sending.</li>
+        <li><strong>AI options send your text out.</strong> “Score a job” and “Tailored CV” send the text of your CV and the job to OpenRouter, which passes it to an AI model provider. We ask OpenRouter to use only providers that say they do not store prompts, but we cannot check what they do. “Skill gap” and “Find open roles” use no AI. Do not upload anything you are not comfortable sending.</li>
         <li><strong>A bot check.</strong> To stop automated abuse, the form uses Cloudflare Turnstile. It runs in your browser, and Cloudflare receives information about your browser to decide whether you are a person. Your CV and the job are not sent to Cloudflare.</li>
         <li><strong>You stay in control.</strong> Jobber never applies for you, sends messages, or submits anything on your behalf.</li>
       </ul>

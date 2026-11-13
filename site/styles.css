@@ -299,3 +299,18 @@ figcaption { font-size: 0.8125rem; color: var(--muted); }
 
 .bot-check:empty { display: none; }
 .bot-check { margin-bottom: 1rem; }
+.report { margin-top: 1.5rem; }
+.report-h { margin: 1.75rem 0 0.5rem; font: 400 1.5rem/1.2 var(--serif); letter-spacing: -0.01em; color: var(--fg); }
+h4.report-h { font: 600 1rem/1.3 var(--sans); }
+.report p, .report li { color: var(--muted); }
+.report ul, .report ol { padding-left: 1.5rem; margin: 0.5rem 0; display: grid; gap: 0.3rem; }
+.report ul { list-style: disc; }
+.report ol { list-style: decimal; }
+#out > .hint, #out > .doc-verdict { margin-top: 0.6rem; }
+.report hr { border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+.report code { font-family: var(--mono); font-size: 0.9em; }
+.table-wrap { overflow-x: auto; margin: 0.75rem 0; }
+.report-table { border-collapse: collapse; font-size: 0.9375rem; min-width: 100%; }
+.report-table th, .report-table td { text-align: left; vertical-align: top; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+.report-table th { font-weight: 600; color: var(--fg); }
+.score-head .doc-score { margin: 0.25rem 0 0.75rem; }

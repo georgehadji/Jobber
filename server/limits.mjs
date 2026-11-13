@@ -56,6 +56,11 @@ export function createLimits({
       return true;
     },
 
+    /** Give back one check (the task failed before delivering a result). */
+    refund(ip) {
+      db.prepare('UPDATE visits SET n = n - 1 WHERE day = ? AND visitor = ? AND n > 0').run(day(), visitor(ip));
+    },
+
     /**
      * Reserve the worst-case cost of a task before it runs. Returns null when it
      * would push today's spend over the cap; zero-cost tasks always pass.

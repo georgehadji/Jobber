@@ -54,6 +54,19 @@ Code: `server/limits.mjs`, `server/turnstile.mjs`, wiring in `server/index.mjs`.
 - **Deploy step:** set the Turnstile site key in `<meta name="jobber-turnstile">` in `site/index.html`. It is empty in the repo. Add `challenges.cloudflare.com` to the Content-Security-Policy when that is written.
 - **Known limits:** limits are per IP, so shared networks share a quota and a visitor with many IPs gets more. Verified in the browser with Cloudflare's published test keys: widget renders, token verifies, third check is refused.
 
+## 3c. Score task as built (step 3)
+
+Code: `server/score.mjs`, wired in `server/index.mjs`. Off unless `OPENROUTER_API_KEY` is set.
+
+- **Method:** the same system prompt as `openai-eval.mjs` (`modes/_shared.md` + `modes/oferta.md`, operating rules adjusted for a hosted, no-tools run). Blocks A to G plus the `---SCORE_SUMMARY---` block, parsed with the shared `eval-runner.mjs` helpers. No profile is sent, and the prompt says so.
+- **No temp folder or child process:** the task is one HTTPS call with the CV text held in memory, so the CV never touches disk. The temp-folder design applies to `pdf` and `scan` only if they need files.
+- **Injection:** CV and job text go in the user message between random per-request markers, labelled untrusted. The result page builds DOM nodes from text only (tiny Markdown subset: headings, lists, tables, bold, code; no links or HTML). Checked with a hostile report in the browser.
+- **Privacy routing:** every request sends `provider.data_collection: "deny"`, plus `zdr: true` when `JOBBER_OPENROUTER_ZDR=1`. If no matching provider exists the call fails and we never retry without the restriction. This depends on OpenRouter honouring it and providers declaring their policies truthfully, so the site text says "we ask", not "we guarantee".
+- **Cost:** `provider.max_price` caps per-token price, so the reserved worst case (prompt-token upper bound times the prompt price, plus `max_tokens` times the completion price) is a real bound. The actual cost is read from `usage.cost`; if it is missing, the full reservation is charged. OpenRouter's docs call `usage.cost` "credits" without defining the unit; I assumed 1 credit = 1 US dollar, which you should confirm against your OpenRouter dashboard on the first paid requests.
+- **Limits:** CV text up to 30,000 characters, job text up to 20,000 (400 with a reason). A failed upstream call returns 503, costs nothing, and gives the check back.
+- **Config:** `OPENROUTER_API_KEY`, `JOBBER_SCORE_MODEL`, `JOBBER_SCORE_MAX_PRICE_PROMPT`, `JOBBER_SCORE_MAX_PRICE_COMPLETION` (USD per million tokens). No default model or price: you choose them.
+- **Before launch (yours):** in the OpenRouter account privacy settings, leave prompt logging off and do not opt in to training or discount programmes; check that the chosen model has at least one provider that passes `data_collection: "deny"` (and `zdr` if you enable it); pick the model and price caps; run a few real requests and compare `usage.cost` with the dashboard. Not tested against the live API in this build.
+
 ## 4. Request flow
 
 1. Reject early: wrong method, body over 5 MB, missing fields. Nothing is read from disk yet.
@@ -99,7 +112,7 @@ Code: `server/limits.mjs`, `server/turnstile.mjs`, wiring in `server/index.mjs`.
 
 1. Server skeleton: static serving, `/api/evaluate` validation, upload checks, temp-folder lifecycle and sweeper, limits table, no-body logging. Ship `gap` end to end here, since it needs no key and proves the plumbing.
 2. ~~Turnstile, daily limit, global cap, 503 kill switch~~ Done (section 3b).
-3. `score` through OpenRouter with the privacy routing settings, spend accounting.
+3. ~~`score` through OpenRouter with the privacy routing settings, spend accounting~~ Done (section 3c).
 4. `pdf` with the concurrency queue.
 5. `scan`.
 6. Hardening: CSP, load test, kill-switch drill, a check that no CV bytes remain on disk or in logs after a request, and the legal review.
