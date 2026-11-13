@@ -9,11 +9,11 @@
 //
 // Network-free assertions:
 //   - --json emits valid JSON with a `results` array of {provider, status}
-//   - a second run within the cache window says cached: true
-//   - --ci with the cache from a healthy run exits 0
-import { pass, fail, warn, NODE, ROOT } from './helpers.mjs';
-import { execFileSync } from 'child_process';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'fs';
+//   - a second run within the cache window says cached: true (cache is SEEDED, not taken from the live probe)
+//   - --ci exits 0 on an all-healthy cache, 1 when a canary is down, 0 when only degraded/skipped
+import { pass, fail, NODE, ROOT } from './helpers.mjs';
+import { execFileSync, spawnSync } from 'child_process';
+import { mkdtempSync, writeFileSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -55,34 +55,51 @@ try {
     fail(`provider-health --json failed: ${e.message}`);
   }
 
-  // --- Cache: second run within window reports cached ---
+  // --- Cache + --ci exit code, with a SEEDED cache ---
+  // The live --no-cache run above writes whatever the network looked like at that moment (a slow or down
+  // ATS endpoint is a legitimate result) into the cache. Asserting --ci off that cache made the test fail
+  // whenever one canary was down. So the cache is overwritten with a known set before these checks: the
+  // assertions are about the cache path and the exit-code rule, not about the vendors' uptime.
+  const canaryIds = ['greenhouse', 'lever', 'ashby', 'workday', 'bamboohr'];
+  const seed = (statuses) => writeFileSync(CACHE, JSON.stringify({
+    ts: Date.now(),
+    results: canaryIds.map((id, i) => ({ provider: id, name: id, status: statuses[i], latencyMs: statuses[i] === 'skipped' ? 0 : 5 })),
+  }));
+  const cli = (args) => spawnSync(NODE, [join(ROOT, 'provider-health.mjs'), ...args], { encoding: 'utf-8', timeout: 60_000, env });
+
   try {
-    const second = execFileSync(NODE, [join(ROOT, 'provider-health.mjs'), '--json'], {
-      encoding: 'utf-8', timeout: 60_000, env,
-    });
-    const parsed = JSON.parse(second);
+    seed(['healthy', 'healthy', 'healthy', 'healthy', 'skipped']);
+    const second = cli(['--json']);
+    const parsed = JSON.parse(second.stdout);
     if (parsed.cached === true) {
       pass('cached run reports cached: true (no network re-probe)');
     } else {
       fail('second --json run expected cached: true');
     }
   } catch (e) {
-    warn(`cache assertion skipped (${e.message})`);
+    fail(`cache assertion failed: ${e.message}`);
   }
 
-  // --- --ci exit code: 0 when nothing is down, 1 when something is down ---
   try {
-    const ciOut = execFileSync(NODE, [join(ROOT, 'provider-health.mjs'), '--ci'], {
-      encoding: 'utf-8', timeout: 60_000, env,
-    });
-    // If the canaries actually reached the network and found a down provider,
-    // exit 1 is correct — but the exit code path itself must be deterministic:
-    // cache present + all-healthy prior run → exit 0 is what we assert here.
-    pass(`--ci exited 0 with cached healthy results`);
-  } catch {
-    // exit 1 is only legitimate when a provider is genuinely down; with a
-    // fresh cache of a healthy run it should not happen, so report as fail.
-    fail('--ci exited non-zero despite a healthy cached run');
+    seed(['healthy', 'healthy', 'healthy', 'healthy', 'skipped']);
+    const ok = cli(['--ci']);
+    if (ok.status === 0) pass('--ci exits 0 with a cached all-healthy run');
+    else fail(`--ci exited ${ok.status} on a seeded healthy cache: ${(ok.stdout + ok.stderr).slice(0, 200)}`);
+
+    // control: the same command on a cache holding one DOWN canary exits 1, so the exit-0 above is the
+    // rule being applied, not a --ci that never fails
+    seed(['healthy', 'down', 'healthy', 'healthy', 'skipped']);
+    const bad = cli(['--ci']);
+    if (bad.status === 1) pass('control: --ci exits 1 when a cached canary is down');
+    else fail(`control: --ci exited ${bad.status} on a cache with a down canary, want 1`);
+
+    // control: degraded and skipped never fail the run (documented in provider-health.mjs)
+    seed(['degraded', 'healthy', 'healthy', 'healthy', 'skipped']);
+    const slow = cli(['--ci']);
+    if (slow.status === 0) pass('control: a degraded canary does not fail --ci');
+    else fail(`control: --ci exited ${slow.status} on a degraded-only cache, want 0`);
+  } catch (e) {
+    fail(`--ci assertion failed: ${e.message}`);
   }
 } finally {
   rmSync(TMP, { recursive: true, force: true });
