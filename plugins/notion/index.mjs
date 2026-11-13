@@ -22,6 +22,9 @@
 //   node plugins.mjs run notion search "platform" # read matching records → pipeline
 
 import { createNotionClient, rich, canonicalStatus } from './_notion.mjs';
+import { withLock } from '../../lib/file-lock.mjs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 function clientFromCtx(ctx) {
   return createNotionClient({
@@ -53,6 +56,41 @@ export function parseScore(s) {
   return m ? parseFloat(m[1]) : NaN;
 }
 
+/** Upsert each tracker row into the Applications DB. Callers hold the export lock (unless dry-running). */
+async function pushRows(rows, client, apps, ctx) {
+  let pushed = 0;
+  const unknownStatuses = [];
+  for (const row of rows) {
+    const company = (row.company || '').trim();
+    const role = (row.role || '').trim();
+    if (!company || !role) continue;
+
+    const props = { Role: { title: rich(role) }, Company: { rich_text: rich(company) } };
+    const status = canonicalStatus(row.status);
+    if (status) props.Status = { select: { name: status } };
+    else if ((row.status || '').trim()) {
+      // An unrecognised status is never sent (Notion would mint a stray select option); the row
+      // is still pushed, but the operator is told which one and why its Status stayed unset.
+      unknownStatuses.push(row.status.trim());
+      ctx?.log?.(`warning: ${company} — ${role}: unknown status "${row.status.trim()}", pushed without a Status`);
+    }
+    const score = parseScore(row.score);
+    if (Number.isFinite(score)) props.Score = { number: score };
+
+    if (ctx?.dryRun) { ctx.log(`would push: ${company} — ${role}`); pushed++; continue; }
+
+    // Upsert: update every existing company+role record (Notion returns them in no fixed order, so
+    // patching only the first would leave a different stale copy on each run), else create one.
+    const dupes = (await client.findRecords(apps, `${company} / ${role}`))
+      .filter((h) => h.company.toLowerCase() === company.toLowerCase() && h.role.toLowerCase() === role.toLowerCase());
+    if (dupes.length > 1) ctx?.log?.(`warning: ${company} — ${role}: ${dupes.length} duplicate Notion rows, updating all of them`);
+    if (dupes.length) for (const d of dupes) await client.api(`pages/${d.id}`, 'PATCH', { properties: props });
+    else await client.createPage(apps, props);
+    pushed++;
+  }
+  return unknownStatuses.length ? { pushed, unknownStatuses } : { pushed };
+}
+
 export default {
   parseScore,
 
@@ -67,36 +105,11 @@ export default {
     if (rows.length === 0) return { pushed: 0 };
     const client = clientFromCtx(ctx);
     const apps = await applicationsDb(client);
-
-    let pushed = 0;
-    const unknownStatuses = [];
-    for (const row of rows) {
-      const company = (row.company || '').trim();
-      const role = (row.role || '').trim();
-      if (!company || !role) continue;
-
-      const props = { Role: { title: rich(role) }, Company: { rich_text: rich(company) } };
-      const status = canonicalStatus(row.status);
-      if (status) props.Status = { select: { name: status } };
-      else if ((row.status || '').trim()) {
-        // An unrecognised status is never sent (Notion would mint a stray select option); the row
-        // is still pushed, but the operator is told which one and why its Status stayed unset.
-        unknownStatuses.push(row.status.trim());
-        ctx?.log?.(`warning: ${company} — ${role}: unknown status "${row.status.trim()}", pushed without a Status`);
-      }
-      const score = parseScore(row.score);
-      if (Number.isFinite(score)) props.Score = { number: score };
-
-      if (ctx?.dryRun) { ctx.log(`would push: ${company} — ${role}`); pushed++; continue; }
-
-      // Upsert: update an existing company+role record, else create one.
-      const dupes = (await client.findRecords(apps, `${company} / ${role}`))
-        .filter((h) => h.company.toLowerCase() === company.toLowerCase() && h.role.toLowerCase() === role.toLowerCase());
-      if (dupes.length) await client.api(`pages/${dupes[0].id}`, 'PATCH', { properties: props });
-      else await client.createPage(apps, props);
-      pushed++;
-    }
-    return unknownStatuses.length ? { pushed, unknownStatuses } : { pushed };
+    // Find-then-create is not atomic: two exports at once would both miss the row and create it twice.
+    // Serialise real pushes per Applications DB with the shared advisory lock (a dry run writes nothing).
+    if (ctx?.dryRun) return pushRows(rows, client, apps, ctx);
+    const lockFile = join(tmpdir(), `jobber-notion-${String(apps).replace(/[^A-Za-z0-9_-]/g, '_')}`);
+    return withLock(lockFile, { kind: 'notion-export', timeoutMs: 120_000 }, () => pushRows(rows, client, apps, ctx));
   },
 
   /**
