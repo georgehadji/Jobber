@@ -13,6 +13,7 @@ import { createPdfTask } from '../server/pdf.mjs';
 import { createScoreTask } from '../server/score.mjs';
 import { createRenderer, createSlots } from '../server/render-pdf.mjs';
 import { createStore } from '../server/store.mjs';
+import { TaskError } from '../server/openrouter.mjs';
 
 console.log('\nhosted server (hardening)');
 
@@ -189,6 +190,19 @@ try {
     else fail(`listen host: ${proxied.host} / ${plain.host} / ${custom.host}`);
     for (const c of [proxied, plain, custom]) c.options.limits.close();
   } catch (e) { fail(`listen host test crashed: ${e.message}`); }
+
+  // 4c. Error text never reaches the wire as markup: a task message holding HTML is escaped in the bytes and identical after parsing.
+  try {
+    const evil = '<img src=x onerror=alert(1)> & <script>';
+    const task = { maxCostUsd: () => 0, run: async () => { throw new TaskError(503, evil); } };
+    ctx = await start({ tasks: { gap: task } });
+    const r = await fetch(`${ctx.base}/api/evaluate`, { method: 'POST', body: form('gap') });
+    const bytes = await r.text();
+    const control = JSON.stringify({ error: evil });   // what an unescaped server would have sent
+    if (r.status === 503 && !/[<>&]/.test(bytes) && JSON.parse(bytes).error === evil && /[<>]/.test(control) && /^application\/json/.test(r.headers.get('content-type'))) pass('error bodies: markup characters in a message are escaped in the JSON bytes and unchanged after parsing');
+    else fail(`error body escaping: ${r.status} ${bytes}`);
+  } catch (e) { fail(`error escaping test crashed: ${e.message}`); }
+  finally { ctx?.server.close(); }
 
   // 5. Kill-switch drill: on, evaluate is refused (even for a valid request) and nothing is stored; off, service resumes.
   try {
