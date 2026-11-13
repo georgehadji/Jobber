@@ -11,7 +11,7 @@
 #   3. provider-health.mjs (vendor canary, cached in os.tmpdir): healthy | degraded | down | skipped
 #   4. discover-ats.mjs (probeVendor / resolveFromWebsite): match | empty | error | unverified | none
 #
-# STREAK CLASSES (scan.mjs computeConsecutiveFailures / computePortalSkipTargets, scan.mjs:~1798-1865):
+# STREAK CLASSES (lib/portal-health.mjs healthEffect / computeConsecutiveFailures / computePortalSkipTargets; scan.mjs re-exports them, stats.mjs uses them):
 #   healthy  (reachable, empty): reset the failure streak to 0.
 #   neutral  (rate_limited): "throttled, not dead" -- neither extends nor resets the streak.
 #   failure  (slug_gone, network, auth, server, unknown, AND any string not listed here):
@@ -21,9 +21,8 @@
 #   "no health signal" and is the initial state (a company with no record yet).
 #
 # KNOWN DRIFT (pinned by the parity test, NOT fixed here):
-#   * The failure classification is still copy-pasted three times: scan.mjs computeConsecutiveFailures,
-#     scan.mjs computePortalSkipTargets, stats.mjs computePortalStats (stats.mjs:~295).
-#     (D12 fixed the one real divergence: stats.mjs now treats rate_limited as neutral like scan.mjs.)
+#   * (Resolved) The failure classification used to be copy-pasted three times and drifted once (D12).
+#     It now lives only in lib/portal-health.mjs `healthEffect`; scan.mjs and stats.mjs share it.
 #   * Unknown strings count as failures everywhere (policy unknown_input: map:unknown).
 #   * The log is append-only and grows without bound.
 id: portal-health

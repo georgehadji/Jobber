@@ -50,6 +50,7 @@ import { normalizeCompany } from './tracker-utils.mjs';
 import { normalizeCompanyName } from './lib/company-name.mjs';
 import { appendPending } from './lib/pipeline-inbox.mjs';
 import { withPortalHealthLock } from './portal-health-lock.mjs';
+import { computeConsecutiveFailures, computePortalSkipTargets, parsePortalHealthTsv } from './lib/portal-health.mjs';
 
 try {
   const { config } = await import('dotenv');
@@ -1779,90 +1780,14 @@ export async function appendPortalHealth(healthRecords, filePath = PORTAL_HEALTH
 
 export function loadPortalHealth(filePath = PORTAL_HEALTH_PATH) {
   if (!existsSync(filePath)) return [];
-  const lines = readFileSync(filePath, 'utf-8').split('\n');
-  const records = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const parts = line.split('\t');
-    if (parts.length >= 3) {
-      records.push({ timestamp: parts[0], company: parts[1], status: parts[2] });
-    }
-  }
-  return records;
+  return parsePortalHealthTsv(readFileSync(filePath, 'utf-8'));
 }
 
 // One company's whole fetch may not exceed this, even with per-request timeouts in providers.
 const COMPANY_TIMEOUT_MS = 5 * 60_000;
 
-export function computeConsecutiveFailures(healthRecords) {
-  const streaks = new Map();
-  for (const r of healthRecords) {
-    // Healthy statuses reset the streak; every other status counts toward it.
-    // Inverted (vs. listing failure statuses) so the newer error kinds
-    // (auth/server/unknown) can't silently fall outside the streak again.
-    // 'empty' is deliberately healthy: a live board with 0 jobs is reachable.
-    if (r.status === 'rate_limited') {
-      continue; // throttled, not dead: neither extends nor resets the streak
-    } else if (r.status === 'reachable' || r.status === 'empty') {
-      streaks.set(r.company, 0);
-    } else {
-      streaks.set(r.company, (streaks.get(r.company) || 0) + 1);
-    }
-  }
-  return streaks;
-}
-
-/**
- * Which portals to skip this run because they keep failing (#improvement-plan A3).
- *
- * Consecutive failures over a threshold earn the portal a backoff window that
- * grows exponentially and caps after a few days; the portal is skipped until
- * its window elapses, then probed again. This replaces "record the failure,
- * print a warning, hit the same dead portal again next run" — the signal is
- * finally actuated instead of collected. Pure fold over the append-only
- * portal-health.tsv records; no I/O here so it is unit-testable.
- *
- * `status` resets on reachable/empty (a live board with 0 jobs is healthy);
- * the backoff counts from the LAST failure timestamp.
- *
- * @param {Array<{timestamp:string,company:string,status:string}>} healthRecords
- * @param {object} [opts]
- * @param {number} [opts.threshold=3] - Consecutive failures before a portal is eligible to be skipped.
- * @param {number} [opts.baseDelayDays=1] - Backoff after hitting the threshold (doubles per extra failure).
- * @param {number} [opts.capDelayDays=4] - Backoff ceiling, in days.
- * @param {number} [opts.now=Date.now()] - Reference time (injectable for tests).
- * @returns {Map<string,{streak:number,lastFailureTs:number|null,skipUntilTs:number}>}
- */
-export function computePortalSkipTargets(healthRecords, {
-  threshold = 3, baseDelayDays = 1, capDelayDays = 4, now = Date.now(),
-} = {}) {
-  const byCompany = new Map();
-  for (const r of healthRecords) {
-    let c = byCompany.get(r.company);
-    if (!c) { c = { streak: 0, lastFailureTs: null }; byCompany.set(r.company, c); }
-    if (r.status === 'rate_limited') {
-      continue; // throttled, not dead
-    } else if (r.status === 'reachable' || r.status === 'empty') {
-      c.streak = 0;
-      c.lastFailureTs = null;
-    } else {
-      c.streak += 1;
-      const ts = Date.parse(r.timestamp);
-      if (!Number.isNaN(ts) && (c.lastFailureTs === null || ts > c.lastFailureTs)) c.lastFailureTs = ts;
-    }
-  }
-  const out = new Map();
-  for (const [company, c] of byCompany) {
-    if (c.streak < threshold) continue;
-    const backoffMs = Math.min(capDelayDays, baseDelayDays * Math.pow(2, c.streak - threshold)) * 86_400_000;
-    const skipUntilTs = (c.lastFailureTs ?? now) + backoffMs;
-    if (now < skipUntilTs) {
-      out.set(company, { streak: c.streak, lastFailureTs: c.lastFailureTs, skipUntilTs });
-    }
-  }
-  return out;
-}
+// The failure classification and streak/backoff folds live in lib/portal-health.mjs (shared with stats.mjs).
+export { computeConsecutiveFailures, computePortalSkipTargets };
 
 // ── Parallel fetch with concurrency limit ───────────────────────────
 

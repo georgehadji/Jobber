@@ -153,6 +153,7 @@ const SYSTEM_PATHS = [
   'lib/llm-providers.mjs',
   'lib/file-lock.mjs',
   'lib/pipeline-inbox.mjs',
+  'lib/portal-health.mjs',
   'lib/report-schema.mjs',
   'lib/score-summary.mjs',
   'lib/cv-plaintext.mjs',
