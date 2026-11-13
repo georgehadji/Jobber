@@ -1120,39 +1120,49 @@ for (const f of skillEntrypoints) {
   }
 }
 
-// The Dockerfile pins playwright twice — the FROM base image tag (bundled
-// Chromium) and the --save-exact npm install — so the npm package matches
-// the browser the container ships. Nothing enforced either pin against
-// package.json's own playwright version, so this keeps all three in sync
-// going forward instead of relying on whoever next reads the Dockerfile.
+// The Dockerfile takes the playwright version from ONE build ARG (PLAYWRIGHT_VERSION) that feeds both the
+// FROM base image tag (bundled Chromium) and the --save-exact npm install, so the npm package matches the
+// browser the container ships. This keeps that ARG equal to package.json's own playwright version and
+// checks the three ways the single-ARG form can silently go wrong.
+// Static text is right here: the subject IS the Dockerfile's text (docker may not be installed in CI).
+/** @returns {string[]} one message per problem; empty means the Dockerfile is consistent */
+function dockerfilePlaywrightProblems(dockerfile, pkgPlaywright) {
+  const out = [];
+  const lines = dockerfile.split(/\r?\n/);
+  const fromIdx = lines.findIndex((l) => /^FROM\s/.test(l));
+  const argBefore = lines.slice(0, fromIdx).map((l) => l.match(/^ARG PLAYWRIGHT_VERSION=([\d.]+)\s*$/)).find(Boolean);
+  const argAfter = lines.slice(fromIdx + 1).some((l) => /^ARG PLAYWRIGHT_VERSION\s*$/.test(l));
+  if (!argBefore) out.push('Dockerfile is missing "ARG PLAYWRIGHT_VERSION=X.Y.Z" before FROM');
+  else if (argBefore[1] !== pkgPlaywright) out.push(`Dockerfile's PLAYWRIGHT_VERSION is ${argBefore[1]} but package.json depends on playwright@${pkgPlaywright} — bump the ARG`);
+  if (!/^FROM mcr\.microsoft\.com\/playwright:v\$\{PLAYWRIGHT_VERSION\}-/m.test(dockerfile)) out.push('Dockerfile FROM must be "mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-<distro>" (no literal version)');
+  if (!/--save-exact playwright@\$\{PLAYWRIGHT_VERSION\}/.test(dockerfile)) out.push('Dockerfile --save-exact install must pin playwright@${PLAYWRIGHT_VERSION} (no literal version)');
+  // An ARG declared before FROM is out of scope after it: without the re-declaration the install becomes "playwright@" (latest).
+  if (!argAfter) out.push('Dockerfile must re-declare "ARG PLAYWRIGHT_VERSION" after FROM, or the npm install sees an empty version');
+  return out;
+}
 {
   const pkgPlaywright = JSON.parse(readFile('package.json')).dependencies?.playwright;
   const dockerfile = readFile('Dockerfile');
-  const dockerfileLine2 = dockerfile.split(/\r?\n/, 3)[1] ?? '';
-  const fromPinMatch = dockerfile.match(/^FROM mcr\.microsoft\.com\/playwright:v([\d.]+)-/m);
-  const runPinMatch = dockerfile.match(/--save-exact playwright@([\d.]+)/);
-  const commentPinMatch = dockerfileLine2.match(/matches playwright@([\d.]+) in package\.json/);
   if (!pkgPlaywright) {
-    fail('package.json missing dependencies.playwright — cannot check Dockerfile pins against it');
+    fail('package.json missing dependencies.playwright — cannot check the Dockerfile against it');
   } else {
-    if (!fromPinMatch) {
-      fail('Dockerfile missing the expected "FROM mcr.microsoft.com/playwright:vX-<distro>" base image line');
-    } else if (fromPinMatch[1] !== pkgPlaywright) {
-      fail(`Dockerfile's FROM base image is playwright@${fromPinMatch[1]} but package.json depends on playwright@${pkgPlaywright} — bump the base image tag`);
+    const problems = dockerfilePlaywrightProblems(dockerfile, pkgPlaywright);
+    if (problems.length === 0) pass(`Dockerfile's single PLAYWRIGHT_VERSION ARG (${pkgPlaywright}) matches package.json and feeds FROM and the install`);
+    else for (const p of problems) fail(p);
+
+    // Controls: each way it can break must be reported, and only that one, so a pass above is not "the checker never fails".
+    const ok = dockerfilePlaywrightProblems(dockerfile, pkgPlaywright).length === 0;
+    const drift = dockerfilePlaywrightProblems(dockerfile, '0.0.1');
+    const literalFrom = dockerfilePlaywrightProblems(dockerfile.replace('playwright:v${PLAYWRIGHT_VERSION}-', `playwright:v${pkgPlaywright}-`), pkgPlaywright);
+    const literalRun = dockerfilePlaywrightProblems(dockerfile.replace('--save-exact playwright@${PLAYWRIGHT_VERSION}', `--save-exact playwright@${pkgPlaywright}`), pkgPlaywright);
+    const noRedeclare = dockerfilePlaywrightProblems(dockerfile.replace(/^ARG PLAYWRIGHT_VERSION\s*$/m, ''), pkgPlaywright);
+    const noArg = dockerfilePlaywrightProblems(dockerfile.replace(/^ARG PLAYWRIGHT_VERSION=[\d.]+\s*$/m, ''), pkgPlaywright);
+    const only = (got, re) => got.length === 1 && re.test(got[0]);
+    if (ok && only(drift, /is \d.* but package\.json depends on playwright@0\.0\.1/) && only(literalFrom, /FROM must be/) && only(literalRun, /--save-exact install must pin/)
+        && only(noRedeclare, /re-declare/) && only(noArg, /missing "ARG PLAYWRIGHT_VERSION=/)) {
+      pass('Dockerfile playwright check: version drift, a literal FROM tag, a literal install pin, a missing re-declaration and a missing ARG are each caught on their own');
     } else {
-      pass(`Dockerfile's FROM base image (${fromPinMatch[1]}) matches package.json`);
-    }
-    if (!runPinMatch) {
-      fail('Dockerfile missing the expected "--save-exact playwright@X" RUN line');
-    } else if (runPinMatch[1] !== pkgPlaywright) {
-      fail(`Dockerfile pins playwright@${runPinMatch[1]} but package.json depends on playwright@${pkgPlaywright} — bump the Dockerfile's --save-exact pin`);
-    } else {
-      pass(`Dockerfile's playwright pin (${runPinMatch[1]}) matches package.json`);
-    }
-    if (commentPinMatch && commentPinMatch[1] !== pkgPlaywright) {
-      fail(`Dockerfile's line-2 comment claims playwright@${commentPinMatch[1]} but package.json depends on playwright@${pkgPlaywright} — update the comment`);
-    } else if (commentPinMatch) {
-      pass('Dockerfile\'s line-2 comment version matches package.json');
+      fail(`Dockerfile playwright check controls misbehave: ok=${ok} drift=${JSON.stringify(drift)} literalFrom=${JSON.stringify(literalFrom)} literalRun=${JSON.stringify(literalRun)} noRedeclare=${JSON.stringify(noRedeclare)} noArg=${JSON.stringify(noArg)}`);
     }
   }
 }
