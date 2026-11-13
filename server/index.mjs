@@ -1,26 +1,42 @@
-// server/index.mjs — hosted Jobber API. Plain node:http, no dependencies.
-//   POST   /api/evaluate      multipart: cv (file), task, job  -> 200 {resultUrl}
+// server/index.mjs — hosted Jobber API. Plain node:http. Needs Node >= 22.13.
+//   POST   /api/evaluate      multipart: cv (file), task, job, cf-turnstile-response -> 200 {resultUrl}
 //   GET    /api/result/:token -> 200 {expiresAt, result}
 //   DELETE /api/result/:token -> 204
 // Also serves ../site for local runs (production puts Caddy in front).
 //
 // Privacy rules enforced here: the CV is held in memory only for the request;
 // only the finished result is kept (store.mjs, memory, TTL); logs carry
-// task, status and duration only — never bodies, text, results or IPs.
+// route, status and duration only — never bodies, text, results or IPs.
+//
+// Config (environment). Production refuses to start unless all of these are set;
+// JOBBER_DEV=1 relaxes that for local runs (no bot check, no limits).
+//   TURNSTILE_SECRET         Cloudflare Turnstile secret key
+//   JOBBER_HASH_SECRET       long random string; keeps visitor hashes stable across restarts
+//   JOBBER_DAILY_LIMIT       checks per visitor per UTC day (positive integer)
+//   JOBBER_DAILY_BUDGET_USD  global spend cap per UTC day for paid (LLM) tasks
+// Optional: PORT (8787), JOBBER_RESULT_TTL_MS (30 min), JOBBER_DB (server/data/limits.db),
+//   JOBBER_KILL_FILE (if this file exists every request is refused with 503),
+//   JOBBER_TRUST_PROXY=1 (read the client IP from the last X-Forwarded-For entry; set only behind Caddy)
 
 import { createServer } from 'node:http';
+import { existsSync, mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readCv, MAX_CV_BYTES } from './cv.mjs';
 import { runGap } from './gap.mjs';
+import { createLimits } from './limits.mjs';
 import { createStore, TOKEN_RE } from './store.mjs';
+import { createTurnstile } from './turnstile.mjs';
 
 const SITE_DIR = resolve(fileURLToPath(new URL('../site/', import.meta.url)));
 const MAX_BODY = MAX_CV_BYTES + 256 * 1024; // CV + job text + multipart framing
 const MIN_JOB = 80;
 const MAX_JOB = 50_000;
-const TASKS = { gap: runGap };            // score, pdf, scan are added in later steps
+// Each task returns {result, costUsd}. score, pdf and scan are added in later steps.
+const TASKS = { gap: async (cv, job) => ({ result: runGap(cv, job), costUsd: 0 }) };
+// Worst-case cost reserved against the daily budget before a task runs.
+const MAX_COST_USD = { gap: 0 };
 const KNOWN_TASKS = new Set(['score', 'gap', 'pdf', 'scan']);
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -38,6 +54,14 @@ const sendJson = (res, status, obj, headers = {}) =>
   send(res, status, JSON.stringify(obj), { 'Content-Type': 'application/json; charset=utf-8', ...PRIVATE, ...headers });
 const fail = (res, status, error) => sendJson(res, status, { error });
 
+/** Refuse before reading the body. Drain briefly so the client can read the reply
+ *  (closing with unread data resets the connection), then cut it off after 5 s. */
+function refuse(req, res, status, error) {
+  req.resume();
+  setTimeout(() => req.destroy(), 5000).unref();
+  fail(res, status, error);
+}
+
 /** Read the request body up to MAX_BODY. Resolves null when it is too large. */
 function readBody(req) {
   return new Promise((resolveBody, reject) => {
@@ -54,18 +78,21 @@ function readBody(req) {
   });
 }
 
-async function evaluate(req, res, store) {
+function clientIp(req, trustProxy) {
+  if (trustProxy) {
+    const last = String(req.headers['x-forwarded-for'] || '').split(',').pop().trim();
+    if (last) return last;
+  }
+  return req.socket.remoteAddress || '';
+}
+
+async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFile }) {
+  if (killFile && existsSync(killFile)) return refuse(req, res, 503, 'Jobber is switched off for now. Try again later.');
   const type = req.headers['content-type'] || '';
   if (!/^multipart\/form-data;/i.test(type)) return fail(res, 400, 'Send your CV as a file upload.');
 
   const body = await readBody(req);
-  if (body === null) {
-    // Drain the rest briefly so the client can read the 413 (closing with unread data resets
-    // the connection); cut it off after 5 s so this cannot become a bandwidth sink.
-    req.resume();
-    setTimeout(() => req.destroy(), 5000).unref();
-    return fail(res, 413, 'That upload is too large. The limit is 5 MB.');
-  }
+  if (body === null) return refuse(req, res, 413, 'That upload is too large. The limit is 5 MB.');
 
   let form;
   try { form = await new Response(body, { headers: { 'content-type': type } }).formData(); }
@@ -81,12 +108,39 @@ async function evaluate(req, res, store) {
 
   const file = form.get('cv');
   if (!file || typeof file === 'string') return fail(res, 400, 'Choose your CV first.');
-  const cv = readCv(Buffer.from(await file.arrayBuffer()), file.name);
-  if (!cv.ok) return fail(res, cv.status, cv.error);
+  const bytes = Buffer.from(await file.arrayBuffer());
 
-  const token = store.put(TASKS[task](cv.text, job));
-  if (!token) return fail(res, 503, 'The service is busy right now. Try again in a few minutes.');
-  sendJson(res, 200, { resultUrl: `/result.html#${token}` });
+  // Bot check before any parsing of the upload, so a bot cannot make us parse PDFs.
+  if (verifyBot) {
+    const v = await verifyBot(String(form.get('cf-turnstile-response') ?? ''));
+    if (!v.ok) {
+      return v.reason === 'unavailable'
+        ? fail(res, 503, 'We could not run the bot check. Try again in a minute.')
+        : fail(res, 403, 'The bot check did not pass. Complete it and try again.');
+    }
+  }
+
+  // From here to the result, everything up to the awaited task is synchronous,
+  // so concurrent requests cannot both slip under a limit.
+  const ip = clientIp(req, trustProxy);
+  const spend = limits.reserve(MAX_COST_USD[task]);
+  if (!spend) return fail(res, 503, 'The free service has reached its budget for today. Try again tomorrow.');
+  let costUsd = 0;
+  try {
+    const tooMany = 'You have used today’s free checks. Come back tomorrow.';
+    if (limits.isOver(ip)) return fail(res, 429, tooMany);
+    const cv = readCv(bytes, file.name);
+    if (!cv.ok) return fail(res, cv.status, cv.error); // a rejected upload does not use a check
+    if (!limits.tryConsume(ip)) return fail(res, 429, tooMany);
+
+    const out = await TASKS[task](cv.text, job);
+    costUsd = out.costUsd;
+    const token = store.put(out.result);
+    if (!token) return fail(res, 503, 'The service is busy right now. Try again in a few minutes.');
+    sendJson(res, 200, { resultUrl: `/result.html#${token}` });
+  } finally {
+    spend.settle(costUsd);
+  }
 }
 
 async function serveStatic(pathname, res) {
@@ -99,7 +153,14 @@ async function serveStatic(pathname, res) {
   } catch { fail(res, 404, 'Not found.'); }
 }
 
-export function createApp({ store = createStore() } = {}) {
+/**
+ * Defaults are permissive (no bot check, no limits) so tests stay simple;
+ * the entry point below is what enforces production config.
+ */
+export function createApp({
+  store = createStore(), limits = createLimits(), verifyBot = null, trustProxy = false, killFile = null,
+} = {}) {
+  const ctx = { store, limits, verifyBot, trustProxy, killFile };
   const server = createServer(async (req, res) => {
     const started = Date.now();
     const { pathname } = new URL(req.url, 'http://x');
@@ -109,7 +170,7 @@ export function createApp({ store = createStore() } = {}) {
       if (pathname === '/api/evaluate') {
         task = 'evaluate';
         if (req.method !== 'POST') return send(res, 405, '', { Allow: 'POST' });
-        await evaluate(req, res, store);
+        await evaluate(req, res, ctx);
       } else if (result) {
         task = 'result';
         const token = result[1];
@@ -139,8 +200,45 @@ export function createApp({ store = createStore() } = {}) {
   return server;
 }
 
+/** Read and validate production config. Returns {errors} or {options}. */
+export function readConfig(env) {
+  const dev = env.JOBBER_DEV === '1';
+  const errors = [];
+  const limit = Number(env.JOBBER_DAILY_LIMIT);
+  const budget = Number(env.JOBBER_DAILY_BUDGET_USD);
+  if (!dev) {
+    if (!env.TURNSTILE_SECRET) errors.push('TURNSTILE_SECRET is not set');
+    if (!env.JOBBER_HASH_SECRET || env.JOBBER_HASH_SECRET.length < 32) errors.push('JOBBER_HASH_SECRET must be set to at least 32 characters');
+    if (!Number.isInteger(limit) || limit < 1) errors.push('JOBBER_DAILY_LIMIT must be a positive integer');
+    if (!(budget > 0)) errors.push('JOBBER_DAILY_BUDGET_USD must be a number above 0');
+  }
+  if (errors.length) return { errors };
+
+  const dbPath = env.JOBBER_DB || fileURLToPath(new URL('./data/limits.db', import.meta.url));
+  if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
+  return {
+    errors,
+    port: Number(env.PORT ?? 8787),
+    options: {
+      store: createStore({ ttlMs: Number(env.JOBBER_RESULT_TTL_MS) || 30 * 60 * 1000 }),
+      limits: createLimits({
+        dbPath, secret: env.JOBBER_HASH_SECRET || undefined,
+        dailyLimit: dev && !env.JOBBER_DAILY_LIMIT ? Infinity : limit,
+        dailyBudgetUsd: dev && !env.JOBBER_DAILY_BUDGET_USD ? Infinity : budget,
+      }),
+      verifyBot: env.TURNSTILE_SECRET ? createTurnstile({ secret: env.TURNSTILE_SECRET }) : null,
+      trustProxy: env.JOBBER_TRUST_PROXY === '1',
+      killFile: env.JOBBER_KILL_FILE || null,
+    },
+  };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const port = Number(process.env.PORT) || 8787;
-  const ttlMs = Number(process.env.JOBBER_RESULT_TTL_MS) || 30 * 60 * 1000;
-  createApp({ store: createStore({ ttlMs }) }).listen(port, () => console.log(`jobber server on :${port}`));
+  const cfg = readConfig(process.env);
+  if (cfg.errors.length) {
+    console.error('Refusing to start:\n  ' + cfg.errors.join('\n  ') + '\n(Set JOBBER_DEV=1 for a local run without a bot check or limits.)');
+    process.exit(1);
+  }
+  const server = createApp(cfg.options);
+  server.listen(cfg.port, () => console.log(`jobber server on :${server.address().port}${process.env.JOBBER_DEV === '1' ? ' (dev: no bot check or limits unless configured)' : ''}`));
 }

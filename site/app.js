@@ -42,6 +42,32 @@
   let file = null;
   let busy = false;
 
+  // Cloudflare Turnstile. Only active when a site key is set in the page; the server
+  // enforces the check regardless, so an empty key just means a server in dev mode.
+  const siteKey = document.querySelector('meta[name="jobber-turnstile"]')?.content || "";
+  let widgetId = null;
+  let botToken = "";
+  function loadBotCheck() {
+    if (!siteKey) return;
+    window.onJobberTurnstile = () => {
+      widgetId = window.turnstile.render("#bot-check", {
+        sitekey: siteKey,
+        callback: (t) => { botToken = t; },
+        "expired-callback": () => { botToken = ""; },
+        "error-callback": () => { botToken = ""; }
+      });
+    };
+    const s = document.createElement("script");
+    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onJobberTurnstile";
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  function resetBotCheck() {
+    botToken = "";
+    if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
+  }
+  loadBotCheck();
+
   const fmtSize = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
 
   function checkFile(f) {
@@ -157,6 +183,8 @@
       return;
     }
 
+    if (siteKey && !botToken) { say("Complete the bot check first, then try again.", "error"); return; }
+
     busy = true;
     form.setAttribute("aria-busy", "true");
     submit.disabled = true;
@@ -167,6 +195,7 @@
     body.append("cv", file, file.name);
     body.append("task", currentTask());
     if (TASKS[currentTask()].needsJob) body.append("job", job.value.trim());
+    if (botToken) body.append("cf-turnstile-response", botToken);
 
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
@@ -190,7 +219,7 @@
       } else {
         // 400, 422 and 503 carry a plain-language reason from the server; show it.
         const data = await res.json().catch(() => ({}));
-        const reason = [400, 422, 503].includes(res.status) && typeof data.error === "string" ? data.error + " " : "Something went wrong on our side. ";
+        const reason = [400, 403, 422, 503].includes(res.status) && typeof data.error === "string" ? data.error + " " : "Something went wrong on our side. ";
         say(reason + kept() + ", so you can try again.", "error");
       }
     } catch (err) {
@@ -199,6 +228,7 @@
         : "Could not reach the Jobber service. Check your connection and try again. " + kept() + ".", "error");
     } finally {
       clearTimeout(timer);
+      resetBotCheck(); // a Turnstile token works once
       busy = false;
       form.removeAttribute("aria-busy");
       submit.textContent = TASKS[currentTask()].label;

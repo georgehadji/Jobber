@@ -26,9 +26,9 @@ Serve `site/` and one API endpoint on a VPS. A visitor uploads a CV, picks one o
 | `cv` | file, `.pdf`, `.md` or `.txt`, at most 5 MB |
 | `task` | `score`, `gap`, `pdf` or `scan` |
 | `job` | pasted job text, at least 80 characters. Absent for `scan` |
-| `cf-turnstile-response` | bot-check token. Not yet sent by the page |
+| `cf-turnstile-response` | bot-check token, single use; the page resets the widget after every submit |
 
-Responses: `200` result, `413` too large, `415` unsupported type, `429` daily limit or spend cap reached, `400` bad input with a plain-language message, `503` tool switched off for the day, `5xx` anything else.
+Responses: `200` result, `400` bad input, `403` bot check failed, `413` too large, `415` unsupported type, `422` unreadable PDF, `429` this visitor used today's checks, `503` bot check unreachable, budget used up, kill switch on, task not built, or store full. Every error carries a plain-language `error` message that the page shows.
 
 **Result delivery (user: short retention).** The existing `200 {resultUrl}` contract in `app.js` stays. The server keeps the finished result, not the CV, for a short window so the visitor can reload or reopen the link.
 
@@ -39,6 +39,20 @@ Responses: `200` result, `413` too large, `415` unsupported type, `429` daily li
 - Anyone holding the link can read the result until it expires. The page must say so, so visitors do not paste it publicly.
 - Cap total retained results by count and bytes. When full, refuse new work with 503 instead of evicting a visitor's live result.
 - A visitor can delete their result early with a "Delete this result" button (`DELETE` on the same URL).
+
+## 3b. Abuse controls as built (step 2)
+
+Code: `server/limits.mjs`, `server/turnstile.mjs`, wiring in `server/index.mjs`. Needs Node 22.13 or newer (`node:sqlite`).
+
+- **Order in `/api/evaluate`:** kill switch, body cap, parse, cheap input checks, Turnstile, budget reservation, visitor over-limit check, CV parse, count one check, run the task. A rejected upload (415, 422) and bad input (400) do not use a check. The Turnstile token is consumed by any request that gets that far.
+- **Bot check:** Cloudflare receives only the secret and the token (no IP, no CV, no job text). Unreachable or empty means fail closed.
+- **Daily limit:** per visitor per UTC day. A visitor is an HMAC of the IP under a key derived from the day, so it cannot be linked across days. IPv6 collapses to its /64. Check-and-count is synchronous, so concurrent requests cannot both pass. Rows from earlier days are deleted. Stored in `server/data/limits.db` (gitignored).
+- **Client IP:** the socket address, or the last `X-Forwarded-For` entry only when `JOBBER_TRUST_PROXY=1` (set it only behind Caddy, and make sure Caddy overwrites the header).
+- **Spend cap:** a task reserves its worst-case cost (`MAX_COST_USD`) before it runs and settles the actual cost after. In-flight reservations count, so parallel requests cannot overshoot. Over the cap returns 503. Free tasks (`gap`) are never blocked. Today no task costs money; `score` and `pdf` must fill in `MAX_COST_USD` and return real `costUsd`.
+- **Kill switch:** create the file named by `JOBBER_KILL_FILE` and every request gets 503 at once; delete it to restore.
+- **Production config:** the server refuses to start unless `TURNSTILE_SECRET`, `JOBBER_HASH_SECRET` (32+ characters), `JOBBER_DAILY_LIMIT` and `JOBBER_DAILY_BUDGET_USD` are set. `JOBBER_DEV=1` skips that for local runs. No default numbers exist: you choose them.
+- **Deploy step:** set the Turnstile site key in `<meta name="jobber-turnstile">` in `site/index.html`. It is empty in the repo. Add `challenges.cloudflare.com` to the Content-Security-Policy when that is written.
+- **Known limits:** limits are per IP, so shared networks share a quota and a visitor with many IPs gets more. Verified in the browser with Cloudflare's published test keys: widget renders, token verifies, third check is refused.
 
 ## 4. Request flow
 
@@ -84,7 +98,7 @@ Responses: `200` result, `413` too large, `415` unsupported type, `429` daily li
 ## 8. Build order
 
 1. Server skeleton: static serving, `/api/evaluate` validation, upload checks, temp-folder lifecycle and sweeper, limits table, no-body logging. Ship `gap` end to end here, since it needs no key and proves the plumbing.
-2. Turnstile, daily limit, global cap, 503 kill switch.
+2. ~~Turnstile, daily limit, global cap, 503 kill switch~~ Done (section 3b).
 3. `score` through OpenRouter with the privacy routing settings, spend accounting.
 4. `pdf` with the concurrency queue.
 5. `scan`.

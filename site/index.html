@@ -8,6 +8,7 @@
 <meta name="color-scheme" content="light">
 <script src="theme.js"></script>
 <meta name="jobber-api" content="/api/evaluate">
+<meta name="jobber-turnstile" content="">
 <link rel="icon" href="data:,">
 <link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -76,6 +77,8 @@
           <p class="error" id="job-error" role="alert"></p>
         </div>
 
+        <div class="bot-check" id="bot-check"></div>
+
         <button class="btn btn-primary" id="submit" type="submit">Check my fit</button>
         <p class="status" id="status" role="status" aria-live="polite"></p>
 
@@ -141,8 +144,9 @@
       <h2 id="h-privacy" class="section-title">What happens to your CV</h2>
       <ul class="facts">
         <li><strong>CV deleted, result kept briefly.</strong> Your CV file is deleted as soon as your result is ready. The result, which contains parts of your CV, is kept for 30 minutes so you can reopen it, then deleted. Anyone with the link can read it until then, so do not share the link. You can delete it earlier.</li>
-        <li><strong>No account.</strong> There is nothing to sign up for and no profile to delete.</li>
+        <li><strong>No account.</strong> There is nothing to sign up for and no profile to delete. To enforce the daily limit, we keep a one-way hash of your IP address for that day only. It changes every day and is not your IP address.</li>
         <li><strong>Sent to an AI provider.</strong> To do the work, the text of your CV and the job is sent to a third-party AI model provider. Do not upload anything you are not comfortable sending.</li>
+        <li><strong>A bot check.</strong> To stop automated abuse, the form uses Cloudflare Turnstile. It runs in your browser, and Cloudflare receives information about your browser to decide whether you are a person. Your CV and the job are not sent to Cloudflare.</li>
         <li><strong>You stay in control.</strong> Jobber never applies for you, sends messages, or submits anything on your behalf.</li>
       </ul>
     </div>
