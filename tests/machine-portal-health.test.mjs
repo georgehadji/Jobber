@@ -96,7 +96,7 @@ eq('...so does a vocabulary alias written raw (`down`) and `skipped`: the log is
   eq('control: rate_limited is neutral there too (2 failures stay below 3)', skipFor('rate_limited'), false);
 }
 
-// ── DRIFT pinned: stats.mjs has no neutral class ─────────────────────────
+// ── D12: stats.mjs knows the neutral class (was a pinned drift) ──────────
 {
   const yml = 'tracked_companies:\n  - name: Acme\nportal_health_threshold: 1\n';
   const tsv = rows => `timestamp\tcompany\tstatus\n${rows.map((s, i) => `2026-10-0${i + 1}T00:00:00Z\tAcme\t${s}`).join('\n')}\n`;
@@ -104,9 +104,11 @@ eq('...so does a vocabulary alias written raw (`down`) and `skipped`: the log is
   eq('stats.mjs: network after reachable is persistently dead at threshold 1 (control)', dead(['reachable', 'network']), 1);
   eq('stats.mjs: reachable resets (control)', dead(['network', 'reachable']), 0);
   eq('stats.mjs: empty resets (control)', dead(['network', 'empty']), 0);
-  eq('DRIFT: stats.mjs counts rate_limited as a failure', dead(['reachable', 'rate_limited']), 1);
-  eq('...while scan.mjs leaves the same history un-failed (streak 0 after reachable, rate_limited)', computeConsecutiveFailures([rec('reachable', 1), rec('rate_limited', 2)]).get('Acme'), 0);
-  eq('the machine documents rate_limited as neutral-in-scan (description names the drift)', /FAILURE by stats\.mjs/.test(machine.states.find(s => s.id === 'rate_limited').description), true);
+  eq('D12: stats.mjs leaves a portal with only rate_limited after reachable un-failed', dead(['reachable', 'rate_limited']), 0);
+  eq('...exactly as scan.mjs does (streak 0 after reachable, rate_limited)', computeConsecutiveFailures([rec('reachable', 1), rec('rate_limited', 2)]).get('Acme'), 0);
+  eq('control: rate_limited does not RESET a streak either (network, rate_limited stays dead)', dead(['network', 'rate_limited']), 1);
+  eq('...and scan.mjs agrees (streak stays 1)', computeConsecutiveFailures([rec('network', 1), rec('rate_limited', 2)]).get('Acme'), 1);
+  eq('the machine no longer documents a stats drift for rate_limited', machine.states.find(st => st.id === 'rate_limited').description.includes('FAILURE by stats'), false);
 }
 
 // ── check() kinds ────────────────────────────────────────────────────────
