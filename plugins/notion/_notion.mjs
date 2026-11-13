@@ -114,6 +114,11 @@ export function createNotionClient({ token, parent, fetch: fetchFn = globalThis.
     };
   }
 
+  /** Every record in the data source, summarised (one paginated query). */
+  async function listRecords(dataSourceId) {
+    return (await queryDB(dataSourceId)).map(summarize);
+  }
+
   /** Match against "<company> / <role>" (substring, case-insensitive) or exact company. */
   async function findRecords(dataSourceId, match) {
     const m = String(match).toLowerCase().trim();
@@ -123,5 +128,5 @@ export function createNotionClient({ token, parent, fetch: fetchFn = globalThis.
     });
   }
 
-  return { api, createPage, resolveDBs, queryDB, findRecords };
+  return { api, createPage, resolveDBs, queryDB, listRecords, findRecords };
 }

@@ -56,10 +56,15 @@ export function parseScore(s) {
   return m ? parseFloat(m[1]) : NaN;
 }
 
-/** Upsert each tracker row into the Applications DB. Callers hold the export lock (unless dry-running). */
+/**
+ * Upsert each tracker row into the Applications DB. Callers hold the export lock (unless dry-running).
+ * The DB is listed ONCE and matched in memory (it used to be queried in full for every row); a row
+ * created during the run is added to that list so a repeated company+role in the tracker updates it.
+ */
 async function pushRows(rows, client, apps, ctx) {
   let pushed = 0;
   const unknownStatuses = [];
+  let existing = null; // lazy: a dry run never reads Notion
   for (const row of rows) {
     const company = (row.company || '').trim();
     const role = (row.role || '').trim();
@@ -81,11 +86,11 @@ async function pushRows(rows, client, apps, ctx) {
 
     // Upsert: update every existing company+role record (Notion returns them in no fixed order, so
     // patching only the first would leave a different stale copy on each run), else create one.
-    const dupes = (await client.findRecords(apps, `${company} / ${role}`))
-      .filter((h) => h.company.toLowerCase() === company.toLowerCase() && h.role.toLowerCase() === role.toLowerCase());
+    existing ??= await client.listRecords(apps);
+    const dupes = existing.filter((h) => h.company.toLowerCase() === company.toLowerCase() && h.role.toLowerCase() === role.toLowerCase());
     if (dupes.length > 1) ctx?.log?.(`warning: ${company} — ${role}: ${dupes.length} duplicate Notion rows, updating all of them`);
     if (dupes.length) for (const d of dupes) await client.api(`pages/${d.id}`, 'PATCH', { properties: props });
-    else await client.createPage(apps, props);
+    else existing.push({ id: (await client.createPage(apps, props)).id, company, role });
     pushed++;
   }
   return unknownStatuses.length ? { pushed, unknownStatuses } : { pushed };
