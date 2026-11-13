@@ -159,22 +159,24 @@ Rules:
 /**
  * @param {{apiKey: string, model: string, maxPricePerM: {prompt: number, completion: number},
  *          render: (html: string, format: string) => Promise<{pdf: Buffer, pages: number, atsFindings: string[]}>,
- *          isBusy?: () => boolean,  true when the render line is full: refuse before paying for the model call
+ *          maxInFlight?: number,  requests allowed between check() and the end of run() (model call plus render).
+ *            Counting from check() means a full line is refused before the model is paid, not after.
  *          zdr?: boolean, format?: 'a4'|'letter', maxOutputTokens?: number, timeoutMs?: number,
  *          baseUrl?: string, fetchFn?: typeof fetch}} cfg
  */
 export function createPdfTask({
-  apiKey, model, maxPricePerM, render, isBusy = () => false, zdr = false, format = 'a4', maxOutputTokens = PDF_MAX_OUTPUT_TOKENS,
+  apiKey, model, maxPricePerM, render, maxInFlight = Infinity, zdr = false, format = 'a4', maxOutputTokens = PDF_MAX_OUTPUT_TOKENS,
   timeoutMs = 110_000, baseUrl = 'https://openrouter.ai/api/v1', fetchFn = fetch,
 }) {
   const template = readFileSync(TEMPLATE_PATH, 'utf8');
+  let inFlight = 0;
   const provider = routing({ maxPricePerM, zdr });
   const userMessage = (cv, job) => untrustedBlocks("Tailor the candidate's CV to the job below.", { CV: cv, JOB: job });
   const costBound = (cv, job) => costOf(promptTokenBound(SYSTEM, userMessage(cv, job)), maxOutputTokens, maxPricePerM);
 
   return {
     check(cv, job) {
-      if (isBusy()) return 'Too many CVs are being built right now. Try again in a minute. This did not use one of your checks.';
+      if (inFlight >= maxInFlight) return 'Too many CVs are being built right now. Try again in a minute. This did not use one of your checks.';
       if (cv.length > MAX_SCORE_CV_CHARS) return `That CV is too long to rebuild (limit ${MAX_SCORE_CV_CHARS.toLocaleString('en-US')} characters of text).`;
       if (job.length > MAX_SCORE_JOB_CHARS) return `That job description is too long to use (limit ${MAX_SCORE_JOB_CHARS.toLocaleString('en-US')} characters).`;
       return null;
@@ -182,7 +184,14 @@ export function createPdfTask({
 
     maxCostUsd: costBound,
 
+    // check() and the start of run() are one synchronous stretch in the server, so the count cannot race.
     async run(cv, job) {
+      inFlight++;
+      try { return await runOnce(cv, job); } finally { inFlight--; }
+    },
+  };
+
+  async function runOnce(cv, job) {
       const reserved = costBound(cv, job);
       const { text, cost } = await chat({
         apiKey, baseUrl, fetchFn, model, system: SYSTEM, user: userMessage(cv, job),
@@ -214,6 +223,5 @@ export function createPdfTask({
           removed: checked.removed,
         },
       };
-    },
-  };
+  }
 }

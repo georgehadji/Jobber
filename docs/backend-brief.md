@@ -92,6 +92,32 @@ Code: `server/scan.mjs`, wired in `server/index.mjs`. On unless `JOBBER_SCAN_ENA
 - **Not covered:** the index is rebuilt after each restart, so for a few minutes after deploy scans return 503. Postings can be closed by the time a visitor clicks (the page says to check). Per-board politeness beyond the provider limits, and ATS terms-of-use review, are yours before launch.
 - **Also fixed:** `[hidden]` CSS rule, because `.field { display: grid }` kept hidden fields visible.
 
+## 3f. Hardening as built (step 6) and launch checklist
+
+Code: `server/index.mjs`, `server/pdf.mjs`, samples in `server/deploy/` (`Caddyfile.example`, `jobber.service.example`). Test: `tests/hosted-hardening.test.mjs`.
+
+**Built and tested**
+- **CSP and headers on every response:** `default-src 'none'`, scripts from self and `challenges.cloudflare.com` only, frames only from Cloudflare, no inline script or style, no `unsafe-eval`, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`; plus nosniff, no referrer, a locked Permissions-Policy, same-origin opener and resource policies. A test keeps `site/` free of inline code, handlers, injection sinks and any other origin. Checked in a real browser (index, gap result, theme toggle, fonts): no violations. The Turnstile widget itself was not exercised under the CSP; do that once with the real site key.
+- **Request robustness:** a malformed URL used to throw outside the handler's try block and could crash the process; it now gets 400, as do bad percent-escapes and NUL bytes. Traversal attempts get 404. Header timeout 15 s, request timeout 60 s, connection cap 256 (`JOBBER_MAX_CONNECTIONS`). A stray rejection is logged by name and does not kill the process. SIGTERM and SIGINT close the server (not tested on Windows).
+- **Listen address:** with `JOBBER_TRUST_PROXY=1` the app binds to 127.0.0.1 (`JOBBER_HOST` overrides), so `X-Forwarded-For` cannot be forged to dodge the daily limit.
+- **PDF queue fix:** the line is now counted from `check()` to the end of the render (`maxInFlight` = concurrency + queue), so a full line is refused before the model is paid. Before, many requests could pass the check while waiting on the model, then be refused at render time after spending money. Test: 12 simultaneous requests, 3 built, 9 refused with no model call and no spend, never more than one render at once.
+- **Leak check:** after gap, score, pdf (real Chromium) and scan, no CV or job bytes appear in any file written under the temp directory during the run (including the limits DB) or in logs, and deleting a result makes it unreachable. This does not cover process memory, swap, or provider-side retention.
+- **Kill switch drill:** creating the `JOBBER_KILL_FILE` refuses new work at once (503, nothing stored; pages and existing results still load); deleting it resumes without a restart. Drill on the VPS before launch: `touch` the file, load the site, submit, `rm` it.
+- **Load:** 80 concurrent gap requests all answered (p95 under 100 ms locally, memory +3 MB); a full store refuses new work and evicts nothing. Not measured: real concurrent Chromium renders and real model latency on the target VPS.
+- **Deploy samples:** Caddy (HTTPS, 6 MB body cap, HSTS, no body logging) and a systemd unit with `PrivateTmp` (own `/tmp`, emptied on stop, so a crash cannot leave visitor data behind), `ProtectSystem=strict`, `NoNewPrivileges`, memory cap. Secrets in `/etc/jobber/env`, mode 0600.
+- Section 4 describes an earlier temp-folder design. It is superseded: every task runs in memory, and the only disk write is the limits DB (hashed visitor buckets and spend counters).
+
+**Yours before launch (not something code can finish)**
+1. Legal review of the privacy text (it names OpenRouter, Cloudflare Turnstile, the hashed IP, the 30-minute result window) and lawful basis; UK GDPR or GDPR if you serve those visitors. Retained results are personal data (risk 8).
+2. OpenRouter: leave prompt logging off, no training or discount programmes, choose models and price caps, confirm at least one provider passes `data_collection: "deny"` for each, run a few paid requests and compare `usage.cost` with the dashboard (confirms 1 credit = 1 USD).
+3. Set the numbers: `JOBBER_DAILY_LIMIT`, `JOBBER_DAILY_BUDGET_USD`; start low.
+4. Domain, Turnstile site key (`jobber-turnstile` meta tag) and secret, `JOBBER_HASH_SECRET`.
+5. VPS: install Chromium (`npx playwright install --with-deps chromium`), size memory for `JOBBER_PDF_CONCURRENCY` (start at 1), firewall so only Caddy reaches the app.
+6. Run a real load test on the VPS with several simultaneous pdf requests and a real model.
+7. Check the job boards' terms of use for the scan index, and widen or narrow `JOBBER_SCAN_SOURCES`.
+8. `README.md` still says Jobber is "not a hosted service" (near line 257); reword it. Decide whether the hosted files belong in the update path (they are excluded from it today).
+9. Set up uptime monitoring on `/` and an alert on the spend counter.
+
 ## 4. Request flow
 
 1. Reject early: wrong method, body over 5 MB, missing fields. Nothing is read from disk yet.
@@ -140,6 +166,6 @@ Code: `server/scan.mjs`, wired in `server/index.mjs`. On unless `JOBBER_SCAN_ENA
 3. ~~`score` through OpenRouter with the privacy routing settings, spend accounting~~ Done (section 3c).
 4. ~~`pdf` with the concurrency queue~~ Done (section 3d).
 5. ~~`scan`~~ Done (section 3e).
-6. Hardening: CSP, load test, kill-switch drill, a check that no CV bytes remain on disk or in logs after a request, and the legal review.
+6. ~~Hardening~~ Done (section 3f); original list: CSP, load test, kill-switch drill, a check that no CV bytes remain on disk or in logs after a request, and the legal review.
 
 Tests follow the repo's existing style (`test-all.mjs`): each assertion must be able to fail, for example uploading a file with a `.pdf` name and non-PDF bytes must return 415, and a failed child process must still delete its temp folder.

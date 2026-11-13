@@ -24,7 +24,7 @@
 //   JOBBER_CHROMIUM_NO_SANDBOX=1  only when Chromium cannot sandbox inside the container
 // Scan task (on unless JOBBER_SCAN_ENABLED=0; no key needed, no cost):
 //   JOBBER_SCAN_SOURCES (templates/portals.example.yml) company board list, JOBBER_SCAN_REFRESH_HOURS (6)
-// Optional: PORT (8787), JOBBER_RESULT_TTL_MS (30 min), JOBBER_DB (server/data/limits.db),
+// Optional: PORT (8787), JOBBER_HOST (127.0.0.1 when JOBBER_TRUST_PROXY=1, else all interfaces), JOBBER_MAX_CONNECTIONS (256), JOBBER_RESULT_TTL_MS (30 min), JOBBER_DB (server/data/limits.db),
 //   JOBBER_KILL_FILE (if this file exists every request is refused with 503),
 //   JOBBER_TRUST_PROXY=1 (read the client IP from the last X-Forwarded-For entry; set only behind Caddy)
 
@@ -57,7 +57,18 @@ const TYPES = {
   '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml',
 };
 
-const SECURITY = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' };
+// No inline script or style anywhere in site/ (a test enforces it), so no 'unsafe-inline'.
+// Cloudflare's origin is allowed only for the Turnstile script and its iframe. Caddy adds HSTS; do not repeat these there.
+const CSP = [
+  "default-src 'none'", "script-src 'self' https://challenges.cloudflare.com", "style-src 'self'", "font-src 'self'",
+  "img-src 'self' data:", "connect-src 'self'", "frame-src https://challenges.cloudflare.com", "form-action 'self'",
+  "base-uri 'none'", "object-src 'none'", "frame-ancestors 'none'",
+].join('; ');
+const SECURITY = {
+  'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': CSP,
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
+  'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin',
+};
 const PRIVATE = { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
 
 function send(res, status, body, headers = {}) {
@@ -171,7 +182,10 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
 }
 
 async function serveStatic(pathname, res) {
-  const rel = pathname === '/' ? 'index.html' : decodeURIComponent(pathname).replace(/^\/+/, '');
+  let rel;
+  try { rel = pathname === '/' ? 'index.html' : decodeURIComponent(pathname).replace(/^\/+/, ''); }
+  catch { return fail(res, 400, 'Bad request.'); }
+  if (rel.includes('\0')) return fail(res, 400, 'Bad request.');
   const file = normalize(join(SITE_DIR, rel));
   if (file !== SITE_DIR && !file.startsWith(SITE_DIR + sep)) return fail(res, 404, 'Not found.');
   try {
@@ -191,9 +205,10 @@ export function createApp({
   const ctx = { store, limits, verifyBot, trustProxy, killFile, tasks };
   const server = createServer(async (req, res) => {
     const started = Date.now();
-    const { pathname } = new URL(req.url, 'http://x');
     let task = '-';
     try {
+      let pathname;
+      try { pathname = new URL(req.url, 'http://x').pathname; } catch { return fail(res, 400, 'Bad request.'); }
       const result = /^\/api\/result\/([^/]+)$/.exec(pathname);
       if (pathname === '/api/evaluate') {
         task = 'evaluate';
@@ -222,6 +237,8 @@ export function createApp({
     }
   });
   server.requestTimeout = 60_000;
+  server.headersTimeout = 15_000;
+  server.maxConnections = Number(process.env.JOBBER_MAX_CONNECTIONS) || 256;
   const sweeper = setInterval(store.sweep, 60_000);
   sweeper.unref();
   server.on('close', () => clearInterval(sweeper));
@@ -268,7 +285,7 @@ export function readConfig(env) {
           tasks.pdf = createPdfTask({
             apiKey: env.OPENROUTER_API_KEY, model: env.JOBBER_PDF_MODEL || env.JOBBER_SCORE_MODEL,
             maxPricePerM: { prompt: ppp, completion: ppc }, zdr: env.JOBBER_OPENROUTER_ZDR === '1',
-            render: renderPdf, isBusy: () => slots.stats().waiting >= queue, format: fmt,
+            render: renderPdf, maxInFlight: conc + queue, format: fmt,
           });
         }
       }
@@ -294,6 +311,8 @@ export function readConfig(env) {
     errors,
     index,
     port: Number(env.PORT ?? 8787),
+    // Behind a proxy the app must not be reachable directly, or X-Forwarded-For could be forged to dodge the daily limit.
+    host: env.JOBBER_HOST || (env.JOBBER_TRUST_PROXY === '1' ? '127.0.0.1' : undefined),
     options: {
       store: createStore({ ttlMs: Number(env.JOBBER_RESULT_TTL_MS) || 30 * 60 * 1000 }),
       limits: createLimits({
@@ -318,5 +337,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const server = createApp(cfg.options);
   cfg.index?.start();
   server.on('close', () => cfg.index?.stop());
-  server.listen(cfg.port, () => console.log(`jobber server on :${server.address().port}${process.env.JOBBER_DEV === '1' ? ' (dev: no bot check or limits unless configured)' : ''}`));
+  // A stray rejection must not take the process down and wipe every visitor's in-memory result.
+  process.on('unhandledRejection', (e) => console.error(`unhandledRejection ${e?.name || 'Error'}`));
+  for (const sig of ['SIGTERM', 'SIGINT']) {
+    process.on(sig, () => { server.close(() => process.exit(0)); setTimeout(() => process.exit(0), 10_000).unref(); });
+  }
+  server.listen(cfg.port, cfg.host, () => console.log(`jobber server on :${server.address().port}${process.env.JOBBER_DEV === '1' ? ' (dev: no bot check or limits unless configured)' : ''}`));
 }

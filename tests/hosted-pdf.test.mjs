@@ -230,7 +230,7 @@ try {
   try {
     const limits = createLimits({ dailyLimit: 5, dailyBudgetUsd: 1 });
     const r = recorder();
-    ctx = await start({ limits, tasks: { gap: GAP_TASK, pdf: mk({ fetchFn: r.fetchFn, isBusy: () => true }) } });
+    ctx = await start({ limits, tasks: { gap: GAP_TASK, pdf: mk({ fetchFn: r.fetchFn, maxInFlight: 0 }) } });
     const res = await fetch(`${ctx.base}/api/evaluate`, { method: 'POST', body: form('pdf') });
     const body = await res.json();
     if (res.status === 400 && /Too many CVs/.test(body.error) && r.calls.length === 0 && limits.spentTodayUsd() === 0) pass('server: when the render line is full the request is refused before the model is called');
