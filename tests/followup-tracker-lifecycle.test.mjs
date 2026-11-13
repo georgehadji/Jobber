@@ -9,12 +9,12 @@
  * files are auto-run by both test-all.mjs and test-runner.mjs).
  */
 
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync, mkdirSync, realpathSync, copyFileSync, symlinkSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync, mkdirSync, realpathSync, copyFileSync, symlinkSync, cpSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
 import { pathToFileURL } from 'url';
-import { pass, fail, ROOT, NODE, run } from './helpers.mjs';
+import { pass, fail, warn, ROOT, NODE, run } from './helpers.mjs';
 
 /**
  * Read a repo-relative text file as UTF-8. Copied verbatim from test-all.mjs
@@ -447,7 +447,14 @@ try {
       copyFileSync(join(ROOT, 'followup-cadence.mjs'), join(e2eTmp, 'followup-cadence.mjs'));
       copyFileSync(join(ROOT, 'tracker-parse.mjs'), join(e2eTmp, 'tracker-parse.mjs'));
       copyFileSync(join(ROOT, 'tracker-aliases.json'), join(e2eTmp, 'tracker-aliases.json'));
-      symlinkSync(join(ROOT, 'node_modules'), join(e2eTmp, 'node_modules'), 'dir');
+      // followup-cadence.mjs resolves statuses through lib/state-machine.mjs, which reads templates/ relative to itself
+      cpSync(join(ROOT, 'lib'), join(e2eTmp, 'lib'), { recursive: true });
+      cpSync(join(ROOT, 'templates'), join(e2eTmp, 'templates'), { recursive: true });
+      // 'junction' links a directory on Windows without the elevated privilege a 'dir' symlink needs
+      // (EPERM without Developer Mode) and is a plain directory symlink elsewhere. Fixture setup that
+      // still fails is a skip with a warning, never a failure of the property under test.
+      try { symlinkSync(join(ROOT, 'node_modules'), join(e2eTmp, 'node_modules'), 'junction'); }
+      catch (linkErr) { const skip = new Error(`could not link node_modules into the fixture (${linkErr.message})`); skip.skip = true; throw skip; }
       mkdirSync(join(e2eTmp, 'data'), { recursive: true });
       writeFileSync(join(e2eTmp, 'data', 'applications.md'), [
         '# Applications Tracker',
@@ -492,7 +499,8 @@ try {
         fail(`analyze() emitted ${(e2e.entries || []).length} entries, ${missingSource.length} without a known appDateSource`);
       }
     } catch (e2eErr) {
-      fail(`analyze() appDateSource end-to-end check crashed: ${e2eErr.message}`);
+      if (e2eErr.skip) warn(`analyze() appDateSource end-to-end check skipped: ${e2eErr.message}`);
+      else fail(`analyze() appDateSource end-to-end check crashed: ${e2eErr.message}`);
     } finally {
       rmSync(e2eTmp, { recursive: true, force: true });
     }
