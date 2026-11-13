@@ -132,9 +132,26 @@
     return nodes;
   }
 
+  // The PDF arrives as base64 in the result. It becomes a Blob, so it never touches a URL or a server again.
+  function renderPdf(r) {
+    const nodes = [el("h1", "Your tailored CV", "section-title")];
+    const bytes = Uint8Array.from(atob(r.pdf), (c) => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    const dl = el("a", "Download the PDF", "btn btn-primary");
+    dl.href = url; dl.download = r.filename || "tailored-cv.pdf";
+    nodes.push(
+      el("p", "Read every line before you send it. An AI model reworded your CV for this job. We removed anything we could check that your CV does not support, but we cannot check the wording of each bullet.", "doc-verdict"),
+      dl,
+      el("p", r.pages + (r.pages === 1 ? " page." : " pages.") + (r.pages > 2 ? " Most recruiters prefer two pages or fewer." : ""), "hint")
+    );
+    if (r.removed.length) nodes.push(list("Removed because your CV does not support it", "These were in the model’s draft and are not in your PDF.", r.removed));
+    if (r.atsFindings.length) nodes.push(list("Reading check", "An applicant tracking system may have trouble reading this PDF.", r.atsFindings));
+    return nodes;
+  }
+
   function render(data) {
     const r = data.result;
-    const nodes = r.task === "score" ? renderScore(r) : renderGap(r);
+    const nodes = r.task === "score" ? renderScore(r) : r.task === "pdf" ? renderPdf(r) : renderGap(r);
 
     const minutes = Math.max(1, Math.round((data.expiresAt - Date.now()) / 60000));
     const del = el("button", "Delete this result now", "btn btn-quiet");

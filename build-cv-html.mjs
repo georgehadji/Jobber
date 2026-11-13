@@ -871,4 +871,7 @@ async function runSelfTest() {
   process.exit(0);
 }
 
-main();
+// Run only as a script; importing this module (the hosted server does) must not start the CLI.
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();
+
+export { renderHtml };

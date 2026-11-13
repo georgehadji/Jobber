@@ -18,6 +18,10 @@
 //   OPENROUTER_API_KEY, JOBBER_SCORE_MODEL (e.g. a model slug from openrouter.ai/models),
 //   JOBBER_SCORE_MAX_PRICE_PROMPT / JOBBER_SCORE_MAX_PRICE_COMPLETION  price ceilings, USD per million tokens
 //   JOBBER_OPENROUTER_ZDR=1  also require zero-data-retention endpoints (stricter; may leave no provider for a model)
+// PDF task (on whenever the score task is, unless JOBBER_PDF_ENABLED=0; needs Chromium: npx playwright install chromium):
+//   JOBBER_PDF_MODEL, JOBBER_PDF_MAX_PRICE_PROMPT, JOBBER_PDF_MAX_PRICE_COMPLETION  default to the score ones
+//   JOBBER_PDF_CONCURRENCY (1) renders at once, JOBBER_PDF_QUEUE (4) renders allowed to wait, JOBBER_PDF_FORMAT (a4|letter)
+//   JOBBER_CHROMIUM_NO_SANDBOX=1  only when Chromium cannot sandbox inside the container
 // Optional: PORT (8787), JOBBER_RESULT_TTL_MS (30 min), JOBBER_DB (server/data/limits.db),
 //   JOBBER_KILL_FILE (if this file exists every request is refused with 503),
 //   JOBBER_TRUST_PROXY=1 (read the client IP from the last X-Forwarded-For entry; set only behind Caddy)
@@ -31,6 +35,8 @@ import { readCv, MAX_CV_BYTES } from './cv.mjs';
 import { runGap } from './gap.mjs';
 import { createLimits } from './limits.mjs';
 import { createScoreTask, TaskError } from './score.mjs';
+import { createPdfTask } from './pdf.mjs';
+import { createRenderer, createSlots } from './render-pdf.mjs';
 import { createStore, TOKEN_RE } from './store.mjs';
 import { createTurnstile } from './turnstile.mjs';
 
@@ -150,7 +156,7 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
     consumed = false; // delivered: the check stays used
     sendJson(res, 200, { resultUrl: `/result.html#${token}` });
   } catch (err) {
-    if (err instanceof TaskError) return fail(res, err.status, err.message);
+    if (err instanceof TaskError) { costUsd = err.costUsd ?? 0; return fail(res, err.status, err.message); }
     throw err;
   } finally {
     if (consumed) limits.refund(ip); // no result was delivered, so give the check back
@@ -239,6 +245,27 @@ export function readConfig(env) {
         apiKey: env.OPENROUTER_API_KEY, model: env.JOBBER_SCORE_MODEL,
         maxPricePerM: { prompt: pp, completion: pc }, zdr: env.JOBBER_OPENROUTER_ZDR === '1',
       });
+      if (env.JOBBER_PDF_ENABLED !== '0') {
+        // The pdf task shares the key. Model and price caps default to the score ones.
+        const ppp = Number(env.JOBBER_PDF_MAX_PRICE_PROMPT ?? pp);
+        const ppc = Number(env.JOBBER_PDF_MAX_PRICE_COMPLETION ?? pc);
+        const conc = Number(env.JOBBER_PDF_CONCURRENCY ?? 1);
+        const queue = Number(env.JOBBER_PDF_QUEUE ?? 4);
+        const fmt = env.JOBBER_PDF_FORMAT ?? 'a4';
+        if (!(ppp > 0) || !(ppc > 0)) errors.push('JOBBER_PDF_MAX_PRICE_PROMPT and JOBBER_PDF_MAX_PRICE_COMPLETION must be numbers above 0');
+        if (!Number.isInteger(conc) || conc < 1) errors.push('JOBBER_PDF_CONCURRENCY must be a positive integer');
+        if (!Number.isInteger(queue) || queue < 0) errors.push('JOBBER_PDF_QUEUE must be 0 or more');
+        if (!['a4', 'letter'].includes(fmt)) errors.push('JOBBER_PDF_FORMAT must be a4 or letter');
+        if (!errors.length) {
+          const slots = createSlots({ concurrency: conc, maxPending: queue });
+          const { renderPdf } = createRenderer({ slots, noSandbox: env.JOBBER_CHROMIUM_NO_SANDBOX === '1' });
+          tasks.pdf = createPdfTask({
+            apiKey: env.OPENROUTER_API_KEY, model: env.JOBBER_PDF_MODEL || env.JOBBER_SCORE_MODEL,
+            maxPricePerM: { prompt: ppp, completion: ppc }, zdr: env.JOBBER_OPENROUTER_ZDR === '1',
+            render: renderPdf, isBusy: () => slots.stats().waiting >= queue, format: fmt,
+          });
+        }
+      }
     }
   }
   if (errors.length) return { errors };

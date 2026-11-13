@@ -67,6 +67,18 @@ Code: `server/score.mjs`, wired in `server/index.mjs`. Off unless `OPENROUTER_AP
 - **Config:** `OPENROUTER_API_KEY`, `JOBBER_SCORE_MODEL`, `JOBBER_SCORE_MAX_PRICE_PROMPT`, `JOBBER_SCORE_MAX_PRICE_COMPLETION` (USD per million tokens). No default model or price: you choose them.
 - **Before launch (yours):** in the OpenRouter account privacy settings, leave prompt logging off and do not opt in to training or discount programmes; check that the chosen model has at least one provider that passes `data_collection: "deny"` (and `zdr` if you enable it); pick the model and price caps; run a few real requests and compare `usage.cost` with the dashboard. Not tested against the live API in this build.
 
+## 3d. PDF task as built (step 4)
+
+Code: `server/pdf.mjs` (task), `server/render-pdf.mjs` (Chromium and queue), `server/openrouter.mjs` (the OpenRouter call, now shared with score). On whenever the score task is, unless `JOBBER_PDF_ENABLED=0`.
+
+- **Flow:** one model call returns a JSON payload (never HTML), `verifyPayload` removes what the CV does not support, `build-cv-html.mjs` (`renderHtml`, now exported; the CLI only runs as a script) fills Jobber's own ATS-safe template, Chromium prints it. The existing `openai-tailor.mjs` full-HTML path is not used.
+- **Anti-fabrication, mechanical:** the name must be in the CV (else 422, no PDF). Email, phone, location and links must appear in the CV. A job needs its employer and title in the CV and every year in its dates. Skills, schools, certifications and projects must appear in the CV. Any number in a summary, bullet or description must appear in the CV. Competencies need their words in the CV. Everything removed is listed on the result page. Bullet wording cannot be checked mechanically, so the page says to read every line. No photo is ever added.
+- **Chromium:** a fresh browser per render, JavaScript off, offline, every request aborted except `data:` (fonts are inlined), 30 s timeout, closed in `finally`. Only `JOBBER_PDF_CONCURRENCY` (default 1) renders run at once; `JOBBER_PDF_QUEUE` (default 4) may wait; beyond that 503. `check()` refuses when the line is full, before the model is paid. `JOBBER_CHROMIUM_NO_SANDBOX=1` only if Chromium cannot sandbox in the container.
+- **Cost on late failure:** `TaskError` now carries `costUsd`. If the model was paid and the reply is unusable, the name is missing, or the render fails, the visitor keeps the check but the spend cap still counts the money.
+- **Result:** `{task:'pdf', filename, pdf (base64), pages, atsFindings, removed}`. The result page turns it into a Blob download. It sits in the in-memory store for 30 minutes like other results (about 20 KB base64).
+- **Config:** model and price caps default to the score ones (`JOBBER_PDF_MODEL`, `JOBBER_PDF_MAX_PRICE_PROMPT`, `JOBBER_PDF_MAX_PRICE_COMPLETION`); `JOBBER_PDF_FORMAT` is `a4` (default) or `letter`. Install Chromium on the VPS with `npx playwright install --with-deps chromium`.
+- **Not tested here:** a live OpenRouter call, quality of the tailoring across real CVs, non-Latin CVs (the template has CSS for en, es, zh-CN, ja, ar; other languages fall back to en), load with several concurrent renders.
+
 ## 4. Request flow
 
 1. Reject early: wrong method, body over 5 MB, missing fields. Nothing is read from disk yet.
@@ -113,7 +125,7 @@ Code: `server/score.mjs`, wired in `server/index.mjs`. Off unless `OPENROUTER_AP
 1. Server skeleton: static serving, `/api/evaluate` validation, upload checks, temp-folder lifecycle and sweeper, limits table, no-body logging. Ship `gap` end to end here, since it needs no key and proves the plumbing.
 2. ~~Turnstile, daily limit, global cap, 503 kill switch~~ Done (section 3b).
 3. ~~`score` through OpenRouter with the privacy routing settings, spend accounting~~ Done (section 3c).
-4. `pdf` with the concurrency queue.
+4. ~~`pdf` with the concurrency queue~~ Done (section 3d).
 5. `scan`.
 6. Hardening: CSP, load test, kill-switch drill, a check that no CV bytes remain on disk or in logs after a request, and the legal review.
 
