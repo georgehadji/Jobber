@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-13T22:30:00Z",
+  "title": "Design System: Jobber public site",
+  "extensions": {
+    "colorMeta": {
+      "stone-ground": { "role": "neutral", "displayName": "Stone Ground", "canonical": "#f7f6f3", "tonalRamp": ["hsl(40 9% 10%)", "hsl(40 9% 20%)", "hsl(40 9% 32%)", "hsl(40 9% 46%)", "hsl(40 9% 60%)", "hsl(40 9% 74%)", "hsl(40 9% 87%)", "hsl(40 14% 96%)"] },
+      "paper-surface": { "role": "neutral", "displayName": "Paper Surface", "canonical": "#ffffff", "tonalRamp": ["hsl(40 5% 12%)", "hsl(40 5% 24%)", "hsl(40 5% 38%)", "hsl(40 5% 52%)", "hsl(40 5% 66%)", "hsl(40 5% 80%)", "hsl(40 5% 91%)", "#ffffff"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "hsl(40 9% 84%)", "tonalRamp": ["hsl(40 9% 15%)", "hsl(40 9% 27%)", "hsl(40 9% 39%)", "hsl(40 9% 51%)", "hsl(40 9% 63%)", "hsl(40 9% 74%)", "hsl(40 9% 84%)", "hsl(40 9% 94%)"] },
+      "warm-ink": { "role": "neutral", "displayName": "Warm Ink", "canonical": "hsl(30 10% 11%)", "tonalRamp": ["hsl(30 10% 6%)", "hsl(30 10% 11%)", "hsl(30 10% 20%)", "hsl(30 10% 30%)", "hsl(30 10% 42%)", "hsl(30 10% 56%)", "hsl(30 10% 74%)", "hsl(30 10% 92%)"] },
+      "muted-ink": { "role": "neutral", "displayName": "Muted Ink", "canonical": "hsl(35 9% 32%)", "tonalRamp": ["hsl(35 9% 12%)", "hsl(35 9% 20%)", "hsl(35 9% 32%)", "hsl(35 9% 44%)", "hsl(35 9% 56%)", "hsl(35 9% 68%)", "hsl(35 9% 82%)", "hsl(35 9% 94%)"] },
+      "olive-headline": { "role": "secondary", "displayName": "Olive Headline", "canonical": "#59592a", "tonalRamp": ["hsl(60 35% 10%)", "hsl(60 35% 18%)", "hsl(60 35% 26%)", "hsl(60 35% 35%)", "hsl(60 25% 48%)", "hsl(60 22% 62%)", "hsl(60 22% 80%)", "hsl(60 25% 93%)"] },
+      "signal-orange": { "role": "primary", "displayName": "Signal Orange", "canonical": "#dd7627", "tonalRamp": ["hsl(26 74% 15%)", "hsl(26 74% 25%)", "hsl(26 74% 35%)", "hsl(26 74% 45%)", "hsl(26 74% 52%)", "hsl(26 74% 65%)", "hsl(26 74% 80%)", "hsl(26 74% 94%)"] },
+      "burnt-orange-text": { "role": "primary", "displayName": "Burnt Orange Text", "canonical": "hsl(26 80% 33%)", "tonalRamp": ["hsl(26 80% 13%)", "hsl(26 80% 22%)", "hsl(26 80% 33%)", "hsl(26 80% 43%)", "hsl(26 75% 55%)", "hsl(26 75% 67%)", "hsl(26 75% 82%)", "hsl(26 75% 94%)"] },
+      "clay-danger": { "role": "neutral", "displayName": "Clay Danger", "canonical": "hsl(8 65% 36%)", "tonalRamp": ["hsl(8 65% 14%)", "hsl(8 65% 24%)", "hsl(8 65% 36%)", "hsl(8 65% 46%)", "hsl(8 65% 58%)", "hsl(8 70% 70%)", "hsl(8 70% 84%)", "hsl(8 70% 95%)"] },
+      "night-ground": { "role": "neutral", "displayName": "Night Ground", "canonical": "hsl(30 8% 6%)", "tonalRamp": ["hsl(30 8% 4%)", "hsl(30 8% 6%)", "hsl(30 8% 9%)", "hsl(30 8% 13%)", "hsl(30 8% 19%)", "hsl(30 8% 30%)", "hsl(30 8% 50%)", "hsl(30 8% 75%)"] },
+      "night-surface": { "role": "neutral", "displayName": "Night Surface", "canonical": "hsl(30 7% 9.5%)", "tonalRamp": ["hsl(30 7% 5%)", "hsl(30 7% 7.5%)", "hsl(30 7% 9.5%)", "hsl(30 7% 13%)", "hsl(30 7% 19%)", "hsl(30 7% 30%)", "hsl(30 7% 50%)", "hsl(30 7% 75%)"] },
+      "night-hairline": { "role": "neutral", "displayName": "Night Hairline", "canonical": "hsl(30 6% 19%)", "tonalRamp": ["hsl(30 6% 8%)", "hsl(30 6% 12%)", "hsl(30 6% 15%)", "hsl(30 6% 19%)", "hsl(30 6% 26%)", "hsl(30 6% 36%)", "hsl(30 6% 52%)", "hsl(30 6% 74%)"] },
+      "night-ink": { "role": "neutral", "displayName": "Night Ink", "canonical": "hsl(40 25% 95%)", "tonalRamp": ["hsl(40 25% 30%)", "hsl(40 25% 42%)", "hsl(40 25% 54%)", "hsl(40 25% 66%)", "hsl(40 25% 78%)", "hsl(40 25% 86%)", "hsl(40 25% 92%)", "hsl(40 25% 95%)"] },
+      "night-muted": { "role": "neutral", "displayName": "Night Muted", "canonical": "hsl(35 9% 71%)", "tonalRamp": ["hsl(35 9% 20%)", "hsl(35 9% 30%)", "hsl(35 9% 42%)", "hsl(35 9% 55%)", "hsl(35 9% 71%)", "hsl(35 9% 80%)", "hsl(35 9% 88%)", "hsl(35 9% 95%)"] },
+      "night-headline": { "role": "secondary", "displayName": "Night Parchment Headline", "canonical": "#e4e2d0", "tonalRamp": ["hsl(55 20% 25%)", "hsl(55 20% 38%)", "hsl(55 20% 52%)", "hsl(55 20% 66%)", "hsl(55 20% 78%)", "hsl(55 20% 86%)", "hsl(55 20% 85%)", "hsl(55 20% 93%)"] },
+      "night-orange-text": { "role": "primary", "displayName": "Night Orange Text", "canonical": "hsl(26 73% 55%)", "tonalRamp": ["hsl(26 73% 20%)", "hsl(26 73% 30%)", "hsl(26 73% 40%)", "hsl(26 73% 48%)", "hsl(26 73% 55%)", "hsl(26 73% 66%)", "hsl(26 73% 80%)", "hsl(26 73% 93%)"] },
+      "night-danger": { "role": "neutral", "displayName": "Night Danger", "canonical": "hsl(8 80% 70%)", "tonalRamp": ["hsl(8 80% 22%)", "hsl(8 80% 32%)", "hsl(8 80% 42%)", "hsl(8 80% 54%)", "hsl(8 80% 62%)", "hsl(8 80% 70%)", "hsl(8 80% 82%)", "hsl(8 80% 94%)"] },
+      "orange-ink": { "role": "neutral", "displayName": "Orange Ink", "canonical": "hsl(30 10% 9%)", "tonalRamp": ["hsl(30 10% 4%)", "hsl(30 10% 9%)", "hsl(30 10% 16%)", "hsl(30 10% 26%)", "hsl(30 10% 38%)", "hsl(30 10% 54%)", "hsl(30 10% 74%)", "hsl(30 10% 92%)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The single H1. Instrument Serif 400, olive, balanced wrap." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles in olive serif." },
+      "title": { "displayName": "Title", "purpose": "Feature-row titles; panel, result and fact leads use the same serif register in ink." },
+      "wordmark": { "displayName": "Wordmark", "purpose": "Header brand text in olive serif." },
+      "body": { "displayName": "Body", "purpose": "Running copy in Inter, capped at 32-38rem." },
+      "label": { "displayName": "Label", "purpose": "Field labels, button text, definition terms in Inter 600." },
+      "mono": { "displayName": "Mono", "purpose": "The one copyable terminal command." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default easing for 150ms state transitions and the hero rise." },
+      { "name": "state-150", "value": "150ms", "purpose": "Duration for hover and focus changes of border, background, color, opacity." },
+      { "name": "hero-rise", "value": "600ms, opacity 0.35 to 1, translateY 14px to 0, staggered 70/130/180ms", "purpose": "Single entrance on hero copy and the upload panel; disabled under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "narrow-gutter", "value": "560px" },
+      { "name": "nav-collapse", "value": "700px" },
+      { "name": "stack", "value": "1000px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one orange fill; full width inside the upload panel.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Check my fit</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 3.25rem; padding: 0.65rem 1.25rem; background: var(--brand, #dd7627); color: var(--brand-ink, #17140f); font: 600 1rem/1.2 var(--sans, Inter, system-ui, sans-serif); border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: background-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: hsl(26 72% 56%); } .ds-btn-primary:focus-visible { outline: 2px solid var(--focus, hsl(26 80% 33%)); outline-offset: 3px; border-radius: 4px; } .ds-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Transparent, hairline-bordered secondary action (header CTA, Copy).",
+      "html": "<button class=\"ds-btn-quiet\" type=\"button\">Upload your CV</button>",
+      "css": ".ds-btn-quiet { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0.65rem 1.25rem; background: transparent; color: var(--fg, #1d1a16); font: 600 0.9375rem/1.2 var(--sans, Inter, system-ui, sans-serif); border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 10px; cursor: pointer; transition: border-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-quiet:hover { border-color: var(--muted, hsl(35 9% 32%)); } .ds-btn-quiet:focus-visible { outline: 2px solid var(--focus, hsl(26 80% 33%)); outline-offset: 3px; border-radius: 4px; }"
+    },
+    {
+      "name": "Task Tile",
+      "kind": "chip",
+      "refersTo": "task-option",
+      "description": "Radio rendered as a selectable tile; checked state gets burnt-orange border and a faint tint.",
+      "html": "<label class=\"ds-task\"><input type=\"radio\" name=\"ds-task\" checked><span>Score a job</span></label>",
+      "css": ".ds-task { display: flex; align-items: center; gap: 0.6rem; min-height: 2.75rem; padding: 0.5rem 0.85rem; border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 10px; font: 400 0.9375rem/1.4 var(--sans, Inter, system-ui, sans-serif); color: var(--fg, #1d1a16); cursor: pointer; transition: border-color 150ms cubic-bezier(0.22,1,0.36,1), background-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-task:hover { border-color: var(--muted, hsl(35 9% 32%)); } .ds-task:has(input:checked) { border-color: var(--brand-text, hsl(26 80% 33%)); background: color-mix(in srgb, var(--brand, #dd7627) 9%, transparent); font-weight: 600; } .ds-task:has(input:focus-visible) { outline: 2px solid var(--focus, hsl(26 80% 33%)); outline-offset: 2px; } .ds-task input { accent-color: var(--brand-text, hsl(26 80% 33%)); margin: 0; }"
+    },
+    {
+      "name": "Dropzone",
+      "kind": "input",
+      "refersTo": "drop-zone",
+      "description": "Dashed file target with upload icon; solid once a file is held.",
+      "html": "<label class=\"ds-drop\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 15V4\"/><path d=\"M7.5 8.5 12 4l4.5 4.5\"/><path d=\"M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15\"/></svg><span>Drop your CV here or <span class=\"ds-drop-link\">choose a file</span></span></label>",
+      "css": ".ds-drop { display: flex; align-items: center; gap: 0.9rem; min-height: 5.5rem; padding: 1rem 1.1rem; border: 1.5px dashed color-mix(in srgb, var(--fg, #1d1a16) 30%, transparent); border-radius: 12px; cursor: pointer; font: 400 0.9375rem/1.5 var(--sans, Inter, system-ui, sans-serif); color: var(--fg, #1d1a16); transition: border-color 150ms cubic-bezier(0.22,1,0.36,1), background-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-drop svg { flex: none; color: var(--brand-text, hsl(26 80% 33%)); } .ds-drop:hover { border-color: var(--brand-text, hsl(26 80% 33%)); background: color-mix(in srgb, var(--brand, #dd7627) 8%, transparent); } .ds-drop-link { color: var(--brand-text, hsl(26 80% 33%)); text-decoration: underline; text-underline-offset: 0.2em; font-weight: 600; }"
+    },
+    {
+      "name": "Textarea",
+      "kind": "input",
+      "refersTo": "textarea",
+      "description": "Job description field, inset on Stone Ground with a hairline border.",
+      "html": "<textarea class=\"ds-textarea\" rows=\"4\" placeholder=\"Paste the full job description here\"></textarea>",
+      "css": ".ds-textarea { width: 100%; min-height: 7.5rem; padding: 0.8rem 0.9rem; resize: vertical; font: 400 0.9375rem/1.55 var(--sans, Inter, system-ui, sans-serif); color: var(--fg, #1d1a16); background: var(--bg, #f7f6f3); border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 10px; transition: border-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-textarea::placeholder { color: var(--muted, hsl(35 9% 32%)); opacity: 0.85; } .ds-textarea:hover { border-color: var(--muted, hsl(35 9% 32%)); } .ds-textarea:focus-visible { outline: 2px solid var(--focus, hsl(26 80% 33%)); outline-offset: 2px; } .ds-textarea[aria-invalid=\"true\"] { border-color: var(--danger, hsl(8 65% 36%)); }"
+    },
+    {
+      "name": "Header Navigation",
+      "kind": "nav",
+      "refersTo": "button-quiet",
+      "description": "Olive serif wordmark, muted text links, quiet CTA at the right.",
+      "html": "<div class=\"ds-bar\"><a class=\"ds-brand\" href=\"#\">Jobber</a><nav class=\"ds-nav\"><a href=\"#\">Example</a><a href=\"#\">What it does</a><a href=\"#\">Your CV</a><a href=\"#\">Docs</a></nav><a class=\"ds-btn-quiet\" href=\"#\">Upload your CV</a></div>",
+      "css": ".ds-bar { display: flex; align-items: center; gap: 2rem; } .ds-brand { font: 400 1.875rem/1 var(--serif, 'Instrument Serif', Georgia, serif); letter-spacing: -0.01em; color: var(--headline, #59592a); text-decoration: none; padding-block: 0.25rem; } .ds-nav { display: flex; gap: 1.75rem; margin-left: auto; font: 400 0.9375rem/1.6 var(--sans, Inter, system-ui, sans-serif); } .ds-nav a { color: var(--muted, hsl(35 9% 32%)); text-decoration: none; padding-block: 0.5rem; } .ds-nav a:hover { color: var(--fg, #1d1a16); text-decoration: underline; } .ds-btn-quiet { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.65rem 1.25rem; border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 10px; color: var(--fg, #1d1a16); font: 600 0.9375rem/1.2 var(--sans, Inter, system-ui, sans-serif); text-decoration: none; } .ds-btn-quiet:hover { border-color: var(--muted, hsl(35 9% 32%)); }"
+    },
+    {
+      "name": "Result Card",
+      "kind": "card",
+      "refersTo": "result-card",
+      "description": "Typeset example result: serif role, orange tabular score, verdict, ruled definition list.",
+      "html": "<figure class=\"ds-doc\"><div class=\"ds-doc-head\"><p class=\"ds-doc-role\">Operations Analyst, Northfield Logistics</p><p class=\"ds-doc-score\"><span class=\"ds-score\">3.4</span> out of 5</p></div><p class=\"ds-doc-verdict\">Below 4.0. Jobber would advise against applying unless you have a specific reason to.</p><dl class=\"ds-doc-list\"><div><dt>Where your CV matches</dt><dd>Two years of SQL reporting, which the role asks for.</dd></div><div><dt>Where it does not</dt><dd>The posting wants Tableau. Your CV does not mention it.</dd></div></dl><figcaption>Example only. The company and role are made up.</figcaption></figure>",
+      "css": ".ds-doc { margin: 0; display: grid; gap: 1.25rem; padding: 2.25rem; background: var(--surface, #fff); border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 16px; font: 400 1.0625rem/1.6 var(--sans, Inter, system-ui, sans-serif); color: var(--fg, #1d1a16); } .ds-doc p, .ds-doc dl, .ds-doc dd { margin: 0; } .ds-doc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; } .ds-doc-role { font: 400 1.5rem/1.2 var(--serif, 'Instrument Serif', Georgia, serif); } .ds-doc-score { white-space: nowrap; color: var(--muted, hsl(35 9% 32%)); font-size: 0.9375rem; } .ds-score { font: 400 2.25rem/1 var(--serif, 'Instrument Serif', Georgia, serif); color: var(--brand-text, hsl(26 80% 33%)); font-variant-numeric: tabular-nums; } .ds-doc-verdict { font-weight: 500; } .ds-doc-list { display: grid; border-top: 1px solid var(--border, hsl(40 9% 84%)); } .ds-doc-list > div { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 1rem; padding-block: 0.9rem; border-bottom: 1px solid var(--border, hsl(40 9% 84%)); } .ds-doc-list dt { font-weight: 600; font-size: 0.9375rem; } .ds-doc-list dd { font-size: 0.9375rem; color: var(--muted, hsl(35 9% 32%)); } .ds-doc figcaption { font-size: 0.8125rem; color: var(--muted, hsl(35 9% 32%)); }"
+    },
+    {
+      "name": "Command Row",
+      "kind": "custom",
+      "refersTo": "command-row",
+      "description": "Inset monospace command with a quiet Copy button.",
+      "html": "<div class=\"ds-cmd-row\"><code>git clone https://github.com/georgehadji/Jobber.git</code><button class=\"ds-btn-quiet\" type=\"button\">Copy</button></div>",
+      "css": ".ds-cmd-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.5rem 0.5rem 1rem; background: var(--bg, #f7f6f3); border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 10px; } .ds-cmd-row code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 500 0.875rem/1.5 var(--mono, ui-monospace, Menlo, Consolas, monospace); color: var(--fg, #1d1a16); padding-block: 0.4rem; } .ds-btn-quiet { min-height: 2.75rem; padding: 0.65rem 1.25rem; background: transparent; color: var(--fg, #1d1a16); font: 600 0.9375rem/1.2 var(--sans, Inter, system-ui, sans-serif); border: 1px solid var(--border, hsl(40 9% 84%)); border-radius: 10px; cursor: pointer; } .ds-btn-quiet:hover { border-color: var(--muted, hsl(35 9% 32%)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Plain-Spoken Desk",
+    "overview": "A desk lit by evening lamp: warm stone paper, a dark warm ink, a serif headline in olive, and exactly one orange thing to press. The site plays the job-tool category straight and at full craft, and lets honesty carry it. What happens to the CV, and what the tool cannot do, sit in ordinary type beside the upload instead of behind a link. There is no hype imagery, no gradient, no glow, and no illustration; the one picture of the product is a typeset example result built from real components.\n\nDensity is calm and generous. A single content width (1200px) holds a two-column hero (7:5), then full-width bands that alternate between ground and a slightly lighter paper surface, separated by hairlines. Hierarchy comes from the serif/sans contrast and from whitespace, never from shadow or color noise. Light and dark follow the system setting and keep the same warm hue: dark is the same room with the lamp lower.",
+    "keyCharacteristics": [
+      "Warm neutrals tinted toward orange-brown; no cool grey, no pure black (ink is hsl(30 10% 11%)).",
+      "Olive serif for the brand voice (wordmark, H1, section titles); near-black ink for everything the user reads or operates.",
+      "One accent, orange: a bright fill for the primary action, a darkened orange for text-weight uses.",
+      "Flat surfaces. One 1px hairline is the only elevation device; there are no shadows anywhere.",
+      "Real controls rebuilt in the same vocabulary: dropzone, radios as selectable tiles, textarea, buttons.",
+      "Motion is a single 600ms rise on hero load, gated by prefers-reduced-motion."
+    ],
+    "rules": [
+      { "name": "The One Orange Rule", "body": "Orange appears as a fill on exactly one control per view (the primary submit), and otherwise only in its darkened text form for links, selection, focus and the score. If a second thing wants to be orange, it should be ink.", "section": "colors" },
+      { "name": "The Olive Is a Voice Rule", "body": "Olive is for the brand and its headings. Anything the user clicks, reads as data, or must act on is ink or burnt orange, never olive.", "section": "colors" },
+      { "name": "The Same Warm Room Rule", "body": "Dark mode is not a different palette: every neutral keeps its warm hue (30-40 degrees) and tinted chroma. Never substitute neutral grey or blue-black.", "section": "colors" },
+      { "name": "The Serif Is Quiet Rule", "body": "Instrument Serif is only ever weight 400. Never bold it, never italicize it, never set it below about 1.5rem, and never use it for UI controls or form labels.", "section": "typography" },
+      { "name": "The Measure Rule", "body": "Prose columns stop at 32 to 38rem (about 60 to 70 characters). Never let body copy span the 1200px container.", "section": "typography" },
+      { "name": "The Ruled List Rule", "body": "Parallel items (capabilities, facts) are rows separated by hairlines, not a grid of identical cards.", "section": "layout" },
+      { "name": "The Hairline Is the Only Edge Rule", "body": "Separate and contain with a 1px Hairline or a tonal band step. Never add a shadow, a thick border, or a colored side stripe to a container.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep orange to one filled control per view (Signal Orange #dd7627) and use Burnt Orange Text hsl(26 80% 33%) for every orange link, stroke or numeral.",
+      "Do set the H1, section titles and wordmark in Instrument Serif 400, olive, with text-wrap: balance.",
+      "Do separate content with 1px Hairline rules and tonal bands; keep every surface flat.",
+      "Do keep tap targets at 44px minimum and every state (hover, focus-visible, disabled, invalid) visible on both themes.",
+      "Do state privacy and limits in plain body type next to the action, and write errors that say what happened and what is kept.",
+      "Do honor prefers-reduced-motion and prefers-color-scheme; both are real, tested modes."
+    ],
+    "donts": [
+      "Don't add shadows, glows, gradients, blur, decorative illustration or AI-hype imagery; the system is flat and typographic.",
+      "Don't use Signal Orange as text on a light ground, or Olive as a link, button or data color.",
+      "Don't switch dark mode to neutral grey or blue-black; keep the warm 30-40 degree hue.",
+      "Don't bold or italicize Instrument Serif, or use it for form labels and controls.",
+      "Don't turn parallel items into a grid of identical bordered cards; keep ruled rows.",
+      "Don't let prose span the full container width; hold it to 32-38rem."
+    ]
+  }
+}

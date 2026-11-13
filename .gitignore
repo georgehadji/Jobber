@@ -165,3 +165,6 @@ vmi.json
 
 # Local MCP server config — per-machine tooling, not project config
 .mcp.json
+
+# hosted backend: visitor-hash and spend counters
+server/data/

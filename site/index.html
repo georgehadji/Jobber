@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jobber: know which jobs are worth your time</title>
+<meta name="description" content="Upload your CV and paste a job. Jobber scores the fit against what your CV really says, checks the posting for scams and ghost jobs, and tells you plainly when not to apply.">
+<meta name="color-scheme" content="light">
+<script src="theme.js"></script>
+<meta name="jobber-api" content="/api/evaluate">
+<meta name="jobber-turnstile" content="">
+<link rel="icon" href="data:,">
+<link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="./" aria-label="Jobber home">Jobber</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#example">Example</a>
+      <a href="#what">What it does</a>
+      <a href="#privacy">Your CV</a>
+      <a href="https://github.com/georgehadji/Jobber/tree/main/docs">Docs</a>
+    </nav>
+    <a class="btn btn-quiet" href="#start">Upload your CV</a>
+    <button type="button" class="btn btn-quiet theme-toggle" id="theme">Dark mode</button>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero" aria-labelledby="h-hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 id="h-hero">Know which jobs are worth your time.</h1>
+        <p class="lede">Upload your CV and paste a job. Jobber scores the fit against what your CV really says, checks the posting for scams and ghost jobs, and tells you plainly when not to apply.</p>
+        <p class="lede-2">It is built for finding the few roles worth applying to out of hundreds. It never applies for you.</p>
+        <p class="lede-privacy"><strong>About your CV.</strong> Your CV file is deleted as soon as your result is ready. Your result is kept for 30 minutes, and for the two AI options your CV’s text is sent to an AI model provider to do the work.</p>
+      </div>
+
+      <form class="panel" id="start" method="post" action="/api/evaluate" enctype="multipart/form-data" novalidate aria-labelledby="h-start">
+        <h2 class="panel-title" id="h-start">Try Jobber on your CV</h2>
+
+        <fieldset class="tasks">
+          <legend class="label">What do you want to do?</legend>
+          <label class="task"><input type="radio" name="task" value="score" checked><span>Score a job</span></label>
+          <label class="task"><input type="radio" name="task" value="gap"><span>Skill gap</span></label>
+          <label class="task"><input type="radio" name="task" value="pdf"><span>Tailored CV</span></label>
+          <label class="task"><input type="radio" name="task" value="scan"><span>Find open roles</span></label>
+        </fieldset>
+
+        <div class="field">
+          <span class="label" id="l-cv">Your CV</span>
+          <label class="drop" id="drop" data-state="empty">
+            <input class="drop-input" type="file" id="cv" name="cv" required
+                   accept=".pdf,.md,.txt,application/pdf,text/markdown,text/plain"
+                   aria-labelledby="l-cv" aria-describedby="cv-hint privacy-note cv-error">
+            <svg class="drop-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg>
+            <span class="drop-main"><span class="drop-prompt">Drop your CV here or <span class="drop-link">choose a file</span></span><span class="drop-file" hidden></span></span>
+          </label>
+          <p class="hint" id="cv-hint">PDF, Markdown or plain text, up to 5 MB.</p>
+          <button type="button" class="btn-text" id="cv-remove" hidden>Remove file</button>
+          <p class="error" id="cv-error" role="alert"></p>
+        </div>
+
+        <div class="field" id="job-field">
+          <div class="label-row">
+            <label class="label" for="job">The job</label>
+            <button type="button" class="btn-text" id="sample">Use a sample job</button>
+          </div>
+          <textarea id="job" name="job" rows="5" minlength="80" placeholder="Paste the full job description here" aria-describedby="job-hint job-error"></textarea>
+          <p class="hint" id="job-hint">Paste the whole posting, including requirements.</p>
+          <p class="error" id="job-error" role="alert"></p>
+        </div>
+
+        <div class="field" id="scan-fields" hidden>
+          <label class="label" for="roles">Roles to look for <span class="opt">(optional)</span></label>
+          <input type="text" id="roles" name="roles" maxlength="500" autocomplete="off" placeholder="For example: data analyst, operations manager" aria-describedby="roles-hint">
+          <p class="hint" id="roles-hint">Leave this empty and we use the job titles we find in your CV. Separate roles with commas.</p>
+          <label class="label" for="where">Where <span class="opt">(optional)</span></label>
+          <input type="text" id="where" name="location" maxlength="200" autocomplete="off" placeholder="For example: London, remote" aria-describedby="where-hint">
+          <p class="hint" id="where-hint">Matches the place shown on each posting. Leave empty to see every location.</p>
+        </div>
+
+        <div class="bot-check" id="bot-check"></div>
+
+        <button class="btn btn-primary" id="submit" type="submit">Check my fit</button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+
+        <p class="panel-note" id="privacy-note">Your CV is deleted once your result is ready. Free to try, with a daily limit.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="band" id="example" aria-labelledby="h-example">
+    <div class="wrap example-grid">
+      <div class="example-copy">
+        <h2 id="h-example" class="section-title">What a result looks like</h2>
+        <p>Every result gives the reasons, not only a number. A separate check looks at whether the posting itself is real, and it never changes your fit score.</p>
+        <p>You read it, you decide, and nothing is sent to an employer.</p>
+      </div>
+
+      <figure class="doc">
+        <div class="doc-head">
+          <p class="doc-role">Operations Analyst, Northfield Logistics</p>
+          <p class="doc-score"><span class="score">3.4</span><span class="score-of"> out of 5</span></p>
+        </div>
+        <p class="doc-verdict">Below 4.0. Jobber would advise against applying unless you have a specific reason to.</p>
+        <dl class="doc-list">
+          <div><dt>Where your CV matches</dt><dd>Two years of SQL reporting, which the role asks for.</dd></div>
+          <div><dt>Where it does not</dt><dd>The posting wants Tableau. Your CV does not mention it.</dd></div>
+          <div><dt>Is the posting real</dt><dd>No warning signs found: a named team, a salary range, posted six days ago.</dd></div>
+        </dl>
+        <figcaption>Example only. The company and role are made up, and this is not a real result.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="plain" id="what" aria-labelledby="h-what">
+    <div class="wrap">
+      <h2 id="h-what" class="section-title">Four things you can do with your CV</h2>
+      <ul class="rows">
+        <li class="row">
+          <h3>Score a job against your CV</h3>
+          <p>A 1 to 5 fit score with reasons taken from your own experience. Below 4.0, Jobber recommends against applying.</p>
+          <div class="row-side"><p class="needs">Needs your CV and the job description.</p><a class="link" href="#start" data-task="score">Start with this</a></div>
+        </li>
+        <li class="row">
+          <h3>Check the skill gap</h3>
+          <p>See which skills a job asks for that your CV already shows, and which it does not. This is keyword matching with no AI involved, so it is instant.</p>
+          <div class="row-side"><p class="needs">Needs your CV and the job description.</p><a class="link" href="#start" data-task="gap">Start with this</a></div>
+        </li>
+        <li class="row">
+          <h3>Get a tailored CV as a PDF</h3>
+          <p>An ATS-friendly PDF built from your own CV for one job. It reorders and rephrases what is true. It does not invent experience.</p>
+          <div class="row-side"><p class="needs">Needs your CV and the job description.</p><a class="link" href="#start" data-task="pdf">Start with this</a></div>
+        </li>
+        <li class="row">
+          <h3>Scan for open roles</h3>
+          <p>Search public job-board feeds, including Greenhouse, Ashby, Lever, Workday and iCIMS, for roles that match your profile.</p>
+          <div class="row-side"><p class="needs">Needs your CV.</p><a class="link" href="#start" data-task="scan">Start with this</a></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band" id="privacy" aria-labelledby="h-privacy">
+    <div class="wrap">
+      <h2 id="h-privacy" class="section-title">What happens to your CV</h2>
+      <ul class="facts">
+        <li><strong>CV deleted, result kept briefly.</strong> Your CV file is deleted as soon as your result is ready. The result, which contains parts of your CV, is kept for 30 minutes so you can reopen it, then deleted. Anyone with the link can read it until then, so do not share the link. You can delete it earlier.</li>
+        <li><strong>No account.</strong> There is nothing to sign up for and no profile to delete. To enforce the daily limit, we keep a one-way hash of your IP address for that day only. It changes every day and is not your IP address.</li>
+        <li><strong>AI options send your text out.</strong> “Score a job” and “Tailored CV” send the text of your CV and the job to OpenRouter, which passes it to an AI model provider. We ask OpenRouter to use only providers that say they do not store prompts, but we cannot check what they do. “Skill gap” and “Find open roles” use no AI. Do not upload anything you are not comfortable sending.</li>
+        <li><strong>A bot check.</strong> To stop automated abuse, the form uses Cloudflare Turnstile. It runs in your browser, and Cloudflare receives information about your browser to decide whether you are a person. Your CV and the job are not sent to Cloudflare.</li>
+        <li><strong>You stay in control.</strong> Jobber never applies for you, sends messages, or submits anything on your behalf.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="limits" aria-labelledby="h-limits">
+    <div class="wrap">
+      <div class="narrow">
+        <h2 id="h-limits" class="section-title">Honest about what it can do</h2>
+        <p>The first results will be rough. Jobber only knows what your CV says, so it gets better as you give it more context, such as the roles you want and the ones you want to avoid.</p>
+        <p>Scores are a filter, not a verdict. Use them to decide where to spend your time.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="local" aria-labelledby="h-local">
+    <div class="wrap local-grid">
+      <div>
+        <h2 id="h-local" class="section-title">Prefer to keep your files on your machine?</h2>
+        <p>Jobber is open source. The local version runs inside your own AI coding assistant, such as Claude Code or Codex. Your files stay on your computer, and text goes only to the AI provider you choose. Setup takes a terminal and Node.js 18 or newer.</p>
+        <p><a class="link" href="https://github.com/georgehadji/Jobber/blob/main/docs/SETUP.md">Read the setup guide</a></p>
+      </div>
+      <div class="cmd">
+        <p class="cmd-label" id="cmd-label">Clone it</p>
+        <div class="cmd-row">
+          <code id="cmd-text" aria-labelledby="cmd-label">git clone https://github.com/georgehadji/Jobber.git</code>
+          <button type="button" class="btn btn-quiet" id="copy" data-copy="#cmd-text">Copy</button>
+        </div>
+        <p class="status" id="copy-status" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap foot">
+    <p>Jobber is open source under the MIT license.</p>
+    <nav aria-label="Footer">
+      <a href="https://github.com/georgehadji/Jobber">GitHub</a>
+      <a href="https://github.com/georgehadji/Jobber/tree/main/docs">Docs</a>
+      <a href="https://discord.gg/8pRpHETxa4">Discord</a>
+      <a href="https://github.com/georgehadji/Jobber/blob/main/TRADEMARK.md">Trademark policy</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>

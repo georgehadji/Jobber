@@ -1,0 +1,29 @@
+# Example only: replace jobber.example with your domain. Caddy gets the certificate and redirects to HTTPS itself.
+# The app sets its own CSP and other security headers; do not add them here.
+jobber.example {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# Matches the app's 5 MB CV limit plus the form fields. The app also enforces it.
+	request_body {
+		max_size 6MB
+	}
+
+	# Caddy appends the real client address to X-Forwarded-For. With JOBBER_TRUST_PROXY=1 the app reads the LAST entry,
+	# so it is only safe when nothing but Caddy can reach the app's port (bind it to 127.0.0.1 or firewall it).
+	reverse_proxy 127.0.0.1:8787 {
+		transport http {
+			response_header_timeout 130s
+		}
+	}
+
+	# Logs: addresses and paths only. Never enable request body logging.
+	log {
+		output file /var/log/caddy/jobber.log
+		format json
+	}
+}

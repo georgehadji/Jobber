@@ -53,13 +53,21 @@ const EXCLUDES = [
   'batch/logs/.gitkeep',
   'batch/tracker-additions/.gitkeep',
   'interview-prep/.gitkeep',
+  // Design context for the public website (Impeccable skill files). Describes
+  // that site, not a user's own project, so the updater must not ship them.
+  'PRODUCT.md',
+  'DESIGN.md',
 ];
 
 // Trees that live in the repo but deliberately OUTSIDE the updater's world:
 // web/ is the experimental web UI — its own release-please component, never
 // shipped by update-system.mjs, never in the npm package. Excluding it here is
 // part of that isolation contract, not a coverage gap.
-const EXCLUDE_PREFIXES = ['web/'];
+//
+// site/ and server/ are the public website and its hosted API. They run on the
+// maintainers' VPS, not inside a user's clone, so they stay out of the updater
+// the same way web/ does. .impeccable/ holds the design records for that site.
+const EXCLUDE_PREFIXES = ['web/', 'site/', 'server/', '.impeccable/'];
 
 function covered(file) {
   // If explicitly excluded, it is covered
@@ -97,6 +105,9 @@ if (process.argv.includes('--self-test')) {
   // Test sibling mismatch (strict prefix match)
   assert(covered('providers-sibling/justjoin.mjs') === false, 'providers-sibling/justjoin.mjs must NOT be covered');
   assert(covered('web/package.json') === true, 'web/ tree must be covered (isolation-contract prefix exclude)');
+  assert(covered('site/app.js') === true, 'site/ tree must be covered (public website, outside the updater)');
+  assert(covered('server/index.mjs') === true, 'server/ tree must be covered (hosted API, outside the updater)');
+  assert(covered('site-extra/app.js') === false, 'site-extra/ must NOT ride the site/ prefix exclude');
   assert(covered('web-dashboard/index.html') === false, 'web-dashboard/ must NOT ride the web/ prefix exclude');
   assert(covered('.npmignore') === true, '.npmignore must be covered (excluded)');
 
