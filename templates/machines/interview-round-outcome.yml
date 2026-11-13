@@ -1,5 +1,5 @@
 # Jobber — interview round outcome vocabulary (STATE-MACHINES-PLAN M35, Phase 4.5).
-# PROPOSED, PENDING D6 (same decision as interview-round; the outcome set itself is not
+# DECIDED (D6, same decision as interview-round; the outcome set itself was never
 # disputed, only its place in the merged interview vocabulary). Behaviour-neutral: no mode
 # or script reads this file yet.
 # Source: modes/interview/debrief.md:19 and :170 (`pending / moved forward / rejected`), and
