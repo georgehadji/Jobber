@@ -404,7 +404,7 @@ stateDiagram-v2
 | `unprobed` | `Unprobed` | no | `skipped`, `unverified`, `none` | No health record yet, or a probe that produced no signal (provider-health `skipped`, discover-ats `unverified`/`none`). Never written to portal-health.tsv. Neutral in spirit; a string like this read from the log would count as a failure today |
 | `reachable` | `Reachable` | no | `live`, `healthy`, `match` | The board answered and returned jobs. HEALTHY class, resets the streak. Aliases are verify-portals `live` (also its partial:true probes), provider-health `healthy`, discover-ats `match` |
 | `empty` | `Empty` | no | (none) | The board answered but lists 0 jobs (scan.mjs:2624 downgrades reachable to empty). HEALTHY class, resets the streak; a live board with no openings is reachable. Same spelling in verify-portals and discover-ats |
-| `rate_limited` | `Rate limited` | no | (none) | HTTP 429. NEUTRAL class in scan.mjs (neither extends nor resets the streak) but counted as a FAILURE by stats.mjs (drift, see header) |
+| `rate_limited` | `Rate limited` | no | (none) | HTTP 429. NEUTRAL class in scan.mjs and stats.mjs (neither extends nor resets the streak) |
 | `slug_gone` | `Slug gone` | no | `missing` | HTTP 404/410, the board slug no longer exists (classifyFetchError). FAILURE class. verify-portals `missing` is the same idea (no board found for the slug) |
 | `network` | `Network error` | no | `down` | Abort, timeout, ECONNREFUSED, ENOTFOUND, ETIMEDOUT, fetch failed. FAILURE class. provider-health `down` (timeout, refused, DNS, no response) is the same idea |
 | `auth` | `Auth blocked` | no | (none) | HTTP 401/403, typically a WAF blocking the scanner. FAILURE class; recorded as `auth` (before the fix these were logged as healthy forever) |

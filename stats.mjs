@@ -293,8 +293,11 @@ export function computePortalStats(portalsYmlContent, scanStats, producingCompan
     const streaks = new Map();
     for (const r of healthRecords) {
       // Mirrors scan.mjs computeConsecutiveFailures: healthy statuses reset,
+      // rate_limited is throttled-not-dead (neither extends nor resets, D12),
       // every other status (slug_gone/network/auth/server/unknown) counts.
-      if (r.status === 'reachable' || r.status === 'empty') {
+      if (r.status === 'rate_limited') {
+        continue;
+      } else if (r.status === 'reachable' || r.status === 'empty') {
         streaks.set(r.company, 0);
       } else {
         streaks.set(r.company, (streaks.get(r.company) || 0) + 1);

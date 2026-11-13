@@ -21,10 +21,9 @@
 #   "no health signal" and is the initial state (a company with no record yet).
 #
 # KNOWN DRIFT (pinned by the parity test, NOT fixed here):
-#   * The failure classification is copy-pasted three times: scan.mjs computeConsecutiveFailures,
+#   * The failure classification is still copy-pasted three times: scan.mjs computeConsecutiveFailures,
 #     scan.mjs computePortalSkipTargets, stats.mjs computePortalStats (stats.mjs:~295).
-#   * stats.mjs does NOT know the neutral class: it counts rate_limited as a failure, so `stats`
-#     can report a portal "persistently dead" that scan.mjs would not skip.
+#     (D12 fixed the one real divergence: stats.mjs now treats rate_limited as neutral like scan.mjs.)
 #   * Unknown strings count as failures everywhere (policy unknown_input: map:unknown).
 #   * The log is append-only and grows without bound.
 id: portal-health
@@ -48,7 +47,7 @@ states:
   - id: rate_limited
     label: Rate limited
     terminal: false
-    description: HTTP 429. NEUTRAL class in scan.mjs (neither extends nor resets the streak) but counted as a FAILURE by stats.mjs (drift, see header)
+    description: HTTP 429. NEUTRAL class in scan.mjs and stats.mjs (neither extends nor resets the streak)
   - id: slug_gone
     label: Slug gone
     terminal: false
