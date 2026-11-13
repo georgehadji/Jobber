@@ -181,17 +181,25 @@ h1 {
 .drop-link { color: var(--brand-text); text-decoration: underline; text-underline-offset: 0.2em; font-weight: 600; }
 .drop-file { overflow-wrap: anywhere; font-weight: 600; }
 
-textarea {
+[hidden] { display: none !important; }
+
+input[type="text"], textarea {
   width: 100%; resize: vertical; min-height: 7.5rem;
   padding: 0.8rem 0.9rem;
   font: 400 0.9375rem/1.55 var(--sans); color: var(--fg);
   background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
   transition: border-color 150ms var(--ease);
 }
-textarea::placeholder { color: var(--muted); opacity: 0.85; }
-textarea:hover { border-color: var(--muted); }
-textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+input[type="text"] { resize: none; min-height: 0; }
+::placeholder { color: var(--muted); opacity: 0.85; }
+input[type="text"]:hover, textarea:hover { border-color: var(--muted); }
+input[type="text"]:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 textarea[aria-invalid="true"] { border-color: var(--danger); }
+.opt { font-weight: 400; color: var(--muted); }
+.jobs { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+.jobs li { padding: 0.75rem 0.9rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); display: grid; gap: 0.15rem; }
+.jobs a { color: var(--brand-text); font-weight: 600; text-decoration: underline; text-underline-offset: 0.2em; overflow-wrap: anywhere; }
+.jobs .meta { font-size: 0.875rem; color: var(--muted); }
 
 .status { font-size: 0.9375rem; min-height: 0; }
 .status:empty { display: none; }

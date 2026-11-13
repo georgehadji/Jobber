@@ -22,6 +22,8 @@
 //   JOBBER_PDF_MODEL, JOBBER_PDF_MAX_PRICE_PROMPT, JOBBER_PDF_MAX_PRICE_COMPLETION  default to the score ones
 //   JOBBER_PDF_CONCURRENCY (1) renders at once, JOBBER_PDF_QUEUE (4) renders allowed to wait, JOBBER_PDF_FORMAT (a4|letter)
 //   JOBBER_CHROMIUM_NO_SANDBOX=1  only when Chromium cannot sandbox inside the container
+// Scan task (on unless JOBBER_SCAN_ENABLED=0; no key needed, no cost):
+//   JOBBER_SCAN_SOURCES (templates/portals.example.yml) company board list, JOBBER_SCAN_REFRESH_HOURS (6)
 // Optional: PORT (8787), JOBBER_RESULT_TTL_MS (30 min), JOBBER_DB (server/data/limits.db),
 //   JOBBER_KILL_FILE (if this file exists every request is refused with 503),
 //   JOBBER_TRUST_PROXY=1 (read the client IP from the last X-Forwarded-For entry; set only behind Caddy)
@@ -36,6 +38,7 @@ import { runGap } from './gap.mjs';
 import { createLimits } from './limits.mjs';
 import { createScoreTask, TaskError } from './score.mjs';
 import { createPdfTask } from './pdf.mjs';
+import { createJobIndex, createScanTask, loadSources } from './scan.mjs';
 import { createRenderer, createSlots } from './render-pdf.mjs';
 import { createStore, TOKEN_RE } from './store.mjs';
 import { createTurnstile } from './turnstile.mjs';
@@ -113,9 +116,12 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
   if (!KNOWN_TASKS.has(task)) return fail(res, 400, 'Choose what you want to do.');
   if (!tasks[task]) return fail(res, 503, 'That option is not available yet. Try “Check the skill gap”.');
 
-  const job = String(form.get('job') ?? '').trim();
-  if (job.length < MIN_JOB) return fail(res, 400, 'Paste the full job description. It looks too short to use.');
+  const needsJob = tasks[task].needsJob !== false;
+  const job = needsJob ? String(form.get('job') ?? '').trim() : '';
+  if (needsJob && job.length < MIN_JOB) return fail(res, 400, 'Paste the full job description. It looks too short to use.');
   if (job.length > MAX_JOB) return fail(res, 413, 'That job description is too long. The limit is 50,000 characters.');
+  // Optional search hints (the scan task uses them; other tasks ignore them).
+  const extra = { roles: String(form.get('roles') ?? '').slice(0, 500), location: String(form.get('location') ?? '').slice(0, 200) };
 
   const file = form.get('cv');
   if (!file || typeof file === 'string') return fail(res, 400, 'Choose your CV first.');
@@ -138,10 +144,10 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
   if (limits.isOver(ip)) return fail(res, 429, tooMany);
   const cv = readCv(bytes, file.name);
   if (!cv.ok) return fail(res, cv.status, cv.error); // a rejected upload does not use a check
-  const tooBig = tasks[task].check?.(cv.text, job);
-  if (tooBig) return fail(res, 400, tooBig);
+  const tooBig = tasks[task].check?.(cv.text, job, extra);
+  if (tooBig) return typeof tooBig === 'string' ? fail(res, 400, tooBig) : fail(res, tooBig.status, tooBig.error);
 
-  const spend = limits.reserve(tasks[task].maxCostUsd(cv.text, job));
+  const spend = limits.reserve(tasks[task].maxCostUsd(cv.text, job, extra));
   if (!spend) return fail(res, 503, 'The free service has reached its budget for today. Try again tomorrow.');
   let costUsd = 0;
   let consumed = false;
@@ -149,7 +155,7 @@ async function evaluate(req, res, { store, limits, verifyBot, trustProxy, killFi
     if (!limits.tryConsume(ip)) return fail(res, 429, tooMany);
     consumed = true;
 
-    const out = await tasks[task].run(cv.text, job);
+    const out = await tasks[task].run(cv.text, job, extra);
     costUsd = out.costUsd;
     const token = store.put(out.result);
     if (!token) return fail(res, 503, 'The service is busy right now. Try again in a few minutes.');
@@ -268,12 +274,25 @@ export function readConfig(env) {
       }
     }
   }
+  let index = null;
+  if (env.JOBBER_SCAN_ENABLED !== '0') {
+    const hours = Number(env.JOBBER_SCAN_REFRESH_HOURS ?? 6);
+    if (!(hours > 0)) errors.push('JOBBER_SCAN_REFRESH_HOURS must be a number above 0');
+    else {
+      try {
+        const sources = loadSources(env.JOBBER_SCAN_SOURCES || fileURLToPath(new URL('../templates/portals.example.yml', import.meta.url)));
+        if (!sources.length) errors.push('the scan source list has no supported company boards');
+        else { index = createJobIndex({ sources, refreshMs: hours * 3600_000 }); tasks.scan = createScanTask({ index }); }
+      } catch { errors.push('the scan source list could not be read (JOBBER_SCAN_SOURCES)'); }
+    }
+  }
   if (errors.length) return { errors };
 
   const dbPath = env.JOBBER_DB || fileURLToPath(new URL('./data/limits.db', import.meta.url));
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true });
   return {
     errors,
+    index,
     port: Number(env.PORT ?? 8787),
     options: {
       store: createStore({ ttlMs: Number(env.JOBBER_RESULT_TTL_MS) || 30 * 60 * 1000 }),
@@ -297,5 +316,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(1);
   }
   const server = createApp(cfg.options);
+  cfg.index?.start();
+  server.on('close', () => cfg.index?.stop());
   server.listen(cfg.port, () => console.log(`jobber server on :${server.address().port}${process.env.JOBBER_DEV === '1' ? ' (dev: no bot check or limits unless configured)' : ''}`));
 }

@@ -77,6 +77,15 @@
           <p class="error" id="job-error" role="alert"></p>
         </div>
 
+        <div class="field" id="scan-fields" hidden>
+          <label class="label" for="roles">Roles to look for <span class="opt">(optional)</span></label>
+          <input type="text" id="roles" name="roles" maxlength="500" autocomplete="off" placeholder="For example: data analyst, operations manager" aria-describedby="roles-hint">
+          <p class="hint" id="roles-hint">Leave this empty and we use the job titles we find in your CV. Separate roles with commas.</p>
+          <label class="label" for="where">Where <span class="opt">(optional)</span></label>
+          <input type="text" id="where" name="location" maxlength="200" autocomplete="off" placeholder="For example: London, remote" aria-describedby="where-hint">
+          <p class="hint" id="where-hint">Matches the place shown on each posting. Leave empty to see every location.</p>
+        </div>
+
         <div class="bot-check" id="bot-check"></div>
 
         <button class="btn btn-primary" id="submit" type="submit">Check my fit</button>

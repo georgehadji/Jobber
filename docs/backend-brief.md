@@ -79,6 +79,19 @@ Code: `server/pdf.mjs` (task), `server/render-pdf.mjs` (Chromium and queue), `se
 - **Config:** model and price caps default to the score ones (`JOBBER_PDF_MODEL`, `JOBBER_PDF_MAX_PRICE_PROMPT`, `JOBBER_PDF_MAX_PRICE_COMPLETION`); `JOBBER_PDF_FORMAT` is `a4` (default) or `letter`. Install Chromium on the VPS with `npx playwright install --with-deps chromium`.
 - **Not tested here:** a live OpenRouter call, quality of the tailoring across real CVs, non-Latin CVs (the template has CSS for en, es, zh-CN, ja, ar; other languages fall back to en), load with several concurrent renders.
 
+## 3e. Scan task as built (step 5)
+
+Code: `server/scan.mjs`, wired in `server/index.mjs`. On unless `JOBBER_SCAN_ENABLED=0`. No LLM, no key, no cost.
+
+- **Design:** a background job index, not a live scan per visitor. At startup and every `JOBBER_SCAN_REFRESH_HOURS` (6) the server fetches a fixed list of company boards through the existing `providers/greenhouse|lever|ashby.mjs` (4 at a time, 250 ms spacing per host, 20 s per board). A request only filters the in-memory index, so visitors cause no outbound traffic and cannot aim the server at any URL. A total outage keeps the last good index.
+- **Source list:** `JOBBER_SCAN_SOURCES`, default `templates/portals.example.yml` (system layer, not your personal `portals.yml`): 84 supported boards today. It is mostly AI and tech companies, so results for other fields will be thin. The result page says so. Widening it is a list edit: any portals-shaped YAML with `tracked_companies` entries that carry an `api:` or `careers_url:` on those three boards.
+- **Inputs:** two optional form fields, `roles` (comma-separated) and `location`. With no roles, titles are taken from the CV by pattern (a capitalised phrase ending in Engineer, Analyst, Manager and similar; seniority words dropped) and shown on the result so the visitor can correct them. English-title CVs work best. If nothing is found the visitor is asked to type roles.
+- **Matching:** every word of a term must be in the posting title (plural tolerant); more matched terms rank first; location is a substring match on the posting's location text; 40 shown, true total reported. Titles only, so a role phrased differently is missed.
+- **Safety:** only `https` posting URLs are kept, the result page links them with `rel="noopener noreferrer"`, and all text is set with `textContent`. Roles and location are never logged.
+- **Plumbing:** tasks may now set `needsJob: false`; `check`, `maxCostUsd` and `run` receive a third `extra = {roles, location}` argument; `check` may return `{status, error}` (used for "index still loading": 503, check kept).
+- **Not covered:** the index is rebuilt after each restart, so for a few minutes after deploy scans return 503. Postings can be closed by the time a visitor clicks (the page says to check). Per-board politeness beyond the provider limits, and ATS terms-of-use review, are yours before launch.
+- **Also fixed:** `[hidden]` CSS rule, because `.field { display: grid }` kept hidden fields visible.
+
 ## 4. Request flow
 
 1. Reject early: wrong method, body over 5 MB, missing fields. Nothing is read from disk yet.
@@ -126,7 +139,7 @@ Code: `server/pdf.mjs` (task), `server/render-pdf.mjs` (Chromium and queue), `se
 2. ~~Turnstile, daily limit, global cap, 503 kill switch~~ Done (section 3b).
 3. ~~`score` through OpenRouter with the privacy routing settings, spend accounting~~ Done (section 3c).
 4. ~~`pdf` with the concurrency queue~~ Done (section 3d).
-5. `scan`.
+5. ~~`scan`~~ Done (section 3e).
 6. Hardening: CSP, load test, kill-switch drill, a check that no CV bytes remain on disk or in logs after a request, and the legal review.
 
 Tests follow the repo's existing style (`test-all.mjs`): each assertion must be able to fail, for example uploading a file with a `.pdf` name and non-PDF bytes must return 415, and a failed child process must still delete its temp folder.

@@ -133,6 +133,29 @@
   }
 
   // The PDF arrives as base64 in the result. It becomes a Blob, so it never touches a URL or a server again.
+  function renderScan(r) {
+    const nodes = [el("h1", "Open roles", "section-title")];
+    nodes.push(el("p", "We looked for: " + r.searched.join(", ") + (r.derived ? ". These are job titles we found in your CV. Go back and type the roles you want to change them." : "."), "hint"));
+    if (r.location) nodes.push(el("p", "Place: " + r.location + ".", "hint"));
+    nodes.push(el("p", "Searched " + r.listed.toLocaleString() + " postings from " + r.boards + " company job boards, last refreshed " + new Date(r.loadedAt).toLocaleString() + ". The boards are mostly technology companies, so this is not every job in the market.", "hint"));
+    if (!r.matches.length) {
+      nodes.push(el("p", "No postings matched. Try broader roles, or leave the place empty."));
+      return nodes;
+    }
+    nodes.push(el("h2", r.total > r.matches.length ? "Showing " + r.matches.length + " of " + r.total + " matches" : r.total + (r.total === 1 ? " match" : " matches"), "result-h"));
+    const ul = el("ul", undefined, "jobs");
+    r.matches.forEach((m) => {
+      const li = el("li");
+      const a = el("a", m.title);
+      // Only https links from the job boards reach this page (the server drops everything else), checked again here.
+      if (/^https:\/\//.test(m.url)) { a.href = m.url; a.rel = "noopener noreferrer"; a.target = "_blank"; li.append(a); } else li.append(el("span", m.title));
+      li.append(el("span", m.company + (m.location ? " · " + m.location : ""), "meta"));
+      ul.append(li);
+    });
+    nodes.push(ul, el("p", "Check that a posting is still open before you spend time on it. Jobber never applies for you.", "hint"));
+    return nodes;
+  }
+
   function renderPdf(r) {
     const nodes = [el("h1", "Your tailored CV", "section-title")];
     const bytes = Uint8Array.from(atob(r.pdf), (c) => c.charCodeAt(0));
@@ -151,7 +174,7 @@
 
   function render(data) {
     const r = data.result;
-    const nodes = r.task === "score" ? renderScore(r) : r.task === "pdf" ? renderPdf(r) : renderGap(r);
+    const nodes = r.task === "score" ? renderScore(r) : r.task === "pdf" ? renderPdf(r) : r.task === "scan" ? renderScan(r) : renderGap(r);
 
     const minutes = Math.max(1, Math.round((data.expiresAt - Date.now()) / 60000));
     const del = el("button", "Delete this result now", "btn btn-quiet");

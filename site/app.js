@@ -97,6 +97,7 @@
   }
 
   const jobField = $("job-field");
+  const scanFields = $("scan-fields");
   const taskInputs = form.querySelectorAll('input[name="task"]');
   const currentTask = () => (form.querySelector('input[name="task"]:checked') || {}).value || "score";
 
@@ -110,6 +111,7 @@
   function applyTask() {
     const t = TASKS[currentTask()];
     jobField.hidden = !t.needsJob;
+    scanFields.hidden = currentTask() !== "scan";
     submit.textContent = t.label;
     jobError.textContent = "";
     job.removeAttribute("aria-invalid");
@@ -195,6 +197,7 @@
     body.append("cv", file, file.name);
     body.append("task", currentTask());
     if (TASKS[currentTask()].needsJob) body.append("job", job.value.trim());
+    if (currentTask() === "scan") { body.append("roles", $("roles").value.trim()); body.append("location", $("where").value.trim()); }
     if (botToken) body.append("cf-turnstile-response", botToken);
 
     const ctl = new AbortController();
