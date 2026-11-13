@@ -67,6 +67,15 @@ func TestSetStatusAgainstRealScript(t *testing.T) {
 		t.Error("a refused move must not touch the tracker")
 	}
 
+	// Confirmed override: the same move with --force is applied by the real script.
+	res, err = SetStatusForced(repo, apps[1], "Interview", "")
+	if err != nil || !res.Changed || res.NewStatus != "Interview" {
+		t.Fatalf("forced Rejected -> Interview should apply, got res=%+v err=%v", res, err)
+	}
+	if forcedRow, _ := os.ReadFile(trackerPath); string(forcedRow) == string(after) {
+		t.Error("a forced move must change the tracker")
+	}
+
 	// Control: a row the tracker does not have is a different failure, not a terminal refusal.
 	_, err = SetStatus(repo, apps[0], "Applied", "")
 	if err != nil {

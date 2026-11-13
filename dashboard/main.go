@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -33,6 +34,8 @@ type appModel struct {
 	jobberPath   string
 	theme           theme.Theme
 	progressMetrics model.ProgressMetrics
+	// pendingForce is a refused move out of a terminal state waiting for the user's y/n.
+	pendingForce *statusWrittenMsg
 }
 
 func (m *appModel) reloadPipelineData() {
@@ -49,20 +52,29 @@ func (m appModel) Init() tea.Cmd {
 // setStatus is the status write (set-status.mjs); a variable so tests can fake it.
 var setStatus = data.SetStatus
 
+// setStatusForced is the same write with --force, used only after the user confirmed.
+var setStatusForced = data.SetStatusForced
+
 // statusWrittenMsg is the outcome of one status write.
 type statusWrittenMsg struct {
 	app        model.CareerApplication
 	newStatus  string
+	note       string
+	force      bool // this write already carried --force
 	res        data.SetStatusResult
 	err        error
 	fromViewer bool // the write was requested from the report viewer
 }
 
 // writeStatusCmd runs the write off the UI goroutine (set-status can wait on the tracker lock).
-func writeStatusCmd(jobberPath string, app model.CareerApplication, newStatus, note string, fromViewer bool) tea.Cmd {
+func writeStatusCmd(jobberPath string, app model.CareerApplication, newStatus, note string, fromViewer, force bool) tea.Cmd {
 	return func() tea.Msg {
-		res, err := setStatus(jobberPath, app, newStatus, note)
-		return statusWrittenMsg{app: app, newStatus: newStatus, res: res, err: err, fromViewer: fromViewer}
+		write := setStatus
+		if force {
+			write = setStatusForced
+		}
+		res, err := write(jobberPath, app, newStatus, note)
+		return statusWrittenMsg{app: app, newStatus: newStatus, note: note, force: force, res: res, err: err, fromViewer: fromViewer}
 	}
 }
 
@@ -72,6 +84,16 @@ func (m appModel) finishStatusWrite(msg statusWrittenMsg) appModel {
 	m.reloadPipelineData()
 	if msg.err != nil {
 		text := "Status not changed: " + msg.err.Error()
+		var se *data.SetStatusError
+		if !msg.force && errors.As(msg.err, &se) && se.IsTerminalRefusal() {
+			// Leaving a final state is a deliberate act: ask once, then force or cancel.
+			pending := msg
+			m.pendingForce = &pending
+			// The flash is one truncated line: keep the question visible by quoting only the first
+			// sentence of the refusal (the rest explains how to force it in a shell).
+			first, _, _ := strings.Cut(msg.err.Error(), ". ")
+			text = "Status not changed: " + first + " — press y to force it, any other key cancels."
+		}
 		if msg.fromViewer {
 			m.viewer.SetFlash(text)
 		} else {
@@ -92,6 +114,17 @@ func (m appModel) finishStatusWrite(msg statusWrittenMsg) appModel {
 
 // Update manages global app state and routes incoming messages to active screens.
 func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && m.pendingForce != nil {
+		req := *m.pendingForce
+		m.pendingForce = nil
+		m.pipeline.SetFlash("")
+		m.viewer.SetFlash("")
+		if k := keyMsg.String(); k == "y" || k == "Y" {
+			return m, writeStatusCmd(m.jobberPath, req.app, req.newStatus, req.note, req.fromViewer, true)
+		}
+		return m, nil // any other key only cancels; it is not also a command
+	}
+
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
 		switch keyMsg.String() {
 		case "t", "T":
@@ -124,11 +157,11 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineUpdateStatusMsg:
-		return m, writeStatusCmd(msg.JobberPath, msg.App, msg.NewStatus, "", false)
+		return m, writeStatusCmd(msg.JobberPath, msg.App, msg.NewStatus, "", false, false)
 
 	case screens.PipelineUpdateStatusAndNotesMsg:
 		// Issue 1380: atomic status + notes write from the discard reason picker.
-		return m, writeStatusCmd(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend, false)
+		return m, writeStatusCmd(msg.JobberPath, msg.App, msg.NewStatus, msg.NotesAppend, false, false)
 
 	case statusWrittenMsg:
 		return m.finishStatusWrite(msg), nil
@@ -170,7 +203,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Everything else (hired included) is written first; finishStatusWrite updates the
 		// viewer, starts the hired celebration, or shows the error, from the real outcome.
-		return m, writeStatusCmd(m.jobberPath, msg.App, msg.NewStatus, "", true)
+		return m, writeStatusCmd(m.jobberPath, msg.App, msg.NewStatus, "", true, false)
 
 	case screens.PipelineOpenProgressMsg:
 		m.progress = screens.NewProgressModel(

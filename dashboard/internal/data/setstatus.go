@@ -16,7 +16,8 @@ import (
 
 // Status writes go through `node set-status.mjs` (STATE-MACHINES-PLAN decision D3): one
 // gate (terminal states are refused without --force), one ledger (status-log.tsv), one lock,
-// and the same error texts as every other writer. The TUI never passes --force.
+// and the same error texts as every other writer. The TUI passes --force only through
+// SetStatusForced, after the user confirmed a refused move out of a terminal state.
 
 // statusWriteTimeout bounds one set-status run; the script itself waits up to 60 s for a busy
 // tracker lock, so this leaves room for that wait.
@@ -86,13 +87,16 @@ func setStatusSelector(app model.CareerApplication) string {
 // setStatusArgs builds the argv for node. --role is sent as a wrong-row guard (set-status
 // refuses when the row it resolves is not the role the TUI showed); values that start with
 // "--" would be read as flags, so they are left out.
-func setStatusArgs(app model.CareerApplication, newStatus, note string) []string {
+func setStatusArgs(app model.CareerApplication, newStatus, note string, force bool) []string {
 	args := []string{"set-status.mjs", setStatusSelector(app), newStatus, "--json"}
 	if role := strings.TrimSpace(app.Role); role != "" && !strings.HasPrefix(role, "--") {
 		args = append(args, "--role", role)
 	}
 	if note != "" {
 		args = append(args, "--note", note)
+	}
+	if force {
+		args = append(args, "--force")
 	}
 	return args
 }
@@ -106,7 +110,24 @@ func SetStatus(jobberPath string, app model.CareerApplication, newStatus, note s
 
 // SetStatusWith is SetStatus with an injectable runner.
 func SetStatusWith(run StatusRunner, jobberPath string, app model.CareerApplication, newStatus, note string) (SetStatusResult, error) {
-	stdout, stderr, runErr := run(jobberPath, setStatusArgs(app, newStatus, note))
+	return setStatusWith(run, jobberPath, app, newStatus, note, false)
+}
+
+// SetStatusForced is SetStatus with --force: it applies a move the gate refused (leaving Hired,
+// Rejected or Discarded). Callers must have the user's explicit confirmation first. --force
+// also lifts set-status's wrong-row guards, which is why it is only used on the row the
+// unforced attempt already resolved.
+func SetStatusForced(jobberPath string, app model.CareerApplication, newStatus, note string) (SetStatusResult, error) {
+	return setStatusWith(statusRunner, jobberPath, app, newStatus, note, true)
+}
+
+// SetStatusForcedWith is SetStatusForced with an injectable runner.
+func SetStatusForcedWith(run StatusRunner, jobberPath string, app model.CareerApplication, newStatus, note string) (SetStatusResult, error) {
+	return setStatusWith(run, jobberPath, app, newStatus, note, true)
+}
+
+func setStatusWith(run StatusRunner, jobberPath string, app model.CareerApplication, newStatus, note string, force bool) (SetStatusResult, error) {
+	stdout, stderr, runErr := run(jobberPath, setStatusArgs(app, newStatus, note, force))
 
 	if runErr != nil {
 		var exitErr *exec.ExitError
