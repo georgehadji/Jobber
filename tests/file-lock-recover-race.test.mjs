@@ -5,7 +5,7 @@
 // owner.json). Recovery now re-judges right before removing and treats a vanished lock as "retry".
 // The `beforeRecoverRemove` seam swaps the lock inside that window, deterministically.
 import { pass, fail, warn } from './helpers.mjs';
-import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync, existsSync } from 'fs';
+import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync, existsSync, utimesSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { spawnSync } from 'child_process';
@@ -60,6 +60,26 @@ else {
     const sl = acquireLockSync(k, { timeoutMs: 2000, retryMs: 20, staleMs: 30_000 });
     eq('control (sync): a genuinely stale lock is still recovered', existsSync(join(sl.lockDir, 'owner.json')), true);
     sl.release();
+
+    // ── recover guard: same discipline (a stale guard swapped for a live one must survive) ──
+    const liveLock = (file) => { const d = `${file}.lock`; mkdirSync(d); writeFileSync(join(d, 'owner.json'), JSON.stringify({ pid: process.pid, token: 'live' })); return d; };
+    const staleGuard = (file) => { const g = `${file}.lock.recover`; mkdirSync(g); const old = new Date(Date.now() - 10_000); utimesSync(g, old, old); return g; };
+    const swapGuard = (g) => { renameSync(g, `${g}.old`); mkdirSync(g); writeFileSync(join(g, 'marker'), 'fresh'); };
+    const opts = { timeoutMs: 400, retryMs: 20, staleMs: 1000 };
+    const m1 = target(); const l1 = liveLock(m1); const g1 = staleGuard(m1);
+    let gerr = null;
+    try { await acquireLock(m1, { ...opts, beforeGuardRemove: () => swapGuard(g1) }); } catch (e) { gerr = e; }
+    eq('async: a stale guard swapped for a live one in the removal window is NOT removed', [gerr instanceof LockTimeoutError, existsSync(join(g1, 'marker')), ownerToken(l1)], [true, true, 'live']);
+    const m2 = target(); liveLock(m2); const g2 = staleGuard(m2);
+    try { await acquireLock(m2, opts); } catch { /* the lock is live, so this times out */ }
+    eq('control (async): a genuinely stale guard IS removed (it cannot wedge recovery)', existsSync(g2), false);
+    const m3 = target(); const l3 = liveLock(m3); const g3 = staleGuard(m3);
+    let gserr = null;
+    try { acquireLockSync(m3, { ...opts, beforeGuardRemove: () => swapGuard(g3) }); } catch (e) { gserr = e; }
+    eq('sync: a stale guard swapped for a live one in the removal window is NOT removed', [gserr instanceof LockTimeoutError, existsSync(join(g3, 'marker')), ownerToken(l3)], [true, true, 'live']);
+    const m4 = target(); liveLock(m4); const g4 = staleGuard(m4);
+    try { acquireLockSync(m4, opts); } catch { /* times out */ }
+    eq('control (sync): a genuinely stale guard IS removed', existsSync(g4), false);
   } catch (e) {
     fail(`recovery-race tests threw: ${e.message}`);
   }
