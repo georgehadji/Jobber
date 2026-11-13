@@ -159,13 +159,13 @@ async function cmdModels() {
 // ---------------------------------------------------------------------------
 // File helpers
 // ---------------------------------------------------------------------------
-function readFile(relPath) {
-  try { return fs.readFileSync(path.join(__dirname, relPath), 'utf-8'); }
+function readFile(relPath, root = __dirname) {
+  try { return fs.readFileSync(path.join(root, relPath), 'utf-8'); }
   catch { return null; }
 }
 
-function writeFile(relPath, content) {
-  const full = path.join(__dirname, relPath);
+function writeFile(relPath, content, root = __dirname) {
+  const full = path.join(root, relPath);
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, content, 'utf-8');
 }
@@ -604,10 +604,16 @@ async function cmdScan() {
 }
 
 // -- EVALUATE --
-async function cmdEvaluate(input, ctx) {
+/**
+ * @param {string|null} input @param {any} ctx
+ * @param {{ call?: typeof callOpenRouter, fetchPage?: typeof fetchJobPage, rootDir?: string }} [deps]
+ *   test seam: a fake model call, a fake page fetch and a temp project root (modes, reports, tracker
+ *   additions). Production passes nothing.
+ */
+export async function cmdEvaluate(input, ctx, { call = callOpenRouter, fetchPage = fetchJobPage, rootDir = __dirname } = {}) {
   tracker.recordZeroToken('scan');
   tracker.recordZeroToken('pdf payload');
-  const modeContent = readFile('modes/oferta.md') ?? readFile('modes/auto-pipeline.md') ?? '';
+  const modeContent = readFile('modes/oferta.md', rootDir) ?? readFile('modes/auto-pipeline.md', rootDir) ?? '';
 
   let jdText = input;
 
@@ -629,7 +635,7 @@ async function cmdEvaluate(input, ctx) {
   } else if (input.startsWith('http')) {
     console.log('Fetching job page...');
     try {
-      const content = await fetchJobPage(input);
+      const content = await fetchPage(input);
       jdText = `URL: ${input}\n\n${content}`;
     } catch (e) {
       console.error(e.message);
@@ -642,7 +648,7 @@ async function cmdEvaluate(input, ctx) {
 
   let resultObj;
   try {
-    resultObj = await callOpenRouter(systemPrompt, `Evaluate this job listing:\n\n${jdText}`);
+    resultObj = await call(systemPrompt, `Evaluate this job listing:\n\n${jdText}`);
   } catch (e) {
     console.error(`OpenRouter error: ${e.message}`);
     return null;
@@ -653,8 +659,8 @@ async function cmdEvaluate(input, ctx) {
   let reservedNumbers;
   try {
     reservedNumbers = await reserveReportNumbers(1, {
-      rootDir: __dirname,
-      reportsDir: path.join(__dirname, 'reports'),
+      rootDir,
+      reportsDir: path.join(rootDir, 'reports'),
     });
   } catch (e) {
     console.error(`Could not reserve a report number: ${e.message}`);
@@ -672,7 +678,7 @@ async function cmdEvaluate(input, ctx) {
     // Extract Legitimacy from LLM output or fall back to placeholder
     const legitMatch = result.match(/\*\*Legitimacy:\*\*\s*([^\n]+)/);
     const legitLine  = legitMatch ? `**Legitimacy:** ${legitMatch[1].trim()}` : '**Legitimacy:** unconfirmed';
-    writeFile(relPath, `**URL:** ${input || '(pasted)'}\n${legitLine}\n\n${result}`);
+    writeFile(relPath, `**URL:** ${input || '(pasted)'}\n${legitLine}\n\n${result}`, rootDir);
 
     const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+\.?\d*)/i);
     const scoreValue  = scoreMatch ? parseFloat(scoreMatch[1]) : NaN;
@@ -681,7 +687,7 @@ async function cmdEvaluate(input, ctx) {
     const reportLink  = `[${numStr}](reports/${numStr}-${slug}-${today}.md)`;
     const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluated\t${scoreStr}\t❌\t${reportLink}\t\n`;
     const tsvFile     = `batch/tracker-additions/or-${numStr}-${slug}.tsv`;
-    writeFile(tsvFile, `num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\tnotes\n${tsvLine}`);
+    writeFile(tsvFile, `num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\tnotes\n${tsvLine}`, rootDir);
 
     console.log(`\n✅ Report saved: ${relPath}`);
     console.log('\n─── EVALUATION ──────────────────────────────────────\n');
@@ -691,7 +697,7 @@ async function cmdEvaluate(input, ctx) {
     return relPath;
   } finally {
     try {
-      await releaseReportNumbers(reservedNumbers, { reportsDir: path.join(__dirname, 'reports') });
+      await releaseReportNumbers(reservedNumbers, { reportsDir: path.join(rootDir, 'reports') });
     } catch (e) {
       console.warn(`Could not release report reservation: ${e.message}`);
     }
