@@ -302,10 +302,6 @@ type PipelineModel struct {
 	discardPendingStatus  string                  // new status to commit with the reason
 	discardPredictedCount int                     // count of predicted reasons (from report)
 
-	// PDF picker sub-state — shown when one application matches several
-	// generated CVs (role variants from the same company).
-	pdfCursor  int
-	pdfChoices []string // root-relative paths, newest first
 	// flash is a one-shot notice rendered in place of the help bar; any
 	// keypress clears it.
 	flash string
@@ -330,7 +326,6 @@ const (
 	overlayColumns             // column picker (C)
 	overlayStatus              // status picker (c)
 	overlayDiscard             // discard reason picker (Issue 1380)
-	overlayPDF                 // PDF choice picker
 	overlaySearch              // search input (/)
 )
 
@@ -503,8 +498,6 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 			return m.handleStatusPicker(msg)
 		case overlayDiscard:
 			return m.handleDiscardPicker(msg)
-		case overlayPDF:
-			return m.handlePDFPicker(msg)
 		case overlaySearch:
 			return m.handleSearchInput(msg)
 		}
@@ -885,34 +878,6 @@ type pipelineStartDiscardPickerMsg struct {
 	app              model.CareerApplication
 	newStatus        string
 	predictedReasons []string
-}
-
-// handlePDFPicker consumes keys while the PDF picker overlay is open.
-func (m PipelineModel) handlePDFPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
-	switch msg.String() {
-	case "esc", "q":
-		m.overlay = overlayNone
-		return m, nil
-
-	case "down", "j":
-		m.pdfCursor++
-		if m.pdfCursor >= len(m.pdfChoices) {
-			m.pdfCursor = len(m.pdfChoices) - 1
-		}
-
-	case "up", "k":
-		m.pdfCursor--
-		if m.pdfCursor < 0 {
-			m.pdfCursor = 0
-		}
-
-	case "enter", "d":
-		m.overlay = overlayNone
-		if m.pdfCursor >= 0 && m.pdfCursor < len(m.pdfChoices) {
-			return m, m.openPDFCmd(m.pdfChoices[m.pdfCursor])
-		}
-	}
-	return m, nil
 }
 
 // handleDiscardPicker consumes keys while the discard reason picker is open
@@ -1361,8 +1326,6 @@ func (m PipelineModel) View() string {
 		body = m.overlayColPicker(body)
 	case overlayStatus:
 		body = m.overlayStatusPicker(body)
-	case overlayPDF:
-		body = m.overlayPDFPicker(body)
 	case overlayDiscard:
 		body = m.overlayDiscardPicker(body)
 	}
@@ -1962,7 +1925,7 @@ func (m PipelineModel) renderHelp() string {
 				keyStyle.Render("Esc/C") + descStyle.Render(i18n.Current.HelpClose))
 	}
 
-	if m.overlay == overlayStatus || m.overlay == overlayPDF {
+	if m.overlay == overlayStatus {
 		return style.Render(
 			keyStyle.Render("↑↓/jk") + descStyle.Render(i18n.Current.HelpNavigate) +
 				keyStyle.Render("Enter") + descStyle.Render(i18n.Current.HelpConfirm) +
@@ -2084,41 +2047,6 @@ func (m PipelineModel) overlayHiredFlow() string {
 
 	box := borderStyle.Render(winContent)
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, box)
-}
-
-// overlayPDFPicker renders the PDF chooser inline at the bottom of the body,
-// mirroring overlayStatusPicker. Choices show the PDF filename only — the
-// directory is always output/ and the role variant lives in the name.
-func (m PipelineModel) overlayPDFPicker(body string) string {
-	bodyLines := strings.Split(body, "\n")
-
-	pickerWidth := m.width - 8
-	if pickerWidth < 30 {
-		pickerWidth = 30
-	}
-	padStyle := lipgloss.NewStyle().Padding(0, 2)
-	borderStyle := lipgloss.NewStyle().
-		Foreground(m.theme.Blue).
-		Bold(true)
-
-	var picker []string
-	picker = append(picker, padStyle.Render(borderStyle.Render("Open CV PDF:")))
-
-	for i, choice := range m.pdfChoices {
-		style := lipgloss.NewStyle().Foreground(m.theme.Text).Width(pickerWidth)
-		if i == m.pdfCursor {
-			style = style.Background(m.theme.Overlay).Bold(true)
-		}
-		prefix := "  "
-		if i == m.pdfCursor {
-			prefix = "> "
-		}
-		name := truncateRunes(filepath.Base(filepath.FromSlash(choice)), pickerWidth-2)
-		picker = append(picker, padStyle.Render(style.Render(prefix+name)))
-	}
-
-	bodyLines = append(bodyLines, picker...)
-	return strings.Join(bodyLines, "\n")
 }
 
 // overlayColPicker renders the column visibility picker inline at the bottom

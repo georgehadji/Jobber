@@ -121,10 +121,6 @@ func goldenCases() []struct{ name, out string } {
 	add("hired/step3", m)
 	add("hired/done", key(m, "n"))
 
-	// pdf picker (no key opens it; the helper hides how the test opens it)
-	add("pdf/open", openPDFPickerForTest(base, []string{"output/cv-a.pdf", "output/cv-b.pdf"}))
-	add("pdf/moved", key(openPDFPickerForTest(base, []string{"output/cv-a.pdf", "output/cv-b.pdf"}), "j"))
-
 	// flash line
 	f, _ := base.Update(PipelinePDFGeneratedMsg{Err: "boom"})
 	add("flash/pdf-error", f)
