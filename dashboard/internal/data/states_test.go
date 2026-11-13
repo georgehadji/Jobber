@@ -8,33 +8,33 @@ import (
 
 // The registry (states_gen.go) and the hand-written Go matcher/ordering must not drift.
 
-// Every registry id, label and alias must normalise to its own id. Known conflict kept on
-// purpose (decision D2): the registry says monitor -> skip, Go has always said evaluated.
+// Every registry id, label and alias must normalise to its own id. There is no known conflict
+// any more: decision D2 made Go agree with the registry (monitor -> skip).
 func TestNormalizeStatusAgreesWithRegistry(t *testing.T) {
-	knownConflicts := map[string]string{"monitor": "evaluated"}
 	for _, s := range States {
 		spellings := append([]string{s.ID, s.Label}, s.Aliases...)
 		for _, sp := range spellings {
-			want := s.ID
-			if v, ok := knownConflicts[strings.ToLower(sp)]; ok {
-				want = v
-			}
-			if got := NormalizeStatus(sp); got != want {
-				t.Errorf("NormalizeStatus(%q) = %q, registry state %q wants %q", sp, got, s.ID, want)
+			if got := NormalizeStatus(sp); got != s.ID {
+				t.Errorf("NormalizeStatus(%q) = %q, registry state %q wants %q", sp, got, s.ID, s.ID)
 			}
 		}
 	}
-	// Control: the conflict table is not vacuous -- monitor really is a registry alias.
+	// Control: monitor really is a registry alias of skip, and Go resolves it there (the former conflict).
 	found := false
 	for _, s := range States {
 		for _, a := range s.Aliases {
-			if a == "monitor" {
+			if a == "monitor" && s.ID == "skip" {
 				found = true
 			}
 		}
 	}
 	if !found {
-		t.Error("control: registry no longer lists the monitor alias; drop the knownConflicts entry")
+		t.Error("control: registry no longer lists monitor as a skip alias")
+	}
+	for _, sp := range []string{"monitor", "MONITOR", " Monitor "} {
+		if got := NormalizeStatus(sp); got != "skip" {
+			t.Errorf("NormalizeStatus(%q) = %q, want skip (D2)", sp, got)
+		}
 	}
 }
 

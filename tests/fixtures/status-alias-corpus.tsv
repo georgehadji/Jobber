@@ -71,9 +71,9 @@ No_aplicar	skip	skip	skip	skip	skip	skip	skip	no
 no aplicar	skip	skip	skip	skip	skip	skip	skip	no	
 NO APLICAR	skip	skip	skip	skip	skip	skip	skip	no	uppercase variant
 No aplicar	skip	skip	skip	skip	skip	skip	skip	no	
-monitor	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip merge_tracker=skip normalize_statuses=skip verify_pipeline=skip stats=skip web_format=skip go_dashboard=evaluated; known conflict: states.yml/merge/normalize/verify/stats/web say skip, Go says evaluated
-MONITOR	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip merge_tracker=skip normalize_statuses=skip verify_pipeline=skip stats=skip web_format=skip go_dashboard=evaluated; uppercase variant; known conflict: states.yml/merge/normalize/verify/stats/web say skip, Go says evaluated
-Monitor	skip	skip	skip	skip	skip	skip	evaluated	yes	differs: states_yml=skip merge_tracker=skip normalize_statuses=skip verify_pipeline=skip stats=skip web_format=skip go_dashboard=evaluated; known conflict: states.yml/merge/normalize/verify/stats/web say skip, Go says evaluated
+monitor	skip	skip	skip	skip	skip	skip	skip	no	registry alias of skip; Go agrees since D2
+MONITOR	skip	skip	skip	skip	skip	skip	skip	no	registry alias of skip; Go agrees since D2
+Monitor	skip	skip	skip	skip	skip	skip	skip	no	registry alias of skip; Go agrees since D2
 hired	hired	hired	hired	hired	hired	hired	hired	no	dashboard i18n catalog label
 HIRED	hired	hired	hired	hired	hired	hired	hired	no	uppercase variant; dashboard i18n catalog label
 Hired	hired	hired	hired	hired	hired	hired	hired	no	dashboard i18n catalog label

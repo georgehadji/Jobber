@@ -115,7 +115,6 @@ const ALLOWLIST = {
     '+yanıt_verildi=>responded',
     '+ıptal edildi=>discarded',
     '+ıptal_edildi=>discarded',
-    '~monitor=>evaluated',
   ],
   'dashboard/internal/ui/screens/pipeline.go': [
     '+all=>all',
