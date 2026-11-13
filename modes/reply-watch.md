@@ -71,3 +71,11 @@ Apply recommended status updates to data/applications.md? (y/N):
 ```
 
 Type `y` or `yes` to apply the changes. The script will rewrite the matched rows in `data/applications.md` and rebuild the derived SQLite index.
+
+**Refused moves.** A suggestion that would take a row out of a final state (`Hired`, `Rejected`, `Discarded`, including a dated cell such as `Rejected 2026-02-01`) is refused, not applied. For example, a later "interview" email on a row that is already `Rejected`. The row and the status log stay untouched and the script prints:
+
+```
+Refused #N: illegal transition Rejected -> Interview ... Override with: node set-status.mjs N Interview --force
+```
+
+Re-opening a closed application is a deliberate call: run the printed `set-status.mjs ... --force` command yourself after checking the reply. Moves between live states (for example `Offer` back to `Interview`) are still applied. Setting `JOBBER_REPLY_WATCH_GATE=warn` applies refused moves anyway and records a `WARN illegal transition` note in `data/status-log.tsv`.
