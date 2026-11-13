@@ -166,3 +166,78 @@ func TestDiscardReasonCommitCarriesNote(t *testing.T) {
 		t.Errorf("calls = %v", *calls)
 	}
 }
+
+// stubForced swaps the forced write and records its calls.
+func stubForced(t *testing.T, res data.SetStatusResult, err error) *[]string {
+	t.Helper()
+	var calls []string
+	orig := setStatusForced
+	setStatusForced = func(_ string, app model.CareerApplication, newStatus, note string) (data.SetStatusResult, error) {
+		calls = append(calls, app.Company+"|"+newStatus+"|"+note)
+		return res, err
+	}
+	t.Cleanup(func() { setStatusForced = orig })
+	return &calls
+}
+
+func pressKey(t *testing.T, m appModel, k string) (appModel, tea.Cmd) {
+	t.Helper()
+	next, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(k)})
+	return next.(appModel), cmd
+}
+
+func TestForceConfirmAfterTerminalRefusal(t *testing.T) {
+	refusal := &data.SetStatusError{Code: "illegal-transition", Message: "Illegal status transition: Rejected → Interview. Rejected is a terminal state. Re-run with --force to override."}
+	app := model.CareerApplication{Number: 2, Company: "Beta", Role: "SRE", Status: "Rejected"}
+	req := screens.PipelineUpdateStatusMsg{JobberPath: "x", App: app, NewStatus: "Interview"}
+
+	// y -> the move is re-run once, with --force, and the prompt is gone.
+	plain := stubSetStatus(t, data.SetStatusResult{}, refusal)
+	forced := stubForced(t, data.SetStatusResult{Changed: true, NewStatus: "Interview"}, nil)
+	m := run(t, newTestAppModel(t), req)
+	if m.pendingForce == nil || !strings.Contains(m.View(), "press y to force it, any other key cancels.") {
+		t.Fatalf("refusal did not ask for confirmation:\n%s", m.View())
+	}
+	if len(*forced) != 0 {
+		t.Fatal("forced write ran before the user confirmed")
+	}
+	m, cmd := pressKey(t, m, "y")
+	if cmd == nil {
+		t.Fatal("y did not start the forced write")
+	}
+	next, _ := m.Update(cmd())
+	m = next.(appModel)
+	if len(*forced) != 1 || (*forced)[0] != "Beta|Interview|" || len(*plain) != 1 {
+		t.Errorf("forced calls = %v, plain calls = %v (want one of each)", *forced, *plain)
+	}
+	if m.pendingForce != nil || strings.Contains(m.View(), "Status not changed") {
+		t.Errorf("prompt or error still showing after a successful forced write:\n%s", m.View())
+	}
+
+	// Control: any other key cancels, writes nothing, and is NOT also a command ('t' toggles language).
+	plain = stubSetStatus(t, data.SetStatusResult{}, refusal)
+	forced = stubForced(t, data.SetStatusResult{Changed: true}, nil)
+	m = run(t, newTestAppModel(t), req)
+	m, cmd = pressKey(t, m, "n")
+	if cmd != nil || m.pendingForce != nil || len(*forced) != 0 || strings.Contains(m.View(), "press y") {
+		t.Errorf("n must cancel quietly: cmd=%v pending=%v forced=%v", cmd != nil, m.pendingForce, *forced)
+	}
+
+	// Control: a forced write that is refused again must not loop into another prompt.
+	stubSetStatus(t, data.SetStatusResult{}, refusal)
+	stubForced(t, data.SetStatusResult{}, refusal)
+	m = run(t, newTestAppModel(t), req)
+	m, cmd = pressKey(t, m, "y")
+	next, _ = m.Update(cmd())
+	m = next.(appModel)
+	if m.pendingForce != nil {
+		t.Error("a refused forced write re-opened the prompt")
+	}
+
+	// Control: only a terminal refusal offers force (a not-found error must not).
+	stubSetStatus(t, data.SetStatusResult{}, &data.SetStatusError{Code: "not-found", Message: "No tracker row with #2"})
+	m = run(t, newTestAppModel(t), req)
+	if m.pendingForce != nil || strings.Contains(m.View(), "press y") {
+		t.Error("force was offered for a non-terminal failure")
+	}
+}

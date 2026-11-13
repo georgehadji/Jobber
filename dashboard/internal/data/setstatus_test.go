@@ -42,7 +42,7 @@ func TestSetStatusSuccessParsesResultAndBuildsArgs(t *testing.T) {
 	}
 	for _, a := range args {
 		if a == "--force" {
-			t.Error("the TUI must never pass --force")
+			t.Error("an ordinary write must never pass --force")
 		}
 	}
 }
@@ -141,5 +141,25 @@ func TestExecRunnerWithoutNodeOnPath(t *testing.T) {
 	var se *SetStatusError
 	if !errors.As(err, &se) || se.Code != "node-missing" {
 		t.Errorf("want node-missing, got %+v", err)
+	}
+}
+
+func TestSetStatusForcedAddsForceFlagOnly(t *testing.T) {
+	var plain, forced []string
+	ok := `{"changed":true,"num":12,"company":"Acme","role":"Platform Engineer","oldStatus":"Rejected","newStatus":"Interview"}`
+	if _, err := SetStatusWith(fake(ok, "", nil, &plain, nil), ".", sampleApp, "Interview", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SetStatusForcedWith(fake(ok, "", nil, &forced, nil), ".", sampleApp, "Interview", "reopened"); err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range plain {
+		if a == "--force" {
+			t.Errorf("unforced args carry --force: %v", plain)
+		}
+	}
+	want := []string{"set-status.mjs", "12", "Interview", "--json", "--role", "Platform Engineer", "--note", "reopened", "--force"}
+	if !reflect.DeepEqual(forced, want) {
+		t.Errorf("forced args = %v, want %v", forced, want)
 	}
 }
