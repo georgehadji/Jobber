@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Jobber result</title>
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light">
+<script src="theme.js"></script>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="./" aria-label="Jobber home">Jobber</a>
+    <div class="bar-end">
+      <a class="btn btn-quiet" href="./#start">Check another job</a>
+      <button type="button" class="btn btn-quiet theme-toggle" id="theme">Dark mode</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="plain">
+    <div class="wrap narrow" id="out" aria-live="polite">
+      <p class="status" id="loading">Loading your result…</p>
+    </div>
+  </section>
+</main>
+
+<script src="result.js" defer></script>
+</body>
+</html>
