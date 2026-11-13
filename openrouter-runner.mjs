@@ -475,8 +475,9 @@ export function parsePortals(rawOverride) {
 // ---------------------------------------------------------------------------
 // pipeline.md management
 // ---------------------------------------------------------------------------
-function readPipeline() {
-  const content = readFile('data/pipeline.md') ?? '';
+function readPipeline(file = PIPELINE_PATH) {
+  let content = '';
+  try { content = fs.readFileSync(file, 'utf-8'); } catch { /* no pipeline file yet */ }
   const pending = [];
   for (const line of content.split('\n')) {
     const m = line.match(/^- \[ \] (.+)/);
@@ -496,9 +497,9 @@ const PIPELINE_PATH = path.join(__dirname, 'data', 'pipeline.md');
 
 // Every pipeline.md mutation goes through lib/pipeline-inbox.mjs (pipeline-lock
 // + atomic write): the row moves to the Processed section, never flipped in place.
-async function markPipelineDone(url, reportRelPath) {
+async function markPipelineDone(url, reportRelPath, file = PIPELINE_PATH) {
   const num = path.basename(reportRelPath ?? '').match(/^(\d+)-/)?.[1];
-  await markProcessed(PIPELINE_PATH, url, { ref: num ? `#${num}` : '#--' });
+  await markProcessed(file, url, { ref: num ? `#${num}` : '#--' });
 }
 
 async function addToPipeline(entries) {
@@ -709,8 +710,13 @@ export function pipelineFailureReason(report, evalError) {
   if (evalError) return evalError.message;
   return report ? null : 'evaluation produced no report (see the log above); re-queue as - [ ] to retry';
 }
-async function cmdPipeline(ctx) {
-  const pending = readPipeline();
+/**
+ * @param {any} ctx
+ * @param {{ evaluate?: (url: string, ctx: any) => Promise<string|null>, pipelinePath?: string, delayMs?: number }} [deps]
+ *   test seam: a fake evaluator, a temp pipeline file and no rate-limit pause. Production passes nothing.
+ */
+export async function cmdPipeline(ctx, { evaluate = cmdEvaluate, pipelinePath = PIPELINE_PATH, delayMs = RATE_LIMIT_DELAY_MS } = {}) {
+  const pending = readPipeline(pipelinePath);
   if (pending.length === 0) {
     console.log('No pending listings in pipeline.md.');
     return;
@@ -724,7 +730,7 @@ async function cmdPipeline(ctx) {
     let report = null;
     let evalError = null;
     try {
-      report = await cmdEvaluate(item.url, ctx);
+      report = await evaluate(item.url, ctx);
     } catch (e) {
       evalError = e;
       console.error(`  Error: ${e.message}`);
@@ -734,13 +740,13 @@ async function cmdPipeline(ctx) {
     // forever (D11). It may be transient, so the reason says how to retry.
     try {
       const reason = pipelineFailureReason(report, evalError);
-      if (reason) await markError(PIPELINE_PATH, item.url, reason);
-      else await markPipelineDone(item.url, report);
+      if (reason) await markError(pipelinePath, item.url, reason);
+      else await markPipelineDone(item.url, report, pipelinePath);
     } catch (e) {
       console.error(`  Could not update pipeline.md: ${e.message}`);
     }
     if (i < pending.length - 1) {
-      await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY_MS));
+      await new Promise(r => setTimeout(r, delayMs));
     }
   }
 
