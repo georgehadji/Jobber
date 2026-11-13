@@ -698,6 +698,17 @@ async function cmdEvaluate(input, ctx) {
 }
 
 // -- PIPELINE --
+
+/**
+ * Why a pipeline row should be marked `[!]`, or null when the evaluation succeeded (D11).
+ * A thrown evaluation carries its message; a `null` report (fetch failed / provider error /
+ * no report number) is also an error, with a generic reason that says how to retry.
+ * @param {string|null} report @param {Error|null} evalError
+ */
+export function pipelineFailureReason(report, evalError) {
+  if (evalError) return evalError.message;
+  return report ? null : 'evaluation produced no report (see the log above); re-queue as - [ ] to retry';
+}
 async function cmdPipeline(ctx) {
   const pending = readPipeline();
   if (pending.length === 0) {
@@ -718,13 +729,13 @@ async function cmdPipeline(ctx) {
       evalError = e;
       console.error(`  Error: ${e.message}`);
     }
-    // A thrown evaluation is an unambiguous error outcome with a reason: mark
-    // the row `[!]` instead of leaving it pending forever. A bare `null` return
-    // (fetch failed / provider error / no report number) stays pending: it
-    // carries no reason and can be transient (owner decision, see report).
+    // Any failed evaluation (a throw, or a `null` return: fetch failed / provider
+    // error / no report number) marks the row `[!]` instead of leaving it pending
+    // forever (D11). It may be transient, so the reason says how to retry.
     try {
-      if (evalError) await markError(PIPELINE_PATH, item.url, evalError.message);
-      else if (report) await markPipelineDone(item.url, report);
+      const reason = pipelineFailureReason(report, evalError);
+      if (reason) await markError(PIPELINE_PATH, item.url, reason);
+      else await markPipelineDone(item.url, report);
     } catch (e) {
       console.error(`  Could not update pipeline.md: ${e.message}`);
     }
