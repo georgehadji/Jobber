@@ -1,9 +1,14 @@
 # Jobber container
-# Base: Playwright image with Chromium preinstalled (matches playwright@1.65.0 in package.json).
+# Base: Playwright image with Chromium preinstalled. PLAYWRIGHT_VERSION must equal playwright in package.json
+# (test-all enforces it); it is the only place in this file the version appears.
 # Host kernels that block Playwright's chromium installer (e.g. Ubuntu 26.04) work fine here
 # because the browser ships in the image and runs under the image's userland.
 
-FROM mcr.microsoft.com/playwright:v1.65.0-jammy
+ARG PLAYWRIGHT_VERSION=1.65.0
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy
+
+# An ARG declared before FROM is not visible after it; re-declare to reuse the global default below.
+ARG PLAYWRIGHT_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive \
     NODE_ENV=development \
@@ -35,7 +40,7 @@ WORKDIR /app
 # Pin playwright to the version that matches the base image's bundled chromium.
 COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund \
- && npm install --no-audit --no-fund --save-exact playwright@1.65.0
+ && npm install --no-audit --no-fund --save-exact playwright@${PLAYWRIGHT_VERSION}
 
 # The rest of the project is bind-mounted at runtime via docker compose,
 # so we don't COPY sources here — keeps the image generic and lets local
