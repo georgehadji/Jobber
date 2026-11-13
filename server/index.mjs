@@ -77,7 +77,7 @@ function send(res, status, body, headers = {}) {
 }
 // JSON is served as application/json with nosniff, so it is never parsed as HTML. As defence in depth,
 // <, > and & are still written as \u escapes (same value after JSON.parse) so no markup can appear in the body bytes.
-const jsonSafe = (obj) => JSON.stringify(obj).replace(/[<>&]/g, (c) => '\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+const jsonSafe = (obj) => JSON.stringify(obj).replace(/[<>&]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
 const sendJson = (res, status, obj, headers = {}) =>
   send(res, status, jsonSafe(obj), { 'Content-Type': 'application/json; charset=utf-8', ...PRIVATE, ...headers });
 const fail = (res, status, error) => sendJson(res, status, { error });
