@@ -26,6 +26,7 @@ import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
 import { readTrackerSafe } from './tracker-utils.mjs';
 import { normalizeStatus, analyzeFromContent } from './followup-cadence.mjs';
 import { loadMachine, canonicalize, APPLICATION_STATUS } from './lib/state-machine.mjs';
+import { computeConsecutiveFailures, parsePortalHealthTsv } from './lib/portal-health.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = join(ROOT, 'data', 'applications.md');
@@ -280,29 +281,8 @@ export function computePortalStats(portalsYmlContent, scanStats, producingCompan
 
   let persistentlyDead = 0;
   if (portalHealthContent) {
-    const lines = portalHealthContent.split('\n');
-    const healthRecords = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      const parts = line.split('\t');
-      if (parts.length >= 3) {
-        healthRecords.push({ company: parts[1], status: parts[2] });
-      }
-    }
-    const streaks = new Map();
-    for (const r of healthRecords) {
-      // Mirrors scan.mjs computeConsecutiveFailures: healthy statuses reset,
-      // rate_limited is throttled-not-dead (neither extends nor resets, D12),
-      // every other status (slug_gone/network/auth/server/unknown) counts.
-      if (r.status === 'rate_limited') {
-        continue;
-      } else if (r.status === 'reachable' || r.status === 'empty') {
-        streaks.set(r.company, 0);
-      } else {
-        streaks.set(r.company, (streaks.get(r.company) || 0) + 1);
-      }
-    }
+    // Same fold scan.mjs uses to decide skips (lib/portal-health.mjs): healthy resets, rate_limited is neutral (D12).
+    const streaks = computeConsecutiveFailures(parsePortalHealthTsv(portalHealthContent));
     const threshold = cfg.portal_health_threshold || 3;
     for (const [company, streak] of streaks.entries()) {
       if (streak >= threshold && configuredNames.has(String(company).toLowerCase())) {
