@@ -1,6 +1,6 @@
 # Jobber — interview round vocabulary (STATE-MACHINES-PLAN M34, Phase 4.5).
-# PROPOSED, PENDING D6: the merged set below is the plan's recommendation (§6 D6,
-# "merged set with aliases"); the owner has not decided yet. It is a SUPERSET: it
+# DECIDED (D6): the merged set below is the adopted interview-round vocabulary (§6 D6,
+# "merged set with aliases"), chosen by the owner. It is a SUPERSET: it
 # changes no behaviour, and no mode or script reads it yet.
 #
 # Three vocabularies exist today for the same idea:
@@ -13,7 +13,7 @@
 #   recruiter-screen, screening   -> screen
 #   design-case-study             -> system-design
 #   peer-tech                     -> technical   (LOSSY: peer-tech also covers system design and
-#                                                 take-home review, interview-prep.md:128; D6 should confirm)
+#                                                 take-home review, interview-prep.md:128; accepted under D6)
 #   panel-mixed                   -> onsite      (JUDGEMENT: "Onsite / loop with multiple interviewer
 #                                                 types", interview-prep.md:129)
 # The round-outcome vocabulary lives in templates/machines/interview-round-outcome.yml.
