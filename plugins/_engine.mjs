@@ -581,7 +581,13 @@ export function lockGate(manifest, root, deps = {}) {
       warnSkip(manifest.id, `files changed with a version bump (${d.changedFiles.slice(0, 5).join(', ')}). Review, then \`node plugins.mjs trust ${manifest.id}\``);
       return { load: false };
     case 'drift-nobump':
-      if (source === 'bundled') { repin(); return { load: true }; } // reviewed-by-construction (branch-protected checkout) → re-pin
+      if (source === 'bundled') {
+        // Re-pin and load, but never silently (STATE-MACHINES-PLAN D9): a bundled plugin edited without
+        // a version bump is either a maintainer who forgot to bump or a tampered checkout, and the
+        // user should see which files moved. The re-pin makes this a one-time notice per change.
+        console.warn(`⚠️  ${manifest.id}: bundled plugin files changed without a version bump (${d.changedFiles.slice(0, 5).join(', ')}) — re-pinned plugins.lock and loading. Run: git status plugins/${manifest.id} (if you did not edit it).`);
+        repin(); return { load: true };
+      }
       warnSkip(manifest.id, `files changed since you trusted it without a version bump — possible tampering (${d.changedFiles.slice(0, 5).join(', ')}). Review, then \`node plugins.mjs trust ${manifest.id}\``);
       return { load: false };
     case 'surface-widened':
